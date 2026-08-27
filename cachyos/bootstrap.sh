@@ -19,7 +19,12 @@ PACMAN_PACKAGES=(
   # what Omarchy itself defaults to (dot-local/share/slievr-cachy/bin/
   # slievr-refresh-sddm and the vendored apps/system.conf both reference
   # it), so matching that rather than picking a different DM.
-  sddm
+  # sddm lists this as merely "optional" (for using Qt5 themes), but it's
+  # actually required for the vendored QML theme below — without it
+  # sddm-greeter fails at the dynamic-link stage ("error while loading
+  # shared libraries: libQt5Quick.so.5"), which surfaces as a blank
+  # screen with just a cursor, no error dialog.
+  sddm qt5-declarative
   # Explicit vulkan-driver/lib32-vulkan-driver provider, matching the
   # NVIDIA env vars already in dot-config/hypr/hyprland.conf — installed
   # in the same transaction as steam-jupiter-stable below so pacman
