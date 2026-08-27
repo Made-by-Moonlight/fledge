@@ -14,6 +14,12 @@ PACMAN_PACKAGES=(
   # dot-config/hypr/bindings.conf calls (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
+  # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
+  # (see /usr/share/wayland-sessions/hyprland-uwsm.desktop) — sddm is
+  # what Omarchy itself defaults to (dot-local/share/slievr-cachy/bin/
+  # slievr-refresh-sddm and the vendored apps/system.conf both reference
+  # it), so matching that rather than picking a different DM.
+  sddm
   # Explicit vulkan-driver/lib32-vulkan-driver provider, matching the
   # NVIDIA env vars already in dot-config/hypr/hyprland.conf — installed
   # in the same transaction as steam-jupiter-stable below so pacman
@@ -144,6 +150,27 @@ if ! compgen -G "$HOME/.local/state/hypr-toggles/*.conf" >/dev/null; then
   printf '# Permanent config toggle flags. Do not remove (dir needs >=1 *.conf file).\n' \
     >"$HOME/.local/state/hypr-toggles/flags.conf"
 fi
+
+# Enable sddm as the login manager, pre-selecting the uwsm-managed
+# Hyprland session (hyprland-uwsm.desktop — resolves the "Hyprland was
+# started without start-hyprland" warning that a plain `Hyprland` binary
+# launch, or `uwsm start hyprland`, both trigger) without enabling
+# autologin: setting Session= under [Autologin] without User= just
+# pre-selects it in the greeter's session picker, real hardware/VM
+# testing should still see a real password prompt.
+sudo mkdir -p /etc/sddm.conf.d
+printf '[Autologin]\nSession=hyprland-uwsm.desktop\n' \
+  | sudo tee /etc/sddm.conf.d/default-session.conf >/dev/null
+
+# Vendored SDDM theme (cachyos/sddm-theme/slievr-cachy/, adapted from
+# Omarchy's default one — same style, relabeled logo, see that dir).
+# Not stow-managed: SDDM reads themes from a system path, not $HOME.
+sudo rm -rf /usr/share/sddm/themes/slievr-cachy
+sudo cp -r "$DOTFILES_DIR/cachyos/sddm-theme/slievr-cachy" /usr/share/sddm/themes/slievr-cachy
+printf '[Theme]\nCurrent=slievr-cachy\n' \
+  | sudo tee /etc/sddm.conf.d/theme.conf >/dev/null
+
+sudo systemctl enable sddm.service
 
 # Enable elephant (walker's search-provider backend) as a user service.
 # restart, not enable --now: if it was already running against the old
