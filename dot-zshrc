@@ -4,7 +4,7 @@ ZINIT_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/zinit/zinit.git"
 
 if [ ! -d "$ZINIT_HOME" ]; then
     mkdir -p "$(dirname $ZINIT_HOME)"
-    git clone git@github.com:zdharma-continuum/zinit.git "$ZINIT_HOME"
+    git clone https://github.com/zdharma-continuum/zinit.git "$ZINIT_HOME"
 fi
 
 # add homebrew to path if mac
@@ -66,5 +66,5 @@ alias ls='ls --color'
 # Shell integerations
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 # eval "$(zoxide init --cmd cd zsh)"
-eval "$(~/.local/bin/mise activate zsh)"
-eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+[ -x ~/.local/bin/mise ] && eval "$(~/.local/bin/mise activate zsh)"
+[ -x /home/linuxbrew/.linuxbrew/bin/brew ] && eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"

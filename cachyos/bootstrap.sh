@@ -9,14 +9,27 @@ PACMAN_PACKAGES=(
   kitty
   mako swayosd starship
   git stow fzf mise base-devel
+  zsh
   # Deps for the vendored dot-local/share/slievr-cachy/bin/ scripts that
   # dot-config/hypr/bindings.conf calls (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
-  # Walker's search-provider backend, needed for the GUI background/theme
-  # pickers (dot-config/elephant/menus/*.lua).
-  elephant
+  # Explicit vulkan-driver/lib32-vulkan-driver provider, matching the
+  # NVIDIA env vars already in dot-config/hypr/hyprland.conf — installed
+  # in the same transaction as steam-jupiter-stable below so pacman
+  # doesn't need to prompt for (and non-interactively default to a
+  # conflicting) provider choice for that virtual dependency.
+  nvidia-utils lib32-nvidia-utils
+  # CachyOS's Jupiter-bootstrapped Steam build.
+  steam-jupiter-stable
 )
+
+# steam-jupiter-stable needs lib32-* packages, which need the multilib
+# repo — commented out by default on a fresh install.
+if grep -q '^#\[multilib\]' /etc/pacman.conf; then
+  sudo sed -i '/^#\[multilib\]/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' /etc/pacman.conf
+  sudo pacman -Sy
+fi
 
 missing=()
 for pkg in "${PACMAN_PACKAGES[@]}"; do
@@ -36,7 +49,29 @@ if ! command -v paru &>/dev/null; then
   sudo pacman -S --needed --noconfirm paru
 fi
 
-for aur_pkg in walker-bin zen-browser-bin xdg-terminal-exec; do
+# elephant (official repo) ships only the daemon, no providers — providers
+# are separate AUR packages. elephant-all-bin bundles every official one
+# (~450MB: apt/dnf5/dpkg package-manager providers, a Rust toolchain,
+# niri, password managers — none of which this setup uses), so install
+# only the specific providers config.toml's [providers] list and
+# dot-config/elephant/menus/*.lua actually need instead.
+ELEPHANT_PROVIDER_PKGS=(
+  elephant-desktopapplications-bin elephant-calc-bin elephant-symbols-bin
+  elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
+  elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
+)
+
+# Each provider package pulls in elephant (the daemon) as its own
+# dependency, in place of the providers-less official-repo one — remove
+# that first, along with walker-bin, which depends on it (reinstalled
+# right after, against elephant-*-bin's provides=elephant instead), since
+# it isn't declared as replacing the base elephant package and installing
+# both would collide on /usr/bin/elephant.
+if pacman -Qi elephant &>/dev/null && ! pacman -Qi elephant-desktopapplications-bin &>/dev/null; then
+  sudo pacman -Rdd --noconfirm elephant walker-bin
+fi
+
+for aur_pkg in "${ELEPHANT_PROVIDER_PKGS[@]}" walker-bin zen-browser-bin xdg-terminal-exec 1password 1password-cli; do
   if ! pacman -Qi "$aur_pkg" &>/dev/null; then
     paru -S --noconfirm "$aur_pkg"
   fi
@@ -71,15 +106,73 @@ if ! grep -q '^export SLIEVR_BIN_PATH=' "$UWSM_ENV"; then
   } >>"$UWSM_ENV"
 fi
 
+# bindings.conf's terminal keybind ($terminal = uwsm app -- $TERMINAL) and
+# $EDITOR need these too. Previously written to ~/.config/uwsm/default,
+# which — despite a plausible-looking pre-existing comment on the host
+# implying otherwise — uwsm's prepare-env.sh does NOT read: it only
+# sources env and env-<compositor> (confirmed against
+# /usr/lib/uwsm/prepare-env.sh). That file was silently never taking
+# effect; these belong in env instead, same as SLIEVR_BIN_PATH above.
+if ! grep -q '^export TERMINAL=' "$UWSM_ENV"; then
+  {
+    echo 'export TERMINAL=xdg-terminal-exec'
+    echo 'export EDITOR=nvim'
+  } >>"$UWSM_ENV"
+fi
+
+# xdg-terminal-exec (what $TERMINAL delegates to, and what
+# slievr-launch-tui/omarchy-launch-tui use) picks the first entry here;
+# an empty/missing list falls back to its own probing order, so pin it
+# to kitty explicitly to match this setup's one installed terminal.
+mkdir -p "$HOME/.config"
+if [ ! -f "$HOME/.config/xdg-terminals.list" ]; then
+  echo "kitty.desktop" >"$HOME/.config/xdg-terminals.list"
+fi
+
 # hyprland.conf sources ~/.local/state/hypr-toggles/*.conf for dynamic
 # feature toggles (waybar-off, etc.) — needs to exist (even empty) so the
 # glob source doesn't warn, and enabled/disabled state persists across
 # rebuilds since it's outside the stowed repo.
 mkdir -p "$HOME/.local/state/hypr-toggles"
-touch "$HOME/.local/state/hypr-toggles/.keep"
+rm -f "$HOME/.local/state/hypr-toggles/.keep"
+# Needs to be *.conf (not just present) — hyprland's glob source errors
+# ("globbing error: found no match") if nothing matches the pattern.
+# Checking for *.conf specifically (not just "dir non-empty") matters:
+# an earlier version of this script left a .keep placeholder here, which
+# satisfied an "is dir empty" check without ever fixing the actual error.
+if ! compgen -G "$HOME/.local/state/hypr-toggles/*.conf" >/dev/null; then
+  printf '# Permanent config toggle flags. Do not remove (dir needs >=1 *.conf file).\n' \
+    >"$HOME/.local/state/hypr-toggles/flags.conf"
+fi
 
-# Enable elephant (walker's search-provider backend, needed for the GUI
-# background/theme pickers) as a user service.
-systemctl --user enable --now elephant.service
+# Enable elephant (walker's search-provider backend) as a user service.
+# restart, not enable --now: if it was already running against the old
+# providers-less elephant package, --now alone wouldn't pick up the
+# replacement binary/providers from the elephant-*-bin packages above.
+systemctl --user enable elephant.service
+systemctl --user restart elephant.service
+
+# dot-zshrc expects mise at ~/.local/bin/mise (the host's curl-installer
+# location); the pacman package above installs to /usr/bin/mise instead.
+mkdir -p "$HOME/.local/bin"
+if [ ! -e "$HOME/.local/bin/mise" ]; then
+  ln -s "$(command -v mise)" "$HOME/.local/bin/mise"
+fi
+
+# dot-zshrc's zinit bootstrap clones over SSH (git@github.com:...) on
+# first shell start; without GitHub's host key already trusted (as it
+# would be on a machine with prior git history) that clone fails
+# non-interactively instead of prompting.
+mkdir -p "$HOME/.ssh"
+touch "$HOME/.ssh/known_hosts"
+if ! ssh-keygen -F github.com &>/dev/null; then
+  ssh-keyscan -t ed25519 github.com >>"$HOME/.ssh/known_hosts" 2>/dev/null
+fi
+
+# Default shell: zsh (dot-zshrc), not bash.
+zsh_path=$(command -v zsh)
+if [ "$(getent passwd "$USER" | cut -d: -f7)" != "$zsh_path" ]; then
+  sudo usermod --shell "$zsh_path" "$USER"
+fi
 
 echo "Bootstrap complete."
