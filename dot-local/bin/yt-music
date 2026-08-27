@@ -1,0 +1,7 @@
+#!/bin/bash
+WINDOW=$(hyprctl clients -j | jq -r '.[] | select(.title == "YouTube Music") | .address' | head -1)
+if [[ -n $WINDOW ]]; then
+  hyprctl dispatch focuswindow "address:$WINDOW"
+else
+  slievr-launch-webapp "https://music.youtube.com/"
+fi

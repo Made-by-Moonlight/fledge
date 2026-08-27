@@ -1,13 +1,11 @@
 #!/bin/bash
 
-# slievr:summary=Launch a URL as a web app in the default supported browser
+# slievr:summary=Launch a URL as a web app in Zen
 # slievr:args=<url>
+#
+# Not Chromium's --app= mode: this setup uses Zen (Firefox-based), which
+# has no equivalent single-flag "app window" mode. Opens a plain new
+# window instead — windowrule matching for these (see windows.conf)
+# needs to key off window title, not window class, as a result.
 
-browser=$(xdg-settings get default-web-browser)
-
-case $browser in
-google-chrome* | brave* | microsoft-edge* | opera* | vivaldi* | helium*) ;;
-*) browser="chromium.desktop" ;;
-esac
-
-exec setsid uwsm-app -- $(sed -n 's/^Exec=\([^ ]*\).*/\1/p' {~/.local,~/.nix-profile,/usr}/share/applications/$browser 2>/dev/null | head -1) --app="$1" "${@:2}"
+exec setsid uwsm-app -- zen-browser --new-window "$1" "${@:2}"

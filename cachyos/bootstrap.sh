@@ -5,11 +5,15 @@ DOTFILES_REPO="https://github.com/slievr/slievr-cachy.git"
 DOTFILES_DIR="$HOME/proj/slievr-cachy"
 
 PACMAN_PACKAGES=(
-  cachyos-hyprland-settings hyprland waybar
+  hyprland waybar xorg-xwayland
   kitty
   mako swayosd starship
   git stow fzf mise base-devel
   zsh
+  # swaybg is what autostart.conf actually uses for the wallpaper — was
+  # previously only pulled in transitively via cachyos-hyprland-settings
+  # (see the removal step below), needs to be explicit now.
+  swaybg
   # Deps for the vendored dot-local/share/slievr-cachy/bin/ scripts that
   # dot-config/hypr/bindings.conf calls (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
@@ -46,6 +50,11 @@ PACMAN_PACKAGES=(
   nvidia-utils lib32-nvidia-utils
   # CachyOS's Jupiter-bootstrapped Steam build.
   steam-jupiter-stable
+  # Discord (windows.conf already pins it to workspace 9).
+  discord
+  # GUI file manager — lighter than the GNOME stack, no dependency on the
+  # yazi TUI keybind it replaces.
+  thunar
 )
 
 # steam-jupiter-stable needs lib32-* packages, which need the multilib
@@ -63,6 +72,21 @@ for pkg in "${PACMAN_PACKAGES[@]}"; do
 done
 if [ "${#missing[@]}" -gt 0 ]; then
   sudo pacman -S --needed --noconfirm "${missing[@]}"
+fi
+
+# cachyos-hyprland-settings (an earlier version of this script installed
+# it) pulls in a lot we don't want or already have our own equivalent
+# for: kvantum/qt5ct/cachyos-nord-gtk-theme-git (GTK/QT theming we don't
+# use), wofi/bemenu (walker replaces these), grimblast-git (our own
+# grim+slurp+satty), polkit-kde-agent (polkit-gnome above instead),
+# swaylock-effects-git/swaylock-fancy-git/wlogout/wob, cachyos-wallpapers
+# (the theme's own vendored backgrounds are used instead),
+# cachyos-alacritty-config (kitty only, no alacritty). Removing it here
+# rather than leaving it installed; -Rns cascades to its now-orphaned
+# deps, but not to anything this script's own PACMAN_PACKAGES loop above
+# already made explicit (hyprland, waybar, mako, swaybg, etc.).
+if pacman -Qi cachyos-hyprland-settings &>/dev/null; then
+  sudo pacman -Rns --noconfirm cachyos-hyprland-settings
 fi
 
 # Use CachyOS's own cachyos/paru package, not AUR paru-bin: paru-bin is
@@ -106,18 +130,14 @@ if [ ! -d "$DOTFILES_DIR" ]; then
 fi
 
 # Ensure these exist as real directories before stowing, so stow links
-# only their specific dot-local/share/* subdirs into them instead of
+# only their specific dot-local/* subdirs/files into them instead of
 # tree-folding the whole directory into one symlink into the repo (which
-# would send every other app's/font's real data into git-tracked
-# territory on a fresh account with no prior ~/.local/share or
-# ~/.local/share/fonts).
-mkdir -p "$HOME/.local/share" "$HOME/.local/share/fonts"
+# would send every other app's real data — or, for ~/.local/bin, the
+# mise symlink added below — into git-tracked territory on a fresh
+# account with no prior ~/.local/share or ~/.local/bin).
+mkdir -p "$HOME/.local/share" "$HOME/.local/bin"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
-
-# Picks up dot-local/share/fonts/omarchy.ttf (the custom-glyph font
-# waybar's leftmost icon uses).
-fc-cache -f "$HOME/.local/share/fonts" >/dev/null
 
 # The vendored dot-local/share/slievr-cachy/bin/ scripts (stowed above) need
 # to be on PATH inside the Hyprland/uwsm session for bindings.conf's
