@@ -45,12 +45,12 @@ Rectangle {
 
     Row {
       anchors.horizontalCenter: parent.horizontalCenter
-      spacing: 15
+      spacing: 10
 
       Image {
         source: root.loginFailed ? "lock-failed.png" : "lock.png"
-        width: 34
-        height: 38
+        width: 22
+        height: 25
         fillMode: Image.PreserveAspectFit
         anchors.verticalCenter: parent.verticalCenter
       }
@@ -62,22 +62,25 @@ Rectangle {
         Image {
           id: entry
           source: root.loginFailed ? "entry-failed.png" : "entry.png"
+          width: 186
+          height: 31
+          fillMode: Image.PreserveAspectFit
           anchors.centerIn: parent
         }
 
         Row {
           anchors.left: parent.left
-          anchors.leftMargin: 20
+          anchors.leftMargin: 13
           anchors.verticalCenter: parent.verticalCenter
-          spacing: 5
+          spacing: 3
 
           Repeater {
             model: Math.min(password.text.length, 21)
 
             Image {
               source: "bullet.png"
-              width: 7
-              height: 7
+              width: 5
+              height: 5
             }
           }
         }
@@ -85,13 +88,13 @@ Rectangle {
         TextInput {
           id: password
           anchors.fill: parent
-          anchors.leftMargin: 20
-          anchors.rightMargin: 20
+          anchors.leftMargin: 13
+          anchors.rightMargin: 13
           verticalAlignment: TextInput.AlignVCenter
           echoMode: TextInput.Password
           font.family: "JetBrainsMono Nerd Font"
-          font.pixelSize: 24
-          font.letterSpacing: 5
+          font.pixelSize: 16
+          font.letterSpacing: 3
           passwordCharacter: "\u2022"
           color: "transparent"
           selectionColor: "transparent"
