@@ -4,8 +4,13 @@
 # slievr:args=<url>
 #
 # Not Chromium's --app= mode: this setup uses Zen (Firefox-based), which
-# has no equivalent single-flag "app window" mode. Opens a plain new
-# window instead — windowrule matching for these (see windows.conf)
-# needs to key off window title, not window class, as a result.
+# has no equivalent single-flag "app window" mode — its real "Web App"
+# feature is GUI-only (Zen menu > turn a pinned tab into one), not
+# scriptable. --kiosk is the closest CLI-triggerable approximation:
+# strips the URL bar/tabs/bookmarks chrome. Hyprland's own window
+# controls (close/move/tile) still work regardless — kiosk mode only
+# hides Zen's own UI, not the compositor's. windowrule matching for
+# these (see windows.conf) needs to key off window title, not window
+# class, since there's no --app=<url>-derived class like Chromium gives.
 
-exec setsid uwsm-app -- zen-browser --new-window "$1" "${@:2}"
+exec setsid uwsm-app -- zen-browser --kiosk --new-window "$1" "${@:2}"
