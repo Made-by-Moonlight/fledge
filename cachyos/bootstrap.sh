@@ -14,6 +14,10 @@ PACMAN_PACKAGES=(
   # dot-config/hypr/bindings.conf calls (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
+  # autostart.conf's exec-once entries — all missing on a fresh install:
+  # idle daemon, input method framework, power-profile D-Bus service
+  # (slievr-powerprofiles-init needs powerprofilesctl), polkit agent.
+  hypridle fcitx5 power-profiles-daemon polkit-gnome
   # TUI controls the Setup menu (slievr-menu setup) and its keybinds
   # (Super+Ctrl+W/B/A) launch: nmtui (wifi — ships with networkmanager
   # already, not impala, which hard-depends on iwd instead of
@@ -167,6 +171,10 @@ if ! compgen -G "$HOME/.local/state/hypr-toggles/*.conf" >/dev/null; then
   printf '# Permanent config toggle flags. Do not remove (dir needs >=1 *.conf file).\n' \
     >"$HOME/.local/state/hypr-toggles/flags.conf"
 fi
+
+# power-profiles-daemon provides the D-Bus service powerprofilesctl (and
+# slievr-powerprofiles-init, run at Hyprland startup) needs.
+sudo systemctl enable --now power-profiles-daemon.service
 
 # Enable sddm as the login manager, pre-selecting the uwsm-managed
 # Hyprland session (hyprland-uwsm.desktop — resolves the "Hyprland was
