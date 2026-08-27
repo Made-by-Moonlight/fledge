@@ -10,10 +10,12 @@ PACMAN_PACKAGES=(
   mako swayosd starship
   git stow fzf mise base-devel
   zsh
-  # swaybg is what autostart.conf actually uses for the wallpaper — was
-  # previously only pulled in transitively via cachyos-hyprland-settings
-  # (see the removal step below), needs to be explicit now.
-  swaybg
+  # swaybg (autostart.conf wallpaper), pamixer (waybar pulseaudio
+  # right-click mute), brightnessctl (slievr-brightness-display/-keyboard)
+  # were all previously only pulled in transitively via
+  # cachyos-hyprland-settings (see the removal step below) — its removal
+  # cascaded them away too since nothing had them explicit yet.
+  swaybg pamixer brightnessctl
   # Deps for the vendored dot-local/share/slievr-cachy/bin/ scripts that
   # dot-config/hypr/bindings.conf calls (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
