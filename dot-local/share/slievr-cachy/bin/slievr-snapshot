@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Create or restore system snapshots with snapper
-# omarchy:args=<create|restore>
-# omarchy:requires-sudo=true
+# slievr:summary=Create or restore system snapshots with snapper
+# slievr:args=<create|restore>
+# slievr:requires-sudo=true
 
 set -e
 

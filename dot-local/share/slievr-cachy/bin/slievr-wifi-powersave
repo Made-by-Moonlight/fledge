@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Set Wi-Fi power save mode on wireless interfaces
-# omarchy:args=<on|off>
+# slievr:summary=Set Wi-Fi power save mode on wireless interfaces
+# slievr:args=<on|off>
 
 for iface in /sys/class/net/*/wireless; do
   iface="$(basename "$(dirname "$iface")")"

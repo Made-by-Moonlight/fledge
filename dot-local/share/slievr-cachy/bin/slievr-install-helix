@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install Helix and configure it to use the current Omarchy theme
+# slievr:summary=Install Helix and configure it to use the current Omarchy theme
 
 echo "Installing Helix..."
 slievr-pkg-add helix

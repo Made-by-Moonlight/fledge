@@ -14,6 +14,11 @@ PACMAN_PACKAGES=(
   # dot-config/hypr/bindings.conf calls (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
+  # TUI controls the Setup menu (slievr-menu setup) and its keybinds
+  # (Super+Ctrl+W/B/A) launch: impala (wifi), bluetui (bluetooth),
+  # wiremix (audio) — NetworkManager/bluez/pipewire's own daemons already
+  # come from other deps, these are just the front-ends.
+  impala bluetui wiremix
   # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
   # (see /usr/share/wayland-sessions/hyprland-uwsm.desktop) — sddm is
   # what Omarchy itself defaults to (dot-local/share/slievr-cachy/bin/

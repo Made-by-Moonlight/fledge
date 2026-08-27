@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Remove all TUIs installed via slievr-tui-install.
+# slievr:summary=Remove all TUIs installed via slievr-tui-install.
 
 set -e
 

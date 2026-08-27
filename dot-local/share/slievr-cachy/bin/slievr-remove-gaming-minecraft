@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Remove the Minecraft launcher along with its worlds, mods, and caches.
-# omarchy:requires-sudo=true
+# slievr:summary=Remove the Minecraft launcher along with its worlds, mods, and caches.
+# slievr:requires-sudo=true
 
 set -e
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Returns true if a battery is present on the system.
+# slievr:summary=Returns true if a battery is present on the system.
 
 for bat in /sys/class/power_supply/BAT*; do
   [[ -r $bat/present ]] &&

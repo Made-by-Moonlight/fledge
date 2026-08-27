@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Upload logs to logs.omarchy.org
-# omarchy:args=<log-file>
-# omarchy:hidden=true
+# slievr:summary=Upload logs to logs.omarchy.org
+# slievr:args=<log-file>
+# slievr:hidden=true
 
 LOG_TYPE="${1:-install}"
 TEMP_LOG="/tmp/upload-log.txt"

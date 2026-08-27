@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Install support for using Xbox controllers with Steam/RetroArch/etc.
-# omarchy:requires-sudo=true
+# slievr:summary=Install support for using Xbox controllers with Steam/RetroArch/etc.
+# slievr:requires-sudo=true
 
 set -e
 

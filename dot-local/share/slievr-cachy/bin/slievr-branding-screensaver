@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Edit, set, or reset screensaver branding
-# omarchy:group=branding
-# omarchy:name=screensaver
-# omarchy:args=<image|text|reset>
-# omarchy:examples=omarchy branding screensaver image | omarchy branding screensaver text | omarchy branding screensaver reset
+# slievr:summary=Edit, set, or reset screensaver branding
+# slievr:group=branding
+# slievr:name=screensaver
+# slievr:args=<image|text|reset>
+# slievr:examples=omarchy branding screensaver image | omarchy branding screensaver text | omarchy branding screensaver reset
 
 set -euo pipefail
 

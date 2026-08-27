@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Set the Plymouth boot theme from an Omarchy theme
-# omarchy:args=<theme-name>
-# omarchy:requires-sudo=true
+# slievr:summary=Set the Plymouth boot theme from an Omarchy theme
+# slievr:args=<theme-name>
+# slievr:requires-sudo=true
 
 # Resolve a theme by name and apply its unlock.png + colors.toml as the
 # Plymouth boot screen via slievr-plymouth-set.

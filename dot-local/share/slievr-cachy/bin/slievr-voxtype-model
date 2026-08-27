@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Open Voxtype AI model setup
+# slievr:summary=Open Voxtype AI model setup
 
 set -e
 

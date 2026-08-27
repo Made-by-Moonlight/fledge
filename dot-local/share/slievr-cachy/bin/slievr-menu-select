@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Pick one option with Walker
-# omarchy:group=menu
-# omarchy:name=select
-# omarchy:args=prompt option... [-- walker args...]
-# omarchy:examples=omarchy menu select Format jpg png|slievr-menu-select Resolution 4k 1080p 720p -- --width 400
+# slievr:summary=Pick one option with Walker
+# slievr:group=menu
+# slievr:name=select
+# slievr:args=prompt option... [-- walker args...]
+# slievr:examples=omarchy menu select Format jpg png|slievr-menu-select Resolution 4k 1080p 720p -- --width 400
 
 set -euo pipefail
 

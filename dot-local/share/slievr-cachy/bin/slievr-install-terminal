@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Install one of the approved terminals and set it as the default for Omarchy (Super + Return etc).
-# omarchy:args=<alacritty|foot|ghostty|kitty>
-# omarchy:requires-sudo=true
+# slievr:summary=Install one of the approved terminals and set it as the default for Omarchy (Super + Return etc).
+# slievr:args=<alacritty|foot|ghostty|kitty>
+# slievr:requires-sudo=true
 
 if (($# == 0)); then
   echo "Usage: slievr-install-terminal [alacritty|foot|ghostty|kitty]"

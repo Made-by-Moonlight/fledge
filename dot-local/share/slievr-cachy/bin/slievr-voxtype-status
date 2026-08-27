@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Clean up the voxtype --follow child when Waybar reloads
+# slievr:summary=Clean up the voxtype --follow child when Waybar reloads
 
 trap 'kill 0' EXIT
 

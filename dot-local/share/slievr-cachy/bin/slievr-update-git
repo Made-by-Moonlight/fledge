@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Pull the latest Omarchy git changes
+# slievr:summary=Pull the latest Omarchy git changes
 
 set -e
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Open the Voxtype configuration file
+# slievr:summary=Open the Voxtype configuration file
 
 set -e
 

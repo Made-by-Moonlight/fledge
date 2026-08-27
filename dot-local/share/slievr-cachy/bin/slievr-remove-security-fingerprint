@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Remove fingerprint authentication from sudo, polkit, and lock screen
-# omarchy:requires-sudo=true
+# slievr:summary=Remove fingerprint authentication from sudo, polkit, and lock screen
+# slievr:requires-sudo=true
 
 set -e
 

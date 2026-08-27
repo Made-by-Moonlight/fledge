@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Check the update log for known failure conditions
+# slievr:summary=Check the update log for known failure conditions
 
 update_log="/tmp/slievr-update.log"
 

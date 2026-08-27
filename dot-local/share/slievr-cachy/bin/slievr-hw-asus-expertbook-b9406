@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Detect ASUS ExpertBook B9406 series laptops on Intel Panther Lake.
+# slievr:summary=Detect ASUS ExpertBook B9406 series laptops on Intel Panther Lake.
 
 slievr-hw-match "B9406" && slievr-hw-intel-ptl

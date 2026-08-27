@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Copies the named config from ~/.local/share/omarchy/config/X/Y/Z -> ~/.config/X/Y/Z.
-# omarchy:args=<config-path>
+# slievr:summary=Copies the named config from ~/.local/share/omarchy/config/X/Y/Z -> ~/.config/X/Y/Z.
+# slievr:args=<config-path>
 
 config_file=$1
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install and launch Geforce Now.
+# slievr:summary=Install and launch Geforce Now.
 
 set -e
 

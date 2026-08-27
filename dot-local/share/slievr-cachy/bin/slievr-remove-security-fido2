@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Remove FIDO2 authentication from sudo and polkit
-# omarchy:requires-sudo=true
+# slievr:summary=Remove FIDO2 authentication from sudo and polkit
+# slievr:requires-sudo=true
 
 set -e
 

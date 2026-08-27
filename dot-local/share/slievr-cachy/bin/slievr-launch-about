@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Launch the fastfetch TUI that gives information about the current system.
+# slievr:summary=Launch the fastfetch TUI that gives information about the current system.
 
 exec slievr-launch-or-focus-tui "bash -c 'fastfetch; read -n 1 -s'"

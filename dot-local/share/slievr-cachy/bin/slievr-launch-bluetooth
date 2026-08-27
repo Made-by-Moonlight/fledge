@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Launch the Omarchy bluetooth controls TUI (provided by bluetui).
+# slievr:summary=Launch the Omarchy bluetooth controls TUI (provided by bluetui).
 
 rfkill unblock bluetooth
 exec slievr-launch-or-focus-tui bluetui

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Pick a file with Walker
-# omarchy:group=menu
-# omarchy:name=file
-# omarchy:args=label paths formats [walker args...]
-# omarchy:examples=omarchy menu file "Select image" "$HOME/Pictures" "jpg png webp"|slievr-menu-file "Select media" "$HOME/Pictures:$HOME/Videos" "jpg png mp4 mov" --width 800
+# slievr:summary=Pick a file with Walker
+# slievr:group=menu
+# slievr:name=file
+# slievr:args=label paths formats [walker args...]
+# slievr:examples=omarchy menu file "Select image" "$HOME/Pictures" "jpg png webp"|slievr-menu-file "Select media" "$HOME/Pictures:$HOME/Videos" "jpg png mp4 mov" --width 800
 
 set -euo pipefail
 

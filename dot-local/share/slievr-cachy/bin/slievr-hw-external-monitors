@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Returns true when an external monitor is physically connected.
+# slievr:summary=Returns true when an external monitor is physically connected.
 
 for status in /sys/class/drm/card*-*/status; do
   [[ "$status" == *-eDP-*/status ]] && continue

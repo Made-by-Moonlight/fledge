@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Print the installed Omarchy version
+# slievr:summary=Print the installed Omarchy version
 
 cat $OMARCHY_PATH/version

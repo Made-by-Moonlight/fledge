@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Apply the current theme keyboard color to Framework Laptop 16 keyboards
-# omarchy:hidden=true
+# slievr:summary=Apply the current theme keyboard color to Framework Laptop 16 keyboards
+# slievr:hidden=true
 
 FRAMEWORK16_THEME=~/.config/omarchy/current/theme/keyboard.rgb
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Set the correct power profile on boot based on current AC/battery state.
+# slievr:summary=Set the correct power profile on boot based on current AC/battery state.
 
 if slievr-battery-present && ! slievr-ac-present; then
   slievr-powerprofiles-set battery

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Remove RetroArch, all libretro cores, and its config/saves. Leaves ~/Games/roms and ~/Games/bios alone.
-# omarchy:requires-sudo=true
+# slievr:summary=Remove RetroArch, all libretro cores, and its config/saves. Leaves ~/Games/roms and ~/Games/bios alone.
+# slievr:requires-sudo=true
 
 set -e
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Launch the Omarchy Menu or takes a parameter to jump straight to a submenu.
+# slievr:summary=Launch the Slievr Menu or takes a parameter to jump straight to a submenu.
 
 # Set to true when going directly to a submenu, so we can exit directly
 BACK_TO_EXIT=false
@@ -83,7 +83,7 @@ aur_install_and_launch() {
 show_learn_menu() {
   case $(menu "Learn" "  Keybindings\n  Omarchy\n  Hyprland\n󰣇  Arch\n  Neovim\n󱆃  Bash") in
   *Keybindings*) slievr-menu-keybindings ;;
-  *Omarchy*) slievr-launch-webapp "https://learn.omacom.io/2/the-slievr-manual" ;;
+  *Omarchy*) slievr-launch-webapp "https://learn.omacom.io/2/the-omarchy-manual" ;;
   *Hyprland*) slievr-launch-webapp "https://wiki.hypr.land/" ;;
   *Arch*) slievr-launch-webapp "https://wiki.archlinux.org/title/Main_page" ;;
   *Bash*) slievr-launch-webapp "https://devhints.io/bash" ;;
@@ -757,8 +757,8 @@ show_remove_elixir_menu() {
 }
 
 show_update_menu() {
-  case $(menu "Update" "  Omarchy\n󰔫  Channel\n  Config\n󰸌  Extra Themes\n  Process\n󰇅  Hardware\n  Firmware\n  Password\n  Timezone\n  Time") in
-  *Omarchy*) present_terminal slievr-update ;;
+  case $(menu "Update" "  Slievr\n󰔫  Channel\n  Config\n󰸌  Extra Themes\n  Process\n󰇅  Hardware\n  Firmware\n  Password\n  Timezone\n  Time") in
+  *Slievr*) present_terminal slievr-update ;;
   *Channel*) show_update_channel_menu ;;
   *Config*) show_update_config_menu ;;
   *Themes*) present_terminal slievr-theme-update ;;
@@ -849,7 +849,7 @@ show_system_menu() {
 }
 
 show_main_menu() {
-  go_to_menu "$(menu "Go" "󰀻  Apps\n󰧑  Learn\n󱓞  Trigger\n  Style\n  Setup\n󰉉  Install\n󰭌  Remove\n  Update\n  About\n  System")"
+  go_to_menu "$(menu "Go" "󰀻  Apps\n󱓞  Trigger\n  Style\n  Setup\n  System")"
 }
 
 go_to_menu() {

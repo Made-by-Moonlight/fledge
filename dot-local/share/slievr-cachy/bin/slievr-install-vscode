@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install VS Code and configure Omarchy defaults for secrets, updates, and theme
+# slievr:summary=Install VS Code and configure Omarchy defaults for secrets, updates, and theme
 
 echo "Installing VSCode..."
 slievr-pkg-add visual-studio-code-bin

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Prompt for text input with Walker
-# omarchy:group=menu
-# omarchy:name=input
-# omarchy:args=prompt [walker args...]
-# omarchy:examples=omarchy menu input Reminder|slievr-menu-input "Reminder in minutes" --width 400
+# slievr:summary=Prompt for text input with Walker
+# slievr:group=menu
+# slievr:name=input
+# slievr:args=prompt [walker args...]
+# slievr:examples=omarchy menu input Reminder|slievr-menu-input "Reminder in minutes" --width 400
 
 set -euo pipefail
 

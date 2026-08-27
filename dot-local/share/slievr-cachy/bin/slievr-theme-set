@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Apply an Omarchy theme
-# omarchy:args=<theme-name>
-# omarchy:examples=omarchy theme list | omarchy theme set "Tokyo Night"
+# slievr:summary=Apply an Omarchy theme
+# slievr:args=<theme-name>
+# slievr:examples=omarchy theme list | omarchy theme set "Tokyo Night"
 
 if [[ -z $1 ]]; then
   echo "Usage: slievr-theme-set <theme-name>"

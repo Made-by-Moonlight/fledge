@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Toggles the window gaps globally between no gaps and the default.
+# slievr:summary=Toggles the window gaps globally between no gaps and the default.
 
 slievr-hyprland-toggle window-no-gaps

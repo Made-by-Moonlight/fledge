@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Reset all Omarchy user configs to the defaults
-# omarchy:requires-sudo=true
+# slievr:summary=Reset all Omarchy user configs to the defaults
+# slievr:requires-sudo=true
 
 set -e
 

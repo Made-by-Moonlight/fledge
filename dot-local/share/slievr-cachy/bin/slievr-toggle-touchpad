@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Enable, disable, or toggle the touchpad
-# omarchy:args=[on|off|toggle]
+# slievr:summary=Enable, disable, or toggle the touchpad
+# slievr:args=[on|off|toggle]
 
 STATE_CONF="$HOME/.local/state/omarchy/toggles/hypr/touchpad-disabled.conf"
 

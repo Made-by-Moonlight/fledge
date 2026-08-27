@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Close all open windows
+# slievr:summary=Close all open windows
 
 hyprctl clients -j | \
   jq -r ".[].address" | \

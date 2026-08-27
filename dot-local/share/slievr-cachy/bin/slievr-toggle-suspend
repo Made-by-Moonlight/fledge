@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle suspend availability in the system menu
+# slievr:summary=Toggle suspend availability in the system menu
 
 slievr-toggle \
   --enabled-notification "󰒲   Suspend removed from system menu" \

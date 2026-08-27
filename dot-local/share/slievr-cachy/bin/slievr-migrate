@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Run all pending migrations to bring the system in line with the installed version.
+# slievr:summary=Run all pending migrations to bring the system in line with the installed version.
 
 STATE_DIR="$HOME/.local/state/omarchy/migrations"
 mkdir -p "$STATE_DIR"

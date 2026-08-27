@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Launch or focus on a given web app identified by the window-pattern.
-# omarchy:args=<window-pattern> <url-and-flags...>
+# slievr:summary=Launch or focus on a given web app identified by the window-pattern.
+# slievr:args=<window-pattern> <url-and-flags...>
 
 if (($# == 0)); then
   echo "Usage: slievr-launch-or-focus-webapp [window-pattern] [url-and-flags...]"

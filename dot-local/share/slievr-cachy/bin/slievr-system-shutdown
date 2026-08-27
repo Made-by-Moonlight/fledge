@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Shut down after closing application windows
-# omarchy:examples=omarchy shutdown | omarchy system shutdown
-# omarchy:aliases=omarchy shutdown
+# slievr:summary=Shut down after closing application windows
+# slievr:examples=omarchy shutdown | omarchy system shutdown
+# slievr:aliases=omarchy shutdown
 
 slievr-state clear re*-required
 

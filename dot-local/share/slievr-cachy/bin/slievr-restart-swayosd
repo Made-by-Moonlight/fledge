@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Restart the SwayOSD server
+# slievr:summary=Restart the SwayOSD server
 
 systemctl --user daemon-reload
 systemctl --user stop swayosd-server.service || true

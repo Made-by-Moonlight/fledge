@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Install an npx wrapper for a given npm package.
-# omarchy:args=<package> [command-name]
+# slievr:summary=Install an npx wrapper for a given npm package.
+# slievr:args=<package> [command-name]
 
 if [[ -z $1 ]]; then
   echo "Usage: slievr-npx-install <package> [command-name]"

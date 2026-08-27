@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Manage persistent state files for Omarchy toggles and settings.
-# omarchy:args=<set|clear> <state-name-or-pattern>
-# omarchy:hidden=true
+# slievr:summary=Manage persistent state files for Omarchy toggles and settings.
+# slievr:args=<set|clear> <state-name-or-pattern>
+# slievr:hidden=true
 
 STATE_DIR="$HOME/.local/state/omarchy"
 mkdir -p "$STATE_DIR"

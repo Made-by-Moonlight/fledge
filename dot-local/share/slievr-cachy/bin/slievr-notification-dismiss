@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Dismiss a mako notification on the basis of its summary. Used by the first-run notifications to dismiss them after clicking for action.
-# omarchy:args=<summary>
+# slievr:summary=Dismiss a mako notification on the basis of its summary. Used by the first-run notifications to dismiss them after clicking for action.
+# slievr:args=<summary>
 
 if (($# == 0)); then
   echo "Usage: slievr-notification-dismiss <summary>"

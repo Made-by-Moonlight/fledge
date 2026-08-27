@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Generate a theme's colors.toml from its alacritty.toml palette
-# omarchy:args=<theme-dir>
-# omarchy:hidden=true
+# slievr:summary=Generate a theme's colors.toml from its alacritty.toml palette
+# slievr:args=<theme-dir>
+# slievr:hidden=true
 
 set -e
 

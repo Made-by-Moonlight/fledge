@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Set the branch for Omarchy's git repository.
-# omarchy:args=<master|rc|dev>
+# slievr:summary=Set the branch for Omarchy's git repository.
+# slievr:args=<master|rc|dev>
 
 if (($# == 0)); then
   echo "Usage: slievr-branch-set [master|rc|dev]"

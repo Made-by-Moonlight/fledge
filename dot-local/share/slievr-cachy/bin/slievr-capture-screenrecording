@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Start or stop screen recording
-# omarchy:group=capture
-# omarchy:args=[--with-desktop-audio] [--with-microphone-audio] [--with-webcam] [--webcam-device=<device>] [--resolution=<size>] [--stop-recording]
-# omarchy:examples=omarchy screenrecord | omarchy capture screenrecord --with-desktop-audio
-# omarchy:aliases=omarchy screenrecord
+# slievr:summary=Start or stop screen recording
+# slievr:group=capture
+# slievr:args=[--with-desktop-audio] [--with-microphone-audio] [--with-webcam] [--webcam-device=<device>] [--resolution=<size>] [--stop-recording]
+# slievr:examples=omarchy screenrecord | omarchy capture screenrecord --with-desktop-audio
+# slievr:aliases=omarchy screenrecord
 #
 # Env: OMARCHY_SCREENRECORD_USE_PORTAL=true skips the built-in slurp picker and
 # uses gpu-screen-recorder's xdg-desktop-portal capture backend instead. The

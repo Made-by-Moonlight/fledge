@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Reset the trackpad by unbinding and rebinding its driver.
-# omarchy:requires-sudo=true
+# slievr:summary=Reset the trackpad by unbinding and rebinding its driver.
+# slievr:requires-sudo=true
 
 for dev in /sys/bus/i2c/drivers/i2c_hid_acpi/i2c-*; do
   [[ -e $dev ]] || continue

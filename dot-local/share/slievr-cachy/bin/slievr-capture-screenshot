@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Take a screenshot
-# omarchy:group=capture
-# omarchy:args=[smart|region|windows|fullscreen] [slurp|copy|save] [--editor=<name>]
-# omarchy:examples=omarchy screenshot | omarchy capture screenshot region
-# omarchy:aliases=omarchy screenshot
+# slievr:summary=Take a screenshot
+# slievr:group=capture
+# slievr:args=[smart|region|windows|fullscreen] [slurp|copy|save] [--editor=<name>]
+# slievr:examples=omarchy screenshot | omarchy capture screenshot region
+# slievr:aliases=omarchy screenshot
 
 [[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
 OUTPUT_DIR="${OMARCHY_SCREENSHOT_DIR:-${XDG_PICTURES_DIR:-$HOME/Pictures}}"

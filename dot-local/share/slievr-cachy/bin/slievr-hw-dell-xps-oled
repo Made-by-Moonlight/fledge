@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Match Dell XPS systems with LG OLED panel on Intel Panther Lake (Xe3) GPU.
+# slievr:summary=Match Dell XPS systems with LG OLED panel on Intel Panther Lake (Xe3) GPU.
 
 slievr-hw-match "XPS" \
   && slievr-hw-intel-ptl \

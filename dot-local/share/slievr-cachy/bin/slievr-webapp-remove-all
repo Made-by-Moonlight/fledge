@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Remove all web apps installed via slievr-webapp-install.
+# slievr:summary=Remove all web apps installed via slievr-webapp-install.
 
 set -e
 

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Set up hibernation with swap and boot resume configuration
-# omarchy:requires-sudo=true
-# omarchy:args=[--force] [--no-rebuild]
+# slievr:summary=Set up hibernation with swap and boot resume configuration
+# slievr:requires-sudo=true
+# slievr:args=[--force] [--no-rebuild]
 
 FORCE=false
 NO_REBUILD=false

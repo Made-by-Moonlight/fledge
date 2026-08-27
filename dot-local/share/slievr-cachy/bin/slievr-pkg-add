@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# omarchy:summary=Install Arch packages if they are missing
-# omarchy:args=<packages...>
-# omarchy:examples=omarchy pkg add jq ripgrep
-# omarchy:requires-sudo=true
+# slievr:summary=Install Arch packages if they are missing
+# slievr:args=<packages...>
+# slievr:examples=omarchy pkg add jq ripgrep
+# slievr:requires-sudo=true
 
 if slievr-pkg-missing "$@"; then
   sudo pacman -S --noconfirm --needed "$@" || exit 1

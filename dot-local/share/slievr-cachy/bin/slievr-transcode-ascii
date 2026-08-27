@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Transcode an image into ASCII/Unicode art text
-# omarchy:group=transcode
-# omarchy:name=ascii
-# omarchy:args=<input-image.svg|png> <output-path> [--width <columns>] [--height <rows>] [--mode <braille|block>] [--threshold <percent>] [--invert]
-# omarchy:examples=omarchy transcode ascii ~/logo.svg /tmp/logo.txt | omarchy transcode ascii ~/logo.png ~/.config/omarchy/branding/screensaver.txt --width 80
+# slievr:summary=Transcode an image into ASCII/Unicode art text
+# slievr:group=transcode
+# slievr:name=ascii
+# slievr:args=<input-image.svg|png> <output-path> [--width <columns>] [--height <rows>] [--mode <braille|block>] [--threshold <percent>] [--invert]
+# slievr:examples=omarchy transcode ascii ~/logo.svg /tmp/logo.txt | omarchy transcode ascii ~/logo.png ~/.config/omarchy/branding/screensaver.txt --width 80
 
 set -o pipefail
 

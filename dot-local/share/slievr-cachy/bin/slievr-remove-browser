@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# omarchy:summary=Remove a supported browser and clean up Omarchy browser defaults
-# omarchy:args=<chrome|brave|brave-origin|edge|firefox|zen>
-# omarchy:examples=omarchy remove browser firefox | omarchy remove browser brave
-# omarchy:requires-sudo=true
+# slievr:summary=Remove a supported browser and clean up Omarchy browser defaults
+# slievr:args=<chrome|brave|brave-origin|edge|firefox|zen>
+# slievr:examples=omarchy remove browser firefox | omarchy remove browser brave
+# slievr:requires-sudo=true
 
 set_fallback_default_browser() {
   local current_browser

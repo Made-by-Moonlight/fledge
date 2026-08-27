@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Edit, set, or reset About branding
-# omarchy:group=branding
-# omarchy:name=about
-# omarchy:args=<image|text|reset>
-# omarchy:examples=omarchy branding about image | omarchy branding about text | omarchy branding about reset
+# slievr:summary=Edit, set, or reset About branding
+# slievr:group=branding
+# slievr:name=about
+# slievr:args=<image|text|reset>
+# slievr:examples=omarchy branding about image | omarchy branding about text | omarchy branding about reset
 
 set -euo pipefail
 

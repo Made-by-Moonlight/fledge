@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Install a hook into ~/.config/omarchy/hooks/<type>.d/
-# omarchy:group=hook
-# omarchy:name=install
-# omarchy:args=<type> <file>
-# omarchy:examples=omarchy hook install post-update ~/my-hook
+# slievr:summary=Install a hook into ~/.config/omarchy/hooks/<type>.d/
+# slievr:group=hook
+# slievr:name=install
+# slievr:args=<type> <file>
+# slievr:examples=omarchy hook install post-update ~/my-hook
 
 set -e
 

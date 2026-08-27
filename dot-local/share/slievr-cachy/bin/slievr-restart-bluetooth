@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Unblock and restart the bluetooth service.
+# slievr:summary=Unblock and restart the bluetooth service.
 
 echo -e "Unblocking bluetooth...\n"
 rfkill unblock bluetooth

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Prompt for required reboot or service restarts after updates
+# slievr:summary=Prompt for required reboot or service restarts after updates
 
 echo
 

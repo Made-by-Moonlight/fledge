@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Set the current background image
-# omarchy:args=<path-to-image>
-# omarchy:examples=omarchy theme bg set ~/Pictures/wallpaper.png
+# slievr:summary=Set the current background image
+# slievr:args=<path-to-image>
+# slievr:examples=omarchy theme bg set ~/Pictures/wallpaper.png
 
 if [[ -z $1 ]]; then
   echo "Usage: slievr-theme-bg-set <path-to-image>" >&2

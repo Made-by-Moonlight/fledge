@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle single-window square aspect ratio.
+# slievr:summary=Toggle single-window square aspect ratio.
 
 slievr-hyprland-toggle \
   --enabled-notification "      Enable single-window square aspect ratio" \

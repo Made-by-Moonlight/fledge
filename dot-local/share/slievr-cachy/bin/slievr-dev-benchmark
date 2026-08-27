@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Measure Omarchy CLI response times
-# omarchy:args=[--repeat=<count>]
-# omarchy:examples=omarchy dev benchmark | omarchy dev benchmark --repeat=10
+# slievr:summary=Measure Omarchy CLI response times
+# slievr:args=[--repeat=<count>]
+# slievr:examples=omarchy dev benchmark | omarchy dev benchmark --repeat=10
 
 set -euo pipefail
 

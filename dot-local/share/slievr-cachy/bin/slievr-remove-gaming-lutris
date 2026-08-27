@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Remove Lutris, Wine, umu-launcher, and all their configs and caches.
-# omarchy:requires-sudo=true
+# slievr:summary=Remove Lutris, Wine, umu-launcher, and all their configs and caches.
+# slievr:requires-sudo=true
 
 set -e
 

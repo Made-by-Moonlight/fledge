@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Set the default editor for $EDITOR
-# omarchy:args=[code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
-# omarchy:examples=omarchy default editor | omarchy default editor code | omarchy default editor helix
+# slievr:summary=Set the default editor for $EDITOR
+# slievr:args=[code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
+# slievr:examples=omarchy default editor | omarchy default editor code | omarchy default editor helix
 
 if (($# == 0)); then
   sed -n 's/^export EDITOR=//p' ~/.config/uwsm/default | head -n 1

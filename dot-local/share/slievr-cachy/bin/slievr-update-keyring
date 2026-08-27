@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Ensure the Omarchy and Arch keyring packages are installed and populated
-# omarchy:requires-sudo=true
+# slievr:summary=Ensure the Omarchy and Arch keyring packages are installed and populated
+# slievr:requires-sudo=true
 
 if slievr-pkg-missing slievr-keyring || ! sudo pacman-key --list-keys 40DFB630FF42BCFFB047046CF0134EE680CAC571 &>/dev/null; then
   sudo pacman-key --recv-keys 40DFB630FF42BCFFB047046CF0134EE680CAC571 --keyserver keys.openpgp.org

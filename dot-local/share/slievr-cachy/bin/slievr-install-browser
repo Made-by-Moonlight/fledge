@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Install a supported browser
-# omarchy:args=<chrome|brave|brave-origin|edge|firefox|zen>
-# omarchy:examples=omarchy install browser firefox | omarchy install browser brave
+# slievr:summary=Install a supported browser
+# slievr:args=<chrome|brave|brave-origin|edge|firefox|zen>
+# slievr:examples=omarchy install browser firefox | omarchy install browser brave
 
 setup_policy_directory() {
   sudo mkdir -p "$1"

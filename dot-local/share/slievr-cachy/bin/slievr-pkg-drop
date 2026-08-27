@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Remove all the named packages from the system if they're installed (otherwise ignore).
-# omarchy:args=<packages...>
-# omarchy:requires-sudo=true
+# slievr:summary=Remove all the named packages from the system if they're installed (otherwise ignore).
+# slievr:args=<packages...>
+# slievr:requires-sudo=true
 
 installed=()
 for pkg in "$@"; do

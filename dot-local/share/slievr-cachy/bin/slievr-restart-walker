@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Restart Walker and related user services
+# slievr:summary=Restart Walker and related user services
 
 restart_services() {
   if systemctl --user is-enabled elephant.service &>/dev/null; then

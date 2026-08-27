@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Reboot after closing application windows
-# omarchy:examples=omarchy reboot | omarchy system reboot
-# omarchy:aliases=omarchy reboot
+# slievr:summary=Reboot after closing application windows
+# slievr:examples=omarchy reboot | omarchy system reboot
+# slievr:aliases=omarchy reboot
 
 slievr-state clear re*-required
 

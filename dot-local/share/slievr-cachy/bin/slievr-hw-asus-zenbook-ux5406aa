@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# omarchy:summary=Detect ASUS Zenbook UX5406AA series laptops on Intel Panther Lake.
+# slievr:summary=Detect ASUS Zenbook UX5406AA series laptops on Intel Panther Lake.
 
 slievr-hw-match "ux5406aa" && slievr-hw-intel-ptl

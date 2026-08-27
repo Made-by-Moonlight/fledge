@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Clear the internal-monitor-disable toggle if no external display is connected.
+# slievr:summary=Clear the internal-monitor-disable toggle if no external display is connected.
 
 TOGGLE="$HOME/.local/state/omarchy/toggles/hypr/internal-monitor-disable.conf"
 

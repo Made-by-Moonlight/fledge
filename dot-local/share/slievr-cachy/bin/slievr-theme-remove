@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Remove a user-installed theme
-# omarchy:args=[theme-name]
-# omarchy:examples=omarchy theme remove "Tokyo Night"
+# slievr:summary=Remove a user-installed theme
+# slievr:args=[theme-name]
+# slievr:examples=omarchy theme remove "Tokyo Night"
 
 if [[ -z $1 ]]; then
   mapfile -t extra_themes < <(find ~/.config/omarchy/themes -mindepth 1 -maxdepth 1 -type d ! -xtype l -printf '%f\n')

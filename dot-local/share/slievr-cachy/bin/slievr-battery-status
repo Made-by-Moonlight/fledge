@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Returns a formatted battery status string with percentage and power draw/charge.
+# slievr:summary=Returns a formatted battery status string with percentage and power draw/charge.
 
 battery_info=$(upower -i $(upower -e | grep BAT))
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Print drive information such as size, model, and mount details
-# omarchy:args=<drive>
+# slievr:summary=Print drive information such as size, model, and mount details
+# slievr:args=<drive>
 
 if (($# == 0)); then
   echo "Usage: slievr-drive-info [/dev/drive]"

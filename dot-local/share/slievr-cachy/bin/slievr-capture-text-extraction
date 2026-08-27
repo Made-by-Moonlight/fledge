@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Extract text from a screenshot region with OCR
-# omarchy:group=capture
-# omarchy:examples=omarchy capture ocr
+# slievr:summary=Extract text from a screenshot region with OCR
+# slievr:group=capture
+# slievr:examples=omarchy capture ocr
 
 # Keep hyprpicker alive until after grim captures so the screenshot sees the
 # frozen overlay rather than live content shifting during teardown.

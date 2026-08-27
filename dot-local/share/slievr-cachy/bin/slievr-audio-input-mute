@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle microphone mute. Drives the hardware mic-mute LED on laptops that expose one.
+# slievr:summary=Toggle microphone mute. Drives the hardware mic-mute LED on laptops that expose one.
 
 wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle >/dev/null
 

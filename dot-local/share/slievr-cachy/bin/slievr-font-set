@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Set the system monospace font
-# omarchy:args=<font-name>
-# omarchy:examples=omarchy font list | omarchy font set "CaskaydiaMono Nerd Font"
+# slievr:summary=Set the system monospace font
+# slievr:args=<font-name>
+# slievr:examples=omarchy font list | omarchy font set "CaskaydiaMono Nerd Font"
 
 font_name="$1"
 

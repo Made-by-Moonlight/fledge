@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Install and start the Dropbox service. Must then be authenticated via the web.
+# slievr:summary=Install and start the Dropbox service. Must then be authenticated via the web.
 
 echo "Installing all dependencies..."
 slievr-pkg-add dropbox dropbox-cli libappindicator-gtk3 python-gpgme nautilus-dropbox

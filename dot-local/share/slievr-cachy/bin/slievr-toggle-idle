@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Toggle hypridle idle locking
+# slievr:summary=Toggle hypridle idle locking
 
 if pgrep -x hypridle >/dev/null; then
   pkill -x hypridle

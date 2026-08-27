@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Check if hibernation is supported
+# slievr:summary=Check if hibernation is supported
 
 if [[ ! -f /sys/power/image_size ]]; then
   exit 1

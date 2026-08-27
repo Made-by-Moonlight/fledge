@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Show current theme
-# omarchy:examples=omarchy theme current
+# slievr:summary=Show current theme
+# slievr:examples=omarchy theme current
 
 THEME_NAME_PATH="$HOME/.config/omarchy/current/theme.name"
 

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Set the power profile to the requested level, falling back to balanced
-# omarchy:args=[autodetect|ac|battery]
+# slievr:summary=Set the power profile to the requested level, falling back to balanced
+# slievr:args=[autodetect|ac|battery]
 
 action="${1-}"
 

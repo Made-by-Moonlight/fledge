@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# omarchy:summary=Returns the battery time remaining (to empty or full) in a compact format.
+# slievr:summary=Returns the battery time remaining (to empty or full) in a compact format.
 
 battery_info=$(upower -i $(upower -e | grep BAT))
 

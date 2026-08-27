@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# omarchy:summary=Adjust keyboard backlight brightness using available steps.
-# omarchy:args=<up|down|cycle|off|restore>
+# slievr:summary=Adjust keyboard backlight brightness using available steps.
+# slievr:args=<up|down|cycle|off|restore>
 
 direction="${1:-up}"
 
