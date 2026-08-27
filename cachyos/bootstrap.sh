@@ -10,6 +10,13 @@ PACMAN_PACKAGES=(
   mako swayosd starship
   git stow fzf mise base-devel
   zsh
+  # waybar/style.css and kitty.conf font_family both name specific nerd
+  # fonts that were never actually installed — every icon glyph in
+  # waybar (not just the menu one, which had its own separate missing-
+  # font issue already fixed) rendered as a missing-glyph box.
+  # JetBrainsMono Nerd Font: used by walker (config.toml/CSS) and the
+  # vendored sddm greeter theme's password field.
+  ttf-cascadia-mono-nerd ttf-firacode-nerd ttf-jetbrains-mono-nerd
   # swaybg (autostart.conf wallpaper), pamixer (waybar pulseaudio
   # right-click mute), brightnessctl (slievr-brightness-display/-keyboard)
   # were all previously only pulled in transitively via
