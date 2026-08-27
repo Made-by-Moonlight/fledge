@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# omarchy:summary=Restart the hypridle service (used for idle detection and auto-lock).
+
+slievr-restart-app hypridle

@@ -1,0 +1,4 @@
+#!/bin/bash
+
+# omarchy:summary=No-op now that slievr-update-perform is responsible for idle management.
+# omarchy:hidden=true

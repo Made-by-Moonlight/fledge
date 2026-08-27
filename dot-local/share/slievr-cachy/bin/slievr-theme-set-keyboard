@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# omarchy:summary=Apply the current theme keyboard color to supported keyboards
+# omarchy:hidden=true
+
+slievr-theme-set-keyboard-asus-rog
+slievr-theme-set-keyboard-f16
