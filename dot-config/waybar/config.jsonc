@@ -42,13 +42,13 @@
     "format": "<span font='omarchy'>\ue900</span>",
     "on-click": "slievr-menu",
     "on-click-right": "xdg-terminal-exec",
-    "tooltip-format": "Omarchy Menu\n\nSuper + Alt + Space"
+    "tooltip-format": "Slievr Menu\n\nSuper + Alt + Space"
   },
   "custom/update": {
     "format": "",
     "exec": "slievr-update-available",
     "on-click": "slievr-launch-floating-terminal-with-presentation slievr-update",
-    "tooltip-format": "Omarchy update available",
+    "tooltip-format": "Slievr update available",
     "signal": 7,
     "interval": 3600
   },
@@ -65,7 +65,7 @@
     "on-click-right": "slievr-launch-floating-terminal-with-presentation slievr-tz-select"
   },
   "custom/weather": {
-    "exec": "$OMARCHY_PATH/default/waybar/weather.sh",
+    "exec": "~/.config/waybar/scripts/weather.sh",
     "return-type": "json",
     "interval": 60,
     "tooltip": false,
@@ -82,7 +82,7 @@
     "tooltip-format-disconnected": "Disconnected",
     "interval": 3,
     "spacing": 1,
-    "on-click": "$TERMINAL --class=Gazelle -e gazelle"
+    "on-click": "slievr-launch-wifi"
   },
   "battery": {
     "format": "{capacity}% {icon}",
@@ -140,7 +140,7 @@
   },
   "custom/screenrecording-indicator": {
     "on-click": "slievr-capture-screenrecording",
-    "exec": "$OMARCHY_PATH/default/waybar/indicators/screen-recording.sh",
+    "exec": "~/.config/waybar/scripts/screen-recording.sh",
     "signal": 8,
     "return-type": "json"
   },
@@ -159,13 +159,13 @@
   },
   "custom/idle-indicator": {
     "on-click": "slievr-toggle-idle",
-    "exec": "$OMARCHY_PATH/default/waybar/indicators/idle.sh",
+    "exec": "~/.config/waybar/scripts/idle.sh",
     "signal": 9,
     "return-type": "json"
   },
   "custom/notification-silencing-indicator": {
     "on-click": "slievr-toggle-notification-silencing",
-    "exec": "$OMARCHY_PATH/default/waybar/indicators/notification-silencing.sh",
+    "exec": "~/.config/waybar/scripts/notification-silencing.sh",
     "signal": 10,
     "return-type": "json"
   },

@@ -19,6 +19,8 @@ PACMAN_PACKAGES=(
   # already, not impala, which hard-depends on iwd instead of
   # NetworkManager), bluetui (bluetooth), wiremix (audio).
   bluetui wiremix
+  # Official ProtonVPN GTK client.
+  proton-vpn-gtk-app
   # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
   # (see /usr/share/wayland-sessions/hyprland-uwsm.desktop) — sddm is
   # what Omarchy itself defaults to (dot-local/share/slievr-cachy/bin/
@@ -97,14 +99,19 @@ if [ ! -d "$DOTFILES_DIR" ]; then
   git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
 fi
 
-# Ensure ~/.local/share exists as a real directory before stowing, so stow
-# links only dot-local/share/slievr-cachy into it instead of tree-folding the
-# whole ~/.local/share into one symlink into the repo (which would send
-# every other app's real data under ~/.local/share into git-tracked
-# territory on a fresh account with no prior ~/.local/share).
-mkdir -p "$HOME/.local/share"
+# Ensure these exist as real directories before stowing, so stow links
+# only their specific dot-local/share/* subdirs into them instead of
+# tree-folding the whole directory into one symlink into the repo (which
+# would send every other app's/font's real data into git-tracked
+# territory on a fresh account with no prior ~/.local/share or
+# ~/.local/share/fonts).
+mkdir -p "$HOME/.local/share" "$HOME/.local/share/fonts"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
+
+# Picks up dot-local/share/fonts/omarchy.ttf (the custom-glyph font
+# waybar's leftmost icon uses).
+fc-cache -f "$HOME/.local/share/fonts" >/dev/null
 
 # The vendored dot-local/share/slievr-cachy/bin/ scripts (stowed above) need
 # to be on PATH inside the Hyprland/uwsm session for bindings.conf's
