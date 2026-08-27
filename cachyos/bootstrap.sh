@@ -18,6 +18,8 @@ PACMAN_PACKAGES=(
   # idle daemon, input method framework, power-profile D-Bus service
   # (slievr-powerprofiles-init needs powerprofilesctl), polkit agent.
   hypridle fcitx5 power-profiles-daemon polkit-gnome
+  # Activity monitor (Super+Ctrl+T, waybar cpu click); calculator key.
+  btop gnome-calculator
   # TUI controls the Setup menu (slievr-menu setup) and its keybinds
   # (Super+Ctrl+W/B/A) launch: nmtui (wifi — ships with networkmanager
   # already, not impala, which hard-depends on iwd instead of
