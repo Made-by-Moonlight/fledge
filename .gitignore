@@ -1,0 +1,6 @@
+# Zen browser profile data must never be tracked — only the chrome theme
+# file (dot-config/zen/chrome/zen-themes.css) is intentionally committed.
+dot-config/zen/*
+!dot-config/zen/chrome/
+dot-config/zen/chrome/*
+!dot-config/zen/chrome/zen-themes.css

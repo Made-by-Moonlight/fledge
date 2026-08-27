@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# Post-update hook for Omarchy to re-stow dotfiles
+# This ensures that any system update that might have replaced
+# a symlink with a regular file is corrected.
+
+echo "Running Omarchy post-update hook to restore dotfiles..."
+
+# Navigate to the dotfiles directory
+DOTFILES_DIR="$HOME/proj/dotfiles"
+
+if [ -d "$DOTFILES_DIR" ]; then
+    # Run stow to restore symlinks
+    # --adopt can be dangerous if files were changed by the update, 
+    # but since we have a git repo, we can always revert.
+    # For now, we'll use a standard stow command.
+    stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
+    echo "Dotfiles restored using stow."
+else
+    echo "Error: Dotfiles directory not found at $DOTFILES_DIR"
+fi

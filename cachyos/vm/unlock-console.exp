@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+set timeout 120
+set vm_name "cachyos-test"
+set root_password [lindex $argv 0]
+
+if {$root_password eq ""} {
+    puts stderr "Usage: unlock-console.exp <root-password>"
+    exit 1
+}
+
+spawn sudo virsh console $vm_name
+send "\r"
+
+# The archiso-based live environment auto-logs in as root on tty1, so we
+# should already be at a shell prompt. Confirm with a harmless command.
+expect {
+    -re {# $} {}
+    timeout { puts stderr "Timed out waiting for root shell"; exit 1 }
+}
+
+send "passwd\r"
+expect -re {[Nn]ew password}
+send "$root_password\r"
+expect -re {[Rr]etype}
+send "$root_password\r"
+expect -re {# $}
+
+send "systemctl enable --now sshd\r"
+expect -re {# $}
+
+# Detach from the console without killing the VM (Ctrl-] is virsh's escape)
+send "\x1d"
+expect eof

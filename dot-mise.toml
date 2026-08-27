@@ -1,0 +1,7 @@
+[tools]
+erlang = "latest"
+terragrunt = "latest"
+zoxide = "latest"
+elixir = "latest"
+rust = "latest"
+python = "latest"
