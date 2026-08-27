@@ -1,6 +1,11 @@
 #!/bin/bash
 
-# slievr:summary=Launch the Omarchy wifi controls (provided by the Impala TUI).
+# slievr:summary=Launch wifi controls (nmtui — NetworkManager's own TUI).
+#
+# Not impala: it hard-depends on iwd as its backend, not NetworkManager,
+# which is what this setup actually uses (install-cachyos.sh installs
+# and enables NetworkManager, not iwd). nmtui ships with the
+# networkmanager package already installed — no extra dependency.
 
 rfkill unblock wifi
-slievr-launch-or-focus-tui impala
+slievr-launch-or-focus-tui nmtui
