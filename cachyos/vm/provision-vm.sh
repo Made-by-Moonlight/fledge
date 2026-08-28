@@ -37,6 +37,7 @@ sudo virt-install \
   --graphics spice \
   --console pty,target_type=serial \
   --boot uefi \
+  --events on_reboot=restart \
   --noautoconsole
 
 echo "VM '$VM_NAME' created and booting from ISO."
