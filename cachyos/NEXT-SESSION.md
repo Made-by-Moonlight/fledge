@@ -4,6 +4,133 @@ Paste this whole file as your first message in a fresh session to pick up
 where we left off. Delete this file once you've resumed (it's a handoff
 note, not permanent project doc).
 
+---
+
+# ⟶ RESUME HERE (2026-08-28): bare-metal install
+
+**Branch `bare-metal-install`** (off `main`, NOT pushed, NOT merged).
+Design: `docs/superpowers/specs/2026-08-28-bare-metal-install-design.md`
+Plan:   `docs/superpowers/plans/2026-08-28-bare-metal-install.md`
+
+## What was built
+
+`cachyos/install/` — a hardware-adaptive installer run as root in the stock
+CachyOS live ISO. Replaces `cachyos/vm/install-cachyos.sh`.
+
+- `install-cachyos.sh` — orchestrator: preflight → detect → disk guard
+  (type the model string + `YES`) → partition/LUKS2/btrfs → pacstrap →
+  arch-chroot → stage repo into target home + install first-boot service.
+- `profile.sh` — fixed choices: LUKS2, btrfs `@ @home @log @pkg @swap`
+  (+`@/.snapshots`), Limine UKI, zram, `SWAP=hibernate` (encrypted btrfs
+  swapfile), the 4 desktop data-disk fstab lines.
+- `lib/detect.sh` (+ `test-detect.sh`, 18 assertions passing) — microcode /
+  GPU pkgs+cmdline+modules / disk list / part-suffix / zram+swap sizing.
+- `lib/disk.sh`, `lib/bootloader.sh` (Limine UKI via `/etc/default/limine`
+  + `limine-update`/`limine-install`), `lib/chroot-setup.sh`.
+- `cachyos/install/firstboot/` — `slievr-firstboot.service` (oneshot,
+  guard `/var/lib/slievr-firstboot-done`) runs `bootstrap.sh` as the user
+  on TTY1 on first real boot, logs to `/var/log/slievr-firstboot.log`,
+  then enables+starts SDDM. Removes the blind post-install TTY phase.
+- `cachyos/plymouth-theme/slievr-cachy/` — vendored+renamed from Omarchy;
+  graphical boot splash + LUKS prompt. Installer adds `plymouth` pkg +
+  hook (after `kms`, before `encrypt`) and selects the theme.
+- `cachyos/vm/provision-vm.sh` — 2nd blank disk (`vdb`) for multi-disk
+  test + `--events on_reboot=restart`. `cachyos/vm/README.md` — new.
+- `cachyos/vm/destroy-vm.sh` — `--nvram` fix (UEFI varstore).
+
+## Validation state
+
+A full VM install **succeeded once** end-to-end BEFORE the last two
+commits: LUKS + btrfs subvols + Limine UKI + zram + 10G swapfile + resume
+cmdline → boots → SDDM → Hyprland/waybar/walker/kitty all work. Data disk
+`vdb` untouched. 4 bugs found + fixed along the way:
+
+1. `disk.sh` pre-`mkdir` broke `.snapshots` subvol — FIXED, validated
+2. CachyOS repos don't survive pacstrap (stock-Arch pacman.conf written) —
+   `chroot-setup.sh` runs `cachyos-repo.sh` — FIXED, validated
+3. SDDM theme: empty `userModel.lastUser` on fresh install → login
+   rejected "user unknown" — first-user fallback added — FIXED, validated
+4. `systemctl --user enable elephant.service` in `bootstrap.sh` HANGS under
+   `runuser` (no user D-Bus) during firstboot — replaced with stow-managed
+   `dot-config/systemd/user/graphical-session.target.wants/elephant.service`
+   symlink — **FIXED, NOT YET VALIDATED** (this is where we stopped)
+
+## VM state right now
+
+`cachyos-test` is **installed** (base system good, boots, plymouth+LUKS
+works) but **powered off** — user hard-restarted it mid-`bootstrap.sh`
+(hung on bug #4). `/var/lib/slievr-firstboot-done` was never written, so
+`slievr-firstboot.service` **will retry automatically on next boot**. The
+staged repo at `~slievr/proj/slievr-cachy` on the VM is STALE (pre-bug-#4
+fix) — must be patched before firstboot retries or it hangs again.
+
+## Next step: validate bug #4 fix (surgical, no reinstall)
+
+```sh
+sudo virsh start cachyos-test
+# unlock at the plymouth LUKS prompt in virt-viewer, then from host:
+VM_IP=$(sudo virsh domifaddr cachyos-test | awk '/ipv4/{print $4}' | cut -d/ -f1); echo "$VM_IP"
+ssh-keygen -R "$VM_IP" 2>/dev/null
+
+# stop firstboot before it wedges; kill any wedged bootstrap
+ssh slievr@$VM_IP 'sudo systemctl stop slievr-firstboot.service; sudo pkill -9 -f bootstrap.sh; sudo pkill -9 -f "systemctl --user"' || true
+
+# patch the two changed files onto the VM's staged repo
+scp ~/proj/slievr-cachy/cachyos/bootstrap.sh slievr@$VM_IP:proj/slievr-cachy/cachyos/bootstrap.sh
+ssh slievr@$VM_IP 'cd proj/slievr-cachy/dot-config/systemd/user && mkdir -p graphical-session.target.wants && ln -sf ../elephant.service graphical-session.target.wants/elephant.service'
+
+# resume, watch live
+ssh -t slievr@$VM_IP 'sudo rm -f /var/lib/slievr-firstboot-done; sudo systemctl start slievr-firstboot.service & journalctl -fu slievr-firstboot.service'
+```
+
+`bootstrap.sh` is re-run-safe (`pacman -Qi`/`paru -Qi` guards, stow
+idempotent). Expect: bootstrap finishes → `Bootstrap complete.` →
+firstboot enables+starts SDDM → greeter → log in → verify elephant/walker.
+
+Then optionally one clean `./destroy-vm.sh && ./provision-vm.sh` run to
+confirm the committed scripts work start-to-finish unpatched.
+
+## Then: finish the branch
+
+1. Cutover: `git rm cachyos/vm/install-cachyos.sh` (replaced by
+   `cachyos/install/`); grep for other refs to it.
+2. Update this file / `cachyos/vm/README.md` if needed.
+3. `superpowers:finishing-a-development-branch` → merge `bare-metal-install`.
+
+## Known loose ends (not blockers)
+
+- **Auto-reboot after install still didn't happen** in the last VM run
+  despite `--events on_reboot=restart` in `provision-vm.sh` — check
+  `sudo virsh dumpxml cachyos-test | grep on_reboot`; if `destroy`, the
+  flag didn't take on this virt-install version → set `<on_reboot>restart`
+  via `virsh edit` or a post-provision `virt-xml` call. On real hardware
+  firmware boots the disk, so this is VM-only.
+- **Plymouth logo art is still Omarchy's** (`logo.png` 800×188,
+  `logos/oma.png`) — an anime "silent." image showed on the LUKS screen,
+  which is a *customized* `~/.local/share/omarchy/default/plymouth/logo.png`
+  on the host, not stock Omarchy. Replace with a real slievr logo, or pull
+  the upstream Omarchy theme art for a cleaner look.
+- **stow links `~/cachyos` and `~/docs`** into $HOME (repo dirs with no
+  `dot-` prefix) — pre-existing `bootstrap.sh` quirk (`stow -d repo -t $HOME .`
+  stows every top-level entry). Harmless; clean up by stowing only the
+  `dot-*` entries, or add a `.stow-local-ignore`.
+- `console=uart,io,0x3f8 console=tty0` appeared in `/proc/cmdline` on the
+  installed VM — not set by us; a CachyOS ISO / mkinitcpio default. Harmless
+  in the VM; check on real hardware.
+- `limine-mkinitcpio-hook` — turned out to BE in the CachyOS repos (the
+  anticipated AUR roadblock never hit); `limine-update` regenerated the
+  UKI cleanly on a kernel bump. No action.
+
+## Bare-metal target (the real machine = this dev host)
+
+AMD Ryzen 9 7900X, RTX 3080 + Raphael iGPU, 61 GiB RAM, UEFI. Root disk:
+`nvme1n1` (WD Blue SN570 1TB). Four data disks (`sda1 sdb1 nvme2n1p1
+nvme0n1p3` → `~/storage1..4`) MUST survive — their UUIDs are already in
+`profile.sh` `EXTRA_FSTAB_ENTRIES`. Delivery: copy the repo onto a data
+disk before booting the ISO; installer stages it into the target itself.
+
+---
+
 ## What this project is
 
 Migrating the user's Arch/Omarchy Hyprland desktop (waybar, walker, mako,
