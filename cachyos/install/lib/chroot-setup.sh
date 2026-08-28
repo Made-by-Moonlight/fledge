@@ -40,8 +40,16 @@ zram-size = ${ZRAM_SIZE}
 compression-algorithm = zstd
 EOF
 
+echo ">>> plymouth theme" >&2
+# Graphical boot splash + LUKS password prompt. Theme was copied to
+# /usr/share/plymouth/themes/slievr-cachy by install-cachyos.sh. 'splash' is
+# already in the kernel cmdline (profile.sh EXTRA_CMDLINE).
+plymouth-set-default-theme slievr-cachy
+
 echo ">>> mkinitcpio.conf" >&2
-hooks="base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems fsck"
+# plymouth hook goes after kms, before encrypt, so the splash is up before the
+# LUKS prompt and 'encrypt' routes the prompt through plymouth.
+hooks="base udev autodetect microcode modconf kms plymouth keyboard keymap consolefont block encrypt filesystems fsck"
 if [[ "${SWAP:-zram}" == hibernate ]]; then
   hooks="${hooks/ fsck/ resume fsck}"
 fi

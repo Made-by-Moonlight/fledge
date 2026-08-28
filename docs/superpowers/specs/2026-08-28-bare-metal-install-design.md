@@ -185,8 +185,13 @@ cmdline fragment, and module list. Runs on the host, no VM.
      sudo
    - `/etc/systemd/zram-generator.conf` with `zram-size = $(zram_size)`
    - `/etc/mkinitcpio.conf`:
-     `HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems resume fsck)`
+     `HOOKS=(base udev autodetect microcode modconf kms plymouth keyboard keymap consolefont block encrypt filesystems resume fsck)`
      (`resume` only when `SWAP=hibernate`); `MODULES=($(detect_gpu_modules))`
+   - `plymouth-set-default-theme slievr-cachy` — vendored theme
+     (`cachyos/plymouth-theme/slievr-cachy/`, from Omarchy) copied to
+     `/usr/share/plymouth/themes/` by `install-cachyos.sh`; gives a
+     graphical splash + LUKS prompt. `plymouth` is in the pacstrap set;
+     `splash` is already in `EXTRA_CMDLINE`.
    - `/etc/kernel/cmdline`:
      `cryptdevice=PARTUUID=<p2>:$LUKS_NAME root=/dev/mapper/$LUKS_NAME rootflags=subvol=@ rw rootfstype=btrfs $EXTRA_CMDLINE $(detect_gpu_cmdline)`
      plus `resume=/dev/mapper/$LUKS_NAME resume_offset=<N>` when hibernate

@@ -149,6 +149,7 @@ pkgs=(
   "${UCODE}"
   networkmanager sudo git openssh vim
   curl tar
+  plymouth
   zram-generator
   limine limine-mkinitcpio-hook efibootmgr
 )
@@ -176,6 +177,12 @@ rule "System configuration (chroot)"
 ########################################################################
 install -Dm755 "$HERE/lib/chroot-setup.sh" /mnt/root/chroot-setup.sh
 install -Dm644 "$HERE/lib/bootloader.sh"   /mnt/root/bootloader.sh
+
+# Vendored Plymouth theme (graphical boot splash + LUKS prompt). Not stow-
+# managed - Plymouth reads themes from a system path. chroot-setup.sh selects it.
+rm -rf /mnt/usr/share/plymouth/themes/slievr-cachy
+install -d /mnt/usr/share/plymouth/themes
+cp -r "$HERE/../plymouth-theme/slievr-cachy" /mnt/usr/share/plymouth/themes/slievr-cachy
 
 arch-chroot /mnt env \
   TIMEZONE="$TIMEZONE" LOCALE="$LOCALE" KEYMAP="$KEYMAP" \

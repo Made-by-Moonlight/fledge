@@ -1,0 +1,11 @@
+[Plymouth Theme]
+Name=slievr-cachy
+Description=slievr-cachy boot splash (vendored from Omarchy).
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/slievr-cachy
+ScriptFile=/usr/share/plymouth/themes/slievr-cachy/slievr-cachy.script
+ConsoleLogBackgroundColor=0x1a1b26
+MonospaceFont=Cantarell 11
+Font=Cantarell 11
