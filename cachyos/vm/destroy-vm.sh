@@ -9,6 +9,6 @@ if ! sudo virsh dominfo "$VM_NAME" &>/dev/null; then
 fi
 
 sudo virsh destroy "$VM_NAME" 2>/dev/null || true
-sudo virsh undefine "$VM_NAME" --remove-all-storage
+sudo virsh undefine "$VM_NAME" --remove-all-storage --nvram
 
 echo "VM '$VM_NAME' destroyed and disk removed."
