@@ -228,12 +228,11 @@ printf '[Theme]\nCurrent=slievr-cachy\n' \
 
 sudo systemctl enable sddm.service
 
-# Enable elephant (walker's search-provider backend) as a user service.
-# restart, not enable --now: if it was already running against the old
-# providers-less elephant package, --now alone wouldn't pick up the
-# replacement binary/providers from the elephant-*-bin packages above.
-systemctl --user enable elephant.service
-systemctl --user restart elephant.service
+# elephant (walker's search-provider backend) is a user service started with
+# the graphical session: dot-config/systemd/user/graphical-session.target.wants/
+# elephant.service (stow-managed) enables it declaratively, so it comes up on
+# login without a `systemctl --user` call here — which would hang when this
+# script runs from slievr-firstboot (runuser, no user D-Bus / session).
 
 # dot-zshrc expects mise at ~/.local/bin/mise (the host's curl-installer
 # location); the pacman package above installs to /usr/bin/mise instead.
