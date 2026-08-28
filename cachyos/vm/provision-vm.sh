@@ -5,6 +5,11 @@ VM_NAME="cachyos-test"
 VM_VCPUS=4
 VM_RAM_MB=8192
 VM_DISK_GB=40
+# A second, blank disk. The installer (cachyos/install/install-cachyos.sh) is
+# run against the FIRST disk; this one stands in for the real machine's data
+# disks so multi-disk selection and the wrong-disk guard get exercised, and it
+# doubles as the "staged repo" delivery medium in the test loop.
+VM_DATA_DISK_GB=8
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if sudo virsh dominfo "$VM_NAME" &>/dev/null; then
@@ -25,6 +30,7 @@ sudo virt-install \
   --vcpus "$VM_VCPUS" \
   --memory "$VM_RAM_MB" \
   --disk "size=$VM_DISK_GB,path=/var/lib/libvirt/images/${VM_NAME}.qcow2" \
+  --disk "size=$VM_DATA_DISK_GB,path=/var/lib/libvirt/images/${VM_NAME}-data.qcow2" \
   --cdrom "$iso_path" \
   --os-variant archlinux \
   --network network=default \
