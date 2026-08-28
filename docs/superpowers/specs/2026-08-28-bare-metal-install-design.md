@@ -145,9 +145,10 @@ cmdline fragment, and module list. Runs on the host, no VM.
 ## Install flow (install-cachyos.sh)
 
 1. **Preflight** — must be root; `/sys/firmware/efi` exists; running in a
-   live env; `profile.sh` present; a configured mirror is reachable. The
-   CachyOS ISO already ships the CachyOS repos in `pacman.conf`, so the
-   `cachyos-repo.sh` bootstrap step from the old VM script is dropped.
+   live env; `profile.sh` present; a configured mirror is reachable.
+   NOTE: `pacstrap` writes a stock-Arch `/etc/pacman.conf` into the target
+   (verified in the VM — no `[cachyos]` repos), so `chroot-setup.sh` runs
+   `cachyos-repo.sh` to add them, same as the old VM script did.
 2. Source `profile.sh` + `lib/*`; run detection; print a summary table
    (ucode, GPU pkgs, RAM/zram/swapfile sizes, candidate disks).
 3. **Disk selection & guard** — user picks the target from `list_disks`

@@ -48,6 +48,19 @@ fi
 sed -i "s/^HOOKS=.*/HOOKS=(${hooks})/" /etc/mkinitcpio.conf
 sed -i "s/^MODULES=.*/MODULES=(${GPU_MODULES:-})/" /etc/mkinitcpio.conf
 
+echo ">>> CachyOS repos" >&2
+# pacstrap writes a stock-Arch /etc/pacman.conf into the target (no [cachyos]
+# repos, no cachyos-mirrorlist), even though the live ISO used its own config to
+# resolve linux-cachyos. Add the repos the same way CachyOS's own installer
+# does, so `pacman -Syu` and bootstrap.sh can find cachyos-only packages
+# (steam-jupiter-stable, elephant providers, etc.).
+if ! grep -q '^\[cachyos\]' /etc/pacman.conf; then
+  curl -fsSL https://mirror.cachyos.org/cachyos-repo.tar.xz -o /tmp/cachyos-repo.tar.xz
+  tar xf /tmp/cachyos-repo.tar.xz -C /tmp
+  ( cd /tmp/cachyos-repo && ./cachyos-repo.sh )
+fi
+pacman -Syu --noconfirm
+
 echo ">>> services" >&2
 systemctl enable NetworkManager sshd
 

@@ -147,6 +147,7 @@ pkgs=(
   btrfs-progs cryptsetup mkinitcpio
   "${UCODE}"
   networkmanager sudo git openssh vim
+  curl tar
   zram-generator
   limine limine-mkinitcpio-hook efibootmgr
 )
