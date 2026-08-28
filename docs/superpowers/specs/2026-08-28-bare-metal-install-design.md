@@ -194,9 +194,16 @@ cmdline fragment, and module list. Runs on the host, no VM.
    - `mkinitcpio -P`
    - `systemctl enable NetworkManager sshd`
 10. Unmount `-R`; `cryptsetup close`; reboot.
-11. **Post-reboot** — log in as the user; the staged
-    `~/proj/slievr-cachy` is already on a data disk / USB; run
-    `cachyos/bootstrap.sh` for the desktop layer.
+11. **Repo staging + first-boot** — `install-cachyos.sh` copies this
+    checkout into `/home/<user>/proj/slievr-cachy` in the target and
+    installs `slievr-firstboot.service` (oneshot, guarded by
+    `/var/lib/slievr-firstboot-done`). It does NOT enable sddm.
+12. **First real boot** — unlock the disk; `slievr-firstboot.service` runs
+    `cachyos/bootstrap.sh` as the user, unattended, output on TTY1 +
+    `/var/log/slievr-firstboot.log`, then enables + starts sddm. On
+    failure it disables itself and leaves a TTY with the repo present and
+    recovery instructions on screen. No manual step, no blind phase, one
+    reboot.
 
 ## Limine UKI (lib/bootloader.sh)
 

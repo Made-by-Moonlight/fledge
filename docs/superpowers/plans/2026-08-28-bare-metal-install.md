@@ -210,6 +210,26 @@
 
 ---
 
+### Task 9: First-boot bootstrap handoff
+
+**Files:**
+- Create: `cachyos/install/firstboot/slievr-firstboot.service`
+- Create: `cachyos/install/firstboot/slievr-firstboot.sh` (`@USERNAME@` templated)
+- Modify: `cachyos/install/install-cachyos.sh` (stage repo into target home; install + enable the service; stop printing the manual next-step)
+
+Removes the blind post-install TTY phase on bare metal: one reboot, bootstrap
+runs unattended on TTY1 with a logfile, SDDM starts on success, a failed run
+leaves a TTY + repo + on-screen recovery steps.
+
+- [ ] **Step 1:** write the `.service` (oneshot, `RemainAfterExit`, `After=network-online.target`, `ConditionPathExists=!/var/lib/slievr-firstboot-done`, `StandardOutput=journal+console`, `ExecStartPost=touch` the guard).
+- [ ] **Step 2:** write `slievr-firstboot.sh` — resolve user home, verify `bootstrap.sh` exists, drop a temp `/etc/sudoers.d/99-slievr-firstboot` NOPASSWD (trap-removed), `runuser -l "$USER_NAME" -c bootstrap.sh` teed to `/var/log/slievr-firstboot.log`; on success `systemctl disable` self + `enable --now sddm`; on failure print recovery block + `exit $rc`.
+- [ ] **Step 3:** in `install-cachyos.sh` after the chroot step: `cp -r "$REPO_ROOT"` to `/mnt/home/$USERNAME/proj/slievr-cachy`, `install -Dm755/644` the two files, `sed` the username, `arch-chroot chown -R` the proj dir, `arch-chroot systemctl enable slievr-firstboot.service`.
+- [ ] **Step 4:** `bash -n` + `shellcheck` + `test-detect.sh` still green.
+- [ ] **Step 5:** VM: clean reinstall, confirm one reboot lands at a running desktop with `/var/lib/slievr-firstboot-done` present and the service disabled.
+- [ ] **Step 6:** commit.
+
+---
+
 ## Self-Review
 
 **Spec coverage:**

@@ -6,6 +6,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
+REPO_ROOT="$(cd "$HERE/../.." && pwd)"     # the slievr-cachy checkout being run from
 MIRROR_CHECK_HOST="mirror.cachyos.org"
 
 # shellcheck source=profile.sh
@@ -188,6 +189,26 @@ arch-chroot /mnt env \
 rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh
 
 ########################################################################
+rule "Staging repo + first-boot bootstrap"
+########################################################################
+# Copy this checkout into the installed system so bootstrap.sh (and the docs)
+# are present offline after reboot with no re-staging.
+target_home="/mnt/home/${USERNAME}"
+mkdir -p "${target_home}/proj"
+rm -rf "${target_home}/proj/slievr-cachy"
+cp -r "$REPO_ROOT" "${target_home}/proj/slievr-cachy"
+
+# First-boot service: runs bootstrap.sh as the user, unattended, on TTY1, then
+# starts SDDM. install-cachyos.sh does NOT enable sddm - firstboot does, so a
+# failed bootstrap leaves a TTY + log instead of a broken greeter.
+install -Dm755 "$HERE/firstboot/slievr-firstboot.sh"      /mnt/usr/local/sbin/slievr-firstboot.sh
+sed -i "s/@USERNAME@/${USERNAME}/g"                        /mnt/usr/local/sbin/slievr-firstboot.sh
+install -Dm644 "$HERE/firstboot/slievr-firstboot.service" /mnt/etc/systemd/system/slievr-firstboot.service
+
+arch-chroot /mnt chown -R "${USERNAME}:${USERNAME}" "/home/${USERNAME}/proj"
+arch-chroot /mnt systemctl enable slievr-firstboot.service
+
+########################################################################
 rule "Done"
 ########################################################################
 umount -R /mnt
@@ -196,8 +217,10 @@ cat <<EOF
 
 Install complete.
 
-Next: reboot, unlock the disk, log in as ${USERNAME}, then from the staged repo:
-    ~/proj/slievr-cachy/cachyos/bootstrap.sh
+On reboot: unlock the disk, then slievr-firstboot runs bootstrap.sh
+automatically on TTY1 (log: /var/log/slievr-firstboot.log) and starts SDDM
+when it finishes. No manual step. If bootstrap fails you land at a TTY with
+the repo at /home/${USERNAME}/proj/slievr-cachy and instructions on screen.
 
 EOF
 read -rp "Reboot now? [y/N] " r
