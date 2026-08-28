@@ -7,7 +7,17 @@ Rectangle {
   height: 480
   color: "#131315"
 
-  property string currentUser: userModel.lastUser
+  // userModel.lastUser is empty on a fresh install (nobody has logged in via
+  // SDDM yet), which made sddm.login() fire with an empty username -> "user
+  // unknown". Fall back to the first real user in the model (257 = NameRole,
+  // Qt.UserRole + 1 in SDDM's UserModel).
+  property string currentUser: {
+    if (userModel.lastUser && userModel.lastUser !== "")
+      return userModel.lastUser
+    if (userModel.count > 0)
+      return userModel.data(userModel.index(0, 0), 257)
+    return ""
+  }
   property bool loginFailed: false
   property int sessionIndex: {
     for (var i = 0; i < sessionModel.rowCount(); i++) {
