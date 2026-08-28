@@ -68,7 +68,6 @@ make_filesystems() {
   done
   if [[ "${CREATE_SNAPSHOTS_SUBVOL:-false}" == true ]]; then
     _log "btrfs subvol @/.snapshots"
-    mkdir -p /mnt/@/.snapshots
     btrfs subvolume create "/mnt/@/.snapshots"
   fi
   umount /mnt
