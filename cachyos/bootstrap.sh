@@ -204,8 +204,14 @@ if ! compgen -G "$HOME/.local/state/hypr-toggles/*.conf" >/dev/null; then
 fi
 
 # power-profiles-daemon provides the D-Bus service powerprofilesctl (and
-# slievr-powerprofiles-init, run at Hyprland startup) needs.
-sudo systemctl enable --now power-profiles-daemon.service
+# slievr-powerprofiles-init, run at Hyprland startup) needs. Enable only, no
+# --now: p-p-d.service is `After=multi-user.target`, and when bootstrap.sh runs
+# from slievr-firstboot.service (itself ordered before multi-user.target, which
+# waits on it), a synchronous `--now` start deadlocks — firstboot waits for the
+# p-p-d job, which waits for multi-user.target, which waits for firstboot. It's
+# only needed post-login at Hyprland startup, so plain enable is enough; it
+# starts with graphical.target.
+sudo systemctl enable power-profiles-daemon.service
 
 # Enable sddm as the login manager, pre-selecting the uwsm-managed
 # Hyprland session (hyprland-uwsm.desktop — resolves the "Hyprland was
