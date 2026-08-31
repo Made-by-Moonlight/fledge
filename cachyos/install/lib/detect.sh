@@ -99,6 +99,8 @@ list_disks() {
     $NF == "disk" {
       name=$1; $NF=""; sub(/[ \t]+$/, "")
       if (name == live) next
+      # zram / ramdisks report TYPE=disk but are not install targets
+      if (name ~ /\/(zram|ram)[0-9]+$/) next
       # rebuild: NAME SIZE MODEL... TRAN
       printf "%s\n", $0
     }'
