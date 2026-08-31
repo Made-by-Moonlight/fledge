@@ -6,11 +6,78 @@ note, not permanent project doc).
 
 ---
 
-# ⟶ RESUME HERE (2026-08-28): bare-metal install
+# ⟶ RESUME HERE (2026-08-31): bare-metal install — firstboot validated
 
 **Branch `bare-metal-install`** (off `main`, NOT pushed, NOT merged).
 Design: `docs/superpowers/specs/2026-08-28-bare-metal-install-design.md`
 Plan:   `docs/superpowers/plans/2026-08-28-bare-metal-install.md`
+
+## 2026-08-31 session progress
+
+Fresh `destroy + provision + install-cachyos.sh` VM run done from scratch
+(the prior VM's passwords were unknown). Uncommitted changes on the branch:
+
+- **`cachyos/vm/{provision,destroy,dev-up}.sh` + `host-deps.sh`** — dropped
+  all `sudo`: they now talk to `virsh -c qemu:///system` / `virt-install
+  --connect qemu:///system` via libvirt-group membership. The one-time
+  privileged bits (ISO-dir ACLs for `libvirt-qemu`) moved into
+  `host-deps.sh`; `dev-up.sh` sets up key auth with `expect` instead of
+  `sudo pacman -S sshpass`. `provision-vm.sh` verifies the ACL rather
+  than re-applying it.
+- **`cachyos/bootstrap.sh` line ~214** — **bug #5 fixed**: was
+  `sudo systemctl enable --now power-profiles-daemon.service`; the `--now`
+  start deadlocks when bootstrap runs from `slievr-firstboot.service`
+  (firstboot waits on the p-p-d job → p-p-d is `After=multi-user.target`
+  → multi-user.target waits on firstboot). Now plain `enable`; p-p-d
+  starts with `graphical.target`. Confirmed `enabled` + `active` after
+  reboot with no hang.
+
+### Validation state — firstboot now works end to end
+
+`slievr-firstboot.service` ran `bootstrap.sh` to `Bootstrap complete.`,
+self-disabled, wrote the done-guard, enabled + started SDDM. **Bug #4
+(elephant `systemctl --user` hang) and bug #5 (p-p-d deadlock) both
+validated fixed.** The stow-managed
+`~/.config/systemd/user/graphical-session.target.wants/elephant.service`
+symlink is in place. Plymouth graphical "SLIEVR" LUKS prompt **works**
+(the plain-text prompt seen first is the pre-splash initramfs stage).
+
+**Clean end-to-end run DONE** (2nd VM build, driven entirely from the
+host — `virsh send-key` for the LUKS unlock, `expect` for the installer):
+`journalctl --list-boots` shows exactly **1 boot**, firstboot log has
+`Created symlink .../graphical.target.wants/power-profiles-daemon.service`
+immediately followed by `Bootstrap complete.` (no deadlock), 0
+FAILED/error lines, 449 pkgs, p-p-d active+enabled, sddm active, firstboot
+disabled + done-guard written, elephant symlink correct, shell = zsh.
+Bug #5 fix confirmed in a genuine single uninterrupted pass.
+
+**NOT yet checked:** an actual SDDM login → Hyprland/waybar/walker render
+on the fresh install. The greeter came up and showed Hyprland's
+".conf format deprecation" notification (so the session config loads),
+but a real login over `virsh send-key`/screenshots was too fiddly —
+verify in virt-viewer (`slievr` / `TestPass1`).
+
+Note: the graphical "SLIEVR" Plymouth prompt DOES render (the plain-text
+one is the pre-splash initramfs stage); it can linger on screen with an
+empty box after unlock until SDDM takes the tty — cosmetic.
+`virsh send-key` LUKS unlock: use `KEY_LEFTCTRL KEY_U` first to clear any
+stray char, then type the passphrase (`scratchpad/typ.py` maps a string
+to send-key calls). SSH password auth into the installed VM is slow while
+bootstrap runs — `expect` needs `timeout ~200`, a `sleep 0.5` before
+`send`, and `PubkeyAuthentication=no`.
+
+### VM access this session
+
+`cachyos-test`, user `slievr` / **`TestPass1`** (LUKS passphrase and root
+password also `TestPass1` — set via the installer). Host SSH key is NOT
+authorized on the installed system; use password auth. `expect` snag:
+`ssh`/`scp` with `-tt` hangs on the password prompt under `expect`;
+plain `ssh -o NumberOfPasswordPrompts=1` (no `-tt`) works. `sudo` on the
+VM needs a password now (the firstboot NOPASSWD drop-in was removed on
+success) — use `ssh -t` ... except that hangs, so read root files via
+`journalctl`/world-readable paths, or unlock via `virsh console`.
+
+### Then: finish the branch (unchanged from below)
 
 ## What was built
 
