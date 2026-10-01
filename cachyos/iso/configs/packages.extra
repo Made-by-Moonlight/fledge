@@ -1,0 +1,13 @@
+# Added to releng's packages.x86_64 by builder/build-iso.sh.
+gum
+git
+curl
+gptfdisk
+pciutils
+arch-install-scripts
+cryptsetup
+btrfs-progs
+dosfstools
+efibootmgr
+cachyos-keyring
+cachyos-mirrorlist
