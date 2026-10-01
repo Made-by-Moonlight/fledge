@@ -31,6 +31,8 @@ PACMAN_PACKAGES=(
   # idle daemon, input method framework, power-profile D-Bus service
   # (slievr-powerprofiles-init needs powerprofilesctl), polkit agent.
   hypridle fcitx5 power-profiles-daemon polkit-gnome
+  # Lock screen (Super+Ctrl+L, hypridle) — dot-config/hypr/hyprlock.conf.
+  hyprlock
   # Activity monitor (Super+Ctrl+T, waybar cpu click); calculator key.
   btop gnome-calculator
   # TUI controls the Setup menu (slievr-menu setup) and its keybinds
@@ -145,7 +147,11 @@ fi
 # mise symlink added below — into git-tracked territory on a fresh
 # account with no prior ~/.local/share or ~/.local/bin).
 # ~/.config (and ~/.config/systemd/user) too: without it stow folds the whole directory into one symlink to dot-config/, and every app then writes its settings into the repo.
-mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" "$HOME/.config/systemd/user"
+# graphical-session.target.wants too: systemd does not follow a .wants
+# directory that is itself a symlink, so stow must link the unit files inside
+# a real directory (otherwise elephant never starts and walker has no backend).
+mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" \
+  "$HOME/.config/systemd/user/graphical-session.target.wants"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 
@@ -186,6 +192,14 @@ fi
 mkdir -p "$HOME/.config"
 if [ ! -f "$HOME/.config/xdg-terminals.list" ]; then
   echo "kitty.desktop" >"$HOME/.config/xdg-terminals.list"
+fi
+
+# btop: use the Omarchy theme's btop.theme. btop rewrites btop.conf on exit,
+# so it isn't stowed; seed it once and point themes/current.theme at the theme.
+mkdir -p "$HOME/.config/btop/themes"
+ln -sfn "$HOME/.config/omarchy/current/theme/btop.theme" "$HOME/.config/btop/themes/current.theme"
+if [ ! -f "$HOME/.config/btop/btop.conf" ]; then
+  printf 'color_theme = "current"\n' >"$HOME/.config/btop/btop.conf"
 fi
 
 # hyprland.conf sources ~/.local/state/hypr-toggles/*.conf for dynamic

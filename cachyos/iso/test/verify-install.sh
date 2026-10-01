@@ -10,9 +10,14 @@ ok()  { printf 'PASS  %s\n' "$1"; }
 no()  { printf 'FAIL  %s\n' "$1"; bad=1; }
 is()  { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 
-is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager --no-legend | grep -c .)"
+is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager | tail -n +2 | grep -c .)"
 is "firstboot finished bootstrap"      1      "$(grep -c 'Bootstrap complete.' /var/log/slievr-firstboot.log)"
-is "no failed units"                   0      "$(systemctl --failed --no-legend | grep -c .)"
+# systemd 262's TPM measurement units (systemd-pcr*, systemd-tpm2-setup*) fail
+# with "Could not extend NvPCR" on swtpm; nothing here uses measured boot.
+is "no failed units (TPM measurement excluded)" 0 "$(systemctl --failed --no-legend --plain | grep -vE '^(systemd-pcr|systemd-tpm2-setup)' | grep -c .)"
+is "hyprlock installed"                yes    "$(command -v hyprlock >/dev/null && echo yes || echo no)"
+is "elephant (walker backend) running" active "$(systemctl --user is-active elephant 2>/dev/null)"
+is "btop uses the theme"               yes    "$( [[ -L "$HOME/.config/btop/themes/current.theme" ]] && grep -q '^color_theme = "current"' "$HOME/.config/btop/btop.conf" && echo yes || echo no )"
 is "sddm active"                       active "$(systemctl is-active sddm)"
 is "firstboot disabled"                disabled "$(systemctl is-enabled slievr-firstboot.service 2>/dev/null)"
 is "root account locked"               L      "$(sudo passwd -S root | awk '{print $2}')"
