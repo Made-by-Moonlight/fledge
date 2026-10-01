@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Runs the unattended install from the configurator's answers file, then
+# reboots into firstboot. On failure: show what failed, keep /mnt mounted, no
+# reboot.
+#   mbm-install [/run/mbm-answers.env]
+set -uo pipefail
+
+MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
+ANSWERS="${1:-/run/mbm-answers.env}"
+LOG=/var/log/mbm-install.log
+
+clear
+gum style --foreground 3 --bold --margin "1 2" "Installing made by moonlight"
+gum style --foreground 8 --margin "0 2" "This takes a while. Full log: $LOG"
+echo
+
+"$MBM_REPO/cachyos/install/install-cachyos.sh" --answers "$ANSWERS" 2>&1 | tee -a "$LOG"
+status="${PIPESTATUS[0]}"
+rm -f -- "$ANSWERS"        # normally already deleted by load_answers
+
+if (( status == 0 )); then
+  echo
+  gum style --foreground 2 --bold --margin "0 2" "Installed. Remove the USB stick."
+  for s in {10..1}; do printf '\r  Rebooting in %2d s (Ctrl-C to stay)' "$s"; sleep 1; done
+  echo
+  reboot
+fi
+
+echo
+gum style --foreground 1 --bold --margin "0 2" "The install failed (exit $status)."
+gum style --foreground 8 --margin "0 2" "Last 20 lines of $LOG:"
+tail -n 20 "$LOG"
+echo
+gum style --foreground 8 --margin "0 2" \
+  "The target is still mounted at /mnt. Run mbm-configurator to start over."
+exit 1
