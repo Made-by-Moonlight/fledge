@@ -20,4 +20,38 @@ python3 "$HERE/render-console.py" "$SVG" --cols 54 > "$ABOUT"
 sed 's/currentColor/#ffffff/g' "$SVG" \
   | rsvg-convert -w 320 -o "$LOGO"
 
-echo "updated $ABOUT and $LOGO"
+# Desktop theme + SDDM images (spec: Moonrise wallpaper, glow, owl).
+THEME_DIR="$OUT/dot-config/omarchy/themes/made-by-moonlight"
+SDDM_DIR="$OUT/cachyos/sddm-theme/slievr-cachy"
+mkdir -p "$THEME_DIR/backgrounds" "$SDDM_DIR"
+TMP="$(mktemp -d)"
+trap 'rm -rf "$TMP"' EXIT
+
+white_owl() { # <width> <out.png>
+  sed 's/currentColor/#ffffff/g' "$SVG" | rsvg-convert -w "$1" -o "$2"
+}
+glow() { # <w> <h> <out.png>: #171e28 with a faint radial glow from the top
+  local w=$1 h=$2
+  magick -size "${w}x${h}" xc:'#171e28' \
+    \( -size "$((w * 7 / 5))x$((h * 2))" radial-gradient:'#222c39'-'#171e28' \) \
+    -gravity north -geometry "+0-${h}" -composite "$3"
+}
+moonrise() { # <w> <h> <out.png>: glow + white owl, 22% wide, 90% opacity, top at 38%
+  local w=$1 h=$2
+  glow "$w" "$h" "$TMP/glow-$w.png"
+  white_owl "$((w * 22 / 100))" "$TMP/owl-$w.png"
+  magick "$TMP/glow-$w.png" \( "$TMP/owl-$w.png" -channel A -evaluate multiply 0.9 +channel \) \
+    -gravity north -geometry "+0+$((h * 38 / 100))" -composite "$3"
+}
+
+moonrise 3440 1440 "$THEME_DIR/backgrounds/1-moonrise-3440x1440.png"
+moonrise 2560 1440 "$THEME_DIR/backgrounds/2-moonrise-2560x1440.png"
+moonrise 1920 1080 "$THEME_DIR/backgrounds/3-moonrise-1920x1080.png"
+magick "$THEME_DIR/backgrounds/3-moonrise-1920x1080.png" -resize 1280x720 "$THEME_DIR/preview.png"
+glow 1920 1080 "$THEME_DIR/glow.png"
+white_owl 520 "$TMP/owl-520.png"
+magick -size 520x520 xc:none "$TMP/owl-520.png" -gravity center -composite "$THEME_DIR/owl.png"
+white_owl 260 "$SDDM_DIR/logo.png"
+cp "$THEME_DIR/glow.png" "$SDDM_DIR/background.png"
+
+echo "updated about.txt, the Plymouth logo, the theme images and the SDDM images under $OUT"

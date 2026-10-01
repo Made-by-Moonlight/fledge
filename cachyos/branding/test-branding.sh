@@ -50,4 +50,24 @@ check "plymouth logo is 320px wide" "320" "$(magick identify -format '%w' "$comm
 check "plymouth logo is current (0 differing pixels)" "0" \
   "$(magick compare -metric AE "$committed" "$fresh" null: 2>&1 | awk '{print $1}')"
 
+# theme + SDDM images
+theme_rel=dot-config/omarchy/themes/made-by-moonlight
+sddm_rel=cachyos/sddm-theme/slievr-cachy
+for spec in "backgrounds/1-moonrise-3440x1440.png 3440x1440" "backgrounds/2-moonrise-2560x1440.png 2560x1440" \
+            "backgrounds/3-moonrise-1920x1080.png 1920x1080" "glow.png 1920x1080" "owl.png 520x520" "preview.png 1280x720"; do
+  f="${spec% *}"; want="${spec#* }"
+  check "theme $f is $want" "$want" "$(magick identify -format '%wx%h' "$T/assets/$theme_rel/$f" 2>/dev/null)"
+  check "theme $f is current" "0" \
+    "$(magick compare -metric AE "$repo/$theme_rel/$f" "$T/assets/$theme_rel/$f" null: 2>&1 | awk '{print $1}')"
+done
+check "sddm logo is 260px wide" "260" "$(magick identify -format '%w' "$T/assets/$sddm_rel/logo.png" 2>/dev/null)"
+for f in logo.png background.png; do
+  check "sddm $f is current" "0" \
+    "$(magick compare -metric AE "$repo/$sddm_rel/$f" "$T/assets/$sddm_rel/$f" null: 2>&1 | awk '{print $1}')"
+done
+check "glow has no owl (centre pixel is background-ish)" "yes" \
+  "$(magick "$T/assets/$theme_rel/glow.png" -format '%[fx:p{960,600}.r<0.2?1:0]' info: | sed 's/^1$/yes/;s/^0$/no/')"
+check "moonrise has the owl (white near the centre)" "yes" \
+  "$(magick "$T/assets/$theme_rel/backgrounds/3-moonrise-1920x1080.png" -crop 422x200+749+411 -format '%[fx:maxima.r>0.8?1:0]' info: | sed 's/^1$/yes/;s/^0$/no/')"
+
 exit $fail
