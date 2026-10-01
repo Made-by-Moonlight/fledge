@@ -90,6 +90,7 @@ grep -rq 'made by moonlight installer' "$PROFILE"/efiboot || die "boot entries w
 compgen -G "$PROFILE/efiboot/loader/entries/*nomodeset.conf" >/dev/null || die "no safe-graphics boot entry"
 
 step "bake repo + branding"
+mkdir -p "$PROFILE/airootfs/usr/share"
 cp -a /src "$PROFILE/airootfs/usr/share/slievr-cachy"
 mkdir -p "$PROFILE/airootfs/usr/share/mbm"
 python3 /src/cachyos/branding/render-console.py /src/cachyos/branding/owl.svg --cols 48 --ansi \
