@@ -48,7 +48,7 @@ committed="$repo/cachyos/plymouth-theme/slievr-cachy/logo.png"
 fresh="$T/assets/cachyos/plymouth-theme/slievr-cachy/logo.png"
 check "plymouth logo is 320px wide" "320" "$(magick identify -format '%w' "$committed")"
 ply_rel=cachyos/plymouth-theme/slievr-cachy
-for f in entry.png bullet.png lock.png progress_box.png progress_bar.png; do
+for f in entry.png bullet.png progress_box.png progress_bar.png; do
   check "plymouth $f is current" "0" \
     "$(magick compare -metric AE "$repo/$ply_rel/$f" "$T/assets/$ply_rel/$f" null: 2>&1 | awk '{print $1}')"
 done

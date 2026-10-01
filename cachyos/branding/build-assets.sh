@@ -20,18 +20,13 @@ python3 "$HERE/render-console.py" "$SVG" --cols 54 > "$ABOUT"
 sed 's/currentColor/#ffffff/g' "$SVG" \
   | rsvg-convert -w 320 -o "$LOGO"
 
-# Plymouth unlock field, dots, padlock and progress bar in the brand palette
+# Plymouth unlock field, dots and progress bar in the brand palette
 # (same look as the SDDM field). Sizes match what slievr-cachy.script expects.
 PLY_DIR="$(dirname "$LOGO")"
 magick -size 286x48 xc:'#2f3640' -fill '#212a33' -draw 'rectangle 2,2 283,45' "PNG32:$PLY_DIR/entry.png"
 magick -size 14x14 xc:none -fill '#f4af03' -draw 'circle 7,7 7,2' "PNG32:$PLY_DIR/bullet.png"
 magick -size 300x10 xc:'#2f3640' "PNG32:$PLY_DIR/progress_box.png"
 magick -size 300x10 xc:'#f4af03' "PNG32:$PLY_DIR/progress_bar.png"
-# padlock: keep the committed shape, recolour it muted (idempotent)
-if [[ "$PLY_DIR" != "$REPO/cachyos/plymouth-theme/slievr-cachy" ]]; then
-  cp "$REPO/cachyos/plymouth-theme/slievr-cachy/lock.png" "$PLY_DIR/lock.png"
-fi
-magick "$PLY_DIR/lock.png" -fill '#6c7787' -colorize 100 "PNG32:$PLY_DIR/lock.png"
 
 # Desktop theme + SDDM images (spec: Moonrise wallpaper, glow, owl).
 THEME_DIR="$OUT/dot-config/omarchy/themes/made-by-moonlight"
@@ -54,7 +49,7 @@ moonrise() { # <w> <h> <out.png>: glow + white owl, 22% wide, 90% opacity, top a
   glow "$w" "$h" "$TMP/glow-$w.png"
   white_owl "$((w * 22 / 100))" "$TMP/owl-$w.png"
   magick "$TMP/glow-$w.png" \( "$TMP/owl-$w.png" -channel A -evaluate multiply 0.9 +channel \) \
-    -gravity north -geometry "+0+$((h * 38 / 100))" -composite "$3"
+    -gravity north -geometry "-$((w * 22 * 117 / 100000))+$((h * 38 / 100))" -composite "$3"
 }
 
 moonrise 3440 1440 "$THEME_DIR/backgrounds/1-moonrise-3440x1440.png"

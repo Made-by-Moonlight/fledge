@@ -5,7 +5,9 @@ Window.SetBackgroundBottomColor(0.090, 0.118, 0.157);
 
 logo.image = Image("logo.png");
 logo.sprite = Sprite(logo.image);
-logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() / 2);
+# The owl is drawn turned: its visual centre is the midpoint between the eyes,
+# at 61.7% of the image width. Put that on the screen's centre line.
+logo.sprite.SetX(Window.GetWidth() / 2 - logo.image.GetWidth() * 0.617);
 logo.sprite.SetY(Window.GetHeight() / 2 - logo.image.GetHeight() / 2);
 logo.sprite.SetOpacity(1);
 
@@ -74,12 +76,10 @@ fun hide_progress_bar() {
 }
 
 fun show_password_dialog() {
-  lock.sprite.SetOpacity(1);
   entry.sprite.SetOpacity(1);
 }
 
 fun hide_password_dialog() {
-  lock.sprite.SetOpacity(0);
   entry.sprite.SetOpacity(0);
 
   for (index = 0; bullet.sprites[index]; index++) {
@@ -103,7 +103,6 @@ fun stop_fake_progress() {
 
 #----------------------------------------- Dialogue --------------------------------
 
-lock.image = Image("lock.png");
 entry.image = Image("entry.png");
 bullet.image = Image("bullet.png");
 
@@ -113,18 +112,6 @@ entry.y = logo.sprite.GetY() + logo.image.GetHeight() + 40;
 entry.sprite.SetPosition(entry.x, entry.y, 10001);
 entry.sprite.SetOpacity(0);
 
-# Scale lock to be slightly shorter than entry field height
-# Original lock is 84x96, entry height determines scale
-lock_height = entry.image.GetHeight() * 0.8;
-lock_scale = lock_height / 96;
-lock_width = 84 * lock_scale;
-
-scaled_lock = lock.image.Scale(lock_width, lock_height);
-lock.sprite = Sprite(scaled_lock);
-lock.x = entry.x - lock_width - 15;
-lock.y = entry.y + entry.image.GetHeight() / 2 - lock_height / 2;
-lock.sprite.SetPosition(lock.x, lock.y, 10001);
-lock.sprite.SetOpacity(0);
 
 # Bullet array
 bullet.sprites = [];

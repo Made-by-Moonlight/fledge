@@ -57,6 +57,8 @@ Rectangle {
       height: sourceSize.width > 0 ? Math.round(width * sourceSize.height / sourceSize.width) : 0
       fillMode: Image.PreserveAspectFit
       anchors.horizontalCenter: parent.horizontalCenter
+      // the owl's visual centre (between the eyes) is 61.7% across; shift it onto the axis
+      anchors.horizontalCenterOffset: -Math.round(width * 0.117)
     }
 
     Text {
