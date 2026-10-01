@@ -60,4 +60,15 @@ check "render: OUT = parent leaves fixture intact" "yes" "$([[ -f "$T/theme/colo
 check "render: shared-prefix sibling OUT is allowed" "0:yes" \
   "$(bash "$RENDER" "$T/theme" "$T/theme-out" >/dev/null 2>&1; echo "$?:$([[ -f "$T/theme-out/waybar.css" ]] && echo yes || echo no)")"
 
+# the committed render matches a fresh render of the real theme
+bash "$RENDER" "$REPO/dot-config/omarchy/themes/made-by-moonlight" "$T/real" >/dev/null
+check "committed current/theme matches a fresh render" "" \
+  "$(diff -rq "$REPO/dot-config/omarchy/current/theme" "$T/real" 2>&1)"
+check "theme.name" "made-by-moonlight" "$(cat "$REPO/dot-config/omarchy/current/theme.name")"
+check "background link points at Moonrise 3440" \
+  "/home/slievr/.config/omarchy/current/theme/backgrounds/1-moonrise-3440x1440.png" \
+  "$(readlink "$REPO/dot-config/omarchy/current/background")"
+contains "kitty uses the brand background" "171e28" "$(cat "$T/real/kitty.conf")"
+contains "hyprland focus border is amber" "rgb(f4af03)" "$(cat "$T/real/hyprland.conf")"
+
 exit $fail
