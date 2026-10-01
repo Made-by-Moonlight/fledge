@@ -22,6 +22,26 @@ work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT
 git clone -q --no-hardlinks "$REPO" "$work/src"
 git -C "$work/src" remote set-url origin "$DOTFILES_REPO"
+
+# The clone's refs/remotes/origin/* are the host's local branches, not GitHub's.
+branch="$(git -C "$work/src" symbolic-ref --short HEAD 2>/dev/null || true)"
+[[ "$branch" == main ]] || echo "WARNING: building from branch '${branch:-detached HEAD}', not main." >&2
+git -C "$work/src" for-each-ref --format='%(refname)' refs/remotes/origin \
+  | while read -r ref; do git -C "$work/src" update-ref -d "$ref"; done
+if [[ -n "$branch" ]]; then
+  rc=0; git ls-remote --exit-code --heads "$DOTFILES_REPO" "$branch" >/dev/null 2>&1 || rc=$?
+  if (( rc == 0 )); then
+    git -C "$work/src" config "branch.$branch.remote" origin
+    git -C "$work/src" config "branch.$branch.merge" "refs/heads/$branch"
+  else
+    git -C "$work/src" branch --unset-upstream 2>/dev/null || true
+    if (( rc == 2 )); then
+      echo "NOTE: $branch isn't on GitHub; the installed repo has no upstream (git pull won't work until it's pushed or switched to main)." >&2
+    else
+      echo "WARNING: couldn't reach GitHub to check for branch $branch (ls-remote exit $rc); the installed repo has no upstream." >&2
+    fi
+  fi
+fi
 mkdir -p "$RELEASE"
 
 command -v docker >/dev/null || die "docker is not installed"

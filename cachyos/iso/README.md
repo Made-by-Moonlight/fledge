@@ -21,7 +21,10 @@ the repo is public.
     bash cachyos/iso/test-mbm.sh                                  # unit tests
     MBM_REPO=$PWD cachyos/iso/configs/airootfs/usr/local/bin/mbm-configurator --dry-run
     cachyos/vm/destroy-vm.sh; cachyos/iso/bin/slievr-iso-boot     # full run in the VM
-    ssh -t slievr@<vm-ip> 'bash -s' < cachyos/iso/test/verify-install.sh
+    scp cachyos/iso/test/verify-install.sh slievr@<vm-ip>:/tmp/ && ssh -t slievr@<vm-ip> bash /tmp/verify-install.sh
+
+The installed system's root account is locked, so systemd's emergency/rescue
+shell won't open (sulogin refuses a locked root); recover by booting this ISO.
 
 ## Write to a USB stick
 

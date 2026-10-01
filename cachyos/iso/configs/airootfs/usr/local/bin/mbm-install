@@ -14,14 +14,16 @@ gum style --foreground 3 --bold --margin "1 2" "Installing made by moonlight"
 gum style --foreground 8 --margin "0 2" "This takes a while. Full log: $LOG"
 echo
 
-"$MBM_REPO/cachyos/install/install-cachyos.sh" --answers "$ANSWERS" 2>&1 | tee -a "$LOG"
+bash "$MBM_REPO/cachyos/install/install-cachyos.sh" --answers "$ANSWERS" 2>&1 | tee -a "$LOG"
 status="${PIPESTATUS[0]}"
 rm -f -- "$ANSWERS"        # normally already deleted by load_answers
 
 if (( status == 0 )); then
   echo
   gum style --foreground 2 --bold --margin "0 2" "Installed. Remove the USB stick."
+  trap 'echo; echo "Staying in the live environment. Reboot when ready."; exit 0' INT
   for s in {10..1}; do printf '\r  Rebooting in %2d s (Ctrl-C to stay)' "$s"; sleep 1; done
+  trap - INT
   echo
   reboot
 fi
@@ -32,5 +34,5 @@ gum style --foreground 8 --margin "0 2" "Last 20 lines of $LOG:"
 tail -n 20 "$LOG"
 echo
 gum style --foreground 8 --margin "0 2" \
-  "The target is still mounted at /mnt. Run mbm-configurator to start over."
+  "Inspect /mnt, then run mbm-configurator - it offers to clean up and start over."
 exit 1

@@ -96,8 +96,11 @@ ask_hostname() {
 ask_timezone() {
   header "2 / 5 · Timezone"
   note "Type to search. Default: $TIMEZONE"
-  TZ_CHOICE="$( { echo "$TIMEZONE"; timedatectl list-timezones | grep -vxF "$TIMEZONE"; } \
-    | gum filter --height 12)"
+  TZ_CHOICE=""
+  until [[ -n "$TZ_CHOICE" && "$TZ_CHOICE" != *..* && -f "/usr/share/zoneinfo/$TZ_CHOICE" ]]; do
+    TZ_CHOICE="$( { echo "$TIMEZONE"; timedatectl list-timezones | grep -vxF "$TIMEZONE"; } \
+      | gum filter --height 12)" || TZ_CHOICE=""
+  done
 }
 
 read_twice() { # <label>  ->  prints the confirmed, non-empty secret
@@ -114,11 +117,13 @@ ask_password() {
   header "3 / 5 · Password"
   note "For your account, $USERNAME. The root account stays locked; use sudo."
   USER_PW="$(read_twice "password")"
-  if gum confirm "Use the same passphrase to unlock the disk at boot?"; then
-    LUKS_PW="$USER_PW"
-  else
-    LUKS_PW="$(read_twice "disk passphrase")"
-  fi
+  local rc=0
+  gum confirm "Use the same passphrase to unlock the disk at boot?" || rc=$?
+  case "$rc" in
+    0) LUKS_PW="$USER_PW" ;;
+    1) LUKS_PW="$(read_twice "disk passphrase")" ;;
+    *) exit 130 ;;
+  esac
 }
 
 ask_disk() {
@@ -163,6 +168,27 @@ summary() {
   fi
   echo
 }
+
+# A failed install leaves the target mounted at /mnt (for inspection) and the
+# LUKS mapping open; the installer refuses to start over those.
+cleanup_previous() {
+  local err
+  header "A previous install attempt is still open"
+  note "/mnt is mounted and/or /dev/mapper/$LUKS_NAME is open."
+  case "$(gum choose "Clean up the previous attempt" "Shell")" in
+    "Clean up the previous attempt")
+      if mountpoint -q /mnt && ! err="$(umount -R /mnt 2>&1)"; then
+        fail "umount -R /mnt failed: $err"; note "Close what uses /mnt, then run mbm-configurator again."; exit 1
+      fi
+      if [[ -e "/dev/mapper/$LUKS_NAME" ]] && ! err="$(cryptsetup close "$LUKS_NAME" 2>&1)"; then
+        fail "cryptsetup close $LUKS_NAME failed: $err"; note "Fix that, then run mbm-configurator again."; exit 1
+      fi ;;
+    *) exit 130 ;;
+  esac
+}
+if (( ! DRY_RUN )) && { mountpoint -q /mnt || [[ -e "/dev/mapper/$LUKS_NAME" ]]; }; then
+  cleanup_previous
+fi
 
 welcome
 ensure_online

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Post-install checks for a VM installed from the made by moonlight ISO.
 # Run as slievr on the installed system, e.g.
-#   ssh slievr@<vm-ip> 'bash -s' < cachyos/iso/test/verify-install.sh
+#   scp cachyos/iso/test/verify-install.sh slievr@<vm-ip>:/tmp/ && ssh -t slievr@<vm-ip> bash /tmp/verify-install.sh
+# (needs a tty for sudo, so don't pipe it into ssh)
 set -uo pipefail
 
 bad=0
@@ -20,5 +21,7 @@ is "no desktop bloat"                  ""     "$bloat"
 is "linux-cachyos kernel"              yes    "$(pacman -Q linux-cachyos >/dev/null 2>&1 && echo yes || echo no)"
 is "running kernel >= 7.2"             yes    "$( (( $(vercmp "$(uname -r | sed 's/-.*//')" 7.2) >= 0 )) && echo yes || echo no)"
 is "repo origin is GitHub"             yes    "$(git -C ~/proj/slievr-cachy remote get-url origin | grep -q '^https://github.com/' && echo yes || echo no)"
+is "bootstrap.sh is executable"        yes    "$([[ -x ~/proj/slievr-cachy/cachyos/bootstrap.sh ]] && echo yes || echo no)"
+is "repo has no local changes"         ""     "$(git -C ~/proj/slievr-cachy status --porcelain)"
 
 exit $bad

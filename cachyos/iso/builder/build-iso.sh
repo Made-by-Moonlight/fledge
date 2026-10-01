@@ -8,8 +8,9 @@ set -euo pipefail
 ISO=/src/cachyos/iso
 PROFILE=/tmp/profile
 OUT=/tmp/out
-# UNVERIFIED: CachyOS packaging key, from CachyOS's "add the repo manually"
-# instructions. Confirm against https://wiki.cachyos.org before relying on it.
+# CachyOS packaging key (from their "add the repo manually" instructions).
+# Verified 2026-10-01: pacman-key --recv-keys fetched it in a real build.
+# Re-check against https://wiki.cachyos.org if the fetch ever fails.
 CACHYOS_KEY=F3B607488DB35A47
 
 die() { echo "build-iso: $*" >&2; exit 1; }
@@ -76,7 +77,8 @@ file_permissions+=(
 EOF
 
 step "boot menu"
-# UNVERIFIED: releng's title string and UEFI entry file names. Check with
+# Verified 2026-10-01: releng's title string and UEFI entry names matched in a
+# real build (the greps below die if they stop matching). Re-check with
 #   grep -rn title "$PROFILE"/efiboot "$PROFILE"/grub "$PROFILE"/syslinux
 # and adjust the patterns if releng renamed them.
 grep -rlZ 'Arch Linux install medium' "$PROFILE"/efiboot "$PROFILE"/grub "$PROFILE"/syslinux 2>/dev/null \
@@ -92,6 +94,16 @@ compgen -G "$PROFILE/efiboot/loader/entries/*nomodeset.conf" >/dev/null || die "
 step "bake repo + branding"
 mkdir -p "$PROFILE/airootfs/usr/share"
 cp -a /src "$PROFILE/airootfs/usr/share/slievr-cachy"
+# mkarchiso copies airootfs with --no-preserve=mode: only file_permissions keep
+# modes, so list every git-executable file explicitly.
+{
+  echo 'file_permissions+=('
+  git -C /src ls-files -z -s | while IFS= read -r -d '' rec; do
+    [[ "${rec%% *}" == 100755 ]] || continue
+    printf '  [%q]="0:0:755"\n' "/usr/share/slievr-cachy/${rec#*$'\t'}"
+  done
+  echo ')'
+} >> "$PROFILE/profiledef.sh"
 mkdir -p "$PROFILE/airootfs/usr/share/mbm"
 python3 /src/cachyos/branding/render-console.py /src/cachyos/branding/owl.svg --cols 48 --ansi \
   > "$PROFILE/airootfs/usr/share/mbm/owl.ansi"
@@ -108,6 +120,16 @@ grep -q '^\[cachyos\]' "$PROFILE/airootfs/etc/pacman.conf" || die "live pacman.c
 
 step "mkarchiso"
 mkarchiso -v -w /tmp/work -o "$OUT" "$PROFILE"
+
+step "check modes inside the image"
+command -v unsquashfs >/dev/null || pacman --noconfirm -S squashfs-tools
+sfs="$(find /tmp/work -name airootfs.sfs | head -n1)"
+[[ -n "$sfs" ]] || die "no airootfs.sfs found in the work dir"
+for f in cachyos/install/install-cachyos.sh cachyos/bootstrap.sh; do
+  line="$(unsquashfs -ll "$sfs" "usr/share/slievr-cachy/$f" | grep "slievr-cachy/$f\$" || true)"
+  [[ "$line" == -rwxr-xr-x* ]] || die "$f is not mode 755 in the image: ${line:-not found}"
+done
+echo "modes ok"
 iso="$(ls "$OUT"/*.iso)"
 cp "$iso" /release/
 ( cd /release && sha256sum "${iso##*/}" > "${iso##*/}.sha256" )

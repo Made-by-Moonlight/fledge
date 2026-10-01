@@ -37,6 +37,10 @@ if [[ -n "$ANSWERS" ]]; then
   for k in DISK HOSTNAME USER_PASSWORD LUKS_PASSPHRASE; do
     [[ -n "${!k:-}" ]] || die "answers file is missing $k"
   done
+  if [[ -n "${TIMEZONE:-}" ]]; then
+    [[ "$TIMEZONE" != *..* && -f "/usr/share/zoneinfo/$TIMEZONE" ]] \
+      || die "answers TIMEZONE is not a valid zone: $TIMEZONE"
+  fi
   ROOT_PASSWORD="${ROOT_PASSWORD:-}"     # empty -> root locked (chroot-setup.sh)
 fi
 
@@ -98,7 +102,7 @@ EOF
 ########################################################################
 rule "Target disk"
 ########################################################################
-if [[ -n "${DISK:-}" ]]; then
+if [[ -n "$ANSWERS" ]]; then
   [[ -b "$DISK" ]] || die "answers DISK is not a block device: $DISK"
   DISK_KNAME="$(realpath "$DISK")"
   DISK_TRAN="$(lsblk -dno TRAN "$DISK_KNAME")"
