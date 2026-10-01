@@ -52,10 +52,10 @@ welcome() {
 # UNVERIFIED: iwctl's table layout. If no networks parse, "Open iwctl" is the fallback.
 wifi_connect() {
   local dev ssid pass
-  dev="$(iwctl device list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | awk '$NF == "station" {print $1; exit}')"
+  dev="$({ iwctl device list 2>/dev/null || true; } | sed 's/\x1b\[[0-9;]*m//g' | awk '$NF == "station" {print $1; exit}')" || dev=""
   if [[ -z "$dev" ]]; then fail "No Wi-Fi device found."; sleep 2; return; fi
-  iwctl station "$dev" scan; sleep 3
-  mapfile -t nets < <(iwctl station "$dev" get-networks 2>/dev/null \
+  iwctl station "$dev" scan || true; sleep 3
+  mapfile -t nets < <({ iwctl station "$dev" get-networks 2>/dev/null || true; } \
     | sed 's/\x1b\[[0-9;]*m//g' \
     | awk 'NR > 4 && NF >= 3 { line = $0; sub(/^[ \t>]+/, "", line); n = split(line, a, /[ \t]+/);
                                s = a[1]; for (i = 2; i <= n - 2; i++) s = s " " a[i]; print s }')
@@ -156,15 +156,25 @@ summary() {
     "GPU         ${gpu:-generic}" \
     "Memory      $(( memkb / 1024 )) MiB, zram $(zram_size "$memkb") MiB" \
     "Data disks  ${#keep[@]} of ${#EXTRA_FSTAB_ENTRIES[@]} fstab entries present"
+  if (( ${#keep[@]} )); then
+    gum style --foreground 8 --margin "0 2" -- "${keep[@]/#/  }"
+  else
+    note "  none on this machine"
+  fi
   echo
-  gum confirm --affirmative "Install" --negative "Back" "Erase $DISK_PATH and install?"
 }
 
 welcome
 ensure_online
 while true; do
   ask_hostname; ask_timezone; ask_password; ask_disk
-  summary && break
+  summary
+  rc=0; gum confirm --affirmative "Install" --negative "Back" "Erase $DISK_PATH and install?" || rc=$?
+  case "$rc" in
+    0) break ;;
+    1) ;;
+    *) exit 130 ;;
+  esac
 done
 
 answers=(
