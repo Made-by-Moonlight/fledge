@@ -7,9 +7,9 @@ of the bare `Enter passphrase for /dev/...` text line.
 Vendored from Omarchy's `default/plymouth` (`script` module theme),
 renamed `omarchy.{plymouth,script}` → `slievr-cachy.{plymouth,script}`
 with the `ImageDir` / `ScriptFile` paths updated to
-`/usr/share/plymouth/themes/slievr-cachy`. `logo.png` (and
-`logos/oma.png`) are still Omarchy's mark — replace them with a slievr
-logo when there is one; sizes are 800×188 and 800×378 RGBA.
+`/usr/share/plymouth/themes/slievr-cachy`. `logo.png` is the made by moonlight owl, generated from
+`cachyos/branding/owl.svg` by `cachyos/branding/build-assets.sh`; the
+background is the brand `#171e28`. (`logos/oma.png` is unused by the script.)
 
 ## How it's installed
 

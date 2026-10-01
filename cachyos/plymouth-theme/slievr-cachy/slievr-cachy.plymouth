@@ -1,11 +1,11 @@
 [Plymouth Theme]
 Name=slievr-cachy
-Description=slievr-cachy boot splash (vendored from Omarchy).
+Description=made by moonlight boot splash (adapted from Omarchy's).
 ModuleName=script
 
 [script]
 ImageDir=/usr/share/plymouth/themes/slievr-cachy
 ScriptFile=/usr/share/plymouth/themes/slievr-cachy/slievr-cachy.script
-ConsoleLogBackgroundColor=0x1a1b26
+ConsoleLogBackgroundColor=0x171e28
 MonospaceFont=Cantarell 11
 Font=Cantarell 11
