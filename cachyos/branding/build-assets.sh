@@ -50,7 +50,7 @@ moonrise 1920 1080 "$THEME_DIR/backgrounds/3-moonrise-1920x1080.png"
 magick "$THEME_DIR/backgrounds/3-moonrise-1920x1080.png" -resize 1280x720 "$THEME_DIR/preview.png"
 glow 1920 1080 "$THEME_DIR/glow.png"
 white_owl 520 "$TMP/owl-520.png"
-magick -size 520x520 xc:none "$TMP/owl-520.png" -gravity center -composite "$THEME_DIR/owl.png"
+magick -size 520x520 xc:none "$TMP/owl-520.png" -gravity center -composite "PNG32:$THEME_DIR/owl.png"
 white_owl 260 "$SDDM_DIR/logo.png"
 cp "$THEME_DIR/glow.png" "$SDDM_DIR/background.png"
 

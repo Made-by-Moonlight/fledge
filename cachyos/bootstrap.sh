@@ -144,8 +144,8 @@ fi
 # would send every other app's real data — or, for ~/.local/bin, the
 # mise symlink added below — into git-tracked territory on a fresh
 # account with no prior ~/.local/share or ~/.local/bin).
-# ~/.config too: without it stow folds the whole directory into one symlink to dot-config/, and every app then writes its settings into the repo.
-mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config"
+# ~/.config (and ~/.config/systemd/user) too: without it stow folds the whole directory into one symlink to dot-config/, and every app then writes its settings into the repo.
+mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" "$HOME/.config/systemd/user"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 

@@ -32,7 +32,7 @@ The same VM run found defects to fix alongside:
 | --- | --- |
 | Approach | A real Omarchy theme `made-by-moonlight` with `colors.toml` as the source of truth, rendered into the committed `dot-config/omarchy/current/theme/` so fresh installs boot branded. |
 | Templates | Omarchy 3.8.2's `default/themed/*.tpl` (17 files) vendored into `dot-local/share/slievr-cachy/default/themed/`; the render does not depend on an Omarchy install. |
-| Wallpaper | **Moonrise**: small white owl (22% of width, 90% opacity) centred at 38% height under a faint radial glow (`#222c39` → `#171e28`) from the top. 3440×1440, 2560×1440, 1920×1080. |
+| Wallpaper | **Moonrise**: small white owl (22% of width, 90% opacity) horizontally centred, top edge at 38% of the height under a faint radial glow (`#222c39` → `#171e28`) from the top. 3440×1440, 2560×1440, 1920×1080. |
 | Focus | **Amber** (`accent`): focused window, launcher, notifications. |
 | Login + lock | One layout: owl, "made by moonlight" wordmark (JetBrains Mono, letter-spaced, lowercase), amber password field; lock adds a clock. Background is a **glow-only** image (no owl) so the owl never appears twice. |
 | Terminal | 16 colours as approved (table below). |
