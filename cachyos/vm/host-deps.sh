@@ -2,8 +2,9 @@
 set -euo pipefail
 
 # Packages needed to create/run/manage the CachyOS test VM, plus tooling
-# used by the other scripts in this plan (expect, shellcheck).
-PACKAGES=(qemu-full libvirt virt-manager virt-viewer dnsmasq edk2-ovmf swtpm expect shellcheck)
+# used by the other scripts in this plan (expect, shellcheck) and the ISO
+# configurator dry run (gum).
+PACKAGES=(qemu-full libvirt virt-manager virt-viewer dnsmasq edk2-ovmf swtpm expect shellcheck gum)
 
 missing=()
 for pkg in "${PACKAGES[@]}"; do

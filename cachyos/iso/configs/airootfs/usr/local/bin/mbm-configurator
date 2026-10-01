@@ -1,0 +1,181 @@
+#!/usr/bin/env bash
+# made by moonlight installer: asks everything up front, then hands over to
+# mbm-install, which runs install-cachyos.sh --answers unattended.
+#   mbm-configurator            live ISO, tty1, as root
+#   mbm-configurator --dry-run  anywhere: walk every screen, print the answers
+set -euo pipefail
+
+MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
+MBM_ANSWERS="${MBM_ANSWERS:-/run/mbm-answers.env}"
+MBM_OWL="${MBM_OWL:-/usr/share/mbm/owl.ansi}"
+DRY_RUN=0
+[[ "${1:-}" == --dry-run ]] && DRY_RUN=1
+
+# shellcheck source=SCRIPTDIR/../../../../../../install/profile.sh
+source "$MBM_REPO/cachyos/install/profile.sh"
+# shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
+source "$MBM_REPO/cachyos/install/lib/detect.sh"
+# shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
+source "$MBM_REPO/cachyos/iso/lib/mbm.sh"
+
+# gum colours are ANSI slots; on the live console .automated_script.sh has
+# loaded the brand palette into them (3 accent, 0 background, 8 muted, 1 error).
+export GUM_INPUT_CURSOR_FOREGROUND=3 GUM_INPUT_PROMPT_FOREGROUND=3
+export GUM_CHOOSE_CURSOR_FOREGROUND=3 GUM_CHOOSE_SELECTED_FOREGROUND=3
+export GUM_FILTER_INDICATOR_FOREGROUND=3 GUM_FILTER_MATCH_FOREGROUND=3
+export GUM_CONFIRM_SELECTED_BACKGROUND=3 GUM_CONFIRM_SELECTED_FOREGROUND=0
+
+header() { clear; gum style --foreground 3 --bold --margin "1 2" "$1"; }
+note()   { gum style --foreground 8 --margin "0 2" -- "$@"; }
+fail()   { gum style --foreground 1 --margin "0 2" -- "$@"; }
+
+show_owl() {
+  if [[ -r "$MBM_OWL" ]]; then
+    cat "$MBM_OWL"
+  elif command -v magick >/dev/null; then
+    python3 "$MBM_REPO/cachyos/branding/render-console.py" \
+      "$MBM_REPO/cachyos/branding/owl.svg" --cols 48 --ansi || true
+  fi
+}
+
+welcome() {
+  clear
+  show_owl
+  echo
+  gum style --bold --margin "0 2" "m a d e   b y   m o o n l i g h t"
+  note "CachyOS · Hyprland · encrypted btrfs"
+  echo
+  gum confirm --affirmative "Let's go" --negative "Shell" \
+    "Install made by moonlight on this machine?" || exit 130
+}
+
+# UNVERIFIED: iwctl's table layout. If no networks parse, "Open iwctl" is the fallback.
+wifi_connect() {
+  local dev ssid pass
+  dev="$(iwctl device list 2>/dev/null | sed 's/\x1b\[[0-9;]*m//g' | awk '$NF == "station" {print $1; exit}')"
+  if [[ -z "$dev" ]]; then fail "No Wi-Fi device found."; sleep 2; return; fi
+  iwctl station "$dev" scan; sleep 3
+  mapfile -t nets < <(iwctl station "$dev" get-networks 2>/dev/null \
+    | sed 's/\x1b\[[0-9;]*m//g' \
+    | awk 'NR > 4 && NF >= 3 { line = $0; sub(/^[ \t>]+/, "", line); n = split(line, a, /[ \t]+/);
+                               s = a[1]; for (i = 2; i <= n - 2; i++) s = s " " a[i]; print s }')
+  if (( ${#nets[@]} == 0 )); then
+    note "Couldn't list networks; opening iwctl. Type 'exit' when connected."
+    iwctl || true; return
+  fi
+  ssid="$(printf '%s\n' "${nets[@]}" | gum choose --header "Wi-Fi network")" || return
+  pass="$(gum input --password --placeholder "Passphrase for $ssid")" || return
+  iwctl --passphrase "$pass" station "$dev" connect "$ssid" || fail "Couldn't connect to $ssid."
+  sleep 3
+}
+
+ensure_online() {
+  while ! mbm_online; do
+    header "No internet connection"
+    note "The install downloads packages, so it needs a connection."
+    case "$(gum choose "Connect to Wi-Fi" "Retry" "Shell")" in
+      "Connect to Wi-Fi") wifi_connect ;;
+      Retry) ;;
+      *) exit 130 ;;
+    esac
+  done
+}
+
+ask_hostname() {
+  local h="${HOST:-}"
+  header "1 / 5 · Hostname"
+  note "The machine's name on your network."
+  while true; do
+    h="$(gum input --placeholder "e.g. glaux" --value "$h")"
+    valid_hostname "$h" && break
+    fail "Use lowercase letters, digits and '-', up to 63 characters."
+  done
+  HOST="$h"
+}
+
+ask_timezone() {
+  header "2 / 5 · Timezone"
+  note "Type to search. Default: $TIMEZONE"
+  TZ_CHOICE="$( { echo "$TIMEZONE"; timedatectl list-timezones | grep -vxF "$TIMEZONE"; } \
+    | gum filter --height 12)"
+}
+
+read_twice() { # <label>  ->  prints the confirmed, non-empty secret
+  local p1 p2
+  while true; do
+    p1="$(gum input --password --placeholder "$1")"
+    p2="$(gum input --password --placeholder "Confirm $1")"
+    [[ -n "$p1" && "$p1" == "$p2" ]] && { printf '%s' "$p1"; return; }
+    fail "Empty, or they don't match. Try again." >&2
+  done
+}
+
+ask_password() {
+  header "3 / 5 · Password"
+  note "For your account, $USERNAME. The root account stays locked; use sudo."
+  USER_PW="$(read_twice "password")"
+  if gum confirm "Use the same passphrase to unlock the disk at boot?"; then
+    LUKS_PW="$USER_PW"
+  else
+    LUKS_PW="$(read_twice "disk passphrase")"
+  fi
+}
+
+ask_disk() {
+  local line kname model want typed disks
+  header "4 / 5 · Disk"
+  note "The disk you pick is erased completely. USB drives and this installer are hidden."
+  mapfile -t disks < <(list_disks | awk '$NF != "usb"')
+  (( ${#disks[@]} )) || { fail "No installable disks found."; exit 1; }
+  while true; do
+    line="$(printf '%s\n' "${disks[@]}" | gum choose --height 10)"
+    kname="${line%% *}"
+    model="$(lsblk -dno MODEL "$kname" | sed 's/[[:space:]]*$//')"
+    want="${model:-${kname##*/}}"                 # virtio disks have no model
+    fail "Everything on $kname will be destroyed."
+    typed="$(gum input --placeholder "Type \"$want\" to confirm, or leave empty to pick again")"
+    [[ "$typed" == "$want" ]] && break
+    note "That didn't match. Pick the disk again."
+  done
+  DISK_PATH="$(disk_by_id "$kname")"
+}
+
+summary() {
+  local ucode gpu memkb keep
+  ucode="$(detect_ucode /proc/cpuinfo || true)"
+  gpu="$(detect_gpu_pkgs "$(lspci -nn 2>/dev/null || true)")"
+  memkb="$(awk '/^MemTotal:/{print $2}' /proc/meminfo)"
+  mapfile -t keep < <(filter_fstab_entries "$(blkid -s UUID -o value 2>/dev/null || true)" "${EXTRA_FSTAB_ENTRIES[@]}")
+  header "5 / 5 · Ready to install"
+  gum style --margin "0 2" \
+    "Hostname    $HOST" \
+    "Timezone    $TZ_CHOICE" \
+    "Account     $USERNAME (root locked)" \
+    "Disk        $DISK_PATH" \
+    "Microcode   $ucode" \
+    "GPU         ${gpu:-generic}" \
+    "Memory      $(( memkb / 1024 )) MiB, zram $(zram_size "$memkb") MiB" \
+    "Data disks  ${#keep[@]} of ${#EXTRA_FSTAB_ENTRIES[@]} fstab entries present"
+  echo
+  gum confirm --affirmative "Install" --negative "Back" "Erase $DISK_PATH and install?"
+}
+
+welcome
+ensure_online
+while true; do
+  ask_hostname; ask_timezone; ask_password; ask_disk
+  summary && break
+done
+
+answers=(
+  "DISK=$DISK_PATH" "DISK_CONFIRMED=yes" "HOSTNAME=$HOST" "TIMEZONE=$TZ_CHOICE"
+  "USER_PASSWORD=$USER_PW" "LUKS_PASSPHRASE=$LUKS_PW"
+)
+if (( DRY_RUN )); then
+  tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT
+  write_answers "$tmp" "${answers[@]}"
+  echo; note "Dry run. install-cachyos.sh --answers would receive:"; mask_answers "$tmp"
+  exit 0
+fi
+write_answers "$MBM_ANSWERS" "${answers[@]}"
+exec mbm-install "$MBM_ANSWERS"
