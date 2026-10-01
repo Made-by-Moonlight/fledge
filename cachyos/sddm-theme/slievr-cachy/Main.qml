@@ -78,6 +78,7 @@ Rectangle {
 
     Rectangle {
       id: field
+      clip: true
       width: 360
       height: 44
       color: "#212a33"
