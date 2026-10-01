@@ -33,7 +33,10 @@ MIN_KERNEL="7.2"                  # refuse to install an older $KERNEL (hardware
 SWAP="hibernate"
 HIBERNATE_SWAP_SIZE=""            # empty -> auto: round(RAM up to GiB) + 2 GiB
 
-EXTRA_CMDLINE="quiet splash zswap.enabled=0"
+# plymouth.ignore-serial-consoles: when the firmware console includes a serial
+# port (VMs, some servers), systemd's UKI stub appends console=uart,... and
+# Plymouth then forces its plain text "details" screen at the LUKS prompt.
+EXTRA_CMDLINE="quiet splash plymouth.ignore-serial-consoles zswap.enabled=0"
 
 # Per-machine, optional. Full fstab lines, appended verbatim after genfstab.
 # Empty on the laptop. On the desktop: the 4 data disks, copied from the

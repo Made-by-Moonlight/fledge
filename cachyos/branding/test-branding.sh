@@ -47,6 +47,13 @@ check "about.txt is current" "$(cat "$repo/dot-config/omarchy/branding/about.txt
 committed="$repo/cachyos/plymouth-theme/slievr-cachy/logo.png"
 fresh="$T/assets/cachyos/plymouth-theme/slievr-cachy/logo.png"
 check "plymouth logo is 320px wide" "320" "$(magick identify -format '%w' "$committed")"
+ply_rel=cachyos/plymouth-theme/slievr-cachy
+for f in entry.png bullet.png lock.png progress_box.png progress_bar.png; do
+  check "plymouth $f is current" "0" \
+    "$(magick compare -metric AE "$repo/$ply_rel/$f" "$T/assets/$ply_rel/$f" null: 2>&1 | awk '{print $1}')"
+done
+check "plymouth dot is amber" "F4AF03" "$(magick "$repo/$ply_rel/bullet.png" -format '%[hex:p{7,7}]' info: | cut -c1-6)"
+check "plymouth field fill is #212a33" "212A33" "$(magick "$repo/$ply_rel/entry.png" -format '%[hex:p{143,24}]' info: | cut -c1-6)"
 check "plymouth logo is current (0 differing pixels)" "0" \
   "$(magick compare -metric AE "$committed" "$fresh" null: 2>&1 | awk '{print $1}')"
 
