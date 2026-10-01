@@ -1,7 +1,7 @@
 # made by moonlight desktop theme — design
 
 **Date:** 2026-10-01
-**Status:** approved (user said "write the spec and do it")
+**Status:** implemented (see plan)
 **Builds on:** `2026-10-01-custom-iso-design.md` (branch `custom-iso`)
 **Mockups:** https://claude.ai/artifact/FvBp7ejtFWAdXRkffAYeBT
 
