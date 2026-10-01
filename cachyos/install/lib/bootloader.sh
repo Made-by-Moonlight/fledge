@@ -47,8 +47,11 @@ BOOT_ORDER="*, *fallback, Snapshots"
 MAX_SNAPSHOT_ENTRIES=5
 EOF
 
-  echo ">>> mkinitcpio -P" >&2
-  mkinitcpio -P
+  # With limine-mkinitcpio-hook installed there are no standard mkinitcpio
+  # presets; plain `mkinitcpio -P` stops to ask "run limine-mkinitcpio now?
+  # [Y/n]", which hangs an unattended install. Call the wrapper directly.
+  echo ">>> limine-mkinitcpio" >&2
+  limine-mkinitcpio
 
   echo ">>> limine-update" >&2
   limine-update
