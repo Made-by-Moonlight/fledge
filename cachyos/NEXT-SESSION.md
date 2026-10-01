@@ -14,13 +14,18 @@ Design: `docs/superpowers/specs/2026-10-01-custom-iso-design.md`
 Plan:   `docs/superpowers/plans/2026-10-01-custom-iso.md`
 
 ISO built: `release/made-by-moonlight-2026.10.01-x86_64.iso`
-SHA256: `b263ccf535bd3aeda50b7b18012ff12aa033ca6be3f7f2d11e89e80c32805f0e`
+SHA256: `9d38515e3bc44de8be04eac2ceaaa8769ee56f9f792a8c96102b4611402c15c2`
 Live kernel: 7.2.7
 Desktop theme made-by-moonlight (login, lock, Moonrise wallpaper, themed apps) — **VM-verified 2026-10-02**:
   install → firstboot → SDDM login → Hyprland, screenshots of installer, login, desktop, lock, walker, btop
   all match the mockups; `verify-install.sh` 16/16 PASS (after fixes 9aeee3f, bc9bacf, 8c5a8a6, applied to
   the VM by re-running bootstrap.sh; the ISO above includes them but has not had a fresh end-to-end run).
-  Open: the LUKS unlock shows Plymouth's text prompt in the VM, not the graphical owl splash (not investigated).
+  LUKS unlock now graphical (owl, brand field) — the text prompt was Plymouth forcing "details" because
+  systemd's UKI stub appends console=uart,… when the firmware console has a serial port; fixed with
+  plymouth.ignore-serial-consoles in profile.sh EXTRA_CMDLINE (3855d49). The owl is centred on the
+  midpoint between its eyes on unlock, login, lock and wallpaper (9021778) — all VM-verified 2026-10-02.
+  ISO above is built from bare-metal-install @ 9021778; not yet re-run end to end from a fresh install.
+  Heads-up: Hyprland warns the .conf config format is removed in 0.57 — plan a migration before then.
 
 **Pending checks** (by the user):
 1. Answers-mode install from the stock ISO (plan Task 2 Step 10)
