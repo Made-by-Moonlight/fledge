@@ -30,7 +30,11 @@ EOF
 echo ">>> users" >&2
 useradd -m -G wheel -s /bin/bash "${USERNAME}"
 printf '%s:%s\n' "${USERNAME}" "${USER_PASSWORD}" | chpasswd
-printf 'root:%s\n' "${ROOT_PASSWORD}" | chpasswd
+if [[ -n "${ROOT_PASSWORD:-}" ]]; then
+  printf 'root:%s\n' "${ROOT_PASSWORD}" | chpasswd
+else
+  passwd -l root            # unattended (ISO) install: no root login, sudo via wheel
+fi
 sed -i 's/^# %wheel ALL=(ALL:ALL) ALL/%wheel ALL=(ALL:ALL) ALL/' /etc/sudoers
 
 echo ">>> zram (${ZRAM_SIZE} MiB)" >&2

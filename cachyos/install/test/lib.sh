@@ -1,6 +1,7 @@
 # shellcheck shell=bash
 # Assertions shared by the bash test scripts. Source it, run checks, then
 # `exit $fail`.
+# shellcheck disable=SC2034  # read by the scripts that source this file
 fail=0
 check() { # <description> <expected> <actual>
   if [[ "$2" == "$3" ]]; then

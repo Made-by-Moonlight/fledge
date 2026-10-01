@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hardware-adaptive CachyOS installer. Run as root in the stock CachyOS live ISO.
-#   sudo /path/to/cachyos/install/install-cachyos.sh [--allow-usb]
+#   sudo /path/to/cachyos/install/install-cachyos.sh [--allow-usb] [--answers FILE]
 #
 # See ./README.md and ../../docs/superpowers/specs/2026-08-28-bare-metal-install-design.md
 set -euo pipefail
@@ -15,13 +15,30 @@ source "$HERE/profile.sh"
 source "$HERE/lib/detect.sh"
 # shellcheck source=lib/disk.sh
 source "$HERE/lib/disk.sh"
-
-ALLOW_USB=0
-[[ "${1:-}" == "--allow-usb" ]] && ALLOW_USB=1
+# shellcheck source=lib/answers.sh
+source "$HERE/lib/answers.sh"
 
 die()  { printf '\e[31mERROR:\e[0m %s\n' "$*" >&2; exit 1; }
 warn() { printf '\e[33mWARN:\e[0m  %s\n' "$*" >&2; }
 rule() { printf '\n\e[1m== %s ==\e[0m\n' "$*"; }
+
+ALLOW_USB=0
+ANSWERS=""
+while (( $# )); do
+  case "$1" in
+    --allow-usb) ALLOW_USB=1 ;;
+    --answers)   ANSWERS="${2:?--answers needs a file}"; shift ;;
+    *)           die "unknown argument: $1" ;;
+  esac
+  shift
+done
+if [[ -n "$ANSWERS" ]]; then
+  load_answers "$ANSWERS" || die "unusable answers file: $ANSWERS"
+  for k in DISK HOSTNAME USER_PASSWORD LUKS_PASSPHRASE; do
+    [[ -n "${!k:-}" ]] || die "answers file is missing $k"
+  done
+  ROOT_PASSWORD="${ROOT_PASSWORD:-}"     # empty -> root locked (chroot-setup.sh)
+fi
 
 ########################################################################
 rule "Preflight"
@@ -40,6 +57,11 @@ grep -qiE 'archiso|cachyos|miso' /proc/cmdline \
   || warn "this doesn't look like a live ISO ( /proc/cmdline has no archiso/cachyos )"
 ping -c1 -W2 "$MIRROR_CHECK_HOST" >/dev/null 2>&1 \
   || warn "can't reach $MIRROR_CHECK_HOST - pacstrap will fail without network"
+pacman -Sy --noconfirm >/dev/null || die "couldn't sync package databases"
+KERNEL_VER="$(pacman -Si "$KERNEL" 2>/dev/null | awk '/^Version/ {print $3; exit}')"
+[[ -n "$KERNEL_VER" ]] || die "$KERNEL is not in the configured repos"
+(( $(vercmp "$KERNEL_VER" "$MIN_KERNEL") >= 0 )) \
+  || die "$KERNEL $KERNEL_VER is older than the required $MIN_KERNEL"
 
 ########################################################################
 rule "Hardware detection"
@@ -61,6 +83,7 @@ mapfile -t KEEP_FSTAB < <(filter_fstab_entries "$(blkid -s UUID -o value)" "${EX
 
 cat <<EOF
 
+  kernel         : ${KERNEL} ${KERNEL_VER} (minimum ${MIN_KERNEL})
   microcode      : ${UCODE}
   GPU packages   : ${GPU_PKGS:-(none - generic)}
   GPU cmdline    : ${GPU_CMDLINE:-(none)}
@@ -75,31 +98,28 @@ EOF
 ########################################################################
 rule "Target disk"
 ########################################################################
-mapfile -t DISKS < <(list_disks)
-(( ${#DISKS[@]} > 0 )) || die "no candidate disks found"
+if [[ -n "${DISK:-}" ]]; then
+  [[ -b "$DISK" ]] || die "answers DISK is not a block device: $DISK"
+  DISK_KNAME="$(realpath "$DISK")"
+  DISK_TRAN="$(lsblk -dno TRAN "$DISK_KNAME")"
+else
+  mapfile -t DISKS < <(list_disks)
+  (( ${#DISKS[@]} > 0 )) || die "no candidate disks found"
 
-echo "Candidate disks:"
-i=0
-for d in "${DISKS[@]}"; do
-  printf '  [%d] %s\n' "$i" "$d"
-  i=$(( i + 1 ))
-done
-read -rp "Select target disk number (its ENTIRE contents will be destroyed): " idx
-[[ "$idx" =~ ^[0-9]+$ && "$idx" -lt "${#DISKS[@]}" ]] || die "invalid selection"
+  echo "Candidate disks:"
+  i=0
+  for d in "${DISKS[@]}"; do
+    printf '  [%d] %s\n' "$i" "$d"
+    i=$(( i + 1 ))
+  done
+  read -rp "Select target disk number (its ENTIRE contents will be destroyed): " idx
+  [[ "$idx" =~ ^[0-9]+$ && "$idx" -lt "${#DISKS[@]}" ]] || die "invalid selection"
 
-DISK_KNAME="$(awk '{print $1}' <<<"${DISKS[$idx]}")"           # /dev/nvme1n1
-DISK_TRAN="$(awk '{print $NF}' <<<"${DISKS[$idx]}")"           # nvme|sata|usb|...
+  DISK_KNAME="$(awk '{print $1}' <<<"${DISKS[$idx]}")"           # /dev/nvme1n1
+  DISK_TRAN="$(awk '{print $NF}' <<<"${DISKS[$idx]}")"           # nvme|sata|usb|...
+  DISK="$(disk_by_id "$DISK_KNAME")"
+fi
 DISK_MODEL="$(lsblk -dno MODEL "$DISK_KNAME" | sed 's/[[:space:]]*$//')"
-
-# resolve to a stable by-id path (prefer nvme-/ata-, never wwn-/eui-/-part)
-DISK=""
-for link in /dev/disk/by-id/*; do
-  [[ -e "$link" ]] || continue
-  [[ "$link" == *-part* ]] && continue
-  case "${link##*/}" in wwn-*|*eui.*) continue ;; esac
-  if [[ "$(realpath "$link")" == "$DISK_KNAME" ]]; then DISK="$link"; break; fi
-done
-[[ -n "$DISK" ]] || DISK="$DISK_KNAME"
 
 # guards
 if findmnt -rno SOURCE | grep -qE "^${DISK_KNAME}([0-9p]|$)"; then
@@ -120,26 +140,30 @@ echo "  transport: ${DISK_TRAN}"
 echo "  current layout:"
 sgdisk -p "$DISK_KNAME" 2>/dev/null | sed 's/^/    /' || echo "    (no GPT / unreadable)"
 echo
-read -rp "Type the disk MODEL exactly to confirm [${DISK_MODEL}]: " typed
-[[ "$typed" == "$DISK_MODEL" ]] || die "model string did not match - aborting"
-read -rp "Last chance. Type YES to DESTROY $DISK_KNAME: " last
-[[ "$last" == "YES" ]] || die "aborted"
+if [[ "${DISK_CONFIRMED:-}" != yes ]]; then
+  read -rp "Type the disk MODEL exactly to confirm [${DISK_MODEL}]: " typed
+  [[ "$typed" == "$DISK_MODEL" ]] || die "model string did not match - aborting"
+  read -rp "Last chance. Type YES to DESTROY $DISK_KNAME: " last
+  [[ "$last" == "YES" ]] || die "aborted"
+fi
 
 ########################################################################
 rule "Passphrases"
 ########################################################################
-read -rsp "New user (${USERNAME}) password: " USER_PASSWORD; echo
-read -rsp "Confirm user password: "                p2;      echo
-[[ "$USER_PASSWORD" == "$p2" && -n "$USER_PASSWORD" ]] || die "user passwords differ/empty"
-read -rsp "New root password: " ROOT_PASSWORD; echo
-read -rsp "Confirm root password: " p2;        echo
-[[ "$ROOT_PASSWORD" == "$p2" && -n "$ROOT_PASSWORD" ]] || die "root passwords differ/empty"
+if [[ -z "$ANSWERS" ]]; then
+  read -rsp "New user (${USERNAME}) password: " USER_PASSWORD; echo
+  read -rsp "Confirm user password: "                p2;      echo
+  [[ "$USER_PASSWORD" == "$p2" && -n "$USER_PASSWORD" ]] || die "user passwords differ/empty"
+  read -rsp "New root password: " ROOT_PASSWORD; echo
+  read -rsp "Confirm root password: " p2;        echo
+  [[ "$ROOT_PASSWORD" == "$p2" && -n "$ROOT_PASSWORD" ]] || die "root passwords differ/empty"
+fi
 
 ########################################################################
 rule "Partitioning + encryption + filesystems"
 ########################################################################
 partition_disk "$DISK"
-luks_format_open "$LUKS_PART"          # prompts for the LUKS passphrase x2
+luks_format_open "$LUKS_PART"          # LUKS_PASSPHRASE from answers, else prompts x2
 make_filesystems
 make_swapfile
 
@@ -233,5 +257,7 @@ when it finishes. No manual step. If bootstrap fails you land at a TTY with
 the repo at /home/${USERNAME}/proj/slievr-cachy and instructions on screen.
 
 EOF
-read -rp "Reboot now? [y/N] " r
-[[ "$r" == [yY] ]] && reboot
+if [[ -z "$ANSWERS" ]]; then
+  read -rp "Reboot now? [y/N] " r
+  [[ "$r" == [yY] ]] && reboot
+fi

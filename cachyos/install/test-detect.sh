@@ -52,4 +52,15 @@ check "fstab filter non-UUID passes"     "/dev/sdz1 /z ext4 defaults 0 0" \
   "$(filter_fstab_entries "" "/dev/sdz1 /z ext4 defaults 0 0")"
 check "fstab filter exact match only"    ""   "$(filter_fstab_entries "aaaa-11112" "$A")"
 
+T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
+mkdir -p "$T/dev" "$T/by-id"
+: > "$T/dev/nvme0n1"; : > "$T/dev/nvme0n1p1"; : > "$T/dev/vda"
+ln -s ../dev/nvme0n1   "$T/by-id/wwn-0x5000000000000001"
+ln -s ../dev/nvme0n1   "$T/by-id/nvme-eui.0025385a01234567"
+ln -s ../dev/nvme0n1p1 "$T/by-id/nvme-Samsung_SSD_990_PRO_2TB_S123-part1"
+ln -s ../dev/nvme0n1   "$T/by-id/nvme-Samsung_SSD_990_PRO_2TB_S123"
+check "disk_by_id picks the model link" "$T/by-id/nvme-Samsung_SSD_990_PRO_2TB_S123" \
+  "$(disk_by_id "$T/dev/nvme0n1" "$T/by-id")"
+check "disk_by_id falls back to kname"  "$T/dev/vda" "$(disk_by_id "$T/dev/vda" "$T/by-id")"
+
 exit $fail

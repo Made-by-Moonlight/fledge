@@ -26,6 +26,7 @@ CREATE_SNAPSHOTS_SUBVOL=true      # create @/.snapshots now so snapper can be
                                   # configure snapper / limine-snapper-sync)
 
 KERNEL="linux-cachyos"
+MIN_KERNEL="7.2"                  # refuse to install an older $KERNEL (hardware needs 7.2+)
 
 # "hibernate" = zram-generator + an encrypted btrfs swapfile (+ resume= cmdline).
 # "zram"      = zram-generator only, no hibernate.

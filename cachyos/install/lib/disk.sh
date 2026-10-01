@@ -6,6 +6,7 @@
 # Consumes from profile.sh: ESP_SIZE LUKS_NAME BTRFS_SUBVOLS BTRFS_OPTS
 #                           CREATE_SNAPSHOTS_SUBVOL SWAP HIBERNATE_SWAP_SIZE
 # Consumes from detect.sh:  hibernate_swap_size
+# Consumes (optional):      LUKS_PASSPHRASE (unattended install)
 # Sets globals: ESP_PART LUKS_PART LUKS_PARTUUID RESUME_OFFSET
 
 _log() { printf '>>> %s\n' "$*" >&2; }
@@ -36,12 +37,16 @@ partition_disk() {
   _log "ESP=$ESP_PART  LUKS=$LUKS_PART"
 }
 
-# luks_format_open <luks_part>   (reads passphrase on stdin, twice)
+# luks_format_open <luks_part>   (LUKS_PASSPHRASE if set, else prompts twice)
 luks_format_open() {
   local part="$1" p1 p2
-  read -rsp "LUKS passphrase: " p1; echo >&2
-  read -rsp "Confirm passphrase: " p2; echo >&2
-  [[ "$p1" == "$p2" && -n "$p1" ]] || { echo "passphrases differ or empty" >&2; return 1; }
+  if [[ -n "${LUKS_PASSPHRASE:-}" ]]; then
+    p1="$LUKS_PASSPHRASE"
+  else
+    read -rsp "LUKS passphrase: " p1; echo >&2
+    read -rsp "Confirm passphrase: " p2; echo >&2
+    [[ "$p1" == "$p2" && -n "$p1" ]] || { echo "passphrases differ or empty" >&2; return 1; }
+  fi
 
   _log "luksFormat $part"
   printf '%s' "$p1" | cryptsetup luksFormat --type luks2 --batch-mode "$part" -

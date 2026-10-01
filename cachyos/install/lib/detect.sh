@@ -119,3 +119,20 @@ list_disks() {
       printf "%s\n", $0
     }'
 }
+
+# disk_by_id <kname> [byid_dir]  ->  stable by-id path for a whole disk, or
+# kname when there is none (e.g. virtio). Skips -partN, wwn-* and eui links,
+# which are either partitions or opaque.
+disk_by_id() {
+  local kname="$1" dir="${2:-/dev/disk/by-id}" link want
+  want="$(realpath "$kname")"
+  for link in "$dir"/*; do
+    [[ -e "$link" ]] || continue
+    [[ "$link" == *-part* ]] && continue
+    case "${link##*/}" in wwn-*|*eui.*) continue ;; esac
+    if [[ "$(realpath "$link")" == "$want" ]]; then
+      echo "$link"; return 0
+    fi
+  done
+  echo "$kname"
+}
