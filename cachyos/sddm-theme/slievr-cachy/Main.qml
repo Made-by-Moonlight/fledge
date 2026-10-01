@@ -5,7 +5,7 @@ Rectangle {
   id: root
   width: 640
   height: 480
-  color: "#131315"
+  color: "#171e28"
 
   // userModel.lastUser is empty on a fresh install (nobody has logged in via
   // SDDM yet), which made sddm.login() fire with an empty username -> "user
@@ -40,90 +40,90 @@ Rectangle {
     }
   }
 
+  Image {
+    anchors.fill: parent
+    source: "background.png"
+    fillMode: Image.PreserveAspectCrop
+  }
+
   Column {
     anchors.centerIn: parent
-    spacing: 40
+    spacing: 26
 
     Image {
       id: logo
       source: "logo.png"
-      width: Math.min(sourceSize.width, root.width * 0.8)
+      width: 260
       height: sourceSize.width > 0 ? Math.round(width * sourceSize.height / sourceSize.width) : 0
       fillMode: Image.PreserveAspectFit
       anchors.horizontalCenter: parent.horizontalCenter
     }
 
-    Row {
+    Text {
+      text: "made by moonlight"
+      color: "#ffffff"
+      font.family: "JetBrainsMono Nerd Font"
+      font.pixelSize: 18
+      font.letterSpacing: 9
       anchors.horizontalCenter: parent.horizontalCenter
-      spacing: 10
+    }
 
-      Image {
-        source: root.loginFailed ? "lock-failed.png" : "lock.png"
-        width: 22
-        height: 25
-        fillMode: Image.PreserveAspectFit
+    Text {
+      text: root.currentUser
+      color: "#6c7787"
+      font.family: "JetBrainsMono Nerd Font"
+      font.pixelSize: 13
+      anchors.horizontalCenter: parent.horizontalCenter
+    }
+
+    Rectangle {
+      id: field
+      width: 360
+      height: 44
+      color: "#212a33"
+      border.width: 2
+      border.color: root.loginFailed ? "#e5626a" : "#2f3640"
+      anchors.horizontalCenter: parent.horizontalCenter
+
+      Row {
+        anchors.left: parent.left
+        anchors.leftMargin: 16
         anchors.verticalCenter: parent.verticalCenter
+        spacing: 6
+
+        Repeater {
+          model: Math.min(password.text.length, 32)
+          Rectangle { width: 7; height: 7; radius: 3.5; color: "#f4af03" }
+        }
       }
 
-      Item {
-        width: entry.width
-        height: entry.height
+      TextInput {
+        id: password
+        anchors.fill: parent
+        anchors.leftMargin: 16
+        anchors.rightMargin: 16
+        verticalAlignment: TextInput.AlignVCenter
+        echoMode: TextInput.Password
+        font.family: "JetBrainsMono Nerd Font"
+        font.pixelSize: 16
+        font.letterSpacing: 3
+        passwordCharacter: "\u2022"
+        color: "transparent"
+        selectionColor: "transparent"
+        selectedTextColor: "transparent"
+        cursorDelegate: Item {}
+        focus: true
 
-        Image {
-          id: entry
-          source: root.loginFailed ? "entry-failed.png" : "entry.png"
-          width: 186
-          height: 31
-          fillMode: Image.PreserveAspectFit
-          anchors.centerIn: parent
-        }
+        onTextChanged: root.loginFailed = false
 
-        Row {
-          anchors.left: parent.left
-          anchors.leftMargin: 13
-          anchors.verticalCenter: parent.verticalCenter
-          spacing: 3
-
-          Repeater {
-            model: Math.min(password.text.length, 21)
-
-            Image {
-              source: "bullet.png"
-              width: 5
-              height: 5
-            }
-          }
-        }
-
-        TextInput {
-          id: password
-          anchors.fill: parent
-          anchors.leftMargin: 13
-          anchors.rightMargin: 13
-          verticalAlignment: TextInput.AlignVCenter
-          echoMode: TextInput.Password
-          font.family: "JetBrainsMono Nerd Font"
-          font.pixelSize: 16
-          font.letterSpacing: 3
-          passwordCharacter: "\u2022"
-          color: "transparent"
-          selectionColor: "transparent"
-          selectedTextColor: "transparent"
-          cursorDelegate: Item {}
-          focus: true
-
-          onTextChanged: root.loginFailed = false
-
-          Keys.onPressed: {
-            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
-              sddm.login(root.currentUser, password.text, root.sessionIndex)
-              event.accepted = true
-            }
+        Keys.onPressed: {
+          if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+            sddm.login(root.currentUser, password.text, root.sessionIndex)
+            event.accepted = true
           }
         }
       }
     }
-
   }
 
   Component.onCompleted: password.forceActiveFocus()
