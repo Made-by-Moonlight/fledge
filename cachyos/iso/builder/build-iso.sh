@@ -105,7 +105,7 @@ cp -a /src "$PROFILE/airootfs/usr/share/slievr-cachy"
   echo ')'
 } >> "$PROFILE/profiledef.sh"
 mkdir -p "$PROFILE/airootfs/usr/share/mbm"
-python3 /src/cachyos/branding/render-console.py /src/cachyos/branding/owl.svg --cols 48 --ansi \
+python3 /src/cachyos/branding/render-console.py /src/cachyos/branding/owl.svg --cols 40 --ansi \
   > "$PROFILE/airootfs/usr/share/mbm/owl.ansi"
 
 step "sanity checks"

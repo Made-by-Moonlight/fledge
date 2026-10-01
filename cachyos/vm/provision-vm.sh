@@ -54,6 +54,7 @@ virt-install \
   --graphics spice \
   --console pty,target_type=serial \
   --boot uefi \
+  --tpm emulator \
   --events on_reboot=restart \
   --noautoconsole
 

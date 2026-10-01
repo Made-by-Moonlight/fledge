@@ -15,3 +15,11 @@ mkdir -p "$cache"
 cp -f "$iso" "$cache/"
 ISO_PATH="$cache/${iso##*/}" "$REPO/cachyos/vm/provision-vm.sh"
 echo "Open the console: virt-viewer --connect qemu:///system cachyos-test"
+
+# virt-install's first boot powers the VM off at the installer's reboot
+# instead of restarting it. Wait for that, then boot the installed system.
+V=(virsh -c qemu:///system)
+echo "Waiting for the install to finish and the VM to power off (Ctrl-C stops waiting)..."
+until [[ "$("${V[@]}" domstate cachyos-test 2>/dev/null)" == "shut off" ]]; do sleep 10; done
+"${V[@]}" start cachyos-test
+echo "Booting the installed system."

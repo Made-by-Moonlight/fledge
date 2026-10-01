@@ -10,7 +10,7 @@ ok()  { printf 'PASS  %s\n' "$1"; }
 no()  { printf 'FAIL  %s\n' "$1"; bad=1; }
 is()  { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 
-is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager | grep -c .)"
+is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager --no-legend | grep -c .)"
 is "firstboot finished bootstrap"      1      "$(grep -c 'Bootstrap complete.' /var/log/slievr-firstboot.log)"
 is "no failed units"                   0      "$(systemctl --failed --no-legend | grep -c .)"
 is "sddm active"                       active "$(systemctl is-active sddm)"
@@ -22,6 +22,7 @@ is "linux-cachyos kernel"              yes    "$(pacman -Q linux-cachyos >/dev/n
 is "running kernel >= 7.2"             yes    "$( (( $(vercmp "$(uname -r | sed 's/-.*//')" 7.2) >= 0 )) && echo yes || echo no)"
 is "repo origin is GitHub"             yes    "$(git -C ~/proj/slievr-cachy remote get-url origin | grep -q '^https://github.com/' && echo yes || echo no)"
 is "bootstrap.sh is executable"        yes    "$([[ -x ~/proj/slievr-cachy/cachyos/bootstrap.sh ]] && echo yes || echo no)"
+is "$HOME/.config is a real directory"     yes    "$( [[ -d $HOME/.config && ! -L $HOME/.config ]] && echo yes || echo no )"
 is "repo has no local changes"         ""     "$(git -C ~/proj/slievr-cachy status --porcelain)"
 
 exit $bad

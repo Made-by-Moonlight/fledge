@@ -24,6 +24,7 @@ export GUM_INPUT_CURSOR_FOREGROUND=3 GUM_INPUT_PROMPT_FOREGROUND=3
 export GUM_CHOOSE_CURSOR_FOREGROUND=3 GUM_CHOOSE_SELECTED_FOREGROUND=3
 export GUM_FILTER_INDICATOR_FOREGROUND=3 GUM_FILTER_MATCH_FOREGROUND=3
 export GUM_CONFIRM_SELECTED_BACKGROUND=3 GUM_CONFIRM_SELECTED_FOREGROUND=0
+export GUM_CONFIRM_PROMPT_FOREGROUND=7
 
 header() { clear; gum style --foreground 3 --bold --margin "1 2" "$1"; }
 note()   { gum style --foreground 8 --margin "0 2" -- "$@"; }
@@ -34,7 +35,7 @@ show_owl() {
     cat "$MBM_OWL"
   elif command -v magick >/dev/null; then
     python3 "$MBM_REPO/cachyos/branding/render-console.py" \
-      "$MBM_REPO/cachyos/branding/owl.svg" --cols 48 --ansi || true
+      "$MBM_REPO/cachyos/branding/owl.svg" --cols 40 --ansi || true
   fi
 }
 
