@@ -66,9 +66,28 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0   # slievr-iso-make clones the checkout; give it full history
+          persist-credentials: false
 
       - name: Build ISO
-        run: cachyos/iso/bin/slievr-iso-make
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          # A tag checks out as a detached HEAD, and the installed repo would then
+          # have no upstream (no git pull). Releases come from main: build from a
+          # local main at the tagged commit so the installed repo tracks origin/main.
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            if ! git merge-base --is-ancestor HEAD origin/main; then
+              echo "::error::$GITHUB_REF_NAME is not on main; tag a commit on main to release"
+              exit 1
+            fi
+            git switch -C main
+          fi
+          # The repo is private: let slievr-iso-make's ls-remote see the branch.
+          # Global config on the runner only — the ISO's clone doesn't copy it.
+          git config --global http.https://github.com/.extraheader \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
+          cachyos/iso/bin/slievr-iso-make
 
       - name: Verify
         id: iso
