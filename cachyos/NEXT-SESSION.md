@@ -6,7 +6,26 @@ note, not permanent project doc).
 
 ---
 
-# ⟶ RESUME HERE (2026-08-31): bare-metal install — firstboot validated
+# ⟶ RESUME HERE (2026-10-01): made by moonlight ISO — all code committed
+
+**Branch `custom-iso`** (worktree `/home/slievr/proj/slievr-cachy-iso`, off `main`,
+NOT pushed, NOT merged).
+Design: `docs/superpowers/specs/2026-10-01-custom-iso-design.md`
+Plan:   `docs/superpowers/plans/2026-10-01-custom-iso.md`
+
+ISO built: `release/made-by-moonlight-2026.10.01-x86_64.iso`
+SHA256: `d8a530bffe9b3cb0bd5c7e112b9791f70c7c96870f88cfa1a8e94f58f5d33e49`
+Live kernel: 7.2.7
+
+**Pending checks** (by the user):
+1. Answers-mode install from the stock ISO (plan Task 2 Step 10)
+2. Brand palette on a real console (Task 5 Step 3)
+3. Full ISO run in the VM + `verify-install.sh` + Hyprland login (Task 7 Steps 5–7)
+4. Interactive configurator dry run (Task 4 Step 5)
+
+---
+
+# ARCHIVE: RESUME HERE (2026-08-31): bare-metal install — firstboot validated
 
 **Branch `bare-metal-install`** (off `main`, NOT pushed, NOT merged).
 Design: `docs/superpowers/specs/2026-08-28-bare-metal-install-design.md`

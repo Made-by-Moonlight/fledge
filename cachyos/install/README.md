@@ -28,7 +28,9 @@ the first reboot.
 | `lib/disk.sh` | partition + LUKS + btrfs + swapfile |
 | `lib/bootloader.sh` | Limine UKI setup (runs in chroot) |
 | `lib/chroot-setup.sh` | system config (runs in chroot) |
+| `lib/answers.sh` | parse unattended answers file |
 | `test-detect.sh` | runs `lib/detect.sh` against fixtures; `bash test-detect.sh` |
+| `test-answers.sh` | runs `lib/answers.sh` against fixtures; `bash test-answers.sh` |
 
 ## Before you run it, per machine
 
@@ -58,6 +60,19 @@ finishes and reboots:
 # log in as the user, then from the staged repo:
 ~/proj/slievr-cachy/cachyos/bootstrap.sh
 ```
+
+## Unattended (`--answers`)
+
+The ISO's configurator writes `/run/mbm-answers.env` (mode 600) and runs
+
+    install-cachyos.sh --answers /run/mbm-answers.env
+
+Keys: `DISK` (by-id path), `DISK_CONFIRMED=yes`, `HOSTNAME`, `TIMEZONE`,
+`USER_PASSWORD`, `LUKS_PASSPHRASE`, optional `ROOT_PASSWORD` (empty → root
+locked). One `KEY=value` per line, unquoted; parsed by `lib/answers.sh`, never
+sourced; deleted once read. Without `--answers` everything prompts as before.
+Data-disk fstab entries from `profile.sh` are only written when their UUID is
+present on the machine.
 
 ## Testing the detection logic (no VM)
 
