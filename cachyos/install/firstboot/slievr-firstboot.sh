@@ -34,8 +34,23 @@ chmod 440 "$SUDOERS"
 cleanup() { rm -f "$SUDOERS"; }
 trap cleanup EXIT
 
-echo ">>> running $BOOTSTRAP as $USER_NAME"
-if runuser -l "$USER_NAME" -c "$BOOTSTRAP"; then
+# CachyOS mirrors are occasionally mid-sync (the database lists a package the
+# mirror doesn't have yet -> 404 and bootstrap aborts). Retry a couple of times
+# with fresh databases before giving up; bootstrap.sh is safe to re-run.
+ok=0
+rc=0
+for attempt in 1 2 3; do
+  echo ">>> running $BOOTSTRAP as $USER_NAME (attempt $attempt/3)"
+  runuser -l "$USER_NAME" -c "$BOOTSTRAP" && { ok=1; break; }
+  rc=$?
+  if (( attempt < 3 )); then
+    echo ">>> bootstrap failed (exit $rc) - a mirror may be mid-sync; refreshing databases and retrying in 60s"
+    sleep 60
+    pacman -Syy --noconfirm || true
+  fi
+done
+
+if (( ok )); then
   echo
   echo ">>> bootstrap OK — enabling graphical login"
   systemctl disable slievr-firstboot.service || true
@@ -43,7 +58,6 @@ if runuser -l "$USER_NAME" -c "$BOOTSTRAP"; then
   systemctl start sddm.service
   echo ">>> done. SDDM should be up now."
 else
-  rc=$?
   echo
   echo "##################################################################"
   echo "# bootstrap FAILED (exit $rc). Full log: $LOG"

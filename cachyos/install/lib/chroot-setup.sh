@@ -69,7 +69,9 @@ echo ">>> CachyOS repos" >&2
 if ! grep -q '^\[cachyos\]' /etc/pacman.conf; then
   curl -fsSL https://mirror.cachyos.org/cachyos-repo.tar.xz -o /tmp/cachyos-repo.tar.xz
   tar xf /tmp/cachyos-repo.tar.xz -C /tmp
-  ( cd /tmp/cachyos-repo && ./cachyos-repo.sh )
+  # cachyos-repo.sh runs pacman without --noconfirm (e.g. "Replace zlib with
+  # zlib-ng-compat? [Y/n]"); feed empty lines so every prompt takes its default.
+  ( cd /tmp/cachyos-repo && ./cachyos-repo.sh < <(yes '') )
 fi
 pacman -Syu --noconfirm
 
