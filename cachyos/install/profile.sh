@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2034  # every variable here is consumed by the scripts that source this file
 # Fixed, hardware-INDEPENDENT install choices. Sourced by install-cachyos.sh.
 # Everything hardware-specific (microcode, GPU driver, kernel params for the
 # GPU, target disk, partition-name suffix, swap sizing) is DETECTED at install

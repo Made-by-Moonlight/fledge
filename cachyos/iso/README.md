@@ -26,6 +26,17 @@ the repo is public.
 The installed system's root account is locked, so systemd's emergency/rescue
 shell won't open (sulogin refuses a locked root); recover by booting this ISO.
 
+## Release (GitHub Actions)
+
+`.github/workflows/iso.yml` runs the unit tests and shellcheck on every push and
+pull request. Pushing a version tag builds the ISO on GitHub and publishes a
+Release with the ISO and its `.sha256` attached:
+
+    git tag v2026.10.02 && git push origin v2026.10.02
+
+"Run workflow" on the Actions tab builds the ISO as a check without publishing.
+The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
+
 ## Write to a USB stick
 
     sha256sum -c release/*.sha256

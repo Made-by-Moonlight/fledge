@@ -1,0 +1,112 @@
+name: made by moonlight ISO
+
+# test: every push / PR — unit tests + shellcheck, in Arch (ImageMagick 7 etc.)
+# iso:  version tags (v*) build the installer ISO and publish a GitHub Release;
+#       "Run workflow" builds it as a check without publishing (release assets
+#       don't count against artifact storage, but a 1.7 GB workflow artifact
+#       would blow the private-repo quota, so manual runs don't upload).
+
+on:
+  push:
+    branches: ["**"]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    container: archlinux/archlinux:latest
+    steps:
+      - name: Tools
+        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck
+
+      - uses: actions/checkout@v4
+
+      - name: Unit tests
+        run: |
+          set -euo pipefail
+          for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh \
+                   cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh; do
+            echo "::group::$t"
+            bash "$t"
+            echo "::endgroup::"
+          done
+
+      - name: shellcheck
+        run: |
+          set -euo pipefail
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          mapfile -t files < <(git ls-files 'cachyos/*.sh' 'cachyos/iso/bin/*' \
+            'cachyos/iso/configs/airootfs/usr/local/bin/*' \
+            'cachyos/iso/configs/airootfs/root/.automated_script.sh')
+          shellcheck -x -S warning "${files[@]}"
+
+  iso:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Free disk space
+        # mkarchiso needs several GB on top of the docker image and pacman cache.
+        run: |
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --all --force >/dev/null
+          df -h /
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # slievr-iso-make clones the checkout; give it full history
+
+      - name: Build ISO
+        run: cachyos/iso/bin/slievr-iso-make
+
+      - name: Verify
+        id: iso
+        run: |
+          set -euo pipefail
+          cd release
+          sha256sum -c ./*.sha256
+          iso="$(ls ./*.iso)"; iso="${iso#./}"
+          size="$(stat -c %s "$iso")"
+          echo "$iso: $((size / 1024 / 1024)) MiB"
+          # GitHub release assets must be under 2 GiB.
+          if (( size >= 2147483648 )); then
+            echo "::error::$iso is $((size / 1024 / 1024)) MiB, over GitHub's 2 GiB release-asset limit"
+            exit 1
+          fi
+          echo "name=$iso" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(cut -d' ' -f1 "$iso.sha256")" >> "$GITHUB_OUTPUT"
+
+      - name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          ISO: ${{ steps.iso.outputs.name }}
+          SHA: ${{ steps.iso.outputs.sha256 }}
+        run: |
+          set -euo pipefail
+          cat > notes.md <<EOF
+          The made by moonlight installer ISO, built from \`${TAG}\` (${GITHUB_SHA::7}).
+
+          | File | SHA-256 |
+          | --- | --- |
+          | \`${ISO}\` | \`${SHA}\` |
+
+          Check the download, then write it to a USB stick:
+
+              sha256sum -c ${ISO}.sha256
+              sudo dd if=${ISO} of=/dev/sdX bs=4M status=progress oflag=sync
+          EOF
+          gh release create "$TAG" "release/${ISO}" "release/${ISO}.sha256" \
+            --title "made by moonlight ${TAG}" --notes-file notes.md --generate-notes --verify-tag
