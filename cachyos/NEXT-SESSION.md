@@ -14,8 +14,9 @@ Design: `docs/superpowers/specs/2026-10-01-custom-iso-design.md`
 Plan:   `docs/superpowers/plans/2026-10-01-custom-iso.md`
 
 ISO built: `release/made-by-moonlight-2026.10.01-x86_64.iso`
-SHA256: `d8a530bffe9b3cb0bd5c7e112b9791f70c7c96870f88cfa1a8e94f58f5d33e49`
+SHA256: `f5ea2e606b9d29027c92d94f5445f97cf5ada19582592f9cb5c101c45ebf299b`
 Live kernel: 7.2.7
+Desktop theme made-by-moonlight (login, lock, Moonrise wallpaper, themed apps) — VM run pending.
 
 **Pending checks** (by the user):
 1. Answers-mode install from the stock ISO (plan Task 2 Step 10)
