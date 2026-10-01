@@ -14,9 +14,13 @@ Design: `docs/superpowers/specs/2026-10-01-custom-iso-design.md`
 Plan:   `docs/superpowers/plans/2026-10-01-custom-iso.md`
 
 ISO built: `release/made-by-moonlight-2026.10.01-x86_64.iso`
-SHA256: `81edcc52e1de430ccfccbf691eda6860cf947562d77cb7f6c9c82a00f371f995`
+SHA256: `b263ccf535bd3aeda50b7b18012ff12aa033ca6be3f7f2d11e89e80c32805f0e`
 Live kernel: 7.2.7
-Desktop theme made-by-moonlight (login, lock, Moonrise wallpaper, themed apps) — VM run pending.
+Desktop theme made-by-moonlight (login, lock, Moonrise wallpaper, themed apps) — **VM-verified 2026-10-02**:
+  install → firstboot → SDDM login → Hyprland, screenshots of installer, login, desktop, lock, walker, btop
+  all match the mockups; `verify-install.sh` 16/16 PASS (after fixes 9aeee3f, bc9bacf, 8c5a8a6, applied to
+  the VM by re-running bootstrap.sh; the ISO above includes them but has not had a fresh end-to-end run).
+  Open: the LUKS unlock shows Plymouth's text prompt in the VM, not the graphical owl splash (not investigated).
 
 **Pending checks** (by the user):
 1. Answers-mode install from the stock ISO (plan Task 2 Step 10)
