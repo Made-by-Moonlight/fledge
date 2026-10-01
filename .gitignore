@@ -4,3 +4,6 @@ dot-config/zen/*
 !dot-config/zen/chrome/
 dot-config/zen/chrome/*
 !dot-config/zen/chrome/zen-themes.css
+
+# Python bytecode
+__pycache__/

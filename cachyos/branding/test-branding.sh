@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Tests for the brand palette and console renderer. Needs python3 + magick.
+# Tests for the brand palette and console renderer. Needs python3, magick and rsvg-convert.
 #   bash cachyos/branding/test-branding.sh
 set -uo pipefail
 
@@ -39,12 +39,15 @@ check "owl fits 48 columns" "yes" "$(awk 'length > 48 {bad=1} END {print bad ? "
 check "owl uses only block characters" "" "$(tr -d ' ▀▄█\n' <<<"$owl")"
 contains "owl has solid areas" "█" "$owl"
 
-# generated assets are current
-bash "$DIR/build-assets.sh" >/dev/null
+# committed generated assets match a fresh build (built into a temp root)
 repo="$(cd "$DIR/../.." && pwd)"
-check "about.txt is the owl at 54 cols" "$("${R[@]}" "$DIR/owl.svg" --cols 54)" \
-  "$(cat "$repo/dot-config/omarchy/branding/about.txt")"
-check "plymouth logo is 320px wide" "320" \
-  "$(magick identify -format '%w' "$repo/cachyos/plymouth-theme/slievr-cachy/logo.png")"
+bash "$DIR/build-assets.sh" "$T/assets" >/dev/null
+check "about.txt is current" "$(cat "$repo/dot-config/omarchy/branding/about.txt")" \
+  "$(cat "$T/assets/dot-config/omarchy/branding/about.txt")"
+committed="$repo/cachyos/plymouth-theme/slievr-cachy/logo.png"
+fresh="$T/assets/cachyos/plymouth-theme/slievr-cachy/logo.png"
+check "plymouth logo is 320px wide" "320" "$(magick identify -format '%w' "$committed")"
+check "plymouth logo is current (0 differing pixels)" "0" \
+  "$(magick compare -metric AE "$committed" "$fresh" null: 2>&1 | awk '{print $1}')"
 
 exit $fail
