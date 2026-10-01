@@ -86,6 +86,20 @@ hibernate_swap_size() {
   echo "$(( gib * 1024 + 2048 ))"
 }
 
+# filter_fstab_entries <present_uuids> <entry>...  ->  the entries whose
+# UUID= source is in present_uuids (newline-separated, as printed by
+# `blkid -s UUID -o value`), one per line, in order. Entries that don't start
+# with UUID= pass through. Lets one profile.sh list every machine's data disks.
+filter_fstab_entries() {
+  local present="$1" entry; shift
+  for entry in "$@"; do
+    if [[ "$entry" =~ ^UUID=([^[:space:]]+) ]]; then
+      grep -qxF -- "${BASH_REMATCH[1]}" <<<"$present" || continue
+    fi
+    printf '%s\n' "$entry"
+  done
+}
+
 # list_disks  ->  lines: NAME<TAB>SIZE<TAB>MODEL<TAB>TRAN
 # Whole disks only, excluding the live-media disk and (unless --allow-usb is
 # handled by the caller) USB devices. Live-only; not fixture-tested.

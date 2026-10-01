@@ -57,6 +57,8 @@ else
   SWAPFILE_SIZE="(none)"
 fi
 
+mapfile -t KEEP_FSTAB < <(filter_fstab_entries "$(blkid -s UUID -o value)" "${EXTRA_FSTAB_ENTRIES[@]}")
+
 cat <<EOF
 
   microcode      : ${UCODE}
@@ -67,6 +69,7 @@ cat <<EOF
   zram swap      : ${ZRAM_SIZE} MiB
   hibernate swap : ${SWAPFILE_SIZE}$( [[ "$SWAPFILE_SIZE" != "(none)" ]] && echo " MiB (btrfs swapfile)" )
   hostname       : ${HOSTNAME:-(will prompt)}
+  data disks     : ${#KEEP_FSTAB[@]} of ${#EXTRA_FSTAB_ENTRIES[@]} fstab entries present on this machine
 EOF
 
 ########################################################################
@@ -164,7 +167,7 @@ pacstrap -K /mnt "${pkgs[@]}"
 rule "fstab"
 ########################################################################
 genfstab -U /mnt >> /mnt/etc/fstab
-for e in "${EXTRA_FSTAB_ENTRIES[@]}"; do
+for e in "${KEEP_FSTAB[@]}"; do
   printf '%s\n' "$e" >> /mnt/etc/fstab
 done
 if [[ "${SWAP}" == "hibernate" ]]; then
