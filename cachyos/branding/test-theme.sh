@@ -53,4 +53,11 @@ bash "$RENDER" "$T/theme" "$T/out" >/dev/null
 check "render: output dir is rebuilt clean" "no" "$([[ -e "$T/out/stale.txt" ]] && echo yes || echo no)"
 check "render: missing colors.toml is an error" "1" "$(bash "$RENDER" "$T/nope" "$T/out2" 2>/dev/null; echo $?)"
 
+check "render: OUT == THEME is refused" "1" "$(bash "$RENDER" "$T/theme" "$T/theme" >/dev/null 2>&1; echo $?)"
+check "render: OUT == THEME leaves theme intact" "yes" "$([[ -f "$T/theme/colors.toml" ]] && echo yes || echo no)"
+check "render: OUT = parent of THEME is refused" "1" "$(bash "$RENDER" "$T/theme" "$T" >/dev/null 2>&1; echo $?)"
+check "render: OUT = parent leaves fixture intact" "yes" "$([[ -f "$T/theme/colors.toml" ]] && echo yes || echo no)"
+check "render: shared-prefix sibling OUT is allowed" "0:yes" \
+  "$(bash "$RENDER" "$T/theme" "$T/theme-out" >/dev/null 2>&1; echo "$?:$([[ -f "$T/theme-out/waybar.css" ]] && echo yes || echo no)")"
+
 exit $fail

@@ -15,7 +15,13 @@ COLORS="$THEME/colors.toml"
 die() { echo "render-theme: $*" >&2; exit 1; }
 
 [[ -f "$COLORS" ]] || die "no colors.toml in $THEME"
-[[ -n "$OUT" && "$OUT" != / ]] || die "refusing to use '$OUT' as the output directory"
+[[ -n "$OUT" ]] || die "empty output directory"
+OUT_R="$(realpath -m -- "$OUT")"
+THEME_R="$(realpath -m -- "$THEME")"
+if [[ "$OUT_R" == / || "$OUT_R" == "$HOME" || "$OUT_R" == "$REPO" || "$OUT_R" == "$THEME_R" ||
+  "$THEME_R" == "$OUT_R"/* || "$REPO" == "$OUT_R"/* || "$HOME" == "$OUT_R"/* ]]; then
+  die "refusing to use '$OUT' as the output directory (it is, or contains, the theme, repo or home)"
+fi
 
 hex_to_rgb() { local hex="${1#\#}"; printf '%d,%d,%d' "0x${hex:0:2}" "0x${hex:2:2}" "0x${hex:4:2}"; }
 
@@ -34,7 +40,7 @@ done < "$COLORS" > "$sed_script"
 
 rm -rf "$OUT"
 mkdir -p "$OUT"
-cp -a "$THEME/." "$OUT/"
+cp -aL "$THEME/." "$OUT/"
 shopt -s nullglob
 for tpl in "$TEMPLATES"/*.tpl; do
   name="$(basename "$tpl" .tpl)"
