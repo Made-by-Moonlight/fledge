@@ -62,7 +62,7 @@ wifi_connect() {
     iwctl || true; return
   fi
   ssid="$(printf '%s\n' "${nets[@]}" | gum choose --header "Wi-Fi network")" || return
-  pass="$(gum input --password --placeholder "Passphrase for $ssid")" || return
+  pass="$(read_secret "Passphrase for $ssid")" || return
   iwctl --passphrase "$pass" station "$dev" connect "$ssid" || fail "Couldn't connect to $ssid."
   sleep 3
 }
@@ -101,10 +101,27 @@ ask_timezone() {
   done
 }
 
+# <placeholder>  ->  prints the secret. Typed hidden; "Show" reveals it to check
+# before use. Runs inside $(...), so everything drawn goes to stderr.
+read_secret() {
+  local s
+  while true; do
+    s="$(gum input --password --placeholder "$1")" || return 1
+    while true; do
+      case "$(gum choose "Continue" "Show" "Retype")" in
+        Continue) printf '%s' "$s"; return 0 ;;
+        Show) note "You typed: $s" >&2 ;;
+        Retype) break ;;
+        *) return 1 ;;
+      esac
+    done
+  done
+}
+
 read_twice() { # <label>  ->  prints the confirmed, non-empty secret
   local p1 p2
   while true; do
-    p1="$(gum input --password --placeholder "$1")"
+    p1="$(read_secret "$1")" || exit 130
     p2="$(gum input --password --placeholder "Confirm $1")"
     [[ -n "$p1" && "$p1" == "$p2" ]] && { printf '%s' "$p1"; return; }
     fail "Empty, or they don't match. Try again." >&2
