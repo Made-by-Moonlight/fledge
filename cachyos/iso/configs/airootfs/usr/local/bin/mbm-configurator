@@ -50,16 +50,13 @@ welcome() {
     "Install made by moonlight on this machine?" || exit 130
 }
 
-# UNVERIFIED: iwctl's table layout. If no networks parse, "Open iwctl" is the fallback.
+# If no networks parse, iwctl itself opens as the fallback.
 wifi_connect() {
   local dev ssid pass
   dev="$({ iwctl device list 2>/dev/null || true; } | sed 's/\x1b\[[0-9;]*m//g' | awk '$NF == "station" {print $1; exit}')" || dev=""
   if [[ -z "$dev" ]]; then fail "No Wi-Fi device found."; sleep 2; return; fi
   iwctl station "$dev" scan || true; sleep 3
-  mapfile -t nets < <({ iwctl station "$dev" get-networks 2>/dev/null || true; } \
-    | sed 's/\x1b\[[0-9;]*m//g' \
-    | awk 'NR > 4 && NF >= 3 { line = $0; sub(/^[ \t>]+/, "", line); n = split(line, a, /[ \t]+/);
-                               s = a[1]; for (i = 2; i <= n - 2; i++) s = s " " a[i]; print s }')
+  mapfile -t nets < <({ iwctl station "$dev" get-networks 2>/dev/null || true; } | parse_networks)
   if (( ${#nets[@]} == 0 )); then
     note "Couldn't list networks; opening iwctl. Type 'exit' when connected."
     iwctl || true; return

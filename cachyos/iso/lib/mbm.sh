@@ -32,3 +32,19 @@ mask_answers() {
 mbm_online() {
   curl -fsI --max-time 5 https://mirror.cachyos.org >/dev/null 2>&1
 }
+
+# Network names from `iwctl station DEV get-networks` on stdin, one per line.
+# Rows are "[>] NAME  SECURITY  SIGNAL" padded with trailing spaces; names may
+# contain spaces, so strip the known columns from the right, not by field count.
+parse_networks() {
+  sed 's/\x1b\[[0-9;?]*[A-Za-z]//g' | awk '
+    NR <= 4 { next }                                  # title, rules, header
+    {
+      line = $0
+      sub(/[ \t]+$/, "", line)                        # row padding
+      sub(/^[ \t]*>?[ \t]*/, "", line)                # connected marker
+      sub(/[ \t]+\*+$/, "", line)                     # signal stars
+      if (!sub(/[ \t]+(open|psk|8021x|wep|owe|sae|wpa3-personal)$/, "", line)) next
+      if (line != "") print line
+    }'
+}
