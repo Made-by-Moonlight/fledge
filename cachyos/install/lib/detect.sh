@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # Hardware detection. Pure functions where possible: they take their input
 # source as an argument so test-detect.sh can feed fixtures. The live-only
-# helpers (list_disks) are exercised in the VM, not the fixture tests.
+# helpers (list_disks) are exercised in the VM and with stubs.
 
 # detect_ucode <cpuinfo_path>  ->  amd-ucode | intel-ucode
 detect_ucode() {
@@ -101,14 +101,20 @@ filter_fstab_entries() {
 }
 
 # list_disks  ->  lines: NAME<TAB>SIZE<TAB>MODEL<TAB>TRAN
-# Whole disks only, excluding the live-media disk and (unless --allow-usb is
-# handled by the caller) USB devices. Live-only; not fixture-tested.
+# Whole disks only, excluding the live-media disk (when it can be identified)
+# and, unless the caller allows them, USB devices. Tested with stubbed
+# findmnt/lsblk in test-detect.sh.
 list_disks() {
   local livesrc lminusb
   # disk backing the live media, if any
   livesrc="$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null \
     || findmnt -no SOURCE /run/archiso/cowspace 2>/dev/null || true)"
-  lminusb="$(lsblk -no PKNAME "$livesrc" 2>/dev/null | head -n1)"
+  # Under Ventoy the source is a device-mapper node lsblk can't always resolve;
+  # a failed lookup must not abort the listing in callers running set -e.
+  lminusb=""
+  if [[ -n "$livesrc" ]]; then
+    lminusb="$({ lsblk -no PKNAME "$livesrc" 2>/dev/null || true; } | head -n1)"
+  fi
   lsblk -dpno NAME,SIZE,MODEL,TRAN,TYPE | awk -v live="/dev/$lminusb" '
     $NF == "disk" {
       name=$1; $NF=""; sub(/[ \t]+$/, "")

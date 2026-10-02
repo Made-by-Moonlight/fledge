@@ -63,4 +63,28 @@ check "disk_by_id picks the model link" "$T/by-id/nvme-Samsung_SSD_990_PRO_2TB_S
   "$(disk_by_id "$T/dev/nvme0n1" "$T/by-id")"
 check "disk_by_id falls back to kname"  "$T/dev/vda" "$(disk_by_id "$T/dev/vda" "$T/by-id")"
 
+# list_disks under the configurator's strict mode, with the live medium on a
+# device lsblk can't resolve (Ventoy): the lookup failing must not empty the list.
+list_disks_strict() { # <live source findmnt reports>
+  LIVESRC="$1" DETECT="$DIR/lib/detect.sh" bash -c '
+    set -euo pipefail
+    source "$DETECT"
+    findmnt() { [[ -n "$LIVESRC" ]] && echo "$LIVESRC" || return 1; }
+    lsblk() {
+      case "$*" in
+        *PKNAME*) [[ "${*: -1}" == /dev/sdc1 ]] && { echo sdc; return 0; }
+                  echo "lsblk: ${*: -1}: not a block device" >&2; return 32 ;;
+        *) printf "%s\n" "/dev/nvme0n1 476.9G SAMSUNG MZVL2512 nvme disk" \
+                         "/dev/sdc 29.4G Ventoy usb disk" "/dev/zram0 4G  disk" ;;
+      esac
+    }
+    list_disks'
+}
+check "list_disks: unresolvable live device keeps the disks" \
+  $'/dev/nvme0n1 476.9G SAMSUNG MZVL2512 nvme\n/dev/sdc 29.4G Ventoy usb' "$(list_disks_strict /dev/mapper/ventoy)"
+check "list_disks: no live mount keeps the disks" \
+  $'/dev/nvme0n1 476.9G SAMSUNG MZVL2512 nvme\n/dev/sdc 29.4G Ventoy usb' "$(list_disks_strict '')"
+check "list_disks: live disk is hidden" \
+  "/dev/nvme0n1 476.9G SAMSUNG MZVL2512 nvme" "$(list_disks_strict /dev/sdc1)"
+
 exit $fail
