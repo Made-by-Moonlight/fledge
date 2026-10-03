@@ -142,7 +142,7 @@ ask_password() {
 }
 
 ask_disk() {
-  local line kname model want typed disks
+  local line kname typed disks
   header "4 / 5 · Disk"
   note "The disk you pick is erased completely. USB drives and this installer are hidden."
   mapfile -t disks < <(list_disks | awk '$NF != "usb"')
@@ -150,12 +150,10 @@ ask_disk() {
   while true; do
     line="$(printf '%s\n' "${disks[@]}" | gum choose --height 10)"
     kname="${line%% *}"
-    model="$(lsblk -dno MODEL "$kname" | sed 's/[[:space:]]*$//')"
-    want="${model:-${kname##*/}}"                 # virtio disks have no model
-    fail "Everything on $kname will be destroyed."
-    typed="$(gum input --placeholder "Type \"$want\" to confirm, or leave empty to pick again")"
-    [[ "$typed" == "$want" ]] && break
-    note "That didn't match. Pick the disk again."
+    fail "Everything on this disk will be destroyed:" "  $line"
+    typed="$(gum input --placeholder "Type confirm to erase it, or leave empty to pick again")"
+    [[ "${typed,,}" == confirm ]] && break
+    note "Not confirmed. Pick the disk again."
   done
   DISK_PATH="$(disk_by_id "$kname")"
 }
