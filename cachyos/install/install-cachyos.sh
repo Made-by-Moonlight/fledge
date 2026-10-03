@@ -191,7 +191,16 @@ if [[ -n "$GPU_PKGS" ]]; then
   pkgs+=("${gpu_arr[@]}")
 fi
 echo "Packages: ${pkgs[*]}"
-pacstrap -K /mnt "${pkgs[@]}"
+# A single slow file (mirror timeout over Wi-Fi) fails the whole transaction.
+# Retry with fresh databases; packages already fetched stay in the target's
+# cache, and re-initialising the keyring with -K is idempotent.
+for attempt in 1 2 3; do
+  pacstrap -K /mnt "${pkgs[@]}" && break
+  (( attempt < 3 )) || die "pacstrap failed 3 times - check the network and the log above"
+  warn "pacstrap failed (attempt $attempt/3); refreshing package databases and retrying in 10s"
+  sleep 10
+  pacman -Syy --noconfirm || true
+done
 
 ########################################################################
 rule "fstab"
