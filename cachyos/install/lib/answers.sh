@@ -4,7 +4,17 @@
 # after the first '=', unquoted). It is parsed, never sourced, so a value can
 # never run as code.
 
-ANSWER_KEYS=(DISK DISK_CONFIRMED HOSTNAME TIMEZONE USER_PASSWORD LUKS_PASSPHRASE ROOT_PASSWORD)
+ANSWER_KEYS=(DISK DISK_CONFIRMED HOSTNAME TIMEZONE USERNAME USER_PASSWORD LUKS_PASSPHRASE ROOT_PASSWORD)
+
+# valid_username <name>  ->  0 for a safe login name: lowercase, starts with a
+# letter or '_', then letters, digits, '_' or '-', at most 32; not a name the
+# base system already uses.
+valid_username() {
+  [[ "$1" =~ ^[a-z_][a-z0-9_-]{0,31}$ ]] || return 1
+  case "$1" in
+    root|bin|daemon|mail|ftp|http|nobody|dbus|polkitd|systemd-*|git|sddm) return 1 ;;
+  esac
+}
 
 # load_answers <file>  ->  sets the ANSWER_KEYS globals present in the file,
 # then deletes it. Returns 1 (file kept) on any problem. Never echoes a value.

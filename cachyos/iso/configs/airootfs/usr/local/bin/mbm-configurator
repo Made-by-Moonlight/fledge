@@ -15,6 +15,8 @@ DRY_RUN=0
 source "$MBM_REPO/cachyos/install/profile.sh"
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
 source "$MBM_REPO/cachyos/install/lib/detect.sh"
+# shellcheck source=SCRIPTDIR/../../../../../../install/lib/answers.sh
+source "$MBM_REPO/cachyos/install/lib/answers.sh"
 # shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
 source "$MBM_REPO/cachyos/iso/lib/mbm.sh"
 
@@ -128,9 +130,17 @@ read_twice() { # <label>  ->  prints the confirmed, non-empty secret
   done
 }
 
-ask_password() {
-  header "3 / 5 · Password"
-  note "For your account, $USERNAME. The root account stays locked; use sudo."
+ask_account() {
+  local u=""
+  header "3 / 5 · Account"
+  note "Your login name. The root account stays locked; you'll use sudo."
+  while true; do
+    u="$(gum input --placeholder "Username, e.g. ethan" --value "$u")" || exit 130
+    valid_username "$u" && break
+    fail "Start with a lowercase letter; then lowercase letters, digits, '_' or '-', up to 32."
+  done
+  USERNAME="$u"
+  note "Password for $USERNAME:"
   USER_PW="$(read_twice "password")"
   local rc=0
   gum confirm "Use the same passphrase to unlock the disk at boot?" || rc=$?
@@ -206,7 +216,7 @@ fi
 welcome
 ensure_online
 while true; do
-  ask_hostname; ask_timezone; ask_password; ask_disk
+  ask_hostname; ask_timezone; ask_account; ask_disk
   summary
   rc=0; gum confirm --affirmative "Install" --negative "Back" "Erase $DISK_PATH and install?" || rc=$?
   case "$rc" in
@@ -218,7 +228,7 @@ done
 
 answers=(
   "DISK=$DISK_PATH" "DISK_CONFIRMED=yes" "HOSTNAME=$HOST" "TIMEZONE=$TZ_CHOICE"
-  "USER_PASSWORD=$USER_PW" "LUKS_PASSPHRASE=$LUKS_PW"
+  "USERNAME=$USERNAME" "USER_PASSWORD=$USER_PW" "LUKS_PASSPHRASE=$LUKS_PW"
 )
 if (( DRY_RUN )); then
   tmp="$(mktemp)"; trap 'rm -f "$tmp"' EXIT

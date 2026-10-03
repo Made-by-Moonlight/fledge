@@ -12,7 +12,7 @@
 TIMEZONE="UTC"
 LOCALE="en_US.UTF-8"
 KEYMAP="us"
-USERNAME="slievr"
+USERNAME="slievr"          # default; the ISO configurator asks and overrides it
 HOSTNAME=""                       # empty -> prompt at install time
 
 ESP_SIZE="2GiB"

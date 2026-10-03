@@ -34,4 +34,20 @@ check "answers: errors never echo values" "" "$(grep -o 'secret' <<<"$err")"
 
 check "answers: missing file rejected" "1" "$( load_answers "$T/nope" 2>/dev/null; echo $? )"
 
+ok() { "$@" && echo yes || echo no; }
+check "username: simple"             yes "$(ok valid_username ethan)"
+check "username: digits, _ and -"    yes "$(ok valid_username e_b-2)"
+check "username: leading underscore" yes "$(ok valid_username _svc)"
+check "username: uppercase rejected"  no "$(ok valid_username Ethan)"
+check "username: leading digit"       no "$(ok valid_username 2ethan)"
+check "username: leading dash"        no "$(ok valid_username -ethan)"
+check "username: slash rejected"      no "$(ok valid_username 'a/b')"
+check "username: space rejected"      no "$(ok valid_username 'a b')"
+check "username: empty rejected"      no "$(ok valid_username '')"
+check "username: root rejected"       no "$(ok valid_username root)"
+check "username: 32 chars ok"        yes "$(ok valid_username "$(printf 'a%.0s' {1..32})")"
+check "username: 33 chars rejected"   no "$(ok valid_username "$(printf 'a%.0s' {1..33})")"
+f="$T/u.env"; printf 'USERNAME=ethan\n' > "$f"; chmod 600 "$f"
+check "answers: USERNAME is an allowed key" "ethan" "$( load_answers "$f" && printf '%s' "$USERNAME" )"
+
 exit $fail

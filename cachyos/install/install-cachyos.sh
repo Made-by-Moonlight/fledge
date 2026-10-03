@@ -44,6 +44,9 @@ if [[ -n "$ANSWERS" ]]; then
       || die "answers TIMEZONE is not a valid zone: $TIMEZONE"
   fi
   ROOT_PASSWORD="${ROOT_PASSWORD:-}"     # empty -> root locked (chroot-setup.sh)
+  # USERNAME is optional (profile.sh has the default) but always re-checked:
+  # it reaches useradd, paths and a sed expression.
+  valid_username "$USERNAME" || die "answers USERNAME is not a valid login name: $USERNAME"
 fi
 
 ########################################################################
