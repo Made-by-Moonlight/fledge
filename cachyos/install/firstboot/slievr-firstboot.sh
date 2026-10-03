@@ -34,6 +34,29 @@ chmod 440 "$SUDOERS"
 cleanup() { rm -f "$SUDOERS"; }
 trap cleanup EXIT
 
+# Wi-Fi can take a while to associate, and a machine may have no profile at
+# all. Wait for the internet; if it never comes, explain how to connect and
+# stay enabled (no `systemctl disable`), so the next boot or a manual start
+# runs this again.
+online() { curl -fsI --max-time 5 https://archlinux.org >/dev/null 2>&1; }
+for (( waited = 0; waited < 120; waited += 5 )); do
+  online && break
+  (( waited == 0 )) && echo ">>> waiting up to 2 minutes for an internet connection..."
+  sleep 5
+done
+if ! online; then
+  echo
+  echo "##################################################################"
+  echo "# No internet connection, so the desktop can't be installed yet."
+  echo "#"
+  echo "# 1. Log in as $USER_NAME and connect:"
+  echo "#        nmtui"
+  echo "# 2. Then finish setup (or just reboot):"
+  echo "#        sudo systemctl start slievr-firstboot"
+  echo "##################################################################"
+  exit 1
+fi
+
 # CachyOS mirrors are occasionally mid-sync (the database lists a package the
 # mirror doesn't have yet -> 404 and bootstrap aborts). Retry a couple of times
 # with fresh databases before giving up; bootstrap.sh is safe to re-run.

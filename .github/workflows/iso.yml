@@ -33,7 +33,7 @@ jobs:
       - name: Unit tests
         run: |
           set -euo pipefail
-          for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh \
+          for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh; do
             echo "::group::$t"
             bash "$t"

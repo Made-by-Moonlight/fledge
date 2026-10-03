@@ -17,6 +17,8 @@ source "$HERE/lib/detect.sh"
 source "$HERE/lib/disk.sh"
 # shellcheck source=lib/answers.sh
 source "$HERE/lib/answers.sh"
+# shellcheck source=lib/network.sh
+source "$HERE/lib/network.sh"
 
 die()  { printf '\e[31mERROR:\e[0m %s\n' "$*" >&2; exit 1; }
 warn() { printf '\e[33mWARN:\e[0m  %s\n' "$*" >&2; }
@@ -245,6 +247,10 @@ install -Dm644 "$HERE/firstboot/slievr-firstboot.service" /mnt/etc/systemd/syste
 
 arch-chroot /mnt chown -R "${USERNAME}:${USERNAME}" "/home/${USERNAME}/proj"
 arch-chroot /mnt systemctl enable slievr-firstboot.service
+
+# Wi-Fi the live ISO joined (iwd) -> NetworkManager keyfiles, so first boot is
+# online on a laptop. Wired machines have nothing in /var/lib/iwd.
+install_wifi_profiles /var/lib/iwd /mnt/etc/NetworkManager/system-connections
 
 ########################################################################
 rule "Done"
