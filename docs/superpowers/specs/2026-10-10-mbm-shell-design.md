@@ -178,7 +178,7 @@ when a generated section changed, showing any `check` error inline.
 ## Shell ↔ Hyprland
 
 - Binds that drive the shell call `qs -c mbm ipc call <target> <fn>`. IPC targets:
-  `launcher` (toggle, open <mode>), `quicksettings` (toggle), `settings`
+  `launcher` (toggle, open <mode>), `quicksettings` (toggle, open [picker]), `settings`
   (open [page]), `lock` (lock), `osd` (volume ±n, brightness ±n, mic-mute),
   `notifications` (dismiss, dismiss-all, dnd-toggle), `dmenu` (used by `mbm dmenu`).
 - Workspaces, focused title and monitors come from `Quickshell.Hyprland`.
@@ -203,7 +203,10 @@ when a generated section changed, showing any `check` error inline.
 - `Super+Shift+Space` (toggle bar) → shell bar toggle.
 - `Super+,` / `Super+Shift+,` → notifications dismiss / dismiss-all.
 - Media/brightness keys → `osd.*` (shell does the change and shows the OSD).
-- Quick settings: new bind `Super+Alt+S` (`Super+S` stays scratchpad).
+- Quick settings: new bind `Super+A` (free today; `Super+S` / `Super+Alt+S` stay scratchpad).
+- `Super+Ctrl+W` / `Super+Ctrl+B` / `Super+Ctrl+A` (today: nmtui, bluetui, wiremix) →
+  quick settings opened with the Wi-Fi / Bluetooth / audio picker expanded
+  (`quicksettings.open wifi|bluetooth|audio`). `bluetui` and `wiremix` leave the package list.
 - Webapp binds (e.g. `Super+Shift+Y`) are left alone in A and decided in B.
 
 **slievr-menu**
@@ -214,7 +217,7 @@ capture, toggle, hardware etc. menus keep working until B replaces them.
 **Packages (`bootstrap.sh`)**
 - Add: `quickshell cliphist wl-clipboard jq ttf-jetbrains-mono` and an emoji
   dataset (`unicode-emoji`, read by the Emoji mode).
-- Remove: `waybar walker elephant* mako swayosd swaybg hyprlock hypridle polkit-gnome`.
+- Remove: `waybar walker elephant* mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix`.
 - Install `/etc/pam.d/mbm-lock` (`auth include login`), separate from the real login stack.
 - Run `mbm settings apply` after stow.
 
