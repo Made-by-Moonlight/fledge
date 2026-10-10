@@ -1,0 +1,24 @@
+# Sourced (POSIX sh) by uwsm before it starts Hyprland; exports reach the
+# whole session. GPU-specific env lives here rather than in hyprland.conf so
+# it follows whichever GPU the monitors are plugged into, decided at login:
+#   - Hyprland only opens the GPU(s) with a monitor attached, primary first,
+#     so a headless compute card (e.g. a 3080 next to a 9070 XT) stays free.
+#   - Vulkan apps (Steam/DXVK/VKD3D) default to that same GPU via Mesa's
+#     device-select layer (vulkan-mesa-layers); other GPUs stay selectable.
+#   - The NVIDIA-only vars apply only when NVIDIA is driving the monitors.
+
+_display_gpu="$HOME/.local/share/slievr-cachy/bin/slievr-hw-display-gpu"
+if [ -x "$_display_gpu" ] && _driver="$("$_display_gpu" --driver)"; then
+  AQ_DRM_DEVICES="$("$_display_gpu" --devices)"
+  MESA_VK_DEVICE_SELECT="$("$_display_gpu" --pci-id)"
+  export AQ_DRM_DEVICES MESA_VK_DEVICE_SELECT
+
+  if [ "$_driver" = nvidia ]; then
+    export NVD_BACKEND=direct
+    export LIBVA_DRIVER_NAME=nvidia
+    export __GLX_VENDOR_LIBRARY_NAME=nvidia
+    export GBM_BACKEND=nvidia-drm
+    export WLR_NO_HARDWARE_CURSORS=1
+  fi
+fi
+unset _display_gpu _driver

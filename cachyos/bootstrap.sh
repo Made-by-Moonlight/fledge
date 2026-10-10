@@ -4,6 +4,29 @@ set -euo pipefail
 DOTFILES_REPO="https://github.com/slievr/slievr-cachy.git"
 DOTFILES_DIR="$HOME/proj/slievr-cachy"
 
+# Vulkan driver per GPU vendor present (PCI display class 0x03xxxx), read from
+# sysfs so it needs no pciutils. Mixed vendors (e.g. RTX 3080 + RX 9070 XT) get
+# both, plus Mesa's device-select layer, which dot-config/uwsm/env-hyprland
+# uses to make the monitor-driving GPU the default Vulkan device. No GPU found
+# (VM) -> lavapipe, a software provider that still satisfies Steam's deps.
+GPU_VULKAN_PKGS=()
+gpu_vendors=()
+for dev in /sys/bus/pci/devices/*; do
+  [[ "$(<"$dev/class")" == 0x03* ]] || continue
+  case "$(<"$dev/vendor")" in
+    0x10de) gpu_vendors+=(nvidia) GPU_VULKAN_PKGS+=(nvidia-utils lib32-nvidia-utils) ;;
+    0x1002) gpu_vendors+=(amd) GPU_VULKAN_PKGS+=(vulkan-radeon lib32-vulkan-radeon) ;;
+    0x8086) gpu_vendors+=(intel) GPU_VULKAN_PKGS+=(vulkan-intel lib32-vulkan-intel) ;;
+  esac
+done
+if (( $(printf '%s\n' "${gpu_vendors[@]}" | sort -u | grep -c .) > 1 )); then
+  GPU_VULKAN_PKGS+=(vulkan-mesa-layers lib32-vulkan-mesa-layers)
+fi
+if (( ${#GPU_VULKAN_PKGS[@]} == 0 )); then
+  GPU_VULKAN_PKGS=(vulkan-swrast lib32-vulkan-swrast)
+fi
+mapfile -t GPU_VULKAN_PKGS < <(printf '%s\n' "${GPU_VULKAN_PKGS[@]}" | sort -u)
+
 PACMAN_PACKAGES=(
   hyprland waybar xorg-xwayland
   kitty
@@ -53,12 +76,12 @@ PACMAN_PACKAGES=(
   # shared libraries: libQt5Quick.so.5"), which surfaces as a blank
   # screen with just a cursor, no error dialog.
   sddm qt5-declarative
-  # Explicit vulkan-driver/lib32-vulkan-driver provider, matching the
-  # NVIDIA env vars already in dot-config/hypr/hyprland.conf — installed
-  # in the same transaction as steam-jupiter-stable below so pacman
-  # doesn't need to prompt for (and non-interactively default to a
-  # conflicting) provider choice for that virtual dependency.
-  nvidia-utils lib32-nvidia-utils
+  # Explicit vulkan-driver/lib32-vulkan-driver provider(s) for the GPUs
+  # actually present (see GPU_VULKAN_PKGS above) — installed in the same
+  # transaction as steam-jupiter-stable below so pacman doesn't need to
+  # prompt for (and non-interactively default to a conflicting) provider
+  # choice for that virtual dependency.
+  "${GPU_VULKAN_PKGS[@]}"
   # CachyOS's Jupiter-bootstrapped Steam build.
   steam-jupiter-stable
   # Discord (windows.conf already pins it to workspace 9).
@@ -150,8 +173,10 @@ fi
 # graphical-session.target.wants too: systemd does not follow a .wants
 # directory that is itself a symlink, so stow must link the unit files inside
 # a real directory (otherwise elephant never starts and walker has no backend).
+# ~/.config/uwsm too: the repo ships dot-config/uwsm/env-hyprland, but env
+# (written below) must stay a real, untracked file rather than land in the repo.
 mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" \
-  "$HOME/.config/systemd/user/graphical-session.target.wants"
+  "$HOME/.config/systemd/user/graphical-session.target.wants" "$HOME/.config/uwsm"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 

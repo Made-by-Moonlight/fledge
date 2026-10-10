@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# slievr:summary=Report the GPU(s) driving connected monitors (primary = most connected outputs).
+# slievr:args=[--driver|--devices|--pci-id]
+# slievr:examples=slievr-hw-display-gpu | slievr-hw-display-gpu --devices
+
+# --driver  (default) kernel driver of the primary display GPU: amdgpu, nvidia, i915, ...
+# --devices colon-joined /dev/dri/cardN of every GPU with a connected output,
+#           primary first (the AQ_DRM_DEVICES format)
+# --pci-id  vendor:device of the primary display GPU (the MESA_VK_DEVICE_SELECT format)
+#
+# GPUs with no monitor attached (e.g. a headless compute card) are left out, so
+# the compositor never opens them. Exits 1 when no connected output is found.
+
+drm="${SLIEVR_SYSFS_DRM:-/sys/class/drm}"
+
+declare -A connected=()
+for status in "$drm"/card*-*/status; do
+  [[ -r $status && $(<"$status") == connected ]] || continue
+  conn="${status%/status}"
+  conn="${conn##*/}"
+  card="${conn%%-*}"
+  connected[$card]=$((${connected[$card]:-0} + 1))
+done
+
+((${#connected[@]})) || exit 1
+
+# Most connected outputs first; ties go to the lower card number.
+mapfile -t cards < <(
+  for card in "${!connected[@]}"; do
+    printf '%s %s\n' "${connected[$card]}" "${card#card}"
+  done | sort -k1,1nr -k2,2n | awk '{print "card" $2}'
+)
+primary="${cards[0]}"
+
+case "${1:---driver}" in
+  --driver)
+    driver="$(readlink "$drm/$primary/device/driver")"
+    echo "${driver##*/}"
+    ;;
+  --devices)
+    (IFS=:; echo "${cards[*]/#//dev/dri/}")
+    ;;
+  --pci-id)
+    vendor="$(<"$drm/$primary/device/vendor")"
+    device="$(<"$drm/$primary/device/device")"
+    echo "${vendor#0x}:${device#0x}"
+    ;;
+  *)
+    echo "usage: ${0##*/} [--driver|--devices|--pci-id]" >&2
+    exit 2
+    ;;
+esac
