@@ -22,8 +22,19 @@ PanelWindow {
     property var items: []
     property string query: ""
 
-    visible: ShellState.launcherOpen
-    screen: ShellState.focusedScreen()
+    // The screen is fixed when the launcher opens: a live binding to the focused monitor would
+    // recreate the surface (moving it, or dropping the grab) when the pointer crosses monitors.
+    property var openScreen: ShellState.focusedScreen()
+    property bool opened: false
+    Connections {
+        target: ShellState
+        function onLauncherOpenChanged() {
+            if (ShellState.launcherOpen) win.openScreen = ShellState.focusedScreen();
+            win.opened = ShellState.launcherOpen;
+        }
+    }
+    visible: opened
+    screen: openScreen
     // Anchored drops from the bar's left tab, so it follows the bar to the bottom edge too.
     anchors { top: !win.anchored || win.barTop; bottom: win.anchored && !win.barTop; left: win.anchored }
     margins {
@@ -85,7 +96,7 @@ PanelWindow {
     Pill {
         anchors.fill: parent
         radius: Theme.radiusLarge
-        color: Qt.rgba(0.090, 0.118, 0.157, 0.97)
+        color: Qt.alpha(Theme.bg, 0.97)
 
         ColumnLayout {
             anchors.fill: parent
