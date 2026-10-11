@@ -10,6 +10,7 @@ import "launcher"
 import "quicksettings"
 import "services"
 import "lock"
+import "polkit"
 
 ShellRoot {
     // No live reload when a QML file changes (a git pull or restow under a locked screen).
@@ -32,7 +33,16 @@ ShellRoot {
     Lock { id: lockScreen }
     Launcher { id: launcher }
     QuickSettings {}
+    PolkitDialog {}
     Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
+    Connections { target: launcher.systemMode; function onIdleToggleRequested() { Idle.toggle(); } }
+    // Idle lock only when nothing holds the lock: lock() while locked restarts the shell to
+    // re-acquire it (Lock.lock()), and while another locker has taken over (lost) the session is
+    // locked anyway. true: no forced screens-off after it; idle.screenOffSec decides that.
+    Connections {
+        target: Idle
+        function onLockRequested() { if (!lockScreen.locked && !lockScreen.lost && !lockScreen.secure) lockScreen.lock(true); }
+    }
     // Lock before sleep: Sleep holds the delay inhibitor until the lock is secure (or its failsafe fires).
     Connections {
         target: Sleep

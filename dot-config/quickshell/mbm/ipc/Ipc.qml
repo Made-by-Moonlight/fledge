@@ -96,4 +96,9 @@ Scope {
         function lock(): void { lockScreen.lock(false); }
         function status(): string { return lockScreen.locked ? "locked" : "unlocked"; }
     }
+    IpcHandler {
+        target: "idle"
+        function toggle(): void { Idle.toggle(); }
+        function status(): string { return Idle.enabled ? "on" : "off"; }
+    }
 }
