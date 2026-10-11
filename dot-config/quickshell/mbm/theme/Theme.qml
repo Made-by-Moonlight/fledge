@@ -28,6 +28,9 @@ Singleton {
     readonly property int frameRadius: 14   // the desktop's inner corners
     readonly property int tabRadius: 8      // a tab's fillet off the strip and its bottom corners
     readonly property int tabPad: 12        // a tab's room either side of its section
+    // Popups ignore exclusive zones, so they place themselves against the frame from the screen edge.
+    readonly property int popupTop: barHeight + gap   // a popup hangs one gap below a tab
+    readonly property int popupSide: frame + gap      // and sits one gap inside the border
     readonly property int anim: 140
 
     readonly property string assets: Quickshell.env("HOME") + "/.local/share/mbm/assets"
