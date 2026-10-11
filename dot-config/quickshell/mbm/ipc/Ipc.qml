@@ -70,4 +70,11 @@ Scope {
         function popups(): int { return Notifs.popups.length; }
         function dnd(): bool { return Notifs.dnd; }
     }
+    IpcHandler {
+        target: "launcher"
+        function toggle(): void { ShellState.toggleLauncher(""); }
+        // Unknown modes (and "dmenu", which only `mbm dmenu` may open) fall back to Apps.
+        function open(mode: string): void { ShellState.openLauncher(["apps", "clipboard", "emoji", "system"].includes(mode) ? mode : ""); }
+        function close(): void { ShellState.closePopups(); }
+    }
 }
