@@ -8,6 +8,16 @@ Row {
     id: root
     property var screen: null
     spacing: 8
+
+    // The icon source to draw for a tray icon string, or "" for the glyph fallback.
+    function resolve(raw) {
+        if (!raw.startsWith("image://icon/") || raw.includes("?path=")) return raw;
+        const name = raw.replace("image://icon/", "").split("?")[0];
+        if (name.startsWith("/")) return raw;
+        if (Quickshell.iconPath(name, true) !== "") return raw;
+        const bare = name.replace(/-symbolic$/, "");
+        return Quickshell.iconPath(bare, true) !== "" ? "image://icon/" + bare : "";
+    }
     Repeater {
         model: SystemTray.items.values
         delegate: Item {
@@ -19,12 +29,8 @@ Row {
             // Qt's magenta checkerboard and report status Ready, so ask the theme first: try the
             // name, then without "-symbolic", else show a Nerd Font glyph. Other URLs pass through.
             readonly property string raw: "" + entry.modelData.icon
-            readonly property bool themed: raw.startsWith("image://icon/")
             readonly property string name: raw.replace("image://icon/", "").split("?")[0]
-            readonly property string resolved: !themed ? raw
-                : Quickshell.iconPath(name, true) !== "" ? raw
-                : Quickshell.iconPath(name.replace(/-symbolic$/, ""), true) !== "" ? "image://icon/" + name.replace(/-symbolic$/, "")
-                : ""
+            readonly property string resolved: root.resolve(raw)
             IconImage { anchors.fill: parent; visible: entry.resolved !== ""; source: entry.resolved }
             Glyph {
                 anchors.centerIn: parent
