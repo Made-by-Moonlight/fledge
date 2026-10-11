@@ -3,6 +3,7 @@ import Quickshell
 import QtQuick
 import "wallpaper"
 import "ipc"
+import "bar"
 import "services"
 
 ShellRoot {
@@ -15,6 +16,7 @@ ShellRoot {
             id: perScreen
             required property ShellScreen modelData
             Wallpaper { screen: perScreen.modelData }
+            Bar { screen: perScreen.modelData }
         }
     }
     Ipc {}
