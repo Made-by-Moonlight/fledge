@@ -32,11 +32,17 @@ export PATH=$HOME/.local/share/mbm/bin:$HOME/.local/share/slievr-cachy/bin:$PATH
 
 cmd_sync() {
   cd "$REPO"
-  local list
-  list="$(git ls-files -co --exclude-standard)"
+  # NUL-separated, and only paths that still exist: a tracked file deleted in
+  # the working tree is still listed by git until the deletion is committed.
+  local list f
+  list="$(mktemp)"
+  trap 'rm -f "$list"' RETURN
+  while IFS= read -r -d '' f; do
+    [[ -e $f || -L $f ]] && printf '%s\0' "$f"
+  done < <(git ls-files -z -co --exclude-standard) >"$list"
   # Delete files the VM copy has that the host no longer does (renames, cutover deletions).
-  ssh_vm "mkdir -p ~/$VM_REPO && cd ~/$VM_REPO && comm -23 <(git ls-files -co --exclude-standard 2>/dev/null | sort) <(sort) | xargs -r -d '\n' rm -f --" <<<"$list"
-  printf '%s\n' "$list" | tar -czf - -T - | ssh_vm "tar -xzf - -C ~/$VM_REPO"
+  ssh_vm "mkdir -p ~/$VM_REPO && cd ~/$VM_REPO && comm -z -23 <(git ls-files -z -co --exclude-standard 2>/dev/null | sort -z) <(sort -z) | xargs -r -0 rm -f --" <"$list"
+  tar --null -czf - -T "$list" | ssh_vm "tar -xzf - -C ~/$VM_REPO"
 }
 
 case "${1:-}" in

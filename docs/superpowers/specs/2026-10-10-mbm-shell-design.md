@@ -164,11 +164,16 @@ Real defaults are migrated from today's config (see Cutover), not invented.
 
 ### Validation (`check`)
 
-Bad JSON; unknown top-level or per-section keys; `version` mismatch; key combo
-not matching `MOD(+MOD)*+KEY` with known modifiers; **two binds with the same
-combo + flags**; action with zero or more than one of shell/dispatch/exec;
-display mode not `WxH@R`; idle timeouts not non-negative integers (and
-`lock ≥ dim` when both are set). `apply` writes nothing if `check` fails.
+Bad JSON; unknown top-level or per-section keys; `version` mismatch; per bind:
+`mods` not a space-separated list of known modifiers (SUPER SHIFT CTRL ALT MOD2
+MOD3 MOD5; empty is fine), empty `key` (any non-empty Hyprland key is accepted,
+e.g. `code:10`, `mouse:272`, `switch:on:Lid Switch`), bad `flags`, a `label`
+with a comma, a missing `group`, or an `action` that is neither one object with
+exactly one non-empty string of shell/dispatch/exec nor a non-empty list of
+such objects; **two binds with the same mods (any order) + key (case-insensitive)
++ flags (ignoring `d`)**; display mode not `preferred|highres|highrr|WxH[@R]`;
+idle timeouts not non-negative integers (and `lockSec ≥ dimSec` when both are
+set). `apply` writes nothing if `check` fails.
 
 ### Write safety
 
