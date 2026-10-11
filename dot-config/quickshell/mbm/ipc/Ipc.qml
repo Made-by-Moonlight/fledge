@@ -77,4 +77,11 @@ Scope {
         function open(mode: string): void { ShellState.openLauncher(["apps", "clipboard", "emoji", "system"].includes(mode) ? mode : ""); }
         function close(): void { ShellState.closePopups(); }
     }
+    IpcHandler {
+        target: "dmenu"
+        function open(prompt: string, optionsFile: string, resultFile: string, select: int, inputOnly: bool): void {
+            ShellState.dmenuOpen({ prompt, optionsFile, resultFile, select, inputOnly });
+        }
+        function close(): void { ShellState.dmenuCancel(); }
+    }
 }

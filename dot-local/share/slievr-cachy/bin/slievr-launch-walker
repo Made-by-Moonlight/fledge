@@ -1,14 +1,28 @@
 #!/bin/bash
 
-# slievr:summary=Launch Walker and ensure its Elephant data provider is running
+# slievr:summary=Compat shim: walker is gone. dmenu calls go to `mbm dmenu`, modes to the mbm launcher.
+# Deleted with the rest of the slievr-* scripts in project B.
 
-if ! pgrep -x elephant > /dev/null; then
-  setsid uwsm-app -- elephant &
+args=()
+mode=""
+dmenu=false
+while (($#)); do
+  case "$1" in
+    --dmenu) dmenu=true ;;
+    -p) args+=(--prompt "${2%…}"); shift ;;
+    -c) args+=(--select "$2"); shift ;;
+    --inputonly) args+=(--input-only) ;;
+    -m) mode="$2"; shift ;;
+    --width | --minheight | --maxheight | -t | --theme) shift ;;
+  esac
+  shift
+done
+
+if [[ $dmenu == true ]]; then
+  exec mbm dmenu "${args[@]}"
 fi
-
-# Ensure walker service is running
-if ! pgrep -f "walker --gapplication-service" > /dev/null; then
-  setsid uwsm-app -- env GSK_RENDERER=cairo walker --gapplication-service &
-fi
-
-exec walker --width 644 --maxheight 300 --minheight 300 "$@"
+case "$mode" in
+  clipboard) exec qs -c mbm ipc call launcher open clipboard ;;
+  symbols) exec qs -c mbm ipc call launcher open emoji ;;
+  *) exec qs -c mbm ipc call launcher open apps ;;
+esac

@@ -36,7 +36,8 @@ jobs:
           for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-conf-to-binds.sh \
-                   dot-local/share/mbm/test/test-bind-parity.sh dot-local/share/mbm/test/test-defaults.sh; do
+                   dot-local/share/mbm/test/test-bind-parity.sh dot-local/share/mbm/test/test-defaults.sh \
+                   dot-local/share/mbm/test/test-dmenu.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"

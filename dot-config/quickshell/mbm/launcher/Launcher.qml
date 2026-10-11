@@ -54,6 +54,7 @@ PanelWindow {
     ClipboardMode { id: clipboard }
     EmojiMode { id: emoji }
     SystemMode { id: system }
+    property alias systemMode: system
     DmenuMode { id: dmenu }
 
     // Prefixes switch mode from the search box: ">" system, ":" emoji, "v " clipboard.
