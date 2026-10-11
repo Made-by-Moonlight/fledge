@@ -157,4 +157,39 @@ good "switch: key"     '{"binds":{"custom.1":{"mods":"","key":"switch:on:Lid Swi
 good "empty mods"      '{"binds":{"custom.1":{"mods":"","key":"F12","label":"A","group":"Apps","action":{"exec":"a"}}}}'
 good "multi-action"    '{"binds":{"custom.1":{"mods":"SUPER","key":"F11","label":"A","group":"Apps","action":[{"exec":"a"},{"dispatch":"cyclenext"}]}}}'
 
+# --- apply -------------------------------------------------------------------
+fresh
+"$MBM" settings apply
+check "apply: binds.conf"             "$(cat "$FIX/expected-binds.conf")"    "$(cat "$MBM_HYPR_DIR/binds.conf")"
+check "apply: monitors.conf"          "$(cat "$FIX/expected-monitors.conf")" "$(cat "$MBM_HYPR_DIR/monitors.conf")"
+check "apply: input.conf"             "$(cat "$FIX/expected-input.conf")"    "$(cat "$MBM_HYPR_DIR/input.conf")"
+check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$MBM_STATE_DIR/settings.json")"
+
+fresh
+"$MBM" settings set '.displays["DP-2"].enabled' false
+"$MBM" settings apply
+contains "apply: disabled display"    "monitor = DP-2, disable" "$(cat "$MBM_HYPR_DIR/monitors.conf")"
+
+fresh
+"$MBM" settings apply
+good="$(cat "$MBM_HYPR_DIR/binds.conf")"
+mkdir -p "$MBM_CONFIG_DIR"
+printf '{"binds":{"x":{"mods":"SUPER","key":"RETURN","label":"Dup","group":"A","action":{"exec":"y"}}}}\n' >"$MBM_CONFIG_DIR/settings.json"
+"$MBM" settings apply 2>"$T/err"; rc=$?
+check "apply: invalid -> exit 1"      "1"        "$rc"
+check "apply: invalid -> old binds kept" "$good" "$(cat "$MBM_HYPR_DIR/binds.conf")"
+check "apply: no temp files left"     ""         "$(find "$MBM_HYPR_DIR" "$MBM_STATE_DIR" -name '*.??????' 2>/dev/null)"
+
+# hyprctl is only called inside a Hyprland session
+fresh
+mkdir -p "$T/bin"; printf '#!/bin/sh\necho "$@" >>"%s/hyprctl.log"\n' "$T" >"$T/bin/hyprctl"; chmod +x "$T/bin/hyprctl"
+rm -f "$T/hyprctl.log"
+PATH="$T/bin:$PATH" "$MBM" settings apply
+check "apply: no reload outside Hyprland" "no" "$([[ -e $T/hyprctl.log ]] && echo yes || echo no)"
+HYPRLAND_INSTANCE_SIGNATURE=test PATH="$T/bin:$PATH" "$MBM" settings apply
+check "apply: reload inside Hyprland" "reload"   "$(cat "$T/hyprctl.log" 2>/dev/null)"
+rm -f "$T/hyprctl.log"
+HYPRLAND_INSTANCE_SIGNATURE=test MBM_NO_RELOAD=1 PATH="$T/bin:$PATH" "$MBM" settings apply
+check "apply: MBM_NO_RELOAD skips reload" "no" "$([[ -e $T/hyprctl.log ]] && echo yes || echo no)"
+
 exit $fail

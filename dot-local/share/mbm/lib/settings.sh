@@ -124,6 +124,23 @@ settings_check() {
   check_json "$merged" || exit 1
 }
 
+settings_apply() {
+  local merged binds monitors input
+  merged="$(merged_json)" || exit 1
+  check_json "$merged" || die "settings are invalid; nothing applied"
+  # Render everything before writing anything, so a jq failure can't leave a mix.
+  binds="$(jq -r -f "$MBM_ROOT/lib/gen-binds.jq" <<<"$merged")" || die "could not generate binds"
+  monitors="$(jq -r -f "$MBM_ROOT/lib/gen-monitors.jq" <<<"$merged")" || die "could not generate monitors"
+  input="$(jq -r -f "$MBM_ROOT/lib/gen-input.jq" <<<"$merged")" || die "could not generate input"
+  printf '%s\n' "$binds" | atomic_write "$MBM_HYPR_DIR/binds.conf"
+  printf '%s\n' "$monitors" | atomic_write "$MBM_HYPR_DIR/monitors.conf"
+  printf '%s\n' "$input" | atomic_write "$MBM_HYPR_DIR/input.conf"
+  printf '%s\n' "$merged" | atomic_write "$MBM_MERGED"
+  if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -z ${MBM_NO_RELOAD:-} ]]; then
+    hyprctl reload >/dev/null
+  fi
+}
+
 settings_main() {
   local sub="${1:-}"
   shift || true
@@ -132,6 +149,7 @@ settings_main() {
     set) settings_set "$@" ;;
     reset) settings_reset "$@" ;;
     check) settings_check ;;
+    apply) settings_apply ;;
     *) die "usage: mbm settings get|set|reset|check|apply" ;;
   esac
 }
