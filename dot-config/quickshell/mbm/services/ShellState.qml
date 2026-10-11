@@ -17,6 +17,7 @@ Singleton {
     onQsOpenChanged: if (!qsOpen) qsPicker = ""
     property bool settingsOpen: false
     property string settingsPage: "keybinds"
+    property string recordRequest: ""   // test hook: settings.record(id) asks the Keybinds page to record this bind
     property var dmenu: null
     property bool locked: false
     property bool polkitOpen: false     // the polkit dialog holds the keyboard

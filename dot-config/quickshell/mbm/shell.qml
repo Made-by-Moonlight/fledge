@@ -11,6 +11,7 @@ import "quicksettings"
 import "services"
 import "lock"
 import "polkit"
+import "settings"
 
 ShellRoot {
     // No live reload when a QML file changes (a git pull or restow under a locked screen).
@@ -34,6 +35,7 @@ ShellRoot {
     Launcher { id: launcher }
     QuickSettings {}
     PolkitDialog {}
+    SettingsWindow {}
     Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
     Connections { target: launcher.systemMode; function onIdleToggleRequested() { Idle.toggle(); } }
     // Idle lock only when nothing holds the lock: lock() while locked restarts the shell to
