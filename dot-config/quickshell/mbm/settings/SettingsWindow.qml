@@ -49,6 +49,18 @@ FloatingWindow {
                 color: Qt.alpha(Theme.error, 0.15); border.color: Theme.error
                 Glyph { id: err; anchors.fill: parent; anchors.margins: 8; text: Settings.lastError; color: Theme.error; wrapMode: Text.Wrap }
             }
+            // Shown on every page: the change stays until it is kept, and reverts on its own even
+            // with this window closed (DisplayConfirm).
+            Rectangle {
+                Layout.fillWidth: true; visible: DisplayConfirm.active && !DisplayConfirm.awaiting; implicitHeight: 50; radius: 7
+                color: Theme.accentSoft; border.color: Theme.accent
+                RowLayout {
+                    anchors.fill: parent; anchors.margins: 10
+                    Glyph { Layout.fillWidth: true; text: "Keep these display settings? Reverting in " + DisplayConfirm.countdown + " s" }
+                    Button { text: "Keep"; primary: true; onClicked: DisplayConfirm.keep() }
+                    Button { text: "Revert"; onClicked: DisplayConfirm.revert() }
+                }
+            }
             // Only the open window builds a page, and leaving a page drops it (and any recording in it).
             Loader {
                 Layout.fillWidth: true; Layout.fillHeight: true
