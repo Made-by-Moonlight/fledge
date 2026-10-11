@@ -53,6 +53,7 @@ PanelWindow {
     function picker(name) { ShellState.qsPicker = ShellState.qsPicker === name ? "" : name; }
 
     Pill {
+        id: panel
         anchors.fill: parent
         radius: Theme.radiusLarge
         color: Theme.panelSolid
@@ -79,20 +80,20 @@ PanelWindow {
                            onClicked: { Quickshell.execDetached(["slievr-toggle-nightlight"]); nlRecheck.restart(); } }
                 }
 
-                Loader { Layout.fillWidth: true; active: ShellState.qsPicker === "wifi"; visible: active; sourceComponent: WifiPicker { width: body.width } }
+                Loader { Layout.fillWidth: true; active: ShellState.qsPicker === "wifi"; visible: active; sourceComponent: WifiPicker { width: body.width; onReleaseFocus: panel.forceActiveFocus() } }
                 Loader { Layout.fillWidth: true; active: ShellState.qsPicker === "bluetooth"; visible: active; sourceComponent: BluetoothPicker { width: body.width } }
 
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8; visible: Audio.ready
                     Glyph { text: Audio.muted ? "󰝟" : "󰕾"; MouseArea { anchors.fill: parent; onClicked: Audio.toggleMute() } }
-                    Slider { Layout.fillWidth: true; value: Audio.volume; onMoved: v => Audio.setVolume(v) }
+                    Slider { Layout.fillWidth: true; value: Audio.volume; onMoved: v => Audio.setVolume(v); onStepped: d => Audio.stepVolume(d * 0.05) }
                     Glyph { text: Math.round(Audio.volume * 100); color: Theme.muted; Layout.preferredWidth: 28 }
                     Glyph { text: "›"; color: Theme.muted; MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: win.picker("audio") } }
                 }
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8; visible: Audio.source !== null
                     Glyph { text: Audio.micMuted ? "󰍭" : "󰍬"; MouseArea { anchors.fill: parent; onClicked: Audio.toggleMicMute() } }
-                    Slider { Layout.fillWidth: true; value: Audio.micVolume; onMoved: v => Audio.setMicVolume(v) }
+                    Slider { Layout.fillWidth: true; value: Audio.micVolume; onMoved: v => Audio.setMicVolume(v); onStepped: d => Audio.stepMicVolume(d * 0.05) }
                     Glyph { text: Math.round(Audio.micVolume * 100); color: Theme.muted; Layout.preferredWidth: 28 }
                     Glyph { text: "›"; color: Theme.muted; MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: win.picker("audio") } }
                 }
@@ -100,7 +101,7 @@ PanelWindow {
                 RowLayout {
                     Layout.fillWidth: true; spacing: 8; visible: Brightness.available
                     Glyph { text: "󰃠" }
-                    Slider { Layout.fillWidth: true; value: Brightness.value; onMoved: v => Brightness.set(v * 100) }
+                    Slider { Layout.fillWidth: true; value: Brightness.value; onMoved: v => Brightness.set(v * 100); onStepped: d => Brightness.step(d * 5) }
                     Glyph { text: Math.round(Brightness.value * 100); color: Theme.muted; Layout.preferredWidth: 28 }
                 }
 

@@ -13,6 +13,8 @@ Singleton {
     property string launcherMode: "apps"
     property bool qsOpen: false
     property string qsPicker: ""
+    // A picker only lives while the panel is open: destroying it stops its Wi-Fi scan / BT discovery.
+    onQsOpenChanged: if (!qsOpen) qsPicker = ""
     property bool settingsOpen: false
     property string settingsPage: "keybinds"
     property var dmenu: null

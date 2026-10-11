@@ -24,7 +24,8 @@ Singleton {
     property real pendingVolume: -1
     property int pendingMuted: -1    // -1 none, 0 unmuted, 1 muted
     property int pendingMicMuted: -1
-    Timer { id: settle; interval: 600; onTriggered: { root.pendingVolume = -1; root.pendingMuted = -1; root.pendingMicMuted = -1; } }
+    property real pendingMicVolume: -1
+    Timer { id: settle; interval: 600; onTriggered: { root.pendingVolume = -1; root.pendingMuted = -1; root.pendingMicMuted = -1; root.pendingMicVolume = -1; } }
 
     function clamp(v) { return isNaN(v) ? 0 : Math.max(0, Math.min(1, v)); }
     function setVolume(v) { if (sink?.audio) { sink.audio.muted = false; sink.audio.volume = clamp(v); } }
@@ -37,6 +38,14 @@ Singleton {
         pendingMuted = 0;
         settle.restart();
         setVolume(t);
+        return t;
+    }
+    function stepMicVolume(delta) {
+        if (!source?.audio || isNaN(delta)) return -1;
+        const t = clamp((pendingMicVolume >= 0 ? pendingMicVolume : micVolume) + delta);
+        pendingMicVolume = t;
+        settle.restart();
+        setMicVolume(t);
         return t;
     }
     // Toggles return the state they set (true = muted); null when there is no node.
