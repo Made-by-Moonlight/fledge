@@ -9,6 +9,7 @@ import "notifications"
 import "launcher"
 import "quicksettings"
 import "services"
+import "lock"
 
 ShellRoot {
     // Singletons are lazy; touch Settings now so its files are loaded before the first IPC call or bar paint.
@@ -25,7 +26,19 @@ ShellRoot {
     }
     Osd { id: osd }
     Popups {}
-    Launcher {}
+    Lock { id: lockScreen }
+    Launcher { id: launcher }
     QuickSettings {}
-    Ipc { osd: osd }
+    Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
+    // Lock before sleep: Sleep holds the delay inhibitor until the lock is secure (or its failsafe fires).
+    Connections {
+        target: Sleep
+        function onPreparingForSleep() {
+            if (Settings.lockOnSleep && !lockScreen.secure) lockScreen.lock(true);
+            else Sleep.release();
+        }
+        function onResumed() { Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "on"]); Brightness.refresh(); }
+    }
+    Connections { target: lockScreen; function onSecureChanged() { if (lockScreen.secure && Sleep.pending) Sleep.release(); } }
+    Ipc { osd: osd; lockScreen: lockScreen }
 }

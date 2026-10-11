@@ -7,6 +7,7 @@ import "../services"
 // Later tasks add their targets here.
 Scope {
     property var osd
+    property var lockScreen
 
     IpcHandler {
         target: "shell"
@@ -89,5 +90,10 @@ Scope {
         function toggle(): void { ShellState.toggleQuickSettings(); }
         function open(picker: string): void { ShellState.openQuickSettings(["wifi", "bluetooth", "audio"].includes(picker) ? picker : ""); }
         function close(): void { ShellState.qsOpen = false; }
+    }
+    IpcHandler {
+        target: "lock"
+        function lock(): void { lockScreen.lock(false); }
+        function status(): string { return lockScreen.locked ? "locked" : "unlocked"; }
     }
 }

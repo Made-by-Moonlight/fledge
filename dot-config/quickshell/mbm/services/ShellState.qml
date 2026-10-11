@@ -30,7 +30,9 @@ Singleton {
         launcherOpen = false;
         qsOpen = false;
     }
+    // Nothing opens under the lock: it would sit unseen behind it (and a dmenu caller would wait).
     function openLauncher(mode) {
+        if (locked) return;
         closePopups();
         launcherMode = mode || "apps";
         launcherOpen = true;
@@ -40,6 +42,7 @@ Singleton {
         else openLauncher(mode);
     }
     function openQuickSettings(picker) {
+        if (locked) return;
         closePopups();
         qsPicker = picker || "";
         qsOpen = true;
@@ -49,6 +52,7 @@ Singleton {
         else openQuickSettings("");
     }
     function openSettings(page) {
+        if (locked) return;
         closePopups();
         settingsPage = page || "keybinds";
         settingsOpen = true;
@@ -58,6 +62,7 @@ Singleton {
     function dmenuOpen(req) {
         closePopups();
         dmenu = req;
+        if (locked) { dmenuCancel(); return; }
         launcherMode = "dmenu";
         launcherOpen = true;
     }
