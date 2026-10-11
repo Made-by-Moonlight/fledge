@@ -46,7 +46,9 @@ Scope {
     }
     function submit() {
         const f = flow;
-        if (!f || !f.isResponseRequired || ShellState.locked) return;
+        // An empty response is a wrong password to PAM: a stray or double Enter would cost a
+        // faillock strike (three lock the account, lock screen included, for 10 minutes).
+        if (!f || !f.isResponseRequired || ShellState.locked || secret.text === "") return;
         const v = secret.text;
         wipe();
         f.submit(v);
@@ -58,6 +60,8 @@ Scope {
     }
 
     onFlowChanged: { wipe(); failures = 0; }
+    // Popups stay shut while the dialog is up: they would take the keyboard (ShellState).
+    Binding { target: ShellState; property: "polkitOpen"; value: root.shown }
     onShownChanged: {
         wipe();
         if (!shown) return;
@@ -85,8 +89,11 @@ Scope {
     function adopt() {
         const f = agent.flow;
         if (!f || f.isCompleted || f === current) return;
-        if (!current) { current = f; return; }
+        if (!current || current.isCompleted) { current = f; return; }
         console.warn("mbm polkit: refused a second authentication request while one is open: " + f.actionId);
+        // The refusal is a cancel, which faillock counts as a failure: say so every time.
+        Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "mbm", "Authentication request cancelled",
+            "Another app asked for admin access while a prompt was open: " + f.actionId]);
         // Not from inside the agent's own flow change.
         Qt.callLater(() => { if (f && !f.isCompleted) f.cancelAuthenticationRequest(); });
     }

@@ -19,6 +19,7 @@ Singleton {
     property string settingsPage: "keybinds"
     property var dmenu: null
     property bool locked: false
+    property bool polkitOpen: false     // the polkit dialog holds the keyboard
 
     function focusedScreen() {
         const name = Hyprland.focusedMonitor?.name;
@@ -31,8 +32,9 @@ Singleton {
         qsOpen = false;
     }
     // Nothing opens under the lock: it would sit unseen behind it (and a dmenu caller would wait).
+    // Nor over the polkit dialog: a popup would take the keyboard and the password could land in it.
     function openLauncher(mode) {
-        if (locked) return;
+        if (locked || polkitOpen) return;
         closePopups();
         launcherMode = mode || "apps";
         launcherOpen = true;
@@ -42,7 +44,7 @@ Singleton {
         else openLauncher(mode);
     }
     function openQuickSettings(picker) {
-        if (locked) return;
+        if (locked || polkitOpen) return;
         closePopups();
         qsPicker = picker || "";
         qsOpen = true;
@@ -52,7 +54,7 @@ Singleton {
         else openQuickSettings("");
     }
     function openSettings(page) {
-        if (locked) return;
+        if (locked || polkitOpen) return;
         closePopups();
         settingsPage = page || "keybinds";
         settingsOpen = true;
@@ -62,7 +64,7 @@ Singleton {
     function dmenuOpen(req) {
         closePopups();
         dmenu = req;
-        if (locked) { dmenuCancel(); return; }
+        if (locked || polkitOpen) { dmenuCancel(); return; }
         launcherMode = "dmenu";
         launcherOpen = true;
     }

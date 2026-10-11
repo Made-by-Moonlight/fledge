@@ -17,7 +17,7 @@ Scope {
             return JSON.stringify({ launcher: ShellState.launcherOpen, mode: ShellState.launcherMode,
                 qs: ShellState.qsOpen, picker: ShellState.qsPicker, settings: ShellState.settingsOpen,
                 page: ShellState.settingsPage, bar: ShellState.barVisible, dmenu: ShellState.dmenu !== null,
-                locked: ShellState.locked });
+                locked: ShellState.locked, polkit: ShellState.polkitOpen });
         }
     }
     IpcHandler {
