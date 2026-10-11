@@ -17,7 +17,7 @@
     "9": { "monitor": "desc:BNQ BenQ EX2780Q W4L08254019", "persistent": true },
     "10": { "monitor": "desc:BNQ BenQ EX2780Q 81N01112019", "persistent": true }
   },
-  "bar": { "position": "top", "left": ["workspaces", "title"], "centre": ["clock"],
+  "bar": { "position": "top", "left": ["workspaces", "title"], "centre": ["clock", "media"],
            "right": ["tray", "glyphs", "cog"], "glyphs": ["network", "bluetooth", "volume", "battery"] },
   "launcher": { "position": "centre" },
   "notifications": { "corner": "top-right", "timeoutMs": 5000 },

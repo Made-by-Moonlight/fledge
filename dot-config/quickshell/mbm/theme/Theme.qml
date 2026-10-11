@@ -23,7 +23,11 @@ Singleton {
     readonly property int radius: 10
     readonly property int radiusLarge: 14
     readonly property int gap: 8
-    readonly property int barHeight: 32
+    readonly property int barHeight: 32     // the bar's tabs, and the band reserved at the bar edge
+    readonly property int frame: 6          // the border round all four edges (the bar edge's is the strip)
+    readonly property int frameRadius: 14   // the desktop's inner corners
+    readonly property int tabRadius: 8      // a tab's fillet off the strip and its bottom corners
+    readonly property int tabPad: 12        // a tab's room either side of its section
     readonly property int anim: 140
 
     readonly property string assets: Quickshell.env("HOME") + "/.local/share/mbm/assets"

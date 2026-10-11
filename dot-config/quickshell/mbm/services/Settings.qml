@@ -61,7 +61,7 @@ Singleton {
     readonly property var binds: merged.binds ?? defaults.binds ?? ({})
     readonly property string barPosition: get("bar", "position", "top")
     readonly property var barLeft: get("bar", "left", ["workspaces", "title"])
-    readonly property var barCentre: get("bar", "centre", ["clock"])
+    readonly property var barCentre: get("bar", "centre", ["clock", "media"])
     readonly property var barRight: get("bar", "right", ["tray", "glyphs", "cog"])
     readonly property var barGlyphs: get("bar", "glyphs", ["network", "battery"])
     readonly property string launcherPosition: get("launcher", "position", "centre")
