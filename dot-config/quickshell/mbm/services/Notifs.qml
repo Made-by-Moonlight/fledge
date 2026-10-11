@@ -17,11 +17,11 @@ Singleton {
     // Pop-up expiry lives here, not in the cards: re-creating cards must not reset it.
     property var deadlines: new Map()
 
-    // Senders are untrusted and StyledText renders <a> and <img>: keep only b/i/u.
-    // Entities (&amp; ...) pass through untouched.
+    // Senders are untrusted and StyledText renders <a> and <img>. Whitelist, one pass:
+    // a "<" survives only as part of an exact <b> <i> <u> or closing tag (no attributes);
+    // every other "<" becomes &lt;, so no input can build any other tag. Entities pass through.
     function sanitize(text) {
-        return (text ?? "").replace(/<(\/?)\s*([a-zA-Z][a-zA-Z0-9]*)[^>]*>/g,
-            (m, close, tag) => ["b", "i", "u"].includes(tag.toLowerCase()) ? "<" + close + tag.toLowerCase() + ">" : "");
+        return (text ?? "").replace(/<\/?[biu]>|</gi, m => m.length > 1 ? m.toLowerCase() : "&lt;");
     }
 
     // freedesktop: -1 server default, 0 never, >0 that long. Quickshell reports ms (measured: -t 2000 expired at ~2 s).
@@ -97,9 +97,12 @@ Singleton {
     // Same choice as clicking a card: the default action, then dismiss.
     function invokeDefault(n) {
         if (!n) return;
+        // Read everything first: closing after the action may destroy the object.
         const a = n.actions.find(a => a.identifier === "default");
+        unpop(n);
+        remember(n);
         if (a) a.invoke();
-        dismiss(n);
+        try { if (n.tracked) n.dismiss(); } catch (e) {}
     }
     function invokeLast() { invokeDefault(newest()); }
     // Re-sends the last dismissed one (the server can't un-dismiss).
