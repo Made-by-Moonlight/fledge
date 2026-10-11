@@ -15,7 +15,7 @@ if slievr-toggle-enabled screensaver-off && [[ $1 != "force" ]]; then
 fi
 
 # Silently quit Walker on overlay
-walker -q
+qs -c mbm ipc call launcher close >/dev/null 2>&1
 
 focused=$(slievr-hyprland-monitor-focused)
 terminal=$(xdg-terminal-exec --print-id)

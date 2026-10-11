@@ -28,41 +28,47 @@ fi
 mapfile -t GPU_VULKAN_PKGS < <(printf '%s\n' "${GPU_VULKAN_PKGS[@]}" | sort -u)
 
 PACMAN_PACKAGES=(
-  hyprland waybar xorg-xwayland
+  hyprland xorg-xwayland
   kitty
-  mako swayosd starship
+  starship
   git stow fzf mise base-devel
   zsh
-  # waybar/style.css and kitty.conf font_family both name specific nerd
-  # fonts that were never actually installed — every icon glyph in
-  # waybar (not just the menu one, which had its own separate missing-
-  # font issue already fixed) rendered as a missing-glyph box.
-  # JetBrainsMono Nerd Font: used by walker (config.toml/CSS) and the
-  # vendored sddm greeter theme's password field.
+  # kitty.conf font_family names a specific nerd font, and the mbm shell's
+  # glyphs come from nerd fonts too (missing ones render as boxes).
+  # JetBrainsMono Nerd Font: the mbm shell's text and the vendored sddm
+  # greeter theme's password field.
   ttf-cascadia-mono-nerd ttf-firacode-nerd ttf-jetbrains-mono-nerd
-  # swaybg (autostart.conf wallpaper), pamixer (waybar pulseaudio
-  # right-click mute), brightnessctl (slievr-brightness-display/-keyboard)
-  # were all previously only pulled in transitively via
-  # cachyos-hyprland-settings (see the removal step below) — its removal
-  # cascaded them away too since nothing had them explicit yet.
-  swaybg pamixer brightnessctl
+  # pamixer (slievr-audio-* scripts), brightnessctl (slievr-brightness-
+  # display/-keyboard, the shell's brightness) were both previously only
+  # pulled in transitively via cachyos-hyprland-settings (see the removal
+  # step below) — its removal cascaded them away too since nothing had
+  # them explicit yet.
+  pamixer brightnessctl
   # Deps for the vendored dot-local/share/slievr-cachy/bin/ scripts that
-  # dot-config/hypr/bindings.conf calls (see that dir's README.md).
+  # the generated binds call (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
   # autostart.conf's exec-once entries — all missing on a fresh install:
-  # idle daemon, input method framework, power-profile D-Bus service
-  # (slievr-powerprofiles-init needs powerprofilesctl), polkit agent.
-  hypridle fcitx5 power-profiles-daemon polkit-gnome
-  # Lock screen (Super+Ctrl+L, hypridle) — dot-config/hypr/hyprlock.conf.
-  hyprlock
-  # Activity monitor (Super+Ctrl+T, waybar cpu click); calculator key.
+  # input method framework, power-profile D-Bus service
+  # (slievr-powerprofiles-init needs powerprofilesctl). No idle daemon or
+  # polkit agent: the mbm shell does both.
+  fcitx5 power-profiles-daemon
+  # The mbm shell (dot-config/quickshell/mbm, run by mbm-shell.service): bar,
+  # launcher, notifications, OSD, lock, idle, polkit agent. cliphist backs its
+  # clipboard history, unicode-emoji its emoji picker (noto-fonts-emoji draws them).
+  quickshell cliphist unicode-emoji noto-fonts-emoji
+  # Audio session: pipewire alone arrives only as a dependency; without a
+  # session manager there are no sinks, so volume controls (and apps) have
+  # nothing to drive. pipewire-pulse serves PulseAudio clients.
+  wireplumber pipewire-pulse
+  # Bluetooth stack for quick settings' Bluetooth picker. It used to arrive
+  # only as bluetui's dependency, so retiring bluetui would cascade it away.
+  bluez
+  # Activity monitor (Super+Ctrl+T); calculator key.
   btop gnome-calculator
-  # TUI controls the Setup menu (slievr-menu setup) and its keybinds
-  # (Super+Ctrl+W/B/A) launch: nmtui (wifi — ships with networkmanager
-  # already, not impala, which hard-depends on iwd instead of
-  # NetworkManager), bluetui (bluetooth), wiremix (audio).
-  bluetui wiremix
+  # Wi-Fi, Bluetooth and audio are the mbm quick settings now (Super+A,
+  # Super+Ctrl+W/B/A); nmtui (ships with networkmanager) stays for the
+  # Setup menu (slievr-menu setup).
   # Official ProtonVPN GTK client.
   proton-vpn-gtk-app
   # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
@@ -111,16 +117,34 @@ fi
 # cachyos-hyprland-settings (an earlier version of this script installed
 # it) pulls in a lot we don't want or already have our own equivalent
 # for: kvantum/qt5ct/cachyos-nord-gtk-theme-git (GTK/QT theming we don't
-# use), wofi/bemenu (walker replaces these), grimblast-git (our own
-# grim+slurp+satty), polkit-kde-agent (polkit-gnome above instead),
+# use), wofi/bemenu (the mbm launcher replaces these), grimblast-git (our own
+# grim+slurp+satty), polkit-kde-agent (the mbm shell is the agent),
 # swaylock-effects-git/swaylock-fancy-git/wlogout/wob, cachyos-wallpapers
 # (the theme's own vendored backgrounds are used instead),
 # cachyos-alacritty-config (kitty only, no alacritty). Removing it here
 # rather than leaving it installed; -Rns cascades to its now-orphaned
 # deps, but not to anything this script's own PACMAN_PACKAGES loop above
-# already made explicit (hyprland, waybar, mako, swaybg, etc.).
+# already made explicit (hyprland, kitty, brightnessctl, etc.).
 if pacman -Qi cachyos-hyprland-settings &>/dev/null; then
   sudo pacman -Rns --noconfirm cachyos-hyprland-settings
+fi
+
+# Tools the mbm shell replaced (earlier versions of this script installed
+# them). Their configs left the repo with the cutover, so nothing uses them.
+RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapplications-bin elephant-calc-bin
+  elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
+  elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
+  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
+# Exact installed names only: `pacman -Qi walker` also matches walker-bin (it
+# provides walker), and `pacman -R walker` would then fail on the whole list.
+declare -A installed=()
+while read -r pkg; do installed[$pkg]=1; done < <(pacman -Qq)
+retired=()
+for pkg in "${RETIRED_PKGS[@]}"; do
+  if [[ -n ${installed[$pkg]:-} ]]; then retired+=("$pkg"); fi
+done
+if ((${#retired[@]})); then
+  sudo pacman -Rns --noconfirm "${retired[@]}" || echo "WARN: could not remove some retired packages: ${retired[*]}" >&2
 fi
 
 # Use CachyOS's own cachyos/paru package, not AUR paru-bin: paru-bin is
@@ -131,29 +155,7 @@ if ! command -v paru &>/dev/null; then
   sudo pacman -S --needed --noconfirm paru
 fi
 
-# elephant (official repo) ships only the daemon, no providers — providers
-# are separate AUR packages. elephant-all-bin bundles every official one
-# (~450MB: apt/dnf5/dpkg package-manager providers, a Rust toolchain,
-# niri, password managers — none of which this setup uses), so install
-# only the specific providers config.toml's [providers] list and
-# dot-config/elephant/menus/*.lua actually need instead.
-ELEPHANT_PROVIDER_PKGS=(
-  elephant-desktopapplications-bin elephant-calc-bin elephant-symbols-bin
-  elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
-  elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
-)
-
-# Each provider package pulls in elephant (the daemon) as its own
-# dependency, in place of the providers-less official-repo one — remove
-# that first, along with walker-bin, which depends on it (reinstalled
-# right after, against elephant-*-bin's provides=elephant instead), since
-# it isn't declared as replacing the base elephant package and installing
-# both would collide on /usr/bin/elephant.
-if pacman -Qi elephant &>/dev/null && ! pacman -Qi elephant-desktopapplications-bin &>/dev/null; then
-  sudo pacman -Rdd --noconfirm elephant walker-bin
-fi
-
-for aur_pkg in "${ELEPHANT_PROVIDER_PKGS[@]}" walker-bin zen-browser-bin xdg-terminal-exec 1password 1password-cli; do
+for aur_pkg in zen-browser-bin xdg-terminal-exec 1password 1password-cli; do
   if ! pacman -Qi "$aur_pkg" &>/dev/null; then
     paru -S --noconfirm "$aur_pkg"
   fi
@@ -172,7 +174,7 @@ fi
 # ~/.config (and ~/.config/systemd/user) too: without it stow folds the whole directory into one symlink to dot-config/, and every app then writes its settings into the repo.
 # graphical-session.target.wants too: systemd does not follow a .wants
 # directory that is itself a symlink, so stow must link the unit files inside
-# a real directory (otherwise elephant never starts and walker has no backend).
+# a real directory (otherwise mbm-shell.service never starts: no desktop shell).
 # ~/.config/uwsm too: the repo ships dot-config/uwsm/env-hyprland, but env
 # (written below) must stay a real, untracked file rather than land in the repo.
 mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" \
@@ -180,8 +182,13 @@ mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.co
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 
+# Links stow made into the repo for files the repo has since dropped (the
+# cutover removed waybar, walker, mako, swayosd, elephant's unit, ...) are left
+# dangling: restow only manages what is still there. Remove them.
+find "$HOME/.config" "$HOME/.local/share" -maxdepth 4 -xtype l -lname "*slievr-cachy/dot-*" -delete 2>/dev/null || true
+
 # The vendored dot-local/share/slievr-cachy/bin/ scripts (stowed above) need
-# to be on PATH inside the Hyprland/uwsm session for bindings.conf's
+# to be on PATH inside the Hyprland/uwsm session for the generated binds'
 # slievr-* keybindings to resolve. uwsm reads this file for session env
 # vars; it isn't stow-managed since it's created fresh on any machine
 # (matches how the current host's ~/.config/uwsm/env was set up).
@@ -195,8 +202,12 @@ if ! grep -q '^export SLIEVR_BIN_PATH=' "$UWSM_ENV"; then
     echo 'export PATH=$SLIEVR_BIN_PATH/bin/:$PATH'
   } >>"$UWSM_ENV"
 fi
+if ! grep -q 'share/mbm/bin' "$UWSM_ENV"; then
+  # shellcheck disable=SC2016 # expanded when uwsm sources the file
+  echo 'export PATH=$HOME/.local/share/mbm/bin:$PATH' >>"$UWSM_ENV"
+fi
 
-# bindings.conf's terminal keybind ($terminal = uwsm app -- $TERMINAL) and
+# The terminal keybind ($terminal = uwsm app -- $TERMINAL) and
 # $EDITOR need these too. Previously written to ~/.config/uwsm/default,
 # which — despite a plausible-looking pre-existing comment on the host
 # implying otherwise — uwsm's prepare-env.sh does NOT read: it only
@@ -228,7 +239,7 @@ if [ ! -f "$HOME/.config/btop/btop.conf" ]; then
 fi
 
 # hyprland.conf sources ~/.local/state/hypr-toggles/*.conf for dynamic
-# feature toggles (waybar-off, etc.) — needs to exist (even empty) so the
+# feature toggles (suspend-off, etc.) — needs to exist (even empty) so the
 # glob source doesn't warn, and enabled/disabled state persists across
 # rebuilds since it's outside the stowed repo.
 mkdir -p "$HOME/.local/state/hypr-toggles"
@@ -252,6 +263,8 @@ fi
 # only needed post-login at Hyprland startup, so plain enable is enough; it
 # starts with graphical.target.
 sudo systemctl enable power-profiles-daemon.service
+# Same for bluetoothd (bluez): enable only, it starts with the system.
+sudo systemctl enable bluetooth.service
 
 # Enable sddm as the login manager, pre-selecting the uwsm-managed
 # Hyprland session (hyprland-uwsm.desktop — resolves the "Hyprland was
@@ -274,11 +287,19 @@ printf '[Theme]\nCurrent=slievr-cachy\n' \
 
 sudo systemctl enable sddm.service
 
-# elephant (walker's search-provider backend) is a user service started with
-# the graphical session: dot-config/systemd/user/graphical-session.target.wants/
-# elephant.service (stow-managed) enables it declaratively, so it comes up on
-# login without a `systemctl --user` call here — which would hang when this
-# script runs from slievr-firstboot (runuser, no user D-Bus / session).
+# mbm-shell.service (the desktop shell) is a user unit started with the
+# graphical session: the stowed graphical-session.target.wants/ link enables it,
+# so no `systemctl --user` call here (it would hang from slievr-firstboot).
+
+# The lock screen's own PAM service, separate from the real login stack so a
+# mistake here can't break logging in.
+printf 'auth include login\n' | sudo tee /etc/pam.d/mbm-lock >/dev/null
+
+# Generate the Hyprland binds/monitors/input from mbm settings; hyprland.conf
+# sources ~/.local/state/mbm/hypr/*.conf and errors if nothing matches.
+# No reload: from slievr-firstboot there is no Hyprland, and in a running
+# session the new config (and the shell) take over at the next login.
+MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply
 
 # dot-zshrc expects mise at ~/.local/bin/mise (the host's curl-installer
 # location); the pacman package above installs to /usr/bin/mise instead.

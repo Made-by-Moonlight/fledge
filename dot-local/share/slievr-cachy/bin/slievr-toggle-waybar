@@ -3,10 +3,5 @@
 # slievr:summary=Toggle Waybar visibility
 # slievr:examples=omarchy toggle waybar
 
-slievr-toggle waybar-off
-
-if pgrep -x waybar >/dev/null; then
-  pkill -x waybar
-else
-  uwsm-app -- waybar >/dev/null 2>&1 &
-fi
+# Compat shim (project B removes it): the mbm bar replaced waybar.
+exec qs -c mbm ipc call bar toggle

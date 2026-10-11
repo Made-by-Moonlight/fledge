@@ -50,6 +50,6 @@ fi
 # Set the new brightness.
 brightnessctl -d "$device" set "$new_brightness" >/dev/null
 
-# Use SwayOSD to display the new brightness setting.
+# Show the new brightness in the mbm OSD.
 percent=$((new_brightness * 100 / max_brightness))
-slievr-swayosd-kbd-brightness "$percent"
+qs -c mbm ipc call osd popup keyboard-brightness-symbolic "" "$(awk -v p="$percent" 'BEGIN{printf "%.2f", p/100}')"

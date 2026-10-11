@@ -5,4 +5,3 @@
 set -e
 
 slievr-launch-floating-terminal-with-presentation "voxtype setup model"
-slievr-restart-waybar

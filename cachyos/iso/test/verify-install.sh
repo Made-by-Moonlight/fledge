@@ -15,8 +15,11 @@ is "firstboot finished bootstrap"      1      "$(grep -c 'Bootstrap complete.' /
 # systemd 262's TPM measurement units (systemd-pcr*, systemd-tpm2-setup*) fail
 # with "Could not extend NvPCR" on swtpm; nothing here uses measured boot.
 is "no failed units (TPM measurement excluded)" 0 "$(systemctl --failed --no-legend --plain | grep -vE '^(systemd-pcr|systemd-tpm2-setup)' | grep -c .)"
-is "hyprlock installed"                yes    "$(command -v hyprlock >/dev/null && echo yes || echo no)"
-is "elephant (walker backend) running" active "$(systemctl --user is-active elephant 2>/dev/null)"
+is "quickshell installed"              yes    "$(command -v qs >/dev/null && echo yes || echo no)"
+is "mbm shell enabled"                 enabled "$(systemctl --user is-enabled mbm-shell 2>/dev/null)"
+is "mbm settings valid"                ""     "$("$HOME/.local/share/mbm/bin/mbm" settings check 2>&1)"
+# shellcheck disable=SC2012 # counting plain *.conf names
+is "generated Hyprland config"         4      "$(ls "$HOME"/.local/state/mbm/hypr/*.conf 2>/dev/null | wc -l)"
 is "btop uses the theme"               yes    "$( [[ -L "$HOME/.config/btop/themes/current.theme" ]] && grep -q '^color_theme = "current"' "$HOME/.config/btop/btop.conf" && echo yes || echo no )"
 is "sddm active"                       active "$(systemctl is-active sddm)"
 is "firstboot disabled"                disabled "$(systemctl is-enabled slievr-firstboot.service 2>/dev/null)"

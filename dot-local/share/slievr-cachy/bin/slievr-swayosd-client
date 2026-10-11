@@ -3,4 +3,16 @@
 # slievr:summary=Wrapper for swayosd-client that targets the currently focused monitor.
 # slievr:args=<swayosd-client-args...>
 
-exec swayosd-client --monitor "$(slievr-hyprland-monitor-focused)" "$@"
+# Compat shim (project B removes it): swayosd is gone; messages and progress go to the mbm OSD.
+icon="" message="" progress=-1
+while (($#)); do
+  case "$1" in
+    --custom-icon) icon="$2"; shift ;;
+    --custom-message) message="$2"; shift ;;
+    --custom-progress) progress="$2"; shift ;;
+    --custom-progress-text) [[ -z $message ]] && message="$2"; shift ;;
+    --monitor) shift ;;
+  esac
+  shift
+done
+exec qs -c mbm ipc call osd popup "$icon" "$message" "$progress"

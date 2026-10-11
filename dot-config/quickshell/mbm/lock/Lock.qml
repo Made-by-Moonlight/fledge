@@ -40,6 +40,9 @@ Scope {
     readonly property string flagDir: Quickshell.env("HOME") + "/.local/state/mbm"
     readonly property string flagPath: flagDir + "/locked"
     readonly property string instance: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? ""
+    // Set by mbm-shell.service. Not INVOCATION_ID: Hyprland runs as a uwsm unit, so a qs it
+    // execs (the dev loop) inherits Hyprland's INVOCATION_ID without being supervised.
+    readonly property bool supervised: Quickshell.env("MBM_SHELL_SUPERVISED") === "1"
     signal unlockedNow()
 
     Binding { target: ShellState; property: "locked"; value: root.locked }
@@ -65,11 +68,13 @@ Scope {
             // reload hands the old object to the new generation. So restart the process: its
             // lock object dies with it (if it is still the session's lock, Hyprland keeps the
             // session locked), and the new shell locks from the relock flag, rewritten here
-            // (blockWrites: it is on disk before exit). A spare start covers the dev loop; under
-            // the systemd unit, exit 1 makes systemd restart it and -n stops a duplicate.
+            // (blockWrites: it is on disk before exit). Under mbm-shell.service, exit 1 makes
+            // systemd restart it (and a spare would race that restart, then die with the cgroup).
+            // Unsupervised (the dev loop), a spare start takes its place; -n stops a duplicate.
             writeFlag();
             console.warn("mbm lock: re-acquiring the session lock by restarting the shell");
-            Quickshell.execDetached(["setsid", "-f", "sh", "-c", "sleep 1; exec qs -c mbm -n"]);
+            if (!root.supervised)
+                Quickshell.execDetached(["setsid", "-f", "sh", "-c", "sleep 1; exec qs -c mbm -n"]);
             Qt.exit(1);
             return;
         }

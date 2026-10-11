@@ -2,12 +2,5 @@
 
 # slievr:summary=Toggle hypridle idle locking
 
-if pgrep -x hypridle >/dev/null; then
-  pkill -x hypridle
-  notify-send -u low "󱫖    Stop locking computer when idle"
-else
-  uwsm-app -- hypridle >/dev/null 2>&1 &
-  notify-send -u low "󱫖    Now locking computer when idle"
-fi
-
-pkill -RTMIN+9 waybar
+# Compat shim (project B removes it): the mbm shell does idle locking.
+exec qs -c mbm ipc call idle toggle

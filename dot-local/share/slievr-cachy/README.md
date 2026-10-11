@@ -5,12 +5,13 @@
 recorded in `VENDORED_VERSION`), MIT-licensed (see `LICENSE`), then had
 every `omarchy-*` command renamed to `slievr-*` (and the `omarchy`
 dispatcher to `slievr`) throughout this directory and every config that
-calls them (`dot-config/hypr/bindings.conf`, `hypr-defaults/`, waybar,
-mako, walker, elephant). These are no longer updated from upstream
+calls them (then `dot-config/hypr/bindings.conf`, `hypr-defaults/`, waybar,
+mako, walker, elephant; the mbm shell replaced the last four). These are no longer updated from upstream
 Omarchy — they're a permanent, independent fork under this project's own
 naming, not a live sync.
 
-`dot-config/hypr/bindings.conf` calls several of these commands
+The keybindings (`dot-local/share/mbm/defaults/settings.json`, generated into
+Hyprland config by `mbm settings apply`) call several of these commands
 (`slievr-launch-browser`, `slievr capture screenshot ...`, etc.). Rather
 than installing the full Omarchy framework — which overrides the pacman
 mirrorlist and makes broader system changes — only these self-contained

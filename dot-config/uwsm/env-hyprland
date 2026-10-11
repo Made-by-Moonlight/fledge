@@ -22,3 +22,12 @@ if [ -x "$_display_gpu" ] && _driver="$("$_display_gpu" --driver)"; then
   fi
 fi
 unset _display_gpu _driver
+
+# hyprland.conf sources the binds, monitors and input that `mbm settings apply`
+# generates into ~/.local/state/mbm/hypr. Bootstrap generates them, but if that
+# state is ever lost (a wiped ~/.local/state, a new user), Hyprland would start
+# with no binds at all; regenerate before it reads its config. No reload: it
+# isn't running yet.
+if [ ! -e "$HOME/.local/state/mbm/hypr/binds.conf" ] && [ -x "$HOME/.local/share/mbm/bin/mbm" ]; then
+  MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply >/dev/null 2>&1 || true
+fi

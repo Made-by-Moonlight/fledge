@@ -56,5 +56,5 @@ fi
 # Set the actual brightness of the display device.
 brightnessctl -d "$device" set "$step" >/dev/null
 
-# Use SwayOSD to display the new brightness setting.
-slievr-swayosd-brightness "$(brightnessctl -d "$device" -m | cut -d',' -f4 | tr -d '%')"
+# Show the new brightness in the mbm OSD.
+qs -c mbm ipc call osd popup display-brightness-symbolic "" "$(awk -v p="$(brightnessctl -d "$device" -m | cut -d',' -f4 | tr -d '%')" 'BEGIN{printf "%.2f", p/100}')"
