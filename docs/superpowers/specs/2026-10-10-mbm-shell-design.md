@@ -59,7 +59,7 @@ After each one merges, the desktop works end to end.
 | Quick settings | Opened by the right island's cog (its visibility/position set on the Bar page), a settable bind, and a launcher "Settings" entry. Wi-Fi, Bluetooth, DND and night-light tiles; volume, mic and brightness sliders; power-profile switch; notification history; Settings and Power buttons. `›` expands in-panel pickers (networks, BT devices, audio sinks/sources). |
 | Notifications | Pop-ups **top-right** by default (corner is a setting). Hidden while quick settings is open. DND holds pop-ups but still records them in history. |
 | OSD | Bottom-centre: volume, brightness, mic mute. |
-| Settings window | **Sidebar layout**: Keybinds, Displays, Bar, Idle & lock, Input. Keybinds is a grouped, filterable list; click a row to record keys; clashes flagged inline; "edited" tag on changed rows; right-click resets to default; "+ Add bind". |
+| Settings window | **Sidebar layout**: Keybinds, Displays, Bar, Idle & lock, Input. Displays also has a Workspaces section: one row per workspace (1–10 plus any others pinned) with a monitor dropdown (Any, connected monitors, remembered ones) and a persistent toggle; changes apply immediately. Keybinds is a grouped, filterable list; click a row to record keys; clashes flagged inline; "edited" tag on changed rows; right-click resets to default; "+ Add bind". |
 | Lock + wallpaper | Port the approved made-by-moonlight design unchanged: Moonrise wallpaper per monitor; lock = glow background, owl, wordmark, clock, amber password field. Assets come from `cachyos/branding/` output, not `omarchy/current/`. |
 | Idle | In-shell `IdleMonitor`, timeouts from settings (dim / lock / screen off / suspend). hypridle retired. Defaults keep today's behaviour: no idle timeouts (today's hypridle.conf has no listeners), lock before sleep on. |
 | Lock semantics | Same as today's `slievr-system-lock`: locking also locks 1Password (`1password --lock` when running). **Lock before suspend:** the shell holds a logind delay inhibitor (`systemd-inhibit --what=sleep --mode=delay`, via `Process`), watches `PrepareForSleep` (`gdbus monitor --system`), locks, then releases it. On wake it turns displays back on (`hyprctl dispatch dpms on`), replacing `slievr-system-wake`. |
@@ -129,6 +129,8 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
     // user-added binds use ids "custom.<n>"; a default bind set to null is removed
   },
   "displays":      { "<connector or desc:…>": { "mode": "2560x1440@165", "scale": 1.25, "position": "0x0", "enabled": true } },
+  "workspaces":    { "1": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true } },
+                   // workspace number → monitor (connector or desc:…); a default entry set to null is removed
   "bar":           { "position": "top", "left": ["workspaces","title"], "centre": ["clock"],
                      "right": ["tray","glyphs","cog"], "glyphs": ["network","battery"] },
   "launcher":      { "position": "centre" },             // centre | anchored
@@ -151,6 +153,12 @@ Hyprland bind flags (`e l r n m t i s p`; `d` is always added). Labels can't
 contain commas. A clash is two different bind ids on the same mods+key+flags.
 Real defaults are migrated from today's config (see Cutover), not invented.
 
+`workspaces` pins workspace numbers to monitors (today's hand-written
+`workspaces.conf`). `persistent` is optional (default false). There is no
+`default` field: the lowest-numbered workspace pinned to each monitor becomes
+that monitor's default workspace, so there's nothing to keep consistent.
+Unlisted workspaces aren't pinned.
+
 ### CLI
 
 | Command | Does |
@@ -159,7 +167,7 @@ Real defaults are migrated from today's config (see Cutover), not invented.
 | `mbm settings set <path> <json> [<path> <json>]…` | write overrides atomically; refuses (writes nothing) if the result fails `check`. Paths are jq paths such as `.launcher.position` or `.binds["apps.terminal"].key` |
 | `mbm settings reset <path>` | delete override |
 | `mbm settings check` | validate merged settings; non-zero + message on failure |
-| `mbm settings apply` | `check`, then generate `binds.conf`, `monitors.conf`, `input.conf` into `~/.config/hypr/mbm/`, then `hyprctl reload` if Hyprland is running |
+| `mbm settings apply` | `check`, then generate `binds.conf`, `monitors.conf`, `workspaces.conf`, `input.conf` into `~/.config/hypr/mbm/`, then `hyprctl reload` if Hyprland is running |
 | `mbm dmenu [--prompt P]` | options on stdin → shell's launcher in dmenu mode → choice on stdout (exit 1 on cancel) |
 
 ### Validation (`check`)
@@ -173,7 +181,8 @@ exactly one non-empty string of shell/dispatch/exec nor a non-empty list of
 such objects; **two binds with the same mods (any order) + key (case-insensitive)
 + flags (ignoring `d`)**; display mode not `preferred|highres|highrr|WxH[@R]`;
 idle timeouts not non-negative integers (and `lockSec ≥ dimSec` when both are
-set). `apply` writes nothing if `check` fails.
+set); a workspace key that isn't a positive integer, an empty `monitor`, or a
+non-boolean `persistent`. `apply` writes nothing if `check` fails.
 
 ### Write safety
 
@@ -182,7 +191,7 @@ directory, then `mv`. A failed `apply` leaves the previous generated files intac
 
 ### Live vs generated
 
-- **Generated (needs `apply`):** binds, displays, input.
+- **Generated (needs `apply`):** binds, displays, workspaces, input.
 - **Live in the shell (the `Settings` singleton watches the file):** bar layout,
   launcher position, notification corner and timeout, idle timeouts.
 
@@ -205,9 +214,9 @@ when a generated section changed, showing any `check` error inline.
 - `autostart.conf` (+ `hypr-defaults/hypr/autostart.conf`): remove mako,
   waybar, swaybg, hypridle, polkit-gnome. The shell runs as the user unit mbm-shell.service (Restart=on-failure, WantedBy graphical-session.target, enabled by a stowed .wants link like elephant was).
 - `hyprland.conf` sources `~/.config/hypr/mbm/*.conf`. It stops sourcing
-  `bindings.conf`, `hypr-defaults/hypr/bindings/*`, `monitors.conf` and
-  `input.conf`, whose contents migrate into `defaults/settings.json` and which
-  are then deleted.
+  `bindings.conf`, `hypr-defaults/hypr/bindings/*`, `monitors.conf`,
+  `workspaces.conf` and `input.conf`, whose contents migrate into
+  `defaults/settings.json` and which are then deleted.
 - Remove walker/waybar/mako layer rules from `hypr-defaults/hypr/apps/`.
 
 **Bind remaps (deliberate changes)**
