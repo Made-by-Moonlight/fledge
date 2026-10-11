@@ -58,4 +58,16 @@ Scope {
         function previous(): void { Media.previous(); }
         function playPause(): void { Media.playPause(); }
     }
+    IpcHandler {
+        target: "notifications"
+        function dismiss(): void { Notifs.dismissLast(); }
+        function dismissAll(): void { Notifs.dismissAll(); }
+        function dndToggle(): void { Notifs.toggleDnd(); }
+        function invokeLast(): void { Notifs.invokeLast(); }
+        function restoreLast(): void { Notifs.restoreLast(); }
+        function dismissSummary(summary: string): void { Notifs.dismissSummary(summary); }
+        function count(): int { return Notifs.history.length; }
+        function popups(): int { return Notifs.popups.length; }
+        function dnd(): bool { return Notifs.dnd; }
+    }
 }

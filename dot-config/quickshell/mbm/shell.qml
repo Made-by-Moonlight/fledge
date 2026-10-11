@@ -5,6 +5,7 @@ import "wallpaper"
 import "ipc"
 import "bar"
 import "osd"
+import "notifications"
 import "services"
 
 ShellRoot {
@@ -21,5 +22,6 @@ ShellRoot {
         }
     }
     Osd { id: osd }
+    Popups {}
     Ipc { osd: osd }
 }
