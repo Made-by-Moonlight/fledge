@@ -66,7 +66,8 @@ PanelWindow {
     }
     function refresh() {
         items = mode.results(query);
-        list.currentIndex = items.length ? Math.min(Math.max(mode.initialIndex ?? 0, 0), items.length - 1) : -1;
+        // initialIndex (dmenu --select) only applies to the unfiltered list; once typing, the best match leads.
+        list.currentIndex = items.length ? Math.min(Math.max(query ? 0 : (mode.initialIndex ?? 0), 0), items.length - 1) : -1;
     }
     function runCurrent() {
         const it = items[list.currentIndex];

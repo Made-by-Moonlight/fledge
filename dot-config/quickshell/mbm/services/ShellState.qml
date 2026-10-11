@@ -64,7 +64,8 @@ Singleton {
         dmenu = null;
         launcherOpen = false;
         if (!req) return;
-        Quickshell.execDetached(["sh", "-c", 'printf "%s\\n%s\\n" "$1" "$2" > "$3"', "sh", ok ? "1" : "0", value ?? "", req.resultFile]);
+        // Bounded: if the caller died, nothing reads the FIFO and a bare redirect would block forever.
+        Quickshell.execDetached(["timeout", "2", "sh", "-c", 'printf "%s\\n%s\\n" "$1" "$2" > "$3"', "sh", ok ? "1" : "0", value ?? "", req.resultFile]);
     }
     function dmenuCancel() { dmenuFinish(false, ""); }
 }
