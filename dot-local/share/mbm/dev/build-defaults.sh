@@ -9,6 +9,7 @@ D="$REPO/dot-config/hypr/hypr-defaults/hypr/bindings"
 binds="$("$HERE/conf-to-binds.sh" \
   "Media=$D/media.conf" "Clipboard=$D/clipboard.conf" "Windows=$D/tiling-v2.conf" \
   "Utilities=$D/utilities.conf" "Apps=$REPO/dot-config/hypr/bindings.conf")"
+out="${MBM_DEFAULTS_OUT:-$HERE/../defaults/settings.json}"
 jq -n --slurpfile base "$HERE/defaults-base.json" --argjson b "$binds" '$base[0] + {binds: $b}' \
-  | jq -f "$HERE/remaps.jq" >"$HERE/../defaults/settings.json.new"
-mv "$HERE/../defaults/settings.json.new" "$HERE/../defaults/settings.json"
+  | jq -f "$HERE/remaps.jq" >"$out.new"
+mv "$out.new" "$out"
