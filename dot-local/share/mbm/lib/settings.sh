@@ -118,6 +118,12 @@ settings_reset() {
   write_user "$out"
 }
 
+settings_check() {
+  local merged
+  merged="$(merged_json)" || exit 1
+  check_json "$merged" || exit 1
+}
+
 settings_main() {
   local sub="${1:-}"
   shift || true
@@ -125,6 +131,7 @@ settings_main() {
     get) settings_get "$@" ;;
     set) settings_set "$@" ;;
     reset) settings_reset "$@" ;;
+    check) settings_check ;;
     *) die "usage: mbm settings get|set|reset|check|apply" ;;
   esac
 }

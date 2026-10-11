@@ -76,4 +76,42 @@ check "broken user file: get fails"   "1"        "$rc"
 contains "broken user file: message names the file" "settings.json is not a valid JSON object" "$(cat "$T/err")"
 check "broken user file: merged state untouched" "$good_state" "$(cat "$MBM_STATE_DIR/settings.json")"
 
+# --- check -------------------------------------------------------------------
+bad() { # bad <description> <expected message part> <user-json>
+  fresh
+  mkdir -p "$MBM_CONFIG_DIR"; printf '%s\n' "$3" >"$MBM_CONFIG_DIR/settings.json"
+  local out rc
+  out="$("$MBM" settings check 2>&1)"; rc=$?
+  check "check: $1 -> exit 1" "1" "$rc"
+  contains "check: $1 -> message" "$2" "$out"
+}
+fresh
+check "check: shipped fixture is valid" "" "$("$MBM" settings check 2>&1)"
+bad "unknown top-level key" "unknown setting: foo"            '{"foo": 1}'
+bad "wrong version"         "version must be 1"               '{"version": 2}'
+bad "duplicate combo"       "use the same keys"               '{"binds":{"custom.1":{"mods":"SUPER","key":"return","label":"Dup","group":"Apps","action":{"exec":"true"}}}}'
+bad "modifier order doesn't hide a clash" "use the same keys" '{"binds":{"custom.1":{"mods":"ALT","key":"TAB","label":"Dup","group":"Windows","action":{"dispatch":"cyclenext"}}}}'
+bad "bad modifier"          "bad modifiers"                   '{"binds":{"shell.launcher":{"mods":"SUPR"}}}'
+bad "missing key"           "key is required"                 '{"binds":{"shell.launcher":{"key":""}}}'
+bad "comma in label"        "without commas"                  '{"binds":{"shell.launcher":{"label":"Launch, now"}}}'
+bad "two action kinds"      "action must be one of"           '{"binds":{"shell.launcher":{"action":{"shell":"launcher.toggle","exec":"x"}}}}'
+bad "empty action list"     "action must be one of"           '{"binds":{"windows.next":{"action":[]}}}'
+bad "bad flags"             "bad flags"                       '{"binds":{"media.volume-up":{"flags":"xd"}}}'
+bad "unknown bind field"    "unknown field colour"            '{"binds":{"shell.launcher":{"colour":"red"}}}'
+bad "bad display mode"      "bad mode"                        '{"displays":{"DP-1":{"mode":"huge"}}}'
+bad "bad display transform" "bad transform"                   '{"displays":{"DP-1":{"transform":9}}}'
+bad "bad bar module"        "unknown module"                  '{"bar":{"left":["workspaces","weather"]}}'
+bad "bad launcher position" "launcher.position"               '{"launcher":{"position":"sideways"}}'
+bad "bad notification corner" "notifications.corner"          '{"notifications":{"corner":"middle"}}'
+bad "lock sooner than dim"  "lockSec must be >= dimSec"       '{"idle":{"dimSec":300,"lockSec":60}}'
+bad "negative timeout"      "idle.suspendSec"                 '{"idle":{"suspendSec":-1}}'
+bad "repeat rate range"     "input.repeatRate"                '{"input":{"repeatRate":0}}'
+bad "touchpad type"         "input.touchpad.naturalScroll"    '{"input":{"touchpad":{"naturalScroll":"yes"}}}'
+
+fresh
+"$MBM" settings set '.binds["custom.1"]' '{"mods":"SUPER","key":"SPACE","label":"Dup","group":"Shell","action":{"exec":"true"}}' 2>"$T/err"; rc=$?
+check "set: refuses a clash"          "1"        "$rc"
+contains "set: clash message"         "use the same keys" "$(cat "$T/err")"
+check "set: clash wrote nothing"      ""         "$(user_file)"
+
 exit $fail
