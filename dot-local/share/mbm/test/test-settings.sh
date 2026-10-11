@@ -16,7 +16,7 @@ fresh() { # fresh [defaults.json]: empty temp HOME with all mbm paths inside it
   rm -rf "${T:?}/home"
   export HOME="$T/home"
   export MBM_DEFAULTS="${1:-$FIX/defaults.json}"
-  export MBM_CONFIG_DIR="$HOME/.config/mbm" MBM_STATE_DIR="$HOME/.local/state/mbm" MBM_HYPR_DIR="$HOME/.config/hypr/mbm"
+  export MBM_CONFIG_DIR="$HOME/.config/mbm" MBM_STATE_DIR="$HOME/.local/state/mbm" MBM_HYPR_DIR="$HOME/.local/state/mbm/hypr"
   unset HYPRLAND_INSTANCE_SIGNATURE MBM_NO_RELOAD
   mkdir -p "$HOME"
 }

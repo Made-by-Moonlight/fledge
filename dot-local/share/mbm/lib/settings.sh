@@ -7,7 +7,7 @@
 MBM_DEFAULTS="${MBM_DEFAULTS:-$MBM_ROOT/defaults/settings.json}"
 MBM_CONFIG_DIR="${MBM_CONFIG_DIR:-$HOME/.config/mbm}"
 MBM_STATE_DIR="${MBM_STATE_DIR:-$HOME/.local/state/mbm}"
-MBM_HYPR_DIR="${MBM_HYPR_DIR:-$HOME/.config/hypr/mbm}"
+MBM_HYPR_DIR="${MBM_HYPR_DIR:-$HOME/.local/state/mbm/hypr}"
 MBM_USER="$MBM_CONFIG_DIR/settings.json"
 MBM_MERGED="$MBM_STATE_DIR/settings.json"
 

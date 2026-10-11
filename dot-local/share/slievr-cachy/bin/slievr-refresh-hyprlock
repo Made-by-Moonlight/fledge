@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Overwrite the user config for hyprlock with the Omarchy default.
-
-slievr-refresh-config hypr/hyprlock.conf

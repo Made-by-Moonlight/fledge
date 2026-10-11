@@ -1,8 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Reset Waybar config to Omarchy defaults
-# slievr:examples=omarchy refresh waybar
-
-slievr-refresh-config waybar/config.jsonc
-slievr-refresh-config waybar/style.css
-slievr-restart-waybar

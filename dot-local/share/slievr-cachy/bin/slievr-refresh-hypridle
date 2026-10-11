@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Overwrite the user config for hypridle with the Omarchy default and restart the service.
-
-slievr-refresh-config hypr/hypridle.conf
-slievr-restart-hypridle
