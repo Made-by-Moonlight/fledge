@@ -38,3 +38,12 @@ Installed in the VM: **Quickshell 0.3.2** (Arch package; the plan said 0.3.1). H
 | `WlrKeyboardFocus` (exported as `Quickshell.Wayland._WlrLayerShell/WlrKeyboardFocus`; used via `WlrLayershell.keyboardFocus`) | `None`, `Exclusive`, `OnDemand` | `Wayland/_WlrLayerShell/quickshell-wayland-layershell.qmltypes:21` |
 
 Note `PamResult` has no `Cancelled`, and `NotificationUrgency` is `Low/Normal/Critical` (not `Urgent`).
+
+## Session lock findings (Task 14, VM)
+
+- `WlSessionLock.locked` does not notify when the lock is released: after `locked = false`, a direct read gives `false` but no `lockStateChanged` fires, so a binding to it stays `true`. `secure` notifies both ways. The shell keeps its own `locked` flag and resyncs it on `secureChanged`. `WlSessionLock` has no callable `unlock()` from QML (TypeError).
+- `PamContext.pamMessage` has no arguments: read `message`, `responseRequired`, `messageIsError` from the context. `completed(result: PamResult)`, `error(error: PamError)` with `PamError` = `StartFailed`, `TryAuthFailed`, `InternalError`. `start()` returns bool.
+- Quickshell does not kill a `Process`'s children when the shell exits or is killed: a `systemd-inhibit … sleep infinity` outlived every restart and kept its delay inhibitor. Hold `cat` on a `stdinEnabled` pipe instead; it exits with the shell.
+- `misc:allow_session_lock_restore` set with `hyprctl keyword` is lost on every config reload (restow, `mbm settings apply`). Without it, a restarted shell that tries to re-lock is killed by a fatal Wayland error and Hyprland shows its "lockscreen died" screen (the session stays locked). It must live in the config file (Task 18).
+- The VM's PAM stack (`login` → `system-auth`) has `pam_faillock` with defaults (deny=3, unlock_time=600): three wrong passwords lock the account for 10 minutes, sudo included. Keep wrong-password tests to two in a row; a correct password resets the count.
+- Suspend in the VM: `/sys/power/mem_sleep` is `[s2idle]`. `systemctl suspend` works and the delay inhibitor held until the lock was secure (~100 ms); `virsh dompmwakeup` does **not** wake it ("guest is not in suspended state"), a `virsh send-key` does. But virtio-gpu loses its virtqueues across the resume (QEMU shows all-zero vrings) and the next blocking modeset (here `dpms on`) hangs Hyprland in `virtio_gpu_queue_ctrl_sgs` for good. After a suspend test the VM needs a reboot; check lock-before-suspend on real hardware.
