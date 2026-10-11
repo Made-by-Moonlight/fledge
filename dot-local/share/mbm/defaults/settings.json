@@ -1,0 +1,1694 @@
+{
+  "version": 1,
+  "displays": {
+    "DP-1": {
+      "mode": "3440x1440@100",
+      "position": "0x0",
+      "scale": 1
+    },
+    "DP-2": {
+      "mode": "2560x1440@144",
+      "position": "3440x-560",
+      "scale": 1,
+      "transform": 3
+    },
+    "DP-3": {
+      "mode": "2560x1440@144",
+      "position": "-1440x-560",
+      "scale": 1,
+      "transform": 1
+    }
+  },
+  "bar": {
+    "position": "top",
+    "left": [
+      "workspaces",
+      "title"
+    ],
+    "centre": [
+      "clock"
+    ],
+    "right": [
+      "tray",
+      "glyphs",
+      "cog"
+    ],
+    "glyphs": [
+      "network",
+      "bluetooth",
+      "volume",
+      "battery"
+    ]
+  },
+  "launcher": {
+    "position": "centre"
+  },
+  "notifications": {
+    "corner": "top-right",
+    "timeoutMs": 5000
+  },
+  "idle": {
+    "dimSec": 0,
+    "lockSec": 0,
+    "screenOffSec": 0,
+    "suspendSec": 0,
+    "lockOnSleep": true
+  },
+  "input": {
+    "kbLayout": "us",
+    "kbOptions": "compose:caps",
+    "repeatRate": 40,
+    "repeatDelay": 600,
+    "numlock": true,
+    "sensitivity": 0,
+    "touchpad": {
+      "naturalScroll": false,
+      "tapToClick": true,
+      "scrollFactor": 0.4
+    }
+  },
+  "binds": {
+    "media.volume-up": {
+      "mods": "",
+      "key": "XF86AudioRaiseVolume",
+      "label": "Volume up",
+      "group": "Media",
+      "action": {
+        "shell": "osd.volume +5"
+      },
+      "flags": "el"
+    },
+    "media.volume-down": {
+      "mods": "",
+      "key": "XF86AudioLowerVolume",
+      "label": "Volume down",
+      "group": "Media",
+      "action": {
+        "shell": "osd.volume -5"
+      },
+      "flags": "el"
+    },
+    "media.mute": {
+      "mods": "",
+      "key": "XF86AudioMute",
+      "label": "Mute",
+      "group": "Media",
+      "action": {
+        "shell": "osd.volume mute"
+      },
+      "flags": "el"
+    },
+    "media.mute-microphone": {
+      "mods": "",
+      "key": "XF86AudioMicMute",
+      "label": "Mute microphone",
+      "group": "Media",
+      "action": {
+        "shell": "osd.mic mute"
+      },
+      "flags": "el"
+    },
+    "media.brightness-up": {
+      "mods": "",
+      "key": "XF86MonBrightnessUp",
+      "label": "Brightness up",
+      "group": "Media",
+      "action": {
+        "shell": "osd.brightness +5"
+      },
+      "flags": "el"
+    },
+    "media.brightness-down": {
+      "mods": "",
+      "key": "XF86MonBrightnessDown",
+      "label": "Brightness down",
+      "group": "Media",
+      "action": {
+        "shell": "osd.brightness -5"
+      },
+      "flags": "el"
+    },
+    "media.brightness-maximum": {
+      "mods": "SHIFT",
+      "key": "XF86MonBrightnessUp",
+      "label": "Brightness maximum",
+      "group": "Media",
+      "action": {
+        "shell": "osd.brightness 100"
+      },
+      "flags": "el"
+    },
+    "media.brightness-minimum": {
+      "mods": "SHIFT",
+      "key": "XF86MonBrightnessDown",
+      "label": "Brightness minimum",
+      "group": "Media",
+      "action": {
+        "shell": "osd.brightness 1"
+      },
+      "flags": "el"
+    },
+    "media.keyboard-brightness-up": {
+      "mods": "",
+      "key": "XF86KbdBrightnessUp",
+      "label": "Keyboard brightness up",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-brightness-keyboard up"
+      },
+      "flags": "el"
+    },
+    "media.keyboard-brightness-down": {
+      "mods": "",
+      "key": "XF86KbdBrightnessDown",
+      "label": "Keyboard brightness down",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-brightness-keyboard down"
+      },
+      "flags": "el"
+    },
+    "media.keyboard-backlight-cycle": {
+      "mods": "",
+      "key": "XF86KbdLightOnOff",
+      "label": "Keyboard backlight cycle",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-brightness-keyboard cycle"
+      },
+      "flags": "l"
+    },
+    "media.toggle-touchpad": {
+      "mods": "",
+      "key": "XF86TouchpadToggle",
+      "label": "Toggle touchpad",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-toggle-touchpad"
+      },
+      "flags": "l"
+    },
+    "media.enable-touchpad": {
+      "mods": "",
+      "key": "XF86TouchpadOn",
+      "label": "Enable touchpad",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-toggle-touchpad on"
+      },
+      "flags": "l"
+    },
+    "media.disable-touchpad": {
+      "mods": "",
+      "key": "XF86TouchpadOff",
+      "label": "Disable touchpad",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-toggle-touchpad off"
+      },
+      "flags": "l"
+    },
+    "media.volume-up-precise": {
+      "mods": "ALT",
+      "key": "XF86AudioRaiseVolume",
+      "label": "Volume up precise",
+      "group": "Media",
+      "action": {
+        "shell": "osd.volume +1"
+      },
+      "flags": "el"
+    },
+    "media.volume-down-precise": {
+      "mods": "ALT",
+      "key": "XF86AudioLowerVolume",
+      "label": "Volume down precise",
+      "group": "Media",
+      "action": {
+        "shell": "osd.volume -1"
+      },
+      "flags": "el"
+    },
+    "media.brightness-up-precise": {
+      "mods": "ALT",
+      "key": "XF86MonBrightnessUp",
+      "label": "Brightness up precise",
+      "group": "Media",
+      "action": {
+        "shell": "osd.brightness +1"
+      },
+      "flags": "el"
+    },
+    "media.brightness-down-precise": {
+      "mods": "ALT",
+      "key": "XF86MonBrightnessDown",
+      "label": "Brightness down precise",
+      "group": "Media",
+      "action": {
+        "shell": "osd.brightness -1"
+      },
+      "flags": "el"
+    },
+    "media.next-track": {
+      "mods": "",
+      "key": "XF86AudioNext",
+      "label": "Next track",
+      "group": "Media",
+      "action": {
+        "shell": "media.next"
+      },
+      "flags": "l"
+    },
+    "media.pause": {
+      "mods": "",
+      "key": "XF86AudioPause",
+      "label": "Pause",
+      "group": "Media",
+      "action": {
+        "shell": "media.playPause"
+      },
+      "flags": "l"
+    },
+    "media.play": {
+      "mods": "",
+      "key": "XF86AudioPlay",
+      "label": "Play",
+      "group": "Media",
+      "action": {
+        "shell": "media.playPause"
+      },
+      "flags": "l"
+    },
+    "media.previous-track": {
+      "mods": "",
+      "key": "XF86AudioPrev",
+      "label": "Previous track",
+      "group": "Media",
+      "action": {
+        "shell": "media.previous"
+      },
+      "flags": "l"
+    },
+    "media.switch-audio-output": {
+      "mods": "SUPER",
+      "key": "XF86AudioMute",
+      "label": "Switch audio output",
+      "group": "Media",
+      "action": {
+        "exec": "slievr-audio-output-switch"
+      },
+      "flags": "l"
+    },
+    "clipboard.universal-copy": {
+      "mods": "SUPER",
+      "key": "C",
+      "label": "Universal copy",
+      "group": "Clipboard",
+      "action": {
+        "dispatch": "sendshortcut CTRL, Insert, activewindow"
+      }
+    },
+    "clipboard.universal-paste": {
+      "mods": "SUPER",
+      "key": "V",
+      "label": "Universal paste",
+      "group": "Clipboard",
+      "action": {
+        "dispatch": "sendshortcut SHIFT, Insert, activewindow"
+      }
+    },
+    "clipboard.universal-cut": {
+      "mods": "SUPER",
+      "key": "X",
+      "label": "Universal cut",
+      "group": "Clipboard",
+      "action": {
+        "dispatch": "sendshortcut CTRL, X, activewindow"
+      }
+    },
+    "clipboard.clipboard-manager": {
+      "mods": "SUPER CTRL",
+      "key": "V",
+      "label": "Clipboard manager",
+      "group": "Clipboard",
+      "action": {
+        "shell": "launcher.open clipboard"
+      }
+    },
+    "windows.close-window": {
+      "mods": "SUPER",
+      "key": "W",
+      "label": "Close window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "killactive"
+      }
+    },
+    "windows.close-all-windows": {
+      "mods": "CTRL ALT",
+      "key": "DELETE",
+      "label": "Close all windows",
+      "group": "Windows",
+      "action": {
+        "exec": "slievr-hyprland-window-close-all"
+      }
+    },
+    "windows.toggle-window-split": {
+      "mods": "SUPER",
+      "key": "J",
+      "label": "Toggle window split",
+      "group": "Windows",
+      "action": {
+        "dispatch": "layoutmsg togglesplit"
+      }
+    },
+    "windows.pseudo-window": {
+      "mods": "SUPER",
+      "key": "P",
+      "label": "Pseudo window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "pseudo"
+      }
+    },
+    "windows.toggle-window-floating-tiling": {
+      "mods": "SUPER",
+      "key": "T",
+      "label": "Toggle window floating/tiling",
+      "group": "Windows",
+      "action": {
+        "dispatch": "togglefloating"
+      }
+    },
+    "windows.full-screen": {
+      "mods": "SUPER",
+      "key": "F",
+      "label": "Full screen",
+      "group": "Windows",
+      "action": {
+        "dispatch": "fullscreen 0"
+      }
+    },
+    "windows.tiled-full-screen": {
+      "mods": "SUPER CTRL",
+      "key": "F",
+      "label": "Tiled full screen",
+      "group": "Windows",
+      "action": {
+        "dispatch": "fullscreenstate 0 2"
+      }
+    },
+    "windows.full-width": {
+      "mods": "SUPER ALT",
+      "key": "F",
+      "label": "Full width",
+      "group": "Windows",
+      "action": {
+        "dispatch": "fullscreen 1"
+      }
+    },
+    "windows.pop-window-out-float-pin": {
+      "mods": "SUPER",
+      "key": "O",
+      "label": "Pop window out (float & pin)",
+      "group": "Windows",
+      "action": {
+        "exec": "slievr-hyprland-window-pop"
+      }
+    },
+    "windows.toggle-workspace-layout": {
+      "mods": "SUPER",
+      "key": "L",
+      "label": "Toggle workspace layout",
+      "group": "Windows",
+      "action": {
+        "exec": "slievr-hyprland-workspace-layout-toggle"
+      }
+    },
+    "windows.focus-on-left-window": {
+      "mods": "SUPER",
+      "key": "LEFT",
+      "label": "Focus on left window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movefocus l"
+      }
+    },
+    "windows.focus-on-right-window": {
+      "mods": "SUPER",
+      "key": "RIGHT",
+      "label": "Focus on right window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movefocus r"
+      }
+    },
+    "windows.focus-on-above-window": {
+      "mods": "SUPER",
+      "key": "UP",
+      "label": "Focus on above window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movefocus u"
+      }
+    },
+    "windows.focus-on-below-window": {
+      "mods": "SUPER",
+      "key": "DOWN",
+      "label": "Focus on below window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movefocus d"
+      }
+    },
+    "windows.switch-to-workspace-1": {
+      "mods": "SUPER",
+      "key": "code:10",
+      "label": "Switch to workspace 1",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 1"
+      }
+    },
+    "windows.switch-to-workspace-2": {
+      "mods": "SUPER",
+      "key": "code:11",
+      "label": "Switch to workspace 2",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 2"
+      }
+    },
+    "windows.switch-to-workspace-3": {
+      "mods": "SUPER",
+      "key": "code:12",
+      "label": "Switch to workspace 3",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 3"
+      }
+    },
+    "windows.switch-to-workspace-4": {
+      "mods": "SUPER",
+      "key": "code:13",
+      "label": "Switch to workspace 4",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 4"
+      }
+    },
+    "windows.switch-to-workspace-5": {
+      "mods": "SUPER",
+      "key": "code:14",
+      "label": "Switch to workspace 5",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 5"
+      }
+    },
+    "windows.switch-to-workspace-6": {
+      "mods": "SUPER",
+      "key": "code:15",
+      "label": "Switch to workspace 6",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 6"
+      }
+    },
+    "windows.switch-to-workspace-7": {
+      "mods": "SUPER",
+      "key": "code:16",
+      "label": "Switch to workspace 7",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 7"
+      }
+    },
+    "windows.switch-to-workspace-8": {
+      "mods": "SUPER",
+      "key": "code:17",
+      "label": "Switch to workspace 8",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 8"
+      }
+    },
+    "windows.switch-to-workspace-9": {
+      "mods": "SUPER",
+      "key": "code:18",
+      "label": "Switch to workspace 9",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 9"
+      }
+    },
+    "windows.switch-to-workspace-10": {
+      "mods": "SUPER",
+      "key": "code:19",
+      "label": "Switch to workspace 10",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace 10"
+      }
+    },
+    "windows.move-window-to-workspace-1": {
+      "mods": "SUPER SHIFT",
+      "key": "code:10",
+      "label": "Move window to workspace 1",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 1"
+      }
+    },
+    "windows.move-window-to-workspace-2": {
+      "mods": "SUPER SHIFT",
+      "key": "code:11",
+      "label": "Move window to workspace 2",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 2"
+      }
+    },
+    "windows.move-window-to-workspace-3": {
+      "mods": "SUPER SHIFT",
+      "key": "code:12",
+      "label": "Move window to workspace 3",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 3"
+      }
+    },
+    "windows.move-window-to-workspace-4": {
+      "mods": "SUPER SHIFT",
+      "key": "code:13",
+      "label": "Move window to workspace 4",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 4"
+      }
+    },
+    "windows.move-window-to-workspace-5": {
+      "mods": "SUPER SHIFT",
+      "key": "code:14",
+      "label": "Move window to workspace 5",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 5"
+      }
+    },
+    "windows.move-window-to-workspace-6": {
+      "mods": "SUPER SHIFT",
+      "key": "code:15",
+      "label": "Move window to workspace 6",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 6"
+      }
+    },
+    "windows.move-window-to-workspace-7": {
+      "mods": "SUPER SHIFT",
+      "key": "code:16",
+      "label": "Move window to workspace 7",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 7"
+      }
+    },
+    "windows.move-window-to-workspace-8": {
+      "mods": "SUPER SHIFT",
+      "key": "code:17",
+      "label": "Move window to workspace 8",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 8"
+      }
+    },
+    "windows.move-window-to-workspace-9": {
+      "mods": "SUPER SHIFT",
+      "key": "code:18",
+      "label": "Move window to workspace 9",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 9"
+      }
+    },
+    "windows.move-window-to-workspace-10": {
+      "mods": "SUPER SHIFT",
+      "key": "code:19",
+      "label": "Move window to workspace 10",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspace 10"
+      }
+    },
+    "windows.move-window-silently-to-workspace-1": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:10",
+      "label": "Move window silently to workspace 1",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 1"
+      }
+    },
+    "windows.move-window-silently-to-workspace-2": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:11",
+      "label": "Move window silently to workspace 2",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 2"
+      }
+    },
+    "windows.move-window-silently-to-workspace-3": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:12",
+      "label": "Move window silently to workspace 3",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 3"
+      }
+    },
+    "windows.move-window-silently-to-workspace-4": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:13",
+      "label": "Move window silently to workspace 4",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 4"
+      }
+    },
+    "windows.move-window-silently-to-workspace-5": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:14",
+      "label": "Move window silently to workspace 5",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 5"
+      }
+    },
+    "windows.move-window-silently-to-workspace-6": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:15",
+      "label": "Move window silently to workspace 6",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 6"
+      }
+    },
+    "windows.move-window-silently-to-workspace-7": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:16",
+      "label": "Move window silently to workspace 7",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 7"
+      }
+    },
+    "windows.move-window-silently-to-workspace-8": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:17",
+      "label": "Move window silently to workspace 8",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 8"
+      }
+    },
+    "windows.move-window-silently-to-workspace-9": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:18",
+      "label": "Move window silently to workspace 9",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 9"
+      }
+    },
+    "windows.move-window-silently-to-workspace-10": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "code:19",
+      "label": "Move window silently to workspace 10",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent 10"
+      }
+    },
+    "windows.toggle-scratchpad": {
+      "mods": "SUPER",
+      "key": "S",
+      "label": "Toggle scratchpad",
+      "group": "Windows",
+      "action": {
+        "dispatch": "togglespecialworkspace scratchpad"
+      }
+    },
+    "windows.move-window-to-scratchpad": {
+      "mods": "SUPER ALT",
+      "key": "S",
+      "label": "Move window to scratchpad",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movetoworkspacesilent special:scratchpad"
+      }
+    },
+    "windows.next-workspace": {
+      "mods": "SUPER",
+      "key": "TAB",
+      "label": "Next workspace",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace e+1"
+      }
+    },
+    "windows.previous-workspace": {
+      "mods": "SUPER SHIFT",
+      "key": "TAB",
+      "label": "Previous workspace",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace e-1"
+      }
+    },
+    "windows.former-workspace": {
+      "mods": "SUPER CTRL",
+      "key": "TAB",
+      "label": "Former workspace",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace previous"
+      }
+    },
+    "windows.move-workspace-to-left-monitor": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "LEFT",
+      "label": "Move workspace to left monitor",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movecurrentworkspacetomonitor l"
+      }
+    },
+    "windows.move-workspace-to-right-monitor": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "RIGHT",
+      "label": "Move workspace to right monitor",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movecurrentworkspacetomonitor r"
+      }
+    },
+    "windows.move-workspace-to-up-monitor": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "UP",
+      "label": "Move workspace to up monitor",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movecurrentworkspacetomonitor u"
+      }
+    },
+    "windows.move-workspace-to-down-monitor": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "DOWN",
+      "label": "Move workspace to down monitor",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movecurrentworkspacetomonitor d"
+      }
+    },
+    "windows.swap-window-to-the-left": {
+      "mods": "SUPER SHIFT",
+      "key": "LEFT",
+      "label": "Swap window to the left",
+      "group": "Windows",
+      "action": {
+        "dispatch": "swapwindow l"
+      }
+    },
+    "windows.swap-window-to-the-right": {
+      "mods": "SUPER SHIFT",
+      "key": "RIGHT",
+      "label": "Swap window to the right",
+      "group": "Windows",
+      "action": {
+        "dispatch": "swapwindow r"
+      }
+    },
+    "windows.swap-window-up": {
+      "mods": "SUPER SHIFT",
+      "key": "UP",
+      "label": "Swap window up",
+      "group": "Windows",
+      "action": {
+        "dispatch": "swapwindow u"
+      }
+    },
+    "windows.swap-window-down": {
+      "mods": "SUPER SHIFT",
+      "key": "DOWN",
+      "label": "Swap window down",
+      "group": "Windows",
+      "action": {
+        "dispatch": "swapwindow d"
+      }
+    },
+    "windows.focus-on-next-window": {
+      "mods": "ALT",
+      "key": "TAB",
+      "label": "Focus on next window",
+      "group": "Windows",
+      "action": [
+        {
+          "dispatch": "cyclenext"
+        },
+        {
+          "dispatch": "bringactivetotop"
+        }
+      ]
+    },
+    "windows.focus-on-previous-window": {
+      "mods": "ALT SHIFT",
+      "key": "TAB",
+      "label": "Focus on previous window",
+      "group": "Windows",
+      "action": [
+        {
+          "dispatch": "cyclenext prev"
+        },
+        {
+          "dispatch": "bringactivetotop"
+        }
+      ]
+    },
+    "windows.focus-on-next-monitor": {
+      "mods": "CTRL ALT",
+      "key": "TAB",
+      "label": "Focus on next monitor",
+      "group": "Windows",
+      "action": {
+        "dispatch": "focusmonitor +1"
+      }
+    },
+    "windows.focus-on-previous-monitor": {
+      "mods": "CTRL ALT SHIFT",
+      "key": "TAB",
+      "label": "Focus on previous monitor",
+      "group": "Windows",
+      "action": {
+        "dispatch": "focusmonitor -1"
+      }
+    },
+    "windows.expand-window-left": {
+      "mods": "SUPER",
+      "key": "code:20",
+      "label": "Expand window left",
+      "group": "Windows",
+      "action": {
+        "dispatch": "resizeactive -100 0"
+      }
+    },
+    "windows.shrink-window-left": {
+      "mods": "SUPER",
+      "key": "code:21",
+      "label": "Shrink window left",
+      "group": "Windows",
+      "action": {
+        "dispatch": "resizeactive 100 0"
+      }
+    },
+    "windows.shrink-window-up": {
+      "mods": "SUPER SHIFT",
+      "key": "code:20",
+      "label": "Shrink window up",
+      "group": "Windows",
+      "action": {
+        "dispatch": "resizeactive 0 -100"
+      }
+    },
+    "windows.expand-window-down": {
+      "mods": "SUPER SHIFT",
+      "key": "code:21",
+      "label": "Expand window down",
+      "group": "Windows",
+      "action": {
+        "dispatch": "resizeactive 0 100"
+      }
+    },
+    "windows.scroll-active-workspace-forward": {
+      "mods": "SUPER",
+      "key": "mouse_down",
+      "label": "Scroll active workspace forward",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace e+1"
+      }
+    },
+    "windows.scroll-active-workspace-backward": {
+      "mods": "SUPER",
+      "key": "mouse_up",
+      "label": "Scroll active workspace backward",
+      "group": "Windows",
+      "action": {
+        "dispatch": "workspace e-1"
+      }
+    },
+    "windows.move-window": {
+      "mods": "SUPER",
+      "key": "mouse:272",
+      "label": "Move window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "movewindow"
+      },
+      "flags": "m"
+    },
+    "windows.resize-window": {
+      "mods": "SUPER",
+      "key": "mouse:273",
+      "label": "Resize window",
+      "group": "Windows",
+      "action": {
+        "dispatch": "resizewindow"
+      },
+      "flags": "m"
+    },
+    "windows.toggle-window-grouping": {
+      "mods": "SUPER",
+      "key": "G",
+      "label": "Toggle window grouping",
+      "group": "Windows",
+      "action": {
+        "dispatch": "togglegroup"
+      }
+    },
+    "windows.move-active-window-out-of-group": {
+      "mods": "SUPER ALT",
+      "key": "G",
+      "label": "Move active window out of group",
+      "group": "Windows",
+      "action": {
+        "dispatch": "moveoutofgroup"
+      }
+    },
+    "windows.move-window-to-group-on-left": {
+      "mods": "SUPER ALT",
+      "key": "LEFT",
+      "label": "Move window to group on left",
+      "group": "Windows",
+      "action": {
+        "dispatch": "moveintogroup l"
+      }
+    },
+    "windows.move-window-to-group-on-right": {
+      "mods": "SUPER ALT",
+      "key": "RIGHT",
+      "label": "Move window to group on right",
+      "group": "Windows",
+      "action": {
+        "dispatch": "moveintogroup r"
+      }
+    },
+    "windows.move-window-to-group-on-top": {
+      "mods": "SUPER ALT",
+      "key": "UP",
+      "label": "Move window to group on top",
+      "group": "Windows",
+      "action": {
+        "dispatch": "moveintogroup u"
+      }
+    },
+    "windows.move-window-to-group-on-bottom": {
+      "mods": "SUPER ALT",
+      "key": "DOWN",
+      "label": "Move window to group on bottom",
+      "group": "Windows",
+      "action": {
+        "dispatch": "moveintogroup d"
+      }
+    },
+    "windows.next-window-in-group": {
+      "mods": "SUPER ALT",
+      "key": "TAB",
+      "label": "Next window in group",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive f"
+      }
+    },
+    "windows.previous-window-in-group": {
+      "mods": "SUPER ALT SHIFT",
+      "key": "TAB",
+      "label": "Previous window in group",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive b"
+      }
+    },
+    "windows.move-grouped-window-focus-left": {
+      "mods": "SUPER CTRL",
+      "key": "LEFT",
+      "label": "Move grouped window focus left",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive b"
+      }
+    },
+    "windows.move-grouped-window-focus-right": {
+      "mods": "SUPER CTRL",
+      "key": "RIGHT",
+      "label": "Move grouped window focus right",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive f"
+      }
+    },
+    "windows.next-window-in-group-2": {
+      "mods": "SUPER ALT",
+      "key": "mouse_down",
+      "label": "Next window in group",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive f"
+      }
+    },
+    "windows.previous-window-in-group-2": {
+      "mods": "SUPER ALT",
+      "key": "mouse_up",
+      "label": "Previous window in group",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive b"
+      }
+    },
+    "windows.switch-to-group-window-1": {
+      "mods": "SUPER ALT",
+      "key": "code:10",
+      "label": "Switch to group window 1",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive 1"
+      }
+    },
+    "windows.switch-to-group-window-2": {
+      "mods": "SUPER ALT",
+      "key": "code:11",
+      "label": "Switch to group window 2",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive 2"
+      }
+    },
+    "windows.switch-to-group-window-3": {
+      "mods": "SUPER ALT",
+      "key": "code:12",
+      "label": "Switch to group window 3",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive 3"
+      }
+    },
+    "windows.switch-to-group-window-4": {
+      "mods": "SUPER ALT",
+      "key": "code:13",
+      "label": "Switch to group window 4",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive 4"
+      }
+    },
+    "windows.switch-to-group-window-5": {
+      "mods": "SUPER ALT",
+      "key": "code:14",
+      "label": "Switch to group window 5",
+      "group": "Windows",
+      "action": {
+        "dispatch": "changegroupactive 5"
+      }
+    },
+    "windows.cycle-monitor-scaling": {
+      "mods": "SUPER",
+      "key": "code:61",
+      "label": "Cycle monitor scaling",
+      "group": "Windows",
+      "action": {
+        "exec": "slievr-hyprland-monitor-scaling-cycle"
+      }
+    },
+    "windows.cycle-monitor-scaling-backwards": {
+      "mods": "SUPER ALT",
+      "key": "code:61",
+      "label": "Cycle monitor scaling backwards",
+      "group": "Windows",
+      "action": {
+        "exec": "slievr-hyprland-monitor-scaling-cycle --reverse"
+      }
+    },
+    "utilities.launch-apps": {
+      "mods": "SUPER",
+      "key": "SPACE",
+      "label": "Launch apps",
+      "group": "Utilities",
+      "action": {
+        "shell": "launcher.toggle"
+      }
+    },
+    "utilities.emoji-picker": {
+      "mods": "SUPER CTRL",
+      "key": "E",
+      "label": "Emoji picker",
+      "group": "Utilities",
+      "action": {
+        "shell": "launcher.open emoji"
+      }
+    },
+    "utilities.capture-menu": {
+      "mods": "SUPER CTRL",
+      "key": "C",
+      "label": "Capture menu",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu capture"
+      }
+    },
+    "utilities.toggle-menu": {
+      "mods": "SUPER CTRL",
+      "key": "O",
+      "label": "Toggle menu",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu toggle"
+      }
+    },
+    "utilities.hardware-menu": {
+      "mods": "SUPER CTRL",
+      "key": "H",
+      "label": "Hardware menu",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu hardware"
+      }
+    },
+    "utilities.slievr-menu": {
+      "mods": "SUPER ALT",
+      "key": "SPACE",
+      "label": "System menu",
+      "group": "Utilities",
+      "action": {
+        "shell": "launcher.open system"
+      }
+    },
+    "utilities.slievr-menu-2": {
+      "mods": "SUPER SHIFT",
+      "key": "code:201",
+      "label": "System menu",
+      "group": "Utilities",
+      "action": {
+        "shell": "launcher.open system"
+      }
+    },
+    "utilities.system-menu": {
+      "mods": "SUPER",
+      "key": "ESCAPE",
+      "label": "System menu",
+      "group": "Utilities",
+      "action": {
+        "shell": "launcher.open system"
+      }
+    },
+    "utilities.power-menu": {
+      "mods": "",
+      "key": "XF86PowerOff",
+      "label": "Power menu",
+      "group": "Utilities",
+      "action": {
+        "shell": "launcher.open system"
+      },
+      "flags": "l"
+    },
+    "utilities.show-key-bindings": {
+      "mods": "SUPER",
+      "key": "K",
+      "label": "Keybinds",
+      "group": "Utilities",
+      "action": {
+        "shell": "settings.open keybinds"
+      }
+    },
+    "utilities.calculator": {
+      "mods": "",
+      "key": "XF86Calculator",
+      "label": "Calculator",
+      "group": "Utilities",
+      "action": {
+        "exec": "gnome-calculator"
+      }
+    },
+    "utilities.toggle-top-bar": {
+      "mods": "SUPER SHIFT",
+      "key": "SPACE",
+      "label": "Toggle top bar",
+      "group": "Utilities",
+      "action": {
+        "shell": "bar.toggle"
+      }
+    },
+    "utilities.theme-background-menu": {
+      "mods": "SUPER CTRL",
+      "key": "SPACE",
+      "label": "Theme background menu",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu background"
+      }
+    },
+    "utilities.theme-menu": {
+      "mods": "SUPER SHIFT CTRL",
+      "key": "SPACE",
+      "label": "Theme menu",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu theme"
+      }
+    },
+    "utilities.toggle-window-transparency": {
+      "mods": "SUPER",
+      "key": "BACKSPACE",
+      "label": "Toggle window transparency",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hyprland-window-transparency-toggle"
+      }
+    },
+    "utilities.toggle-window-gaps": {
+      "mods": "SUPER SHIFT",
+      "key": "BACKSPACE",
+      "label": "Toggle window gaps",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hyprland-window-gaps-toggle"
+      }
+    },
+    "utilities.toggle-single-window-square-aspect": {
+      "mods": "SUPER CTRL",
+      "key": "BACKSPACE",
+      "label": "Toggle single-window square aspect",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hyprland-window-single-square-aspect-toggle"
+      }
+    },
+    "utilities.dismiss-last-notification": {
+      "mods": "SUPER",
+      "key": "COMMA",
+      "label": "Dismiss last notification",
+      "group": "Utilities",
+      "action": {
+        "shell": "notifications.dismiss"
+      }
+    },
+    "utilities.dismiss-all-notifications": {
+      "mods": "SUPER SHIFT",
+      "key": "COMMA",
+      "label": "Dismiss all notifications",
+      "group": "Utilities",
+      "action": {
+        "shell": "notifications.dismissAll"
+      }
+    },
+    "utilities.toggle-silencing-notifications": {
+      "mods": "SUPER CTRL",
+      "key": "COMMA",
+      "label": "Toggle silencing notifications",
+      "group": "Utilities",
+      "action": {
+        "shell": "notifications.dndToggle"
+      }
+    },
+    "utilities.invoke-last-notification": {
+      "mods": "SUPER ALT",
+      "key": "COMMA",
+      "label": "Invoke last notification",
+      "group": "Utilities",
+      "action": {
+        "shell": "notifications.invokeLast"
+      }
+    },
+    "utilities.restore-last-notification": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "COMMA",
+      "label": "Restore last notification",
+      "group": "Utilities",
+      "action": {
+        "shell": "notifications.restoreLast"
+      }
+    },
+    "utilities.toggle-locking-on-idle": {
+      "mods": "SUPER CTRL",
+      "key": "I",
+      "label": "Toggle locking on idle",
+      "group": "Utilities",
+      "action": {
+        "shell": "idle.toggle"
+      }
+    },
+    "utilities.toggle-nightlight": {
+      "mods": "SUPER CTRL",
+      "key": "N",
+      "label": "Toggle nightlight",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-toggle-nightlight"
+      }
+    },
+    "utilities.toggle-laptop-display": {
+      "mods": "SUPER CTRL",
+      "key": "Delete",
+      "label": "Toggle laptop display",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hyprland-monitor-internal toggle"
+      }
+    },
+    "utilities.toggle-laptop-display-mirroring": {
+      "mods": "SUPER CTRL ALT",
+      "key": "Delete",
+      "label": "Toggle laptop display mirroring",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hyprland-monitor-internal-mirror toggle"
+      }
+    },
+    "utilities.exec-slievr-hw-external-monitors-slievr-hyprland-monitor-internal-off": {
+      "mods": "",
+      "key": "switch:on:Lid Switch",
+      "label": "Lid closed",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hw-external-monitors && slievr-hyprland-monitor-internal off"
+      },
+      "flags": "l"
+    },
+    "utilities.exec-slievr-hyprland-monitor-internal-on": {
+      "mods": "",
+      "key": "switch:off:Lid Switch",
+      "label": "Lid opened",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-hyprland-monitor-internal on"
+      },
+      "flags": "l"
+    },
+    "utilities.extract-text-ocr-from-screenshot": {
+      "mods": "SUPER CTRL",
+      "key": "PRINT",
+      "label": "Extract text (OCR) from screenshot",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-capture-text-extraction"
+      }
+    },
+    "utilities.share": {
+      "mods": "SUPER CTRL",
+      "key": "S",
+      "label": "Share",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu share"
+      }
+    },
+    "utilities.transcode": {
+      "mods": "SUPER CTRL",
+      "key": "PERIOD",
+      "label": "Transcode",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-transcode"
+      }
+    },
+    "utilities.set-reminder": {
+      "mods": "SUPER CTRL",
+      "key": "R",
+      "label": "Set reminder",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-menu reminder-set"
+      }
+    },
+    "utilities.show-reminders": {
+      "mods": "SUPER CTRL ALT",
+      "key": "R",
+      "label": "Show reminders",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-reminder show"
+      }
+    },
+    "utilities.clear-reminders": {
+      "mods": "SUPER SHIFT CTRL",
+      "key": "R",
+      "label": "Clear reminders",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-reminder clear"
+      }
+    },
+    "utilities.show-time": {
+      "mods": "SUPER CTRL ALT",
+      "key": "T",
+      "label": "Show time",
+      "group": "Utilities",
+      "action": {
+        "exec": "notify-send -u low \"    $(date +\"%A %H:%M  ·  %d %B %Y  ·  Week %V\")\""
+      }
+    },
+    "utilities.show-battery-remaining": {
+      "mods": "SUPER CTRL ALT",
+      "key": "B",
+      "label": "Show battery remaining",
+      "group": "Utilities",
+      "action": {
+        "exec": "notify-send -u low \"$(slievr-battery-status)\""
+      }
+    },
+    "utilities.show-weather": {
+      "mods": "SUPER CTRL ALT",
+      "key": "W",
+      "label": "Show weather",
+      "group": "Utilities",
+      "action": {
+        "exec": "notify-send -u low \"$(slievr-weather-status)\""
+      }
+    },
+    "utilities.audio-controls": {
+      "mods": "SUPER CTRL",
+      "key": "A",
+      "label": "Audio controls",
+      "group": "Utilities",
+      "action": {
+        "shell": "quicksettings.open audio"
+      }
+    },
+    "utilities.bluetooth-controls": {
+      "mods": "SUPER CTRL",
+      "key": "B",
+      "label": "Bluetooth controls",
+      "group": "Utilities",
+      "action": {
+        "shell": "quicksettings.open bluetooth"
+      }
+    },
+    "utilities.wifi-controls": {
+      "mods": "SUPER CTRL",
+      "key": "W",
+      "label": "Wifi controls",
+      "group": "Utilities",
+      "action": {
+        "shell": "quicksettings.open wifi"
+      }
+    },
+    "utilities.activity": {
+      "mods": "SUPER CTRL",
+      "key": "T",
+      "label": "Activity",
+      "group": "Utilities",
+      "action": {
+        "exec": "slievr-launch-tui btop"
+      }
+    },
+    "utilities.zoom-in": {
+      "mods": "SUPER CTRL",
+      "key": "Z",
+      "label": "Zoom in",
+      "group": "Utilities",
+      "action": {
+        "exec": "hyprctl keyword cursor:zoom_factor $(hyprctl getoption cursor:zoom_factor -j | jq '.float + 1')"
+      }
+    },
+    "utilities.reset-zoom": {
+      "mods": "SUPER CTRL ALT",
+      "key": "Z",
+      "label": "Reset zoom",
+      "group": "Utilities",
+      "action": {
+        "exec": "hyprctl keyword cursor:zoom_factor 1"
+      }
+    },
+    "utilities.lock-system": {
+      "mods": "SUPER CTRL",
+      "key": "L",
+      "label": "Lock system",
+      "group": "Utilities",
+      "action": {
+        "shell": "lock.lock"
+      }
+    },
+    "apps.tmux": {
+      "mods": "SUPER ALT",
+      "key": "RETURN",
+      "label": "Tmux",
+      "group": "Apps",
+      "action": {
+        "exec": "uwsm-app -- xdg-terminal-exec --dir=\"$(slievr-cmd-terminal-cwd)\" tmux new"
+      }
+    },
+    "apps.terminal": {
+      "mods": "SUPER",
+      "key": "RETURN",
+      "label": "Terminal",
+      "group": "Apps",
+      "action": {
+        "exec": "uwsm app -- $TERMINAL --dir=\"$(slievr-cmd-terminal-cwd)\""
+      }
+    },
+    "apps.browser": {
+      "mods": "SUPER SHIFT",
+      "key": "RETURN",
+      "label": "Browser",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-browser"
+      }
+    },
+    "apps.file-manager": {
+      "mods": "SUPER SHIFT",
+      "key": "F",
+      "label": "File manager",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-or-focus thunar thunar"
+      }
+    },
+    "apps.browser-2": {
+      "mods": "SUPER SHIFT",
+      "key": "B",
+      "label": "Browser",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-browser"
+      }
+    },
+    "apps.browser-private": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "B",
+      "label": "Browser (private)",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-browser --private"
+      }
+    },
+    "apps.youtube-music": {
+      "mods": "SUPER SHIFT",
+      "key": "M",
+      "label": "YouTube Music",
+      "group": "Apps",
+      "action": {
+        "exec": "~/.local/bin/yt-music"
+      }
+    },
+    "apps.music-tui": {
+      "mods": "SUPER SHIFT ALT",
+      "key": "M",
+      "label": "Music TUI",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-or-focus-tui cliamp"
+      }
+    },
+    "apps.editor": {
+      "mods": "SUPER SHIFT",
+      "key": "N",
+      "label": "Editor",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-editor"
+      }
+    },
+    "apps.activity": {
+      "mods": "SUPER SHIFT",
+      "key": "T",
+      "label": "Activity",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-tui btop"
+      }
+    },
+    "apps.docker": {
+      "mods": "SUPER SHIFT",
+      "key": "D",
+      "label": "Docker",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-tui lazydocker"
+      }
+    },
+    "apps.obsidian": {
+      "mods": "SUPER SHIFT",
+      "key": "O",
+      "label": "Obsidian",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-or-focus obsidian \"uwsm-app -- obsidian\""
+      }
+    },
+    "apps.passwords": {
+      "mods": "SUPER SHIFT",
+      "key": "slash",
+      "label": "Passwords",
+      "group": "Apps",
+      "action": {
+        "exec": "uwsm app -- 1password"
+      }
+    },
+    "apps.togglespecialworkspace-game": {
+      "mods": "SUPER SHIFT",
+      "key": "G",
+      "label": "Game workspace",
+      "group": "Apps",
+      "action": {
+        "dispatch": "togglespecialworkspace game"
+      }
+    },
+    "apps.youtube": {
+      "mods": "SUPER SHIFT",
+      "key": "Y",
+      "label": "YouTube",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr-launch-or-focus-webapp YouTube \"https://youtube.com/\""
+      }
+    },
+    "apps.screenshot-of-region": {
+      "mods": "SHIFT CTRL",
+      "key": "4",
+      "label": "Screenshot of region",
+      "group": "Apps",
+      "action": {
+        "exec": "slievr capture screenshot region copy"
+      }
+    },
+    "shell.quick-settings": {
+      "mods": "SUPER",
+      "key": "A",
+      "label": "Quick settings",
+      "group": "Utilities",
+      "action": {
+        "shell": "quicksettings.toggle"
+      }
+    }
+  }
+}

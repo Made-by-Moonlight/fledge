@@ -1,0 +1,16 @@
+{
+  "test.terminal": { "mods": "SUPER", "key": "RETURN", "label": "Terminal", "group": "Test",
+                     "action": { "exec": "uwsm app -- $TERMINAL --dir=x" } },
+  "test.close-window": { "mods": "SUPER", "key": "W", "label": "Close window", "group": "Test",
+                         "action": { "dispatch": "killactive" } },
+  "test.togglespecialworkspace-game": { "mods": "SUPER SHIFT", "key": "G", "label": "togglespecialworkspace game", "group": "Test",
+                                        "action": { "dispatch": "togglespecialworkspace game" } },
+  "test.volume-up": { "mods": "", "key": "XF86AudioRaiseVolume", "label": "Volume up", "group": "Test", "flags": "el",
+                      "action": { "exec": "vol +5" } },
+  "test.focus-on-next-window": { "mods": "ALT", "key": "TAB", "label": "Focus on next window", "group": "Test",
+                                 "action": [ { "dispatch": "cyclenext" }, { "dispatch": "bringactivetotop" } ] },
+  "test.pseudo-window": { "mods": "SUPER", "key": "P", "label": "Pseudo window", "group": "Test",
+                          "action": { "dispatch": "pseudo" } },
+  "test.universal-copy": { "mods": "SUPER", "key": "C", "label": "Universal copy", "group": "Test",
+                           "action": { "dispatch": "sendshortcut CTRL, Insert, activewindow" } }
+}

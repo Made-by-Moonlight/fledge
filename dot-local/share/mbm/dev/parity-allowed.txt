@@ -1,0 +1,14 @@
+walker
+swayosd
+makoctl
+slievr-toggle-idle
+slievr-system-lock
+slievr-toggle-waybar
+slievr-launch-(audio|bluetooth|wifi)
+slievr-menu( system)?$
+slievr-menu-keybindings
+slievr-brightness-display
+slievr-audio-input-mute
+slievr-toggle-notification-silencing
+qs -c mbm ipc call
+submap

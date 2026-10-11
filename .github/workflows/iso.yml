@@ -26,7 +26,7 @@ jobs:
     container: archlinux/archlinux:latest
     steps:
       - name: Tools
-        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck
+        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq
 
       - uses: actions/checkout@v4
 
@@ -34,7 +34,8 @@ jobs:
         run: |
           set -euo pipefail
           for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
-                   cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh; do
+                   cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
+                   dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-conf-to-binds.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
@@ -46,7 +47,8 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mapfile -t files < <(git ls-files 'cachyos/*.sh' 'cachyos/iso/bin/*' \
             'cachyos/iso/configs/airootfs/usr/local/bin/*' \
-            'cachyos/iso/configs/airootfs/root/.automated_script.sh')
+            'cachyos/iso/configs/airootfs/root/.automated_script.sh' \
+            'dot-local/share/mbm/bin/*' 'dot-local/share/mbm/**/*.sh')
           shellcheck -x -S warning "${files[@]}"
 
   iso:
