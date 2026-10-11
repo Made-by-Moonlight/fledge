@@ -10,6 +10,10 @@ import "../services"
 // caller of that is PamContext reporting Success. Errors, aborts, a hung conversation
 // or a crash all leave the session locked (the compositor keeps it locked when the
 // client dies; with misc:allow_session_lock_restore a restarted shell re-locks from the flag).
+// The lock target lives in PersistentProperties, so a Quickshell reload while locked builds
+// the new WlSessionLock already locked: the old lock object is dropped without unlocking
+// (Hyprland keeps the session locked) and the new one re-locks, which needs
+// misc:allow_session_lock_restore. shell.qml also turns file-watch reloads off.
 Scope {
     id: root
     // The typed password lives only in `secret.text`. It is a field of a plain JS object,
@@ -22,9 +26,9 @@ Scope {
     property string note: ""          // PAM's own info/error text (e.g. faillock's lockout notice)
     property int attempts: 0
     property bool answered: false     // this attempt's password prompt has been answered
-    // Our own flag, not a binding to wl.locked: Quickshell 0.3.2 doesn't emit lockStateChanged
-    // when a lock is released, so a binding stays true after unlocking (direct reads are right).
-    property bool locked: false
+    // The lock target, not a binding to wl.locked: Quickshell 0.3.2 doesn't emit
+    // lockStateChanged when a lock is released, so a binding to it stays true after unlocking.
+    readonly property bool locked: persist.locked
     readonly property bool secure: wl.secure
     readonly property string flagDir: Quickshell.env("HOME") + "/.local/state/mbm"
     readonly property string flagPath: flagDir + "/locked"
@@ -44,20 +48,18 @@ Scope {
     function clear() { if (!pam.active) wipe(); }
 
     function lock(fromSleep) {
-        if (wl.locked) return;
+        if (persist.locked || wl.locked) { persist.locked = true; return; }
         ShellState.closePopups();               // popups give up the keyboard; a waiting dmenu gets "cancel"
         wipe(); status = ""; note = ""; attempts = 0;
-        wl.locked = true;
-        locked = wl.locked;
-        if (!locked) { console.warn("mbm lock: the compositor refused the session lock"); return; }
-        // A restarted shell re-locks from this, in the same Hyprland session only.
-        if (instance !== "") flag.setText(instance);
+        persist.locked = true;                  // wl.locked follows
+        refusal.restart();
+        writeFlag();
         Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", "0"]);
         Quickshell.execDetached(["sh", "-c", "pgrep -x 1password >/dev/null && exec 1password --lock"]);
         if (!fromSleep) displayOff.restart();
     }
     function submit() {
-        if (!wl.locked || pam.active || secret.text === "") return;
+        if (!persist.locked || pam.active || secret.text === "") return;
         status = "checking"; note = ""; answered = false;
         watchdog.restart();
         if (!pam.start()) fail("could not start authentication");
@@ -73,34 +75,66 @@ Scope {
         watchdog.stop();
         displayOff.stop();
         wipe();
-        wl.locked = false;
-        locked = wl.locked;
+        refusal.stop();
+        persist.locked = false;                 // wl.locked follows: the lock is released here and only here
         status = ""; note = ""; attempts = 0;
         Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "on"]);
-        // Removed only after unlocking: a crash in between re-locks, which is the safe side.
-        Quickshell.execDetached(["rm", "-f", flagPath]);
+        // Cleared only after unlocking: a crash in between re-locks, which is the safe side.
+        writeFlag();
         unlockedNow();
+    }
+    // The compositor refused the lock (another locker holds it): nothing is shown, so don't
+    // pretend to be locked (popups would stay blocked and lock() would no-op forever).
+    function refused() {
+        console.warn("mbm lock: the compositor did not grant the session lock; another locker may hold it");
+        persist.locked = false;
+        writeFlag();
+    }
+
+    // The relock flag holds the Hyprland instance signature while locked and is empty otherwise.
+    // Every write goes through FileView (atomic, in order, and its cached text stays true), so a
+    // clear can never land after a newer lock's write. Writes wait for the state dir.
+    function writeFlag() {
+        if (!dirReady || instance === "") return;
+        flag.setText(persist.locked ? instance + "\n" : "");
     }
 
     // Like slievr-system-lock: screens off shortly after a manual lock (any key wakes them: misc:key_press_enables_dpms).
-    Timer { id: displayOff; interval: 3000; onTriggered: if (wl.locked) Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "off"]) }
+    Timer { id: displayOff; interval: 3000; onTriggered: if (persist.locked) Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "off"]) }
+    // Hyprland grants a lock in well under a second; one that isn't secure after this was refused.
+    Timer { id: refusal; interval: 3000; onTriggered: if (persist.locked && !wl.secure) root.refused() }
     // A PAM module that never answers would otherwise block every retry.
     Timer { id: watchdog; interval: 30000; onTriggered: if (pam.active) { pam.abort(); root.fail("authentication timed out"); } }
 
+    PersistentProperties {
+        id: persist
+        reloadableId: "mbm-lock-state"
+        property bool locked: false
+    }
+
+    property bool dirReady: false
+    property bool flagChecked: false
+    Process {
+        running: true
+        command: ["mkdir", "-p", root.flagDir]
+        onExited: { root.dirReady = true; if (root.flagChecked) root.writeFlag(); }
+    }
     FileView {
         id: flag
         path: root.flagPath
         atomicWrites: true
         printErrors: false      // no flag is the normal state
+        // Only the first load decides: later loads are our own writes coming back.
         onLoaded: {
-            if (root.locked) return;
+            if (root.flagChecked) return;
+            root.flagChecked = true;
             const sig = text().trim();
             if (sig !== "" && sig === root.instance) root.lock(true);
-            // Left by another (ended) Hyprland session: it must not lock this one, now or later.
-            else Quickshell.execDetached(["rm", "-f", root.flagPath]);
+            // Empty, or left by another (ended) Hyprland session: it must not lock this one.
+            else root.writeFlag();
         }
+        onLoadFailed: { root.flagChecked = true; root.writeFlag(); }
     }
-    Component.onCompleted: Quickshell.execDetached(["mkdir", "-p", flagDir])
 
     PamContext {
         id: pam
@@ -114,7 +148,8 @@ Scope {
                 respond(root.secret.text);
                 root.wipe();
             } else if (message !== "") {
-                root.note = message;
+                // Modules may send several lines (faillock: reason, then time left): keep them all.
+                root.note = root.note ? root.note + "\n" + message : message;
             }
         }
         onCompleted: result => {
@@ -126,8 +161,8 @@ Scope {
 
     WlSessionLock {
         id: wl
-        // Picks up a lock the compositor ends or refuses (secure drops); see `locked` above.
-        onSecureChanged: root.locked = locked
+        reloadableId: "mbm-session-lock"
+        locked: persist.locked
         // One surface per screen, including screens added while locked.
         LockSurface { lockRoot: root }
     }

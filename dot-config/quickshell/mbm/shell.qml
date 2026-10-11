@@ -12,6 +12,9 @@ import "services"
 import "lock"
 
 ShellRoot {
+    // No live reload when a QML file changes (a git pull or restow under a locked screen).
+    // Restart the shell to pick up changes; the lock also survives a reload on its own (Lock.qml).
+    settings.watchFiles: false
     // Singletons are lazy; touch Settings now so its files are loaded before the first IPC call or bar paint.
     Component.onCompleted: Settings.home
 

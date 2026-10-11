@@ -38,6 +38,7 @@ WlSessionLockSurface {
         }
 
         Rectangle {
+            id: field
             width: 420; height: 64
             anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter; verticalCenterOffset: 190 }
             color: Theme.bgRaised
@@ -55,10 +56,25 @@ WlSessionLockSurface {
                 elide: Text.ElideRight
                 visible: surface.lockRoot.typed === 0 && surface.lockRoot.status !== ""
                 text: surface.lockRoot.status === "checking" ? "…"
-                    : (surface.lockRoot.note || "wrong password") + " (" + surface.lockRoot.attempts + ")"
+                    : (surface.lockRoot.note ? "failed" : "wrong password") + " (" + surface.lockRoot.attempts + ")"
                 color: surface.lockRoot.status === "failed" ? Theme.error : Theme.muted
                 font.italic: true
             }
+        }
+        // PAM's own text (faillock's lockout notice, "too many attempts" …) under the field:
+        // wrapped so it isn't cut off, and plain text so a module's message can't inject markup.
+        Glyph {
+            anchors { horizontalCenter: parent.horizontalCenter; top: field.bottom; topMargin: 14 }
+            width: 560
+            visible: surface.lockRoot.note !== "" && surface.lockRoot.typed === 0
+            text: surface.lockRoot.note
+            textFormat: Text.PlainText
+            wrapMode: Text.Wrap
+            maximumLineCount: 4
+            elide: Text.ElideRight
+            horizontalAlignment: Text.AlignHCenter
+            color: Theme.error
+            font.italic: true
         }
     }
 
