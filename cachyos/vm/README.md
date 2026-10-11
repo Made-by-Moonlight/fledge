@@ -10,6 +10,7 @@ QEMU/KVM VM before touching real hardware.
 | `provision-vm.sh` | create the VM: 40G system disk + 8G blank data disk, boot the ISO |
 | `dev-up.sh` | bring an already-installed VM up for a test iteration (SSH + viewer) |
 | `destroy-vm.sh` | delete the VM and all its disks |
+| `vm.sh` | dev loop: `sync` the working tree in, `run`/`sudo` commands in the logged-in session, `restow`, restart the dev `shell`, `shot` screenshots into `.superpowers/shots/`, `type` into the console, `relogin` |
 
 Only `host-deps.sh` needs `sudo`. Everything else talks to the system
 libvirt over `qemu:///system` via `libvirt`-group membership.

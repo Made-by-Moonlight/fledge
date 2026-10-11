@@ -1,7 +1,7 @@
 # mbm shell v1 — design
 
 **Date:** 2026-10-10
-**Status:** approved design, awaiting plan
+**Status:** approved design, amended during planning (2026-10-11)
 **Branch:** `mbm-shell` (off `main` @ 4abc949)
 **Mockups:** visual-companion screens in `.superpowers/brainstorm/` (gitignored):
 `bar-style-v2.html`, `launcher-style.html`, `quick-settings.html`, `settings-window.html`
@@ -61,7 +61,7 @@ After each one merges, the desktop works end to end.
 | OSD | Bottom-centre: volume, brightness, mic mute. |
 | Settings window | **Sidebar layout**: Keybinds, Displays, Bar, Idle & lock, Input. Keybinds is a grouped, filterable list; click a row to record keys; clashes flagged inline; "edited" tag on changed rows; right-click resets to default; "+ Add bind". |
 | Lock + wallpaper | Port the approved made-by-moonlight design unchanged: Moonrise wallpaper per monitor; lock = glow background, owl, wordmark, clock, amber password field. Assets come from `cachyos/branding/` output, not `omarchy/current/`. |
-| Idle | In-shell `IdleMonitor`, timeouts from settings (dim / lock / screen off / suspend). hypridle retired. |
+| Idle | In-shell `IdleMonitor`, timeouts from settings (dim / lock / screen off / suspend). hypridle retired. Defaults keep today's behaviour: no idle timeouts (today's hypridle.conf has no listeners), lock before sleep on. |
 | Lock semantics | Same as today's `slievr-system-lock`: locking also locks 1Password (`1password --lock` when running). **Lock before suspend:** the shell holds a logind delay inhibitor (`systemd-inhibit --what=sleep --mode=delay`, via `Process`), watches `PrepareForSleep` (`gdbus monitor --system`), locks, then releases it. On wake it turns displays back on (`hyprctl dispatch dpms on`), replacing `slievr-system-wake`. |
 | Polkit | In-shell agent (`Services.Polkit`) styled like the lock prompt. polkit-gnome retired. |
 | Naming | `mbm` (made by moonlight): `~/.config/quickshell/mbm/`, `~/.config/mbm/`, `~/.local/share/mbm/`, `mbm` CLI. |
@@ -106,6 +106,9 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
 - `~/.local/share/mbm/defaults/settings.json`: shipped defaults, read-only (stowed from the repo).
 - `~/.config/mbm/settings.json`: **user overrides only**. "Reset to default"
   deletes the key. New defaults from the repo reach the user on update.
+- `~/.local/state/mbm/settings.json`: the **merged** settings (defaults + overrides),
+  rewritten by every `set`/`reset`/`apply`. The shell reads only this file (plus the
+  user file, to mark edited rows), so the merge lives in one place: the CLI.
 - `~/.config/hypr/mbm/*.conf`: generated. `hyprland.conf` sources
   `~/.config/hypr/mbm/*.conf`. Never hand-edited (header comment says so).
 
@@ -115,31 +118,37 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
 {
   "version": 1,
   "binds": {                                   // keyed by stable action id
-    "app.terminal":     { "keys": "SUPER+Return",       "label": "Terminal", "group": "Apps",
-                          "action": { "exec": "$terminal --dir=\"$(slievr-cmd-terminal-cwd)\"" } },
-    "launcher.apps":    { "keys": "SUPER+Space",        "label": "Launcher", "group": "Shell",
-                          "action": { "shell": "launcher.toggle" } },
-    "window.close":     { "keys": "SUPER+W",            "label": "Close window", "group": "Windows",
-                          "action": { "dispatch": "killactive" } },
-    "media.volume-up":  { "keys": "XF86AudioRaiseVolume", "flags": "el", "label": "Volume up", "group": "Media",
-                          "action": { "shell": "osd.volume +5" } }
-    // … user-added binds use ids "custom.<n>"
+    "apps.terminal":   { "mods": "SUPER", "key": "RETURN", "label": "Terminal", "group": "Apps",
+                         "action": { "exec": "uwsm app -- $TERMINAL --dir=\"$(slievr-cmd-terminal-cwd)\"" } },
+    "utilities.launch-apps": { "mods": "SUPER", "key": "SPACE", "label": "Launch apps", "group": "Utilities",
+                         "action": { "shell": "launcher.toggle" } },
+    "windows.focus-on-next-window": { "mods": "ALT", "key": "TAB", "label": "Focus on next window", "group": "Windows",
+                         "action": [ { "dispatch": "cyclenext" }, { "dispatch": "bringactivetotop" } ] },
+    "media.volume-up": { "mods": "", "key": "XF86AudioRaiseVolume", "flags": "el", "label": "Volume up", "group": "Media",
+                         "action": { "shell": "osd.volume +5" } }
+    // user-added binds use ids "custom.<n>"; a default bind set to null is removed
   },
   "displays":      { "<connector or desc:…>": { "mode": "2560x1440@165", "scale": 1.25, "position": "0x0", "enabled": true } },
   "bar":           { "position": "top", "left": ["workspaces","title"], "centre": ["clock"],
                      "right": ["tray","glyphs","cog"], "glyphs": ["network","battery"] },
   "launcher":      { "position": "centre" },             // centre | anchored
   "notifications": { "corner": "top-right", "timeoutMs": 5000 },
-  "idle":          { "dimSec": 240, "lockSec": 300, "screenOffSec": 330, "suspendSec": 0 },
+  "idle": { "dimSec": 0, "lockSec": 0, "screenOffSec": 0, "suspendSec": 0, "lockOnSleep": true }
   "input":         { "kbLayout": "us", "kbOptions": "compose:caps", "repeatRate": 40, "repeatDelay": 600,
                      "numlock": true, "touchpad": { "scrollFactor": 0.4, "naturalScroll": false, "tapToClick": true },
                      "sensitivity": 0 }
 }
 ```
 
-An action is exactly one of `{shell: "<ipc target>.<fn> [args]"}` (becomes
-`exec, qs -c mbm ipc call …`), `{dispatch: "<dispatcher> [args]"}` or
-`{exec: "<command>"}`. `flags` maps to Hyprland bind flags (`e`, `l`, `r`, `m`…).
+`mods` (space-separated, from SUPER SHIFT CTRL ALT MOD2 MOD3 MOD5, may be empty)
+and `key` (any Hyprland key: `RETURN`, `code:10`, `mouse:272`, `XF86AudioMute`,
+`switch:on:Lid Switch`) are separate fields, because many real keys can't be
+written as a `MOD+KEY` string. `action` is one action or a list of them
+(Hyprland runs several binds on one combo; `ALT+TAB` does). Each action is
+exactly one of `{shell: "<target>.<fn> [args]"}` (→ `exec, qs -c mbm ipc call …`),
+`{dispatch: "<dispatcher> [args]"}` or `{exec: "<command>"}`. `flags` maps to
+Hyprland bind flags (`e l r n m t i s p`; `d` is always added). Labels can't
+contain commas. A clash is two different bind ids on the same mods+key+flags.
 Real defaults are migrated from today's config (see Cutover), not invented.
 
 ### CLI
@@ -147,7 +156,7 @@ Real defaults are migrated from today's config (see Cutover), not invented.
 | Command | Does |
 | --- | --- |
 | `mbm settings get <path>` | merged value (jq path) |
-| `mbm settings set <path> <json>` | write override, atomically |
+| `mbm settings set <path> <json> [<path> <json>]…` | write overrides atomically; refuses (writes nothing) if the result fails `check`. Paths are jq paths such as `.launcher.position` or `.binds["apps.terminal"].key` |
 | `mbm settings reset <path>` | delete override |
 | `mbm settings check` | validate merged settings; non-zero + message on failure |
 | `mbm settings apply` | `check`, then generate `binds.conf`, `monitors.conf`, `input.conf` into `~/.config/hypr/mbm/`, then `hyprctl reload` if Hyprland is running |
@@ -183,12 +192,13 @@ when a generated section changed, showing any `check` error inline.
   `notifications` (dismiss, dismiss-all, dnd-toggle), `dmenu` (used by `mbm dmenu`).
 - Workspaces, focused title and monitors come from `Quickshell.Hyprland`.
 - `misc:allow_session_lock_restore = true`, so a restarted shell can lock again.
+- The Keybinds page records keys inside an empty Hyprland submap (mbm-record, generated with binds.conf) so compositor binds don't fire while recording; SUPER+CTRL+ALT+Escape always leaves it.
 
 ## Cutover (all in this branch)
 
 **Hyprland config**
 - `autostart.conf` (+ `hypr-defaults/hypr/autostart.conf`): remove mako,
-  waybar, swaybg, hypridle, polkit-gnome. Add `uwsm-app -- qs -c mbm`.
+  waybar, swaybg, hypridle, polkit-gnome. The shell runs as the user unit mbm-shell.service (Restart=on-failure, WantedBy graphical-session.target, enabled by a stowed .wants link like elephant was).
 - `hyprland.conf` sources `~/.config/hypr/mbm/*.conf`. It stops sourcing
   `bindings.conf`, `hypr-defaults/hypr/bindings/*`, `monitors.conf` and
   `input.conf`, whose contents migrate into `defaults/settings.json` and which
@@ -210,9 +220,12 @@ when a generated section changed, showing any `check` error inline.
 - Webapp binds (e.g. `Super+Shift+Y`) are left alone in A and decided in B.
 
 **slievr-menu**
-`slievr-menu` and `slievr-menu-*` swap `walker --dmenu` for `mbm dmenu`, so the
-capture, toggle, hardware etc. menus keep working until B replaces them.
-`slievr-menu-keybindings` is deleted (the Keybinds page replaces it).
+Callers keep working through compat shims that B deletes: `slievr-launch-walker`
+(dmenu → `mbm dmenu`, modes → launcher), `slievr-swayosd-client` (→ `osd.show`),
+`slievr-system-lock`, `slievr-toggle-waybar`, `slievr-toggle-idle`,
+`slievr-toggle-notification-silencing`, `slievr-notification-dismiss` (→ IPC).
+`slievr-menu-keybindings` and the restart/refresh scripts of retired tools are deleted,
+and their slievr-menu entries removed.
 
 **Packages (`bootstrap.sh`)**
 - Add: `quickshell cliphist wl-clipboard jq ttf-jetbrains-mono` and an emoji
