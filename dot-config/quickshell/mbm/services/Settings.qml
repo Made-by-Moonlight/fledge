@@ -15,7 +15,9 @@ Singleton {
     property var merged: ({})
     property var user: ({})
     property string lastError: ""
-    readonly property bool busy: writer.running
+    property var queue: []
+    property bool inflight: false
+    readonly property bool busy: writer.running || queue.length > 0
 
     function parse(text, fallback, what) {
         try {
@@ -34,6 +36,7 @@ Singleton {
     }
     FileView {
         path: root.home + "/.local/state/mbm/settings.json"
+        printErrors: false  // missing on a first boot before `apply`
         watchChanges: true
         onFileChanged: reload()
         onLoaded: root.merged = root.parse(text(), root.merged, path)
@@ -78,18 +81,34 @@ Singleton {
         run(args, apply);
     }
     function reset(paths, apply) { run([root.mbm, "settings", "reset", ...paths], apply); }
+    // FIFO: every call is one job, run one at a time, each ends in exactly one
+    // writeFinished. A rapid second toggle must not be lost.
     function run(args, apply) {
-        if (writer.running) return;
-        writer.command = apply ? ["sh", "-c", '"$@" && "$0" settings apply', root.mbm, ...args] : args;
+        root.queue = [...root.queue, { command: apply ? ["sh", "-c", '"$@" && "$0" settings apply', root.mbm, ...args] : args }];
+        next();
+    }
+    function next() {
+        if (writer.running || root.queue.length === 0) return;
+        const job = root.queue[0];
+        writer.command = job.command;
+        root.inflight = true;
         writer.running = true;
+    }
+    function finish(ok, error) {
+        root.inflight = false;
+        root.queue = root.queue.slice(1);
+        root.lastError = ok ? "" : error;
+        root.writeFinished(ok, root.lastError);
+        next();
     }
 
     Process {
         id: writer
         stderr: StdioCollector { id: writerErr }
-        onExited: code => {
-            root.lastError = code === 0 ? "" : writerErr.text.trim();
-            root.writeFinished(code === 0, root.lastError);
-        }
+        onExited: code => root.finish(code === 0, writerErr.text.trim())
+        // A binary that can't start never emits exited, it just drops `running`.
+        onRunningChanged: if (!running) Qt.callLater(() => {
+            if (root.inflight && !writer.running) root.finish(false, "could not start " + writer.command[0]);
+        })
     }
 }
