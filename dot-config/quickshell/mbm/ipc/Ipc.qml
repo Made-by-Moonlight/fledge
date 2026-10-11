@@ -105,6 +105,9 @@ Scope {
         target: "settings"
         function open(page: string): void { ShellState.openSettings(page); }
         function close(): void { ShellState.settingsOpen = false; }
-        function record(id: string): void { ShellState.openSettings("keybinds"); ShellState.recordRequest = id; }
+        function record(id: string): void {
+            ShellState.openSettings("keybinds");
+            if (ShellState.settingsOpen) ShellState.recordRequest = id;   // refused open (locked, polkit): no silent recording later
+        }
     }
 }

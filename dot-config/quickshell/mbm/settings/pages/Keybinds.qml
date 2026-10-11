@@ -14,7 +14,17 @@ Item {
     function combo(b) { return (b.mods ? b.mods.split(" ").filter(m => m).join(" + ") + " + " : "") + b.key; }
     // Same identity the CLI uses for a clash: mods in any order, key case-insensitive, flags minus `d`.
     function norm(b) { return (b.mods ?? "").split(" ").filter(m => m).map(m => m.toUpperCase()).sort().join("+") + "+" + b.key.toLowerCase() + "/" + (b.flags ?? "").replace("d", "").split("").sort().join(""); }
-    readonly property var all: Object.keys(Settings.binds).filter(id => Settings.binds[id]).map(id => Object.assign({ id }, Settings.binds[id]))
+    // Defaults overlaid per id with the user's binds (null removes one), not the validated merged
+    // state: that is only written when `check` passes, so it can never show a clash.
+    readonly property var effective: {
+        const out = Object.assign({}, Settings.defaults.binds ?? {}), u = Settings.user?.binds ?? {};
+        for (const id of Object.keys(u)) {
+            if (u[id] === null) delete out[id];
+            else out[id] = Object.assign({}, out[id] ?? {}, u[id]);
+        }
+        return out;
+    }
+    readonly property var all: Object.keys(effective).filter(id => effective[id]).map(id => Object.assign({ id }, effective[id]))
     readonly property var byCombo: { const m = {}; for (const b of all) (m[norm(b)] = m[norm(b)] ?? []).push(b); return m; }
     readonly property var rows: all
         .filter(b => !filter || (b.label + " " + combo(b) + " " + b.group).toLowerCase().includes(filter.toLowerCase()))
@@ -24,7 +34,7 @@ Item {
     function path(id) { return '.binds["' + id + '"]'; }
     function nextCustomId() {
         let n = 0;
-        for (const id of Object.keys(Settings.binds)) { const m = /^custom\.(\d+)$/.exec(id); if (m) n = Math.max(n, +m[1]); }
+        for (const id of Object.keys(page.effective)) { const m = /^custom\.(\d+)$/.exec(id); if (m) n = Math.max(n, +m[1]); }
         for (const id of Object.keys(Settings.user?.binds ?? {})) { const m = /^custom\.(\d+)$/.exec(id); if (m) n = Math.max(n, +m[1]); }
         return "custom." + (n + 1);
     }
@@ -44,6 +54,7 @@ Item {
             page.recording = "";
         }
         onCancelled: page.recording = ""
+        onRefused: reason => { page.recording = ""; Settings.lastError = reason; }
         onUnavailable: { page.recording = ""; Settings.lastError = "Key recording isn't available: Hyprland has no mbm-record submap (run mbm settings apply)."; }
     }
     // The request may arrive before this page exists (settings.record opens the window first).

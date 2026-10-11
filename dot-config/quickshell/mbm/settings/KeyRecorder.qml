@@ -15,15 +15,21 @@ FocusScope {
     // The submap isn't loaded (e.g. binds.conf not sourced): dispatching to a missing submap
     // would leave every key dead, so nothing is dispatched and recording never starts.
     signal unavailable()
+    // A combo that would bind a printable key system-wide (no modifier, or only Shift).
+    signal refused(string reason)
+    property bool entered: false     // Hyprland has confirmed the submap
+    property bool aborted: false     // a deliberate stop while the probe ran
 
     function start() {
         if (active || probe.running) return;
+        aborted = false;
         probe.running = true;
     }
     function stop() {
-        probe.running = false;
+        if (probe.running) { aborted = true; probe.running = false; }
         if (!active) return;
         active = false;
+        entered = false;
         guard.stop();
         Hyprland.dispatch("submap reset");
     }
@@ -34,18 +40,30 @@ FocusScope {
         id: probe
         command: ["sh", "-c", "hyprctl -j binds | grep -q '\"submap\": \"mbm-record\"'"]
         onExited: code => {
+            if (rec.aborted) { rec.aborted = false; return; }
             if (code !== 0) { rec.unavailable(); return; }
+            rec.entered = false;
             rec.active = true;
             Hyprland.dispatch("submap mbm-record");
             catcher.forceActiveFocus();
             guard.restart();
         }
     }
+    // The submap was left under us (SUPER+CTRL+ALT+Escape, a reload): stop at once, or the next
+    // key would both fire its bind and be recorded. `entered` ignores a stale event from before.
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "submap" || !rec.active) return;
+            if (event.data === "mbm-record") rec.entered = true;
+            else if (rec.entered) { rec.stop(); rec.cancelled(); }
+        }
+    }
     Timer { id: guard; interval: 10000; onTriggered: { rec.stop(); rec.cancelled(); } }
 
     // Qt key -> Hyprland (xkb) key name. Letters, digits and anything unlisted fall through below.
     readonly property var names: ({
-        [Qt.Key_Return]: "RETURN", [Qt.Key_Enter]: "RETURN", [Qt.Key_Space]: "SPACE", [Qt.Key_Tab]: "TAB",
+        [Qt.Key_Return]: "RETURN", [Qt.Key_Enter]: "KP_Enter", [Qt.Key_Space]: "SPACE", [Qt.Key_Tab]: "TAB",
         [Qt.Key_Backtab]: "TAB", [Qt.Key_Backspace]: "BACKSPACE", [Qt.Key_Delete]: "DELETE", [Qt.Key_Escape]: "ESCAPE",
         [Qt.Key_Left]: "LEFT", [Qt.Key_Right]: "RIGHT", [Qt.Key_Up]: "UP", [Qt.Key_Down]: "DOWN",
         [Qt.Key_Home]: "HOME", [Qt.Key_End]: "END", [Qt.Key_PageUp]: "Page_Up", [Qt.Key_PageDown]: "Page_Down",
@@ -80,6 +98,9 @@ FocusScope {
         if (!key) key = "code:" + scanCode;
         return { mods: mods.join(" "), key };
     }
+    // Letters, digits, punctuation, Space and raw keycodes type text: bound bare (or with only
+    // Shift) they would hijack typing everywhere. F-keys, XF86 keys, Return, arrows etc. are fine.
+    function isPrintable(key) { return /^([A-Z]|code:\d+|COMMA|PERIOD|slash|SPACE)$/.test(key); }
 
     Item {
         id: catcher
@@ -91,6 +112,7 @@ FocusScope {
             if (!d) return;                                                // wait for the real key
             if (e.key === Qt.Key_Escape && d.mods === "") { rec.stop(); rec.cancelled(); return; }
             rec.stop();
+            if (rec.isPrintable(d.key) && !/SUPER|CTRL|ALT/.test(d.mods)) { rec.refused("Add a modifier (Super, Ctrl or Alt): " + (d.mods ? d.mods + " + " : "") + d.key + " alone would stop that key typing."); return; }
             rec.recorded(d.mods, d.key);
         }
     }
