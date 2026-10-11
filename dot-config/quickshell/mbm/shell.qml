@@ -37,6 +37,8 @@ ShellRoot {
     Connections {
         target: Sleep
         function onPreparingForSleep() {
+            // A lock we already hold is trusted here: re-acquiring means a shell restart, which
+            // would drop the inhibitor before the new lock is up (see Lock.lock()).
             if (Settings.lockOnSleep && !lockScreen.secure) lockScreen.lock(true);
             else Sleep.release();
         }
