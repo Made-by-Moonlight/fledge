@@ -62,7 +62,7 @@ them if needed, don't extend them.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
 - Settings (once project A lands): defaults in `dot-local/share/mbm/defaults/settings.json`,
   user overrides in `~/.config/mbm/settings.json`, Hyprland fragments
-  **generated** into `~/.config/hypr/mbm/` by `mbm settings apply`. Don't hand-edit generated files;
+  **generated** into `~/.local/state/mbm/hypr/` by `mbm settings apply`. Don't hand-edit generated files;
   change the defaults or the generator.
 - Shell scripts: bash, `set -euo pipefail`, shellcheck-clean (CI runs it).
   Comments explain *why*. Match the density of the surrounding code.

@@ -109,8 +109,11 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
 - `~/.local/state/mbm/settings.json`: the **merged** settings (defaults + overrides),
   rewritten by every `set`/`reset`/`apply`. The shell reads only this file (plus the
   user file, to mark edited rows), so the merge lives in one place: the CLI.
-- `~/.config/hypr/mbm/*.conf`: generated. `hyprland.conf` sources
-  `~/.config/hypr/mbm/*.conf`. Never hand-edited (header comment says so).
+- `~/.local/state/mbm/hypr/*.conf`: generated. `hyprland.conf` sources
+  `~/.local/state/mbm/hypr/*.conf`. Never hand-edited (header comment says so).
+  They live under `~/.local/state`, not `~/.config/hypr`, because stow folds
+  `~/.config/hypr` into a symlink to the repo, which would put generated files
+  inside the checkout (amended 2026-10-11).
 
 ### Schema (top level)
 
@@ -167,7 +170,7 @@ Unlisted workspaces aren't pinned.
 | `mbm settings set <path> <json> [<path> <json>]…` | write overrides atomically; refuses (writes nothing) if the result fails `check`. Paths are jq paths such as `.launcher.position` or `.binds["apps.terminal"].key` |
 | `mbm settings reset <path>` | delete override |
 | `mbm settings check` | validate merged settings; non-zero + message on failure |
-| `mbm settings apply` | `check`, then generate `binds.conf`, `monitors.conf`, `workspaces.conf`, `input.conf` into `~/.config/hypr/mbm/`, then `hyprctl reload` if Hyprland is running |
+| `mbm settings apply` | `check`, then generate `binds.conf`, `monitors.conf`, `workspaces.conf`, `input.conf` into `~/.local/state/mbm/hypr/`, then `hyprctl reload` if Hyprland is running |
 | `mbm dmenu [--prompt P]` | options on stdin → shell's launcher in dmenu mode → choice on stdout (exit 1 on cancel) |
 
 ### Validation (`check`)
@@ -213,7 +216,7 @@ when a generated section changed, showing any `check` error inline.
 **Hyprland config**
 - `autostart.conf` (+ `hypr-defaults/hypr/autostart.conf`): remove mako,
   waybar, swaybg, hypridle, polkit-gnome. The shell runs as the user unit mbm-shell.service (Restart=on-failure, WantedBy graphical-session.target, enabled by a stowed .wants link like elephant was).
-- `hyprland.conf` sources `~/.config/hypr/mbm/*.conf`. It stops sourcing
+- `hyprland.conf` sources `~/.local/state/mbm/hypr/*.conf`. It stops sourcing
   `bindings.conf`, `hypr-defaults/hypr/bindings/*`, `monitors.conf`,
   `workspaces.conf` and `input.conf`, whose contents migrate into
   `defaults/settings.json` and which are then deleted.
