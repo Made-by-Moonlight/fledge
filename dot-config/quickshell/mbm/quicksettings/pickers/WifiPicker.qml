@@ -7,9 +7,12 @@ import "../../components"
 // Per-network state machine (keyed by SSID in `failed`, fed by the watchers below):
 //   idle --click--> Connecting (network.state) --> Connected   (row shows "Connected")
 //                                              \-> connectionFailed => "Failed"
-// A failure of a *known* network (saved password wrong or missing) opens the password box;
-// submitting it forgets the stale profile and connects with the new password.
+// Only an authentication failure (NoSecrets, WifiClientFailed, WifiAuthTimeout) on a *known* network
+// reopens the password box; other dropouts (network lost, client disconnected, unknown) show "Failed"
+// for a few seconds, nothing more. Submitting calls connectWithPsk alone: on a known network it
+// rewrites the saved PSK in place (never forget() first, that races the update and loses the profile).
 // Unknown secured networks open the password box straight away. Known rows also get a Forget action.
+// `tried` lives in this picker, so closing the panel drops it: a later autoconnect failure can't prompt.
 Column {
     id: p
     spacing: 4
@@ -34,14 +37,18 @@ Column {
         delegate: QtObject {
             id: w
             required property var modelData
+            property Timer fade: Timer { interval: 4000; onTriggered: p.mark("failed", w.modelData.name, false) }
             property Connections c: Connections {
                 target: w.modelData
                 function onConnectionFailed(reason) {
                     if (!p.tried[w.modelData.name]) return;
                     p.mark("tried", w.modelData.name, false);
                     p.mark("failed", w.modelData.name, true);
-                    // Known profile that no longer works: ask for the password again.
-                    if (w.modelData.known) p.pending = w.modelData;
+                    const auth = reason === ConnectionFailReason.NoSecrets || reason === ConnectionFailReason.WifiClientFailed
+                              || reason === ConnectionFailReason.WifiAuthTimeout;
+                    // Saved password wrong or missing: ask again. Anything else just flashes "Failed".
+                    if (auth && w.modelData.known) p.pending = w.modelData;
+                    else w.fade.restart();
                 }
                 function onStateChanged() {
                     const st = w.modelData.state;
@@ -63,8 +70,7 @@ Column {
         if (!n || !psk) return;
         mark("failed", n.name, false);
         mark("tried", n.name, true);
-        if (n.known) n.forget();   // drop the saved profile whose password failed
-        n.connectWithPsk(psk);     // D-Bus only: never in a command line or a log
+        n.connectWithPsk(psk);     // replaces the saved PSK of a known network; D-Bus only, never in a command line or a log
     }
 
     Glyph {
@@ -99,7 +105,8 @@ Column {
                 id: ma; anchors.fill: parent; hoverEnabled: true; z: -1
                 onClicked: {
                     const n = row.modelData;
-                    if (n.connected || row.connecting) n.disconnect();
+                    if (row.connecting) { p.mark("tried", n.name, false); n.disconnect(); }   // cancel: a late failure must not prompt
+                    else if (n.connected) n.disconnect();
                     else if (n.known || n.security === WifiSecurityType.Open) p.connectTo(n);
                     else p.pending = n;
                 }

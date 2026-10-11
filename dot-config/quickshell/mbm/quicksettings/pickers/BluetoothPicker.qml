@@ -62,6 +62,7 @@ Column {
     function activate(d) {
         mark("failed", d.address, false);
         if (d.connected) d.disconnect();
+        else if (d.state === BluetoothDeviceState.Connecting) { mark("attempt", d.address, false); d.disconnect(); }   // cancel
         else if (d.paired) { mark("attempt", d.address, "connect"); d.connect(); }
         else { mark("attempt", d.address, "pair"); d.pair(); }
     }
