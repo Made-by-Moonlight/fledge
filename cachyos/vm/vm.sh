@@ -54,9 +54,19 @@ case "${1:-}" in
   shell)
     # Dev loop before Task 18 installs the service: stop the old UI daemons
     # (mako owns the notification bus name, waybar overlaps the bar), restart qs.
+    # Every running instance is stopped first, not just one: a stale duplicate
+    # holds the notification bus name and doubles the reserved space.
+    # shellcheck disable=SC2016  # expanded by the VM shell, on purpose
     ssh_vm "$SESSION_ENV"$'\n''pkill -x waybar; pkill -x mako; pkill -x swayosd-server; pkill -x hypridle
       if systemctl --user is-active -q mbm-shell 2>/dev/null; then systemctl --user restart mbm-shell; sleep 3; journalctl --user -u mbm-shell -b --no-pager | grep -E "WARN|ERROR" | tail -n 40
-      else qs -c mbm kill >/dev/null 2>&1; sleep 0.5; setsid -f qs -c mbm >/tmp/mbm.log 2>&1 </dev/null; sleep 3; grep -E "WARN|ERROR" /tmp/mbm.log | tail -n 40; fi; true' ;;
+      else
+        inst="^(qs|quickshell) -c mbm( |\$)"
+        pkill -f "$inst"
+        for _ in $(seq 20); do pgrep -f "$inst" >/dev/null || break; sleep 0.25; done
+        pkill -9 -f "$inst" && sleep 0.5
+        if pgrep -f "$inst" >/dev/null; then echo "vm.sh: qs -c mbm still running" >&2; exit 1; fi
+        setsid -f qs -c mbm >/tmp/mbm.log 2>&1 </dev/null; sleep 3; grep -E "WARN|ERROR" /tmp/mbm.log | tail -n 40
+      fi; true' ;;
   shot)
     name="${2:?vm.sh shot NAME}"; mkdir -p "$REPO/.superpowers/shots"
     ssh_vm "$SESSION_ENV"$'\n'"grim /tmp/$name.png" && scp -q "$VM_USER@$(vm_ip):/tmp/$name.png" "$REPO/.superpowers/shots/$name.png"
