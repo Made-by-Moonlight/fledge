@@ -43,6 +43,9 @@ cmd_sync() {
   # Delete files the VM copy has that the host no longer does (renames, cutover deletions).
   ssh_vm "mkdir -p ~/$VM_REPO && cd ~/$VM_REPO && comm -z -23 <(git ls-files -z -co --exclude-standard 2>/dev/null | sort -z) <(sort -z) | xargs -r -0 rm -f --" <"$list"
   tar --null -czf - -T "$list" | ssh_vm "tar -xzf - -C ~/$VM_REPO"
+  # And the directories those deletions emptied, as a git checkout would: a stowed
+  # link to an empty dir (e.g. ~/.config/waybar after the cutover) never dangles.
+  ssh_vm "find ~/$VM_REPO -mindepth 1 -depth -type d -empty -not -path '*/.git/*' -delete"
 }
 
 case "${1:-}" in
@@ -52,8 +55,9 @@ case "${1:-}" in
   run) shift; ssh_vm "$SESSION_ENV"$'\n'"$*" ;;
   sudo) shift; printf '%s\n' "$VM_PASSWORD" | ssh_vm "$SESSION_ENV"$'\n'"sudo -S -p '' sh -c $(printf '%q' "$*")" ;;
   shell)
-    # Dev loop before Task 18 installs the service: stop the old UI daemons
-    # (mako owns the notification bus name, waybar overlaps the bar), restart qs.
+    # Dev loop: restart the shell, through mbm-shell.service once the cutover has
+    # installed it. On an older install, first stop the old UI daemons (mako owns
+    # the notification bus name, waybar overlaps the bar), then restart qs.
     # Every running instance is stopped first, not just one: a stale duplicate
     # holds the notification bus name and doubles the reserved space.
     # polkit allows one agent per session, so polkit-gnome goes before qs registers its own
