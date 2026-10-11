@@ -4,6 +4,7 @@ import QtQuick
 import "wallpaper"
 import "ipc"
 import "bar"
+import "osd"
 import "services"
 
 ShellRoot {
@@ -19,5 +20,6 @@ ShellRoot {
             Bar { screen: perScreen.modelData }
         }
     }
-    Ipc {}
+    Osd { id: osd }
+    Ipc { osd: osd }
 }
