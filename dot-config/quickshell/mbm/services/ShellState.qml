@@ -1,0 +1,70 @@
+pragma Singleton
+import Quickshell
+import Quickshell.Hyprland
+import QtQuick
+
+// Which popups are open. Every opener goes through here so only one popup
+// holds the keyboard at a time and a pending dmenu is always answered.
+Singleton {
+    id: root
+
+    property bool barVisible: true
+    property bool launcherOpen: false
+    property string launcherMode: "apps"
+    property bool qsOpen: false
+    property string qsPicker: ""
+    property bool settingsOpen: false
+    property string settingsPage: "keybinds"
+    property var dmenu: null
+    property bool locked: false
+
+    function focusedScreen() {
+        const name = Hyprland.focusedMonitor?.name;
+        return Quickshell.screens.find(s => s.name === name) ?? Quickshell.screens[0];
+    }
+
+    function closePopups() {
+        if (dmenu) dmenuCancel();
+        launcherOpen = false;
+        qsOpen = false;
+    }
+    function openLauncher(mode) {
+        closePopups();
+        launcherMode = mode || "apps";
+        launcherOpen = true;
+    }
+    function toggleLauncher(mode) {
+        if (launcherOpen && (!mode || mode === launcherMode)) closePopups();
+        else openLauncher(mode);
+    }
+    function openQuickSettings(picker) {
+        closePopups();
+        qsPicker = picker || "";
+        qsOpen = true;
+    }
+    function toggleQuickSettings() {
+        if (qsOpen) qsOpen = false;
+        else openQuickSettings("");
+    }
+    function openSettings(page) {
+        closePopups();
+        settingsPage = page || "keybinds";
+        settingsOpen = true;
+    }
+
+    // dmenu: `mbm dmenu` waits on resultFile (a FIFO) for "1\n<choice>\n" or "0\n\n".
+    function dmenuOpen(req) {
+        closePopups();
+        dmenu = req;
+        launcherMode = "dmenu";
+        launcherOpen = true;
+    }
+    function dmenuFinish(ok, value) {
+        const req = dmenu;
+        dmenu = null;
+        launcherOpen = false;
+        if (!req) return;
+        Quickshell.execDetached(["sh", "-c", 'printf "%s\\n%s\\n" "$1" "$2" > "$3"', "sh", ok ? "1" : "0", value ?? "", req.resultFile]);
+    }
+    function dmenuCancel() { dmenuFinish(false, ""); }
+}
