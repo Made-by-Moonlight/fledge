@@ -11,34 +11,43 @@ Singleton {
     property bool available: false
     property real value: 0
     signal applied()
-
-    property string pendingArg: ""     // adjust() waiting for a fresh read
-    property var queued: null          // next write while one is running
+    // Requests not yet applied, in order: {abs, n}. A held key fires faster than brightnessctl
+    // round-trips, so presses pile up here and are applied in one set call when the running
+    // process finishes. An absolute request replaces everything pending before it.
+    property var ops: []
 
     function refresh() { reader.running = true; }
 
-    // arg: "+N" / "-N" relative, "N" absolute (percent). Reads the live value first so steps
-    // start from what the backlight is now.
+    // arg: "+N" / "-N" relative, "N" absolute (percent).
     function adjust(arg) {
-        pendingArg = arg;
-        reader.running = true;
+        const n = parseInt(arg);
+        if (isNaN(n)) return;
+        const op = { abs: !/^[+-]/.test(arg), n: n };
+        ops = op.abs ? [op] : ops.concat([op]);
+        kick();
+    }
+    // Start a fresh read (steps are computed from the live value) unless a process is already
+    // running; its completion comes back here for whatever piled up meanwhile.
+    function kick() {
+        if (!reader.running && !writer.running) reader.running = true;
     }
 
-    // brightnessctl arguments for a set; null for bad input. -n1 keeps the backlight from reaching 0.
-    function commandFor(arg, cur) {
-        const n = parseInt(arg);
-        if (isNaN(n)) return null;
-        let spec;
-        if (/^[+-]/.test(arg)) {
-            // ±5 steps by 1 at or below 5% (same feel as slievr-brightness-display); other deltas are exact.
-            const mag = (Math.abs(n) === 5 && (n > 0 ? cur < 5 : cur <= 5)) ? 1 : Math.abs(n);
-            spec = mag + "%" + (n > 0 ? "+" : "-");
-        } else {
-            spec = Math.max(1, Math.min(100, n)) + "%";
+    // Percent after applying the pending ops to cur, one press at a time so the small-step
+    // rule (±5 steps by 1 at or below 5%, same feel as slievr-brightness-display) is not lost
+    // when presses are combined. Floor 1%, ceiling 100%.
+    function fold(cur) {
+        let v = cur;
+        for (const op of ops) {
+            if (op.abs) v = op.n;
+            else {
+                const small = Math.abs(op.n) === 5 && (op.n > 0 ? v < 5 : v <= 5);
+                v += small ? (op.n > 0 ? 1 : -1) : op.n;
+            }
+            v = Math.max(1, Math.min(100, v));
         }
-        return ["brightnessctl", "-m", "-n1", "-c", "backlight", "set", spec];
+        return v;
     }
-    function set(percent) { if (!isNaN(percent)) adjust(String(Math.round(percent))); }
+    function set(percent) { if (!isNaN(percent)) adjust(String(Math.max(1, Math.round(percent)))); }
     function step(delta) { if (!isNaN(delta)) adjust((delta > 0 ? "+" : "-") + Math.abs(Math.round(delta))); }
 
     function parse(text) {
@@ -50,25 +59,21 @@ Singleton {
         if (ok) root.value = pct / 100;
         return ok;
     }
-    function write(cmd) {
-        if (writer.running) { queued = cmd; return; }
-        writer.command = cmd;
-        writer.running = true;
-    }
 
     Process {
         id: reader
         command: ["brightnessctl", "-m", "-c", "backlight"]
         running: true
+        onExited: { if (root.ops.length > 0 && !writer.running) root.kick(); }
         stdout: StdioCollector {
             onStreamFinished: {
                 const ok = root.parse(text);
-                const arg = root.pendingArg;
-                root.pendingArg = "";
-                if (ok && arg !== "") {
-                    const cmd = root.commandFor(arg, Math.round(root.value * 100));
-                    if (cmd) root.write(cmd);
-                }
+                if (!ok) { root.ops = []; return; }
+                if (root.ops.length === 0) return;
+                const t = root.fold(Math.round(root.value * 100));
+                root.ops = [];
+                writer.command = ["brightnessctl", "-m", "-n1", "-c", "backlight", "set", t + "%"];
+                writer.running = true;
             }
         }
     }
@@ -77,8 +82,6 @@ Singleton {
         stdout: StdioCollector {
             onStreamFinished: { if (root.parse(text)) root.applied(); }
         }
-        onExited: {
-            if (root.queued) { const c = root.queued; root.queued = null; root.write(c); }
-        }
+        onExited: { if (root.ops.length > 0) root.kick(); }
     }
 }
