@@ -5,7 +5,7 @@ import "../../theme"
 
 Row {
     id: root
-    property var screen
+    property var screen: null
     readonly property var monitor: screen ? Hyprland.monitorFor(screen) : null
     spacing: 6
 

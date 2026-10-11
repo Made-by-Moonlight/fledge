@@ -16,7 +16,7 @@ Item {
     Row {
         id: row
         spacing: 10
-        Glyph { visible: root.show.includes("network") && Net.available; text: Net.glyph }
+        Glyph { visible: root.show.includes("network") && Net.available && Net.present; text: Net.glyph }
         Glyph { visible: root.show.includes("bluetooth") && Bt.available; text: Bt.glyph }
         Glyph { visible: root.show.includes("volume") && Audio.ready; text: Audio.muted ? "󰝟" : Audio.volume > 0.5 ? "󰕾" : "󰖀" }
         Glyph { visible: root.show.includes("battery") && Power.battery; text: Power.glyph + " " + Power.percent + "%"; color: Power.percent <= 15 && !Power.charging ? Theme.error : Theme.fg }

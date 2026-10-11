@@ -25,7 +25,9 @@ Pill {
                 required property string modelData
                 anchors.verticalCenter: parent.verticalCenter
                 source: island.sources[modelData] ?? ""
-                onLoaded: if (item.screen !== undefined) item.screen = island.screen
+                id: loader
+                // A var property defaults to undefined, so bind rather than test it on load.
+                Binding { target: loader.item; property: "screen"; value: island.screen; when: loader.item && "screen" in loader.item }
             }
         }
     }
