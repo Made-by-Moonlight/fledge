@@ -147,6 +147,7 @@ bad "workspace key abc"          "workspaces: abc is not a workspace number" '{"
 bad "workspace key -1"           "workspaces: -1 is not a workspace number"  '{"workspaces":{"-1":{"monitor":"DP-1"}}}'
 bad "workspace monitor missing"  "workspaces.5: monitor is required"         '{"workspaces":{"5":{"persistent":true}}}'
 bad "workspace monitor empty"    "workspaces.2: monitor is required"         '{"workspaces":{"2":{"monitor":""}}}'
+bad "workspace monitor comma"    "workspaces.2: monitor can't contain a comma" '{"workspaces":{"2":{"monitor":"desc:Maker, Model"}}}'
 bad "workspace persistent type"  "workspaces.2: persistent must be true or false" '{"workspaces":{"2":{"persistent":"yes"}}}'
 bad "workspace unknown field"    "workspaces.2: unknown field default"       '{"workspaces":{"2":{"default":true}}}'
 bad "workspace not an object"    "workspaces.7: must be an object"           '{"workspaces":{"7":"DP-1"}}'

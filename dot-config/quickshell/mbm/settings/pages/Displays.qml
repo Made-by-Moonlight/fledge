@@ -55,10 +55,12 @@ Flickable {
     }
     // [value, label] for the monitor Choice: Any, each connected monitor (stored as desc:… so the pin
     // survives a port change), and the current value when that monitor isn't connected.
+    // A comma would split the generated `workspace =` line, so such a monitor is pinned by connector.
+    function monitorValue(m) { return m.description && !m.description.includes(",") ? "desc:" + m.description : m.name; }
     function monitorOptions(current) {
         const opts = [["", "Any"]], seen = new Set([""]);
         for (const m of Hyprland.monitors.values) {
-            const v = m.description ? "desc:" + m.description : m.name;
+            const v = page.monitorValue(m);
             opts.push([v, m.name]); seen.add(v); seen.add(m.name);
         }
         if (current && !seen.has(current)) opts.push([current, current.replace(/^desc:/, "").slice(0, 24) + " (unplugged)"]);
@@ -128,7 +130,7 @@ Flickable {
                     Row { spacing: 8
                         Button { text: "Apply"; primary: true; enabled: page.edits[card.name] !== undefined && !DisplayConfirm.active; onClicked: page.apply(card.modelData) }
                         Button { text: "Reset"; enabled: !DisplayConfirm.active
-                                 onClicked: { const x = Object.assign({}, page.edits); delete x[card.name]; page.edits = x; Settings.reset(['.displays["' + card.name + '"]'], true); } } }
+                                 onClicked: { const x = Object.assign({}, page.edits); delete x[card.name]; page.edits = x; if (Settings.user?.displays?.[card.name] !== undefined) DisplayConfirm.begin(card.name, undefined); } } }
                 }
             }
         }

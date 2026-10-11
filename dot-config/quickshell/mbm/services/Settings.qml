@@ -73,19 +73,23 @@ Singleton {
     readonly property int idleSuspend: get("idle", "suspendSec", 0)
     readonly property bool lockOnSleep: get("idle", "lockOnSleep", true)
 
-    signal writeFinished(bool ok, string error)
+    // `id` is the job id set()/reset() returned, so a caller can tell its own write from the others queued.
+    signal writeFinished(bool ok, string error, int id)
+    property int lastId: 0
 
     function set(pairs, apply) {
         const args = [root.mbm, "settings", "set"];
         for (const p of pairs) args.push(p[0], JSON.stringify(p[1]));
-        run(args, apply);
+        return run(args, apply);
     }
-    function reset(paths, apply) { run([root.mbm, "settings", "reset", ...paths], apply); }
+    function reset(paths, apply) { return run([root.mbm, "settings", "reset", ...paths], apply); }
     // FIFO: every call is one job, run one at a time, each ends in exactly one
     // writeFinished. A rapid second toggle must not be lost.
     function run(args, apply) {
-        root.queue = [...root.queue, { command: apply ? ["sh", "-c", '"$@" && "$0" settings apply', root.mbm, ...args] : args }];
+        const id = ++root.lastId;
+        root.queue = [...root.queue, { id: id, command: apply ? ["sh", "-c", '"$@" && "$0" settings apply', root.mbm, ...args] : args }];
         next();
+        return id;
     }
     function next() {
         if (writer.running || root.queue.length === 0) return;
@@ -95,10 +99,11 @@ Singleton {
         writer.running = true;
     }
     function finish(ok, error) {
+        const id = root.queue[0]?.id ?? 0;
         root.inflight = false;
         root.queue = root.queue.slice(1);
         root.lastError = ok ? "" : error;
-        root.writeFinished(ok, root.lastError);
+        root.writeFinished(ok, root.lastError, id);
         next();
     }
 

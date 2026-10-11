@@ -18,6 +18,6 @@ ColumnLayout {
     }
     Toggle { label: "Lock before sleep"; checked: Settings.lockOnSleep; onToggled: c => Settings.set([[".idle.lockOnSleep", c]], false) }
     // Idle honours Wayland idle inhibitors only; not every app takes one.
-    Glyph { text: "Video in browsers and mpv keeps the screen on; some apps may not."; color: Theme.muted; font.pixelSize: Theme.fontSmall }
+    Glyph { text: "Only apps that hold a Wayland idle inhibitor (browsers playing video, mpv) delay these steps; others don't."; color: Theme.muted; font.pixelSize: Theme.fontSmall }
     Item { Layout.fillHeight: true }
 }

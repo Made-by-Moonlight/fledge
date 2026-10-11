@@ -18,7 +18,8 @@ ShellRoot {
     // Restart the shell to pick up changes; the lock also survives a reload on its own (Lock.qml).
     settings.watchFiles: false
     // Singletons are lazy; touch Settings now so its files are loaded before the first IPC call or bar paint.
-    Component.onCompleted: Settings.home
+    // DisplayConfirm too: at startup it reverts a display change the last shell never got confirmed.
+    Component.onCompleted: { Settings.home; DisplayConfirm.active; }
 
     Variants {
         model: Quickshell.screens

@@ -47,6 +47,7 @@ def check_workspace($k):
     else
       unknown(["monitor", "persistent"]; "workspaces.\($k)"),
       (if ($w.monitor | type == "string" and length > 0) then empty else "workspaces.\($k): monitor is required" end),
+      (if ($w.monitor | type == "string" and contains(",")) then "workspaces.\($k): monitor can't contain a comma" else empty end),
       (if ($w | has("persistent") | not) or ($w.persistent | type == "boolean") then empty
        else "workspaces.\($k): persistent must be true or false" end)
     end;
