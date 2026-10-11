@@ -7,6 +7,7 @@ import "bar"
 import "osd"
 import "notifications"
 import "launcher"
+import "quicksettings"
 import "services"
 
 ShellRoot {
@@ -25,5 +26,6 @@ ShellRoot {
     Osd { id: osd }
     Popups {}
     Launcher {}
+    QuickSettings {}
     Ipc { osd: osd }
 }

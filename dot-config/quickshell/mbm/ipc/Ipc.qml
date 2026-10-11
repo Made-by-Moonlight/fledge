@@ -84,4 +84,10 @@ Scope {
         }
         function close(): void { ShellState.dmenuCancel(); }
     }
+    IpcHandler {
+        target: "quicksettings"
+        function toggle(): void { ShellState.toggleQuickSettings(); }
+        function open(picker: string): void { ShellState.openQuickSettings(["wifi", "bluetooth", "audio"].includes(picker) ? picker : ""); }
+        function close(): void { ShellState.qsOpen = false; }
+    }
 }

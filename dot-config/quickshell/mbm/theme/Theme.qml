@@ -14,6 +14,8 @@ Singleton {
     readonly property color error: "#e5626a"
     readonly property color ok: "#8fcf8a"
     readonly property color panel: Qt.rgba(0.090, 0.118, 0.157, 0.94)
+    readonly property color panelSolid: Qt.rgba(0.090, 0.118, 0.157, 0.97)   // quick settings, over busy windows
+    readonly property color accentSoft: Qt.rgba(0.957, 0.686, 0.012, 0.15)    // current/connected row wash
 
     readonly property string font: "JetBrainsMono Nerd Font"
     readonly property int fontSmall: 11
