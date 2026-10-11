@@ -114,4 +114,47 @@ check "set: refuses a clash"          "1"        "$rc"
 contains "set: clash message"         "use the same keys" "$(cat "$T/err")"
 check "set: clash wrote nothing"      ""         "$(user_file)"
 
+
+# --- check: coverage of every rule ------------------------------------------
+bad "mod order doesn't hide a clash" "use the same keys" \
+  '{"binds":{"custom.1":{"mods":"SUPER SHIFT","key":"X","label":"A","group":"Apps","action":{"exec":"a"}},"custom.2":{"mods":"SHIFT SUPER","key":"x","label":"B","group":"Apps","action":{"exec":"b"}}}}'
+bad "unknown display field"      "displays.DP-1: unknown field colour"  '{"displays":{"DP-1":{"colour":1}}}'
+bad "unknown bar field"          "bar: unknown field colour"            '{"bar":{"colour":1}}'
+bad "unknown launcher field"     "launcher: unknown field colour"       '{"launcher":{"colour":1}}'
+bad "unknown notifications field" "notifications: unknown field colour" '{"notifications":{"colour":1}}'
+bad "unknown idle field"         "idle: unknown field colour"           '{"idle":{"colour":1}}'
+bad "unknown input field"        "input: unknown field colour"          '{"input":{"colour":1}}'
+bad "unknown touchpad field"     "input.touchpad: unknown field colour" '{"input":{"touchpad":{"colour":1}}}'
+bad "group required"             "group is required"                    '{"binds":{"shell.launcher":{"group":null}}}'
+bad "display position"           "displays.DP-1: bad position"          '{"displays":{"DP-1":{"position":"left"}}}'
+bad "display scale"              "displays.DP-1: bad scale"             '{"displays":{"DP-1":{"scale":0}}}'
+bad "display enabled"            "displays.DP-1: enabled must be"       '{"displays":{"DP-1":{"enabled":"yes"}}}'
+bad "bar position"               "bar.position must be"                 '{"bar":{"position":"left"}}'
+bad "bar glyph"                  "bar.glyphs: unknown glyph"            '{"bar":{"glyphs":["wifi"]}}'
+bad "bar centre module"          "bar.centre: unknown module"           '{"bar":{"centre":["weather"]}}'
+bad "bar right module"           "bar.right: unknown module"            '{"bar":{"right":["weather"]}}'
+bad "notification timeout"       "notifications.timeoutMs"              '{"notifications":{"timeoutMs":-5}}'
+bad "idle lockOnSleep"           "idle.lockOnSleep"                     '{"idle":{"lockOnSleep":"yes"}}'
+bad "repeat delay"               "input.repeatDelay"                    '{"input":{"repeatDelay":5}}'
+bad "numlock"                    "input.numlock"                        '{"input":{"numlock":"on"}}'
+bad "sensitivity"                "input.sensitivity"                    '{"input":{"sensitivity":2}}'
+bad "kbLayout"                   "input.kbLayout"                       '{"input":{"kbLayout":""}}'
+bad "kbOptions"                  "input.kbOptions"                      '{"input":{"kbOptions":5}}'
+bad "tapToClick"                 "input.touchpad.tapToClick"            '{"input":{"touchpad":{"tapToClick":"yes"}}}'
+bad "scrollFactor"               "input.touchpad.scrollFactor"          '{"input":{"touchpad":{"scrollFactor":0}}}'
+
+good() { # good <description> <user-json>
+  fresh
+  mkdir -p "$MBM_CONFIG_DIR"; printf '%s\n' "$2" >"$MBM_CONFIG_DIR/settings.json"
+  local out rc
+  out="$("$MBM" settings check 2>&1)"; rc=$?
+  check "check: $1 -> exit 0" "0" "$rc"
+  check "check: $1 -> silent" "" "$out"
+}
+good "code: key"       '{"binds":{"custom.1":{"mods":"SUPER","key":"code:11","label":"A","group":"Apps","action":{"exec":"a"}}}}'
+good "mouse: key"      '{"binds":{"custom.1":{"mods":"SUPER","key":"mouse:272","flags":"m","label":"A","group":"Apps","action":{"dispatch":"movewindow"}}}}'
+good "switch: key"     '{"binds":{"custom.1":{"mods":"","key":"switch:on:Lid Switch","flags":"l","label":"A","group":"Apps","action":{"exec":"a"}}}}'
+good "empty mods"      '{"binds":{"custom.1":{"mods":"","key":"F12","label":"A","group":"Apps","action":{"exec":"a"}}}}'
+good "multi-action"    '{"binds":{"custom.1":{"mods":"SUPER","key":"F11","label":"A","group":"Apps","action":[{"exec":"a"},{"dispatch":"cyclenext"}]}}}'
+
 exit $fail
