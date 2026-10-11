@@ -7,6 +7,8 @@
                         "action": { "shell": "launcher.toggle" } },
     "media.volume-up": { "mods": "", "key": "XF86AudioRaiseVolume", "flags": "el", "label": "Volume up", "group": "Media",
                          "action": { "shell": "osd.volume +5" } },
+    "windows.resize": { "mods": "SUPER", "key": "mouse:273", "flags": "m", "label": "Resize window", "group": "Windows",
+                      "action": { "dispatch": "resizewindow" } },
     "windows.next": { "mods": "ALT", "key": "TAB", "label": "Focus on next window", "group": "Windows",
                       "action": [ { "dispatch": "cyclenext" }, { "dispatch": "bringactivetotop" } ] },
     "windows.workspace-1": { "mods": "SUPER", "key": "code:10", "label": "Switch to workspace 1", "group": "Windows",
