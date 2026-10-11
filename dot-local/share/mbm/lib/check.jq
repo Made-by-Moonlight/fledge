@@ -41,6 +41,16 @@ def check_display($name):
      else "displays.\($name): bad transform \($d.transform | tojson)" end),
     (if ($d.enabled // true | type == "boolean") then empty else "displays.\($name): enabled must be true or false" end);
 
+def check_workspace($k):
+  . as $w
+  | if type != "object" then "workspaces.\($k): must be an object"
+    else
+      unknown(["monitor", "persistent"]; "workspaces.\($k)"),
+      (if ($w.monitor | type == "string" and length > 0) then empty else "workspaces.\($k): monitor is required" end),
+      (if ($w | has("persistent") | not) or ($w.persistent | type == "boolean") then empty
+       else "workspaces.\($k): persistent must be true or false" end)
+    end;
+
 def modules($side):
   (.[$side] // [])
   | if type != "array" then "bar.\($side) must be a list"
@@ -49,7 +59,7 @@ def modules($side):
 
 def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) must be a whole number of seconds >= 0" end;
 
-((keys - ["version", "binds", "displays", "bar", "launcher", "notifications", "idle", "input"])[] | "unknown setting: \(.)"),
+((keys - ["version", "binds", "displays", "workspaces", "bar", "launcher", "notifications", "idle", "input"])[] | "unknown setting: \(.)"),
 
 (if .version != 1 then "version must be 1 (got \(.version | tojson))" else empty end),
 
@@ -62,6 +72,10 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
  | "binds: \(map(.id) | join(" and ")) use the same keys (\(.[0].c | sub("/.*$"; "")))"),
 
 (.displays // {} | to_entries[] | .key as $n | .value | check_display($n)),
+
+(.workspaces // {} | to_entries[] | .key as $k
+ | if ($k | test("^[1-9][0-9]*$")) then (.value | check_workspace($k))
+   else "workspaces: \($k) is not a workspace number" end),
 
 (.bar // {}
  | unknown(["position", "left", "centre", "right", "glyphs"]; "bar"),

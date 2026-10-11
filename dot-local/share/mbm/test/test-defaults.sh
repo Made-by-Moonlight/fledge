@@ -21,4 +21,13 @@ if [[ -f "$REPO/dot-config/hypr/bindings.conf" && -f "$REPO/dot-config/hypr/hypr
 else
   echo "PASS  defaults: rebuild check skipped (today's Hyprland sources are gone)"
 fi
+# Task 18 deletes workspaces.conf; the generator must reproduce it until then.
+WS="$REPO/dot-config/hypr/workspaces.conf"
+if [[ -f $WS ]]; then
+  check "defaults: generated workspaces match today's workspaces.conf" \
+    "$(grep '^workspace = ' "$WS")" \
+    "$(jq -r -f "$HERE/../lib/gen-workspaces.jq" "$DEF" | tail -n +2)"
+else
+  echo "PASS  defaults: workspaces.conf comparison skipped (the hand-written file is gone)"
+fi
 exit $fail

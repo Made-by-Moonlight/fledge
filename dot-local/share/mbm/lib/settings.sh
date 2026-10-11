@@ -43,10 +43,11 @@ user_json() { # the overrides, or {} when there are none
   fi
 }
 
-# merge <user-json>: defaults * overrides; a bind overridden with null is removed.
+# merge <user-json>: defaults * overrides; a bind or workspace overridden with null is removed.
 merge() {
   jq -n --slurpfile d "$MBM_DEFAULTS" --argjson u "$1" \
-    '($d[0] * $u) | .binds |= with_entries(select(.value != null))'
+    '($d[0] * $u) | .binds |= with_entries(select(.value != null))
+     | if has("workspaces") then .workspaces |= with_entries(select(.value != null)) else . end'
 }
 
 merged_json() {
@@ -125,15 +126,17 @@ settings_check() {
 }
 
 settings_apply() {
-  local merged binds monitors input
+  local merged binds monitors input workspaces
   merged="$(merged_json)" || exit 1
   check_json "$merged" || die "settings are invalid; nothing applied"
   # Render everything before writing anything, so a jq failure can't leave a mix.
   binds="$(jq -r -f "$MBM_ROOT/lib/gen-binds.jq" <<<"$merged")" || die "could not generate binds"
   monitors="$(jq -r -f "$MBM_ROOT/lib/gen-monitors.jq" <<<"$merged")" || die "could not generate monitors"
   input="$(jq -r -f "$MBM_ROOT/lib/gen-input.jq" <<<"$merged")" || die "could not generate input"
+  workspaces="$(jq -r -f "$MBM_ROOT/lib/gen-workspaces.jq" <<<"$merged")" || die "could not generate workspaces"
   printf '%s\n' "$binds" | atomic_write "$MBM_HYPR_DIR/binds.conf"
   printf '%s\n' "$monitors" | atomic_write "$MBM_HYPR_DIR/monitors.conf"
+  printf '%s\n' "$workspaces" | atomic_write "$MBM_HYPR_DIR/workspaces.conf"
   printf '%s\n' "$input" | atomic_write "$MBM_HYPR_DIR/input.conf"
   printf '%s\n' "$merged" | atomic_write "$MBM_MERGED"
   if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -z ${MBM_NO_RELOAD:-} ]]; then

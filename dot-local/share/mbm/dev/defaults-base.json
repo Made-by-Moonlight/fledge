@@ -5,6 +5,18 @@
     "DP-2": { "mode": "2560x1440@144", "position": "3440x-560", "scale": 1, "transform": 3 },
     "DP-3": { "mode": "2560x1440@144", "position": "-1440x-560", "scale": 1, "transform": 1 }
   },
+  "workspaces": {
+    "1": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "2": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "3": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "4": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "5": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "6": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "7": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "8": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true },
+    "9": { "monitor": "desc:BNQ BenQ EX2780Q W4L08254019", "persistent": true },
+    "10": { "monitor": "desc:BNQ BenQ EX2780Q 81N01112019", "persistent": true }
+  },
   "bar": { "position": "top", "left": ["workspaces", "title"], "centre": ["clock"],
            "right": ["tray", "glyphs", "cog"], "glyphs": ["network", "bluetooth", "volume", "battery"] },
   "launcher": { "position": "centre" },

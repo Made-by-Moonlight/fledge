@@ -16,6 +16,12 @@
     "DP-1": { "mode": "3440x1440@100", "position": "0x0", "scale": 1 },
     "DP-2": { "mode": "2560x1440@144", "position": "3440x-560", "scale": 1, "transform": 3 }
   },
+  "workspaces": {
+    "1": { "monitor": "desc:Acer X34", "persistent": true },
+    "2": { "monitor": "desc:Acer X34", "persistent": true },
+    "10": { "monitor": "DP-2" },
+    "9": { "monitor": "desc:BenQ Left", "persistent": true }
+  },
   "bar": { "position": "top", "left": ["workspaces", "title"], "centre": ["clock"],
            "right": ["tray", "glyphs", "cog"], "glyphs": ["network", "battery"] },
   "launcher": { "position": "centre" },
