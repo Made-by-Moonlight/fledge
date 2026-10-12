@@ -1,24 +1,26 @@
 add_newline = true
+palette = "moonlight"
 command_timeout = 200
 format = "[$directory$git_branch$git_status]($style)$character"
 
 [character]
-error_symbol = "[✗](bold cyan)"
-success_symbol = "[❯](bold cyan)"
+error_symbol = "[✗](bold error)"
+success_symbol = "[❯](bold accent)"
 
 [directory]
+style = "muted"
 truncation_length = 2
 truncation_symbol = "…/"
-repo_root_style = "bold cyan"
+repo_root_style = "bold accent"
 repo_root_format = "[$repo_root]($repo_root_style)[$path]($style)[$read_only]($read_only_style) "
 
 [git_branch]
 format = "[$branch]($style) "
-style = "italic cyan"
+style = "italic dim"
 
 [git_status]
 format     = '[$all_status]($style)'
-style      = "cyan"
+style      = "muted"
 ahead      = "⇡${count} "
 diverged   = "⇕⇡${ahead_count}⇣${behind_count} "
 behind     = "⇣${count} "
@@ -30,3 +32,13 @@ stashed    = ""
 staged     = ""
 renamed    = ""
 deleted    = ""
+
+# made by moonlight palette (cachyos/branding/palette.sh); reads on the
+# terminal background #171e28.
+[palettes.moonlight]
+accent = "#f4af03"
+fg     = "#ffffff"
+dim    = "#c8ced8"
+muted  = "#6c7787"
+error  = "#e5626a"
+ok     = "#8fcf8a"
