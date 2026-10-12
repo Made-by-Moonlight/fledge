@@ -376,6 +376,10 @@ esac
 if command -v pkgfile >/dev/null; then
   sudo pkgfile -u || echo "WARN: could not update the pkgfile database" >&2
 fi
+# ...and the timer keeps it fresh afterwards.
+if command -v pkgfile >/dev/null; then
+  sudo systemctl enable --now pkgfile-update.timer || echo "WARN: could not enable pkgfile-update.timer" >&2
+fi
 
 # Removals come last, after everything that can fail (paru and the AUR loop,
 # the clone, stow, the generated config): on an upgrade, a failure before this
@@ -403,9 +407,7 @@ fi
 RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapplications-bin elephant-calc-bin
   elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
   elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
-  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix
-  # fish replaced zsh (the login shell was switched above).
-  zsh zsh-completions)
+  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
 # Exact names (the set reloaded here, after the removal just before): `pacman
 # -R walker`, or a name already gone, would fail the whole list.
 load_installed
@@ -415,6 +417,18 @@ for pkg in "${RETIRED_PKGS[@]}"; do
 done
 if ((${#retired[@]})); then
   sudo pacman -Rns --noconfirm "${retired[@]}" || echo "WARN: could not remove some retired packages: ${retired[*]}" >&2
+fi
+
+# zsh goes in its own transaction: if something installed depends on it, pacman
+# refuses the whole list, which must not strand the retirements above. After
+# the login shell switch earlier, so no shell points at a removed binary.
+load_installed
+zsh_pkgs=()
+for pkg in cachyos-zsh-config zsh-completions zsh; do
+  if [[ -n ${installed[$pkg]:-} ]]; then zsh_pkgs+=("$pkg"); fi
+done
+if ((${#zsh_pkgs[@]})); then
+  sudo pacman -Rns --noconfirm "${zsh_pkgs[@]}" || echo "WARN: could not remove zsh (${zsh_pkgs[*]}); fish is still the login shell" >&2
 fi
 
 # In a running session the switch happens now, not at the next login: the old

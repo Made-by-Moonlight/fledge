@@ -24,8 +24,14 @@ if type -q fzf
 end
 
 # Completions from each tool's own generator, where the tool exists.
+# kubectl's is generated into completions/ (fish autoloads it) only when
+# missing or older than the binary, so starting a shell never runs kubectl.
 if type -q kubectl
-    kubectl completion fish | source
+    set -l comp ~/.config/fish/completions/kubectl.fish
+    if not test -s $comp; or test (command -s kubectl) -nt $comp
+        mkdir -p (dirname $comp)
+        kubectl completion fish >$comp 2>/dev/null
+    end
 end
 if type -q aws_completer
     complete -c aws -f -a '(begin; set -lx COMP_SHELL fish; set -lx COMP_LINE (commandline); aws_completer | sed "s/ \$//"; end)'
