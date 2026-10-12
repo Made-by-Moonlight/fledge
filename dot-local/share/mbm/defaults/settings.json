@@ -61,6 +61,9 @@
       "persistent": true
     }
   },
+  "wallpaper": {
+    "image": ""
+  },
   "bar": {
     "position": "top",
     "left": [

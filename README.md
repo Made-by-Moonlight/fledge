@@ -9,7 +9,8 @@ hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
 emoji, system), notifications, OSD, lock screen, quick settings and a
 settings window. Settings are one JSON file that generates the Hyprland
 config; pinning workspaces to monitors is edited on the Displays page of the
-settings window. Audio is PipeWire (wireplumber, pipewire-pulse), and the
+settings window. Wallpapers live in `~/Pictures/Wallpapers` and are chosen
+(per monitor if you like) on the Displays page. Audio is PipeWire (wireplumber, pipewire-pulse), and the
 desktop ships an emoji font for the emoji picker.
 
 ![Desktop with btop and a terminal](docs/screenshots/06-desktop-apps.png)

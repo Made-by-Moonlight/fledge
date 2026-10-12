@@ -1,7 +1,9 @@
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick
 import "../theme"
+import "../services"
 
 PanelWindow {
     id: wall
@@ -32,9 +34,17 @@ PanelWindow {
     // How much the asset must grow to cover the screen.
     readonly property real cover: Math.max(pw / asset[0], ph / asset[1])
 
+    // The chosen picture for this screen (monitor override, then the shared one); "" is Moonrise.
+    // A file that is missing or won't decode falls back to Moonrise, with one warning per path.
+    readonly property string chosen: Settings.wallpaperFor(screen?.name ?? "", Hyprland.monitorFor(screen)?.description ?? "")
+    property bool failed: false
+    onChosenChanged: failed = false
+    readonly property bool custom: chosen !== "" && !failed
+
     Image {
         anchors.fill: parent
-        source: "file://" + Theme.assets + "/" + wall.file
+        visible: !wall.custom
+        source: wall.custom ? "" : "file://" + Theme.assets + "/" + wall.file
         fillMode: Image.PreserveAspectCrop
         asynchronous: true
         // Both dimensions: with PreserveAspectCrop the decode fills (covers) the screen's
@@ -43,4 +53,20 @@ PanelWindow {
         // GPU scale it: same picture, without a decoded copy several times the asset's size.
         sourceSize: wall.cover >= 1 ? Qt.size(wall.asset[0], wall.asset[1]) : Qt.size(wall.pw, wall.ph)
     }
+
+    // The user's picture, cropped to fill. Decoded no bigger than the screen's physical pixels.
+    Image {
+        id: pic
+        anchors.fill: parent
+        visible: wall.custom && status === Image.Ready
+        source: wall.custom ? wall.fileUrl(wall.chosen) : ""
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        sourceSize: Qt.size(wall.pw, wall.ph)
+        onStatusChanged: if (status === Image.Error && !wall.failed) {
+            console.warn("mbm wallpaper: can't load " + wall.chosen + ", using Moonrise");
+            wall.failed = true;
+        }
+    }
+    function fileUrl(p) { return "file://" + encodeURI(p).replace(/#/g, "%23").replace(/\?/g, "%3F"); }
 }

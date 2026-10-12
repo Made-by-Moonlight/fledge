@@ -60,7 +60,7 @@ def modules($side):
 
 def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) must be a whole number of seconds >= 0" end;
 
-((keys - ["version", "binds", "displays", "workspaces", "bar", "launcher", "notifications", "idle", "input"])[] | "unknown setting: \(.)"),
+((keys - ["version", "binds", "displays", "workspaces", "wallpaper", "bar", "launcher", "notifications", "idle", "input"])[] | "unknown setting: \(.)"),
 
 (if .version != 1 then "version must be 1 (got \(.version | tojson))" else empty end),
 
@@ -77,6 +77,15 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
 (.workspaces // {} | to_entries[] | .key as $k
  | if ($k | test("^[1-9][0-9]*$")) then (.value | check_workspace($k))
    else "workspaces: \($k) is not a workspace number" end),
+
+(.wallpaper // {}
+ | unknown(["image", "monitors"]; "wallpaper"),
+   (if (.image // "" | type == "string") then empty else "wallpaper.image must be text (a file path, or empty for Moonrise)" end),
+   (if (.monitors // {} | type == "object") then
+      (.monitors // {} | to_entries[]
+       | select(.value | type != "string" or length == 0)
+       | "wallpaper.monitors.\(.key): must be a non-empty path")
+    else "wallpaper.monitors must be an object" end)),
 
 (.bar // {}
  | unknown(["position", "left", "centre", "right", "glyphs"]; "bar"),

@@ -1,12 +1,13 @@
 import Quickshell
 import Quickshell.Hyprland
+import Quickshell.Io
 import QtQuick
 import QtQuick.Layouts
 import "../../theme"
 import "../../services"
 import "../../components"
 
-// Monitors (confirm-or-revert, see DisplayConfirm) and Workspaces (applied at once).
+// Monitors (confirm-or-revert, see DisplayConfirm), Workspaces and Wallpaper (both applied at once).
 Flickable {
     id: page
     contentHeight: col.implicitHeight; clip: true
@@ -76,6 +77,44 @@ Flickable {
         } else Settings.set([[path, { monitor: monitor, persistent: persistent }]], true);
     }
 
+    // Wallpaper: thumbnails of the shipped Moonrise art and ~/Pictures/Wallpapers. The setting is read
+    // live by the shell, so these writes don't apply. target "" is every monitor, else one monitor's key.
+    readonly property string wallDir: Settings.home + "/Pictures/Wallpapers"
+    readonly property string moonrise: Theme.assets + "/moonrise-2560x1440.png"
+    property string wallTarget: ""
+    property var wallFiles: []
+    function wallPath(target) { return target === "" ? ".wallpaper.image" : ".wallpaper.monitors[" + JSON.stringify(target) + "]"; }
+    // What this target shows now: the chosen file, "" for Moonrise (All), null when a monitor follows All.
+    function wallCurrent(target) {
+        if (target === "") return Settings.wallpaperImage === "" ? page.moonrise : Settings.wallpaperImage;
+        const o = Settings.wallpaperMonitors?.[target];
+        return typeof o === "string" ? o : null;
+    }
+    function wallPick(path) {
+        // Moonrise for All is the empty setting, so the shipped default stays the default.
+        const v = path === page.moonrise && page.wallTarget === "" ? "" : path;
+        Settings.set([[page.wallPath(page.wallTarget), v]], false);
+    }
+    function wallReset() {
+        if (page.wallTarget === "") Settings.reset([".wallpaper"], false);
+        else Settings.reset([page.wallPath(page.wallTarget)], false);
+    }
+    function wallScan() { lister.running = false; lister.running = true; }
+    Process {
+        id: maker
+        command: ["mkdir", "-p", page.wallDir]
+        onExited: page.wallScan()
+    }
+    Process {
+        id: lister
+        command: ["find", page.wallDir, "-maxdepth", "1", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg",
+                  "-o", "-iname", "*.png", "-o", "-iname", "*.webp", ")", "-print0"]
+        stdout: StdioCollector {
+            onStreamFinished: page.wallFiles = text.split("\0").filter(f => f !== "").sort()
+        }
+    }
+    Component.onCompleted: maker.running = true
+
     ColumnLayout {
         id: col
         width: page.width; spacing: 14
@@ -131,6 +170,46 @@ Flickable {
                         Button { text: "Apply"; primary: true; enabled: page.edits[card.name] !== undefined && !DisplayConfirm.active; onClicked: page.apply(card.modelData) }
                         Button { text: "Reset"; enabled: !DisplayConfirm.active
                                  onClicked: { const x = Object.assign({}, page.edits); delete x[card.name]; page.edits = x; if (Settings.user?.displays?.[card.name] !== undefined) DisplayConfirm.begin(card.name, undefined); } } }
+                }
+            }
+        }
+
+        Glyph { text: "Wallpaper"; font.bold: true; Layout.topMargin: 10 }
+        Glyph { Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.muted; font.pixelSize: Theme.fontSmall
+                text: "Put images in ~/Pictures/Wallpapers (jpg, png, webp). A monitor's own pick overrides the one for all monitors." }
+        RowLayout {
+            Layout.fillWidth: true; spacing: 12
+            Choice { label: "Monitor"; value: page.wallTarget
+                     options: { const o = [["", "All"]]; for (const m of Hyprland.monitors.values) o.push([page.monitorValue(m), m.name]); return o; }
+                     onPicked: v => page.wallTarget = v }
+            Item { Layout.fillWidth: true }
+            Button { text: page.wallTarget === "" ? "Use Moonrise" : "Same as all"; Layout.alignment: Qt.AlignBottom
+                     enabled: page.wallTarget === "" ? (Settings.wallpaperImage !== "" || Object.keys(Settings.wallpaperMonitors ?? {}).length > 0) : page.wallCurrent(page.wallTarget) !== null
+                     onClicked: page.wallReset() }
+            Button { text: "Rescan"; Layout.alignment: Qt.AlignBottom; onClicked: page.wallScan() }
+        }
+        Glyph { visible: page.wallFiles.length === 0; Layout.fillWidth: true; color: Theme.muted; font.pixelSize: Theme.fontSmall
+                text: "Put images in ~/Pictures/Wallpapers" }
+        Flow {
+            Layout.fillWidth: true; spacing: 10
+            Repeater {
+                model: [page.moonrise, ...page.wallFiles]
+                delegate: Rectangle {
+                    id: thumb
+                    required property string modelData
+                    readonly property bool on: page.wallCurrent(page.wallTarget) === modelData
+                    width: 150; height: 104; radius: Theme.radius
+                    color: Theme.surface; border.width: 2; border.color: on ? Theme.accent : "transparent"
+                    Image {
+                        x: 4; y: 4; width: parent.width - 8; height: 76
+                        source: "file://" + encodeURI(thumb.modelData).replace(/#/g, "%23").replace(/\?/g, "%3F")
+                        fillMode: Image.PreserveAspectCrop; asynchronous: true
+                        sourceSize: Qt.size(300, 152)   // small decode: a 8K picture costs no more than a 300px one
+                    }
+                    Glyph { anchors { left: parent.left; right: parent.right; bottom: parent.bottom; margins: 6 }
+                            elide: Text.ElideRight; font.pixelSize: Theme.fontSmall; color: thumb.on ? Theme.accent : Theme.fgDim
+                            text: thumb.modelData === page.moonrise ? "Moonrise" : thumb.modelData.slice(thumb.modelData.lastIndexOf("/") + 1) }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: page.wallPick(thumb.modelData) }
                 }
             }
         }

@@ -72,6 +72,16 @@ Singleton {
     readonly property int idleScreenOff: get("idle", "screenOffSec", 0)
     readonly property int idleSuspend: get("idle", "suspendSec", 0)
     readonly property bool lockOnSleep: get("idle", "lockOnSleep", true)
+    readonly property string wallpaperImage: get("wallpaper", "image", "")
+    readonly property var wallpaperMonitors: get("wallpaper", "monitors", ({}))
+    // The image for one screen: its own entry (by connector or desc:<description>), else the
+    // shared one, else "" (the shipped Moonrise art). A leading ~/ is the home directory.
+    function wallpaperFor(name, description) {
+        const m = wallpaperMonitors ?? {};
+        let p = m[name] ?? (description ? m["desc:" + description] : undefined) ?? wallpaperImage;
+        if (typeof p !== "string") return "";
+        return p.startsWith("~/") ? home + p.slice(1) : p;
+    }
 
     // `id` is the job id set()/reset() returned, so a caller can tell its own write from the others queued.
     signal writeFinished(bool ok, string error, int id)

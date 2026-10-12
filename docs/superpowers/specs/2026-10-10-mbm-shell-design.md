@@ -142,6 +142,8 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
     // user-added binds use ids "custom.<n>"; a default bind set to null is removed
   },
   "displays":      { "<connector or desc:…>": { "mode": "2560x1440@165", "scale": 1.25, "position": "0x0", "enabled": true } },
+  "wallpaper":     { "image": "", "monitors": { "<connector or desc:…>": "<path>" } },
+                   // "" = the shipped Moonrise art; live (no apply); added 2026-10-11 at the user's request
   "workspaces":    { "1": { "monitor": "desc:Acer Technologies X34 GS 0x1240460A", "persistent": true } },
                    // workspace number → monitor (connector or desc:…); a default entry set to null is removed
   "bar":           { "position": "top", "left": ["workspaces","title"], "centre": ["clock"],
