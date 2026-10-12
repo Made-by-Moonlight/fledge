@@ -82,7 +82,8 @@ PanelWindow {
                            expandable: Net.wifi !== null; onClicked: Net.setWifiEnabled(!Net.wifiEnabled); onExpand: win.picker("wifi") }
                     Tile { Layout.fillWidth: true; glyph: Bt.glyph || "󰂲"; title: "Bluetooth"; sub: Bt.summary; on: Bt.enabled
                            expandable: Bt.available; onClicked: Bt.setEnabled(!Bt.enabled); onExpand: win.picker("bluetooth") }
-                    Tile { Layout.fillWidth: true; glyph: Notifs.dnd ? "󰂛" : "󰂚"; title: "Do not disturb"; sub: Notifs.dnd ? "on" : "off"; on: Notifs.dnd
+                    // Alone on the last row (night light hidden): span both columns instead of leaving a gap.
+                    Tile { Layout.fillWidth: true; Layout.columnSpan: win.nightLightAvailable ? 1 : 2; glyph: Notifs.dnd ? "󰂛" : "󰂚"; title: "Do not disturb"; sub: Notifs.dnd ? "on" : "off"; on: Notifs.dnd
                            onClicked: Notifs.toggleDnd() }
                     Tile { Layout.fillWidth: true; glyph: "󰖔"; title: "Night light"; visible: win.nightLightAvailable; sub: win.nightLight ? "on" : "off"; on: win.nightLight
                            onClicked: { Quickshell.execDetached(["slievr-toggle-nightlight"]); nlRecheck.restart(); } }

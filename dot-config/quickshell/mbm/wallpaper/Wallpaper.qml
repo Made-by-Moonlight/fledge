@@ -41,32 +41,42 @@ PanelWindow {
     onChosenChanged: failed = false
     readonly property bool custom: chosen !== "" && !failed
 
-    Image {
-        anchors.fill: parent
-        visible: !wall.custom
-        source: wall.custom ? "" : "file://" + Theme.assets + "/" + wall.file
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        // Both dimensions: with PreserveAspectCrop the decode fills (covers) the screen's
-        // physical size instead of fitting its width. But Qt upscales on decode too, so
-        // when the asset is smaller than that, decode it at its native size and let the
-        // GPU scale it: same picture, without a decoded copy several times the asset's size.
-        sourceSize: wall.cover >= 1 ? Qt.size(wall.asset[0], wall.asset[1]) : Qt.size(wall.pw, wall.ph)
-    }
+    readonly property string target: custom ? fileUrl(chosen) : "file://" + Theme.assets + "/" + file
+    // Moonrise: both dimensions, so PreserveAspectCrop's decode fills (covers) the screen's physical
+    // size instead of fitting its width. But Qt upscales on decode too, so when the asset is smaller
+    // than that, decode it at its native size and let the GPU scale it: same picture, without a decoded
+    // copy several times the asset's size. A user's picture is decoded no bigger than the physical screen.
+    readonly property size decodeSize: custom || cover < 1 ? Qt.size(pw, ph) : Qt.size(asset[0], asset[1])
 
-    // The user's picture, cropped to fill. Decoded no bigger than the screen's physical pixels.
-    Image {
-        id: pic
-        anchors.fill: parent
-        visible: wall.custom && status === Image.Ready
-        source: wall.custom ? wall.fileUrl(wall.chosen) : ""
-        fillMode: Image.PreserveAspectCrop
-        asynchronous: true
-        sourceSize: Qt.size(wall.pw, wall.ph)
-        onStatusChanged: if (status === Image.Error && !wall.failed) {
-            console.warn("mbm wallpaper: can't load " + wall.chosen + ", using Moonrise");
-            wall.failed = true;
+    // Two layers: the new picture loads in the hidden one and replaces the shown one only once it is
+    // Ready, so a switch or a fallback never shows the bare background in between.
+    property Image front: imgA
+    function load() {
+        const b = front === imgA ? imgB : imgA;
+        b.want = target;
+        b.sourceSize = decodeSize;
+        b.source = target;
+    }
+    function settle(img) {
+        if (img === front || img.want !== target) return;
+        if (img.status === Image.Ready) {
+            img.visible = true;
+            front.visible = false;
+            const old = front;
+            front = img;
+            old.source = "";   // free the old decode
+        } else if (img.status === Image.Error && custom) {
+            console.warn("mbm wallpaper: can't load " + chosen + ", using Moonrise");
+            failed = true;
         }
     }
+    onTargetChanged: load()
+    Component.onCompleted: load()
+
+    Image { id: imgA; property string want; anchors.fill: parent; visible: false; fillMode: Image.PreserveAspectCrop; asynchronous: true
+            onStatusChanged: wall.settle(imgA) }
+    Image { id: imgB; property string want; anchors.fill: parent; visible: false; fillMode: Image.PreserveAspectCrop; asynchronous: true
+            onStatusChanged: wall.settle(imgB) }
+
     function fileUrl(p) { return "file://" + encodeURI(p).replace(/#/g, "%23").replace(/\?/g, "%3F"); }
 }

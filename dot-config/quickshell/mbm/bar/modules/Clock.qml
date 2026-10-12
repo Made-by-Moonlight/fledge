@@ -11,7 +11,16 @@ import "../../components"
 Item {
     id: root
     implicitWidth: row.implicitWidth; implicitHeight: row.implicitHeight
-    readonly property int fmt: Settings.clockFormat
+    // The value just asked for, until the setting file catches up: the next click must count from it,
+    // not from the not-yet-reloaded setting, or a fast second click repeats the first step.
+    property int pending: -1
+    readonly property int fmt: pending >= 0 ? pending : Settings.clockFormat
+    Timer { id: settle; interval: 2000; onTriggered: root.pending = -1 }   // never stuck if the write was lost
+    Connections {
+        target: Settings
+        function onClockFormatChanged() { if (Settings.clockFormat === root.pending) root.pending = -1; }
+        function onWriteFinished(ok) { if (!ok) root.pending = -1; }
+    }
     SystemClock { id: clock; precision: root.fmt === 2 ? SystemClock.Seconds : SystemClock.Minutes }
     Row {
         id: row
@@ -30,6 +39,6 @@ Item {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
         cursorShape: Qt.PointingHandCursor
-        onClicked: Settings.set([[".bar.clockFormat", (root.fmt + 1) % 4]], false)
+        onClicked: { root.pending = (root.fmt + 1) % 4; settle.restart(); Settings.set([[".bar.clockFormat", root.pending]], false); }
     }
 }

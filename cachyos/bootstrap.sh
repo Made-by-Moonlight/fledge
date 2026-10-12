@@ -38,6 +38,8 @@ PACMAN_PACKAGES=(
   kitty
   starship
   git stow fzf mise base-devel
+  # gsettings' persistent backend: the GTK dark seeding below needs it.
+  dconf
   zsh
   # The quick-settings night light tile (slievr-toggle-nightlight); it used to
   # arrive transitively and nothing pulls it in any more.
@@ -239,20 +241,25 @@ fi
 # follow color-scheme. GTK3 ignores it and wants gtk-application-prefer-dark-theme
 # in gtk-3.0/settings.ini (below) on the built-in Adwaita theme. Don't set
 # gtk-theme to Adwaita-dark: gtk3 no longer ships that theme (gnome-themes-extra
-# does), and a missing theme name makes GTK3 apps fall back to light. Set
-# once and idempotently. gsettings needs a D-Bus session: firstboot has none, so
-# use a private one (dconf writes ~/.config/dconf/user, which persists).
-set_gtk_dark() {
-  local run=()
+# does), and a missing theme name makes GTK3 apps fall back to light.
+# Seeded once, not on every run: bootstrap re-runs on every upgrade, and a user who
+# later picks light must keep it. The marker is written only after a read-back through
+# a fresh D-Bus session shows the values persisted: without the dconf backend,
+# `gsettings set` succeeds in memory and stores nothing. gsettings needs a session
+# bus: firstboot has none, so a private one is used (dconf writes
+# ~/.config/dconf/user, which persists).
+seed_gtk_dark() {
+  local marker="$HOME/.local/state/mbm/gtk-dark-seeded" run=() out
+  [[ -e $marker ]] && return 0
+  command -v gsettings >/dev/null 2>&1 && command -v dconf >/dev/null 2>&1 || return 1
   [[ -S ${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/bus || -n ${DBUS_SESSION_BUS_ADDRESS:-} ]] || run=(dbus-run-session --)
   "${run[@]}" gsettings set org.gnome.desktop.interface color-scheme prefer-dark &&
-    "${run[@]}" gsettings set org.gnome.desktop.interface gtk-theme Adwaita
+    "${run[@]}" gsettings set org.gnome.desktop.interface gtk-theme Adwaita || return 1
+  out="$("${run[@]}" gsettings get org.gnome.desktop.interface color-scheme)/$("${run[@]}" gsettings get org.gnome.desktop.interface gtk-theme)"
+  [[ $out == "'prefer-dark'/'Adwaita'" ]] || return 1
+  mkdir -p "${marker%/*}" && : >"$marker"
 }
-if command -v gsettings >/dev/null 2>&1; then
-  set_gtk_dark || echo "WARN: could not set GTK dark mode via gsettings" >&2
-else
-  echo "WARN: gsettings not found; relying on gtk-3.0/settings.ini for GTK dark mode" >&2
-fi
+seed_gtk_dark || echo "WARN: could not set GTK dark mode via gsettings (needs gsettings and dconf); relying on gtk-3.0/settings.ini" >&2
 # Not stow-managed (GTK tools rewrite it), so seed it only when the user hasn't made one.
 mkdir -p "$HOME/.config/gtk-3.0"
 if [ ! -e "$HOME/.config/gtk-3.0/settings.ini" ]; then

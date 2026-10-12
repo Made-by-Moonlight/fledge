@@ -76,11 +76,13 @@ Singleton {
     readonly property string wallpaperImage: get("wallpaper", "image", "")
     readonly property var wallpaperMonitors: get("wallpaper", "monitors", ({}))
     // The image for one screen: its own entry (by connector or desc:<description>), else the
-    // shared one, else "" (the shipped Moonrise art). A leading ~/ is the home directory.
+    // shared one; "" is the shipped Moonrise art. A monitor entry of "moonrise" means Moonrise
+    // on that monitor even when the shared image is something else (no entry = follow the shared one).
+    // A leading ~/ is the home directory.
     function wallpaperFor(name, description) {
         const m = wallpaperMonitors ?? {};
-        let p = m[name] ?? (description ? m["desc:" + description] : undefined) ?? wallpaperImage;
-        if (typeof p !== "string") return "";
+        const p = m[name] ?? (description ? m["desc:" + description] : undefined) ?? wallpaperImage;
+        if (typeof p !== "string" || p === "moonrise") return "";
         return p.startsWith("~/") ? home + p.slice(1) : p;
     }
 

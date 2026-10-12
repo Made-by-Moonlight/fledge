@@ -52,6 +52,12 @@ check "set: refused writes nothing"   "$before"  "$(user_file)"
 "$MBM" settings set .launcher 2>/dev/null; rc=$?
 check "set: odd argument count refused" "1"      "$rc"
 
+fresh
+"$MBM" settings set '.wallpaper.monitors["DP-"1"]' '"/x/a.png"' 2>"$T/err"; rc=$?
+check "set: monitor key with a quote refused" "1" "$rc"
+contains "set: monitor key with a quote message" "bad settings path" "$(cat "$T/err")"
+check "set: refused monitor key wrote nothing" "" "$(user_file)"
+
 # --- reset -----------------------------------------------------------------
 fresh
 "$MBM" settings set .launcher.position '"anchored"' .bar.position '"bottom"'
@@ -171,11 +177,13 @@ bad "workspace monitor comma"    "workspaces.2: monitor can't contain a comma" '
 bad "workspace persistent type"  "workspaces.2: persistent must be true or false" '{"workspaces":{"2":{"persistent":"yes"}}}'
 bad "workspace unknown field"    "workspaces.2: unknown field default"       '{"workspaces":{"2":{"default":true}}}'
 bad "workspace not an object"    "workspaces.7: must be an object"           '{"workspaces":{"7":"DP-1"}}'
+bad "wallpaper monitor key with a quote" "wallpaper.monitors: monitor name can't contain a quote or backslash" '{"wallpaper":{"monitors":{"DP-\"1":"/x/a.png"}}}'
+bad "wallpaper monitor key with a backslash" "wallpaper.monitors: monitor name can't contain a quote or backslash" '{"wallpaper":{"monitors":{"DP-\\1":"/x/a.png"}}}'
 bad "unknown wallpaper field"    "wallpaper: unknown field colour"           '{"wallpaper":{"colour":1}}'
 bad "wallpaper image type"       "wallpaper.image must be text"              '{"wallpaper":{"image":5}}'
 bad "wallpaper monitors type"    "wallpaper.monitors must be an object"      '{"wallpaper":{"monitors":["a"]}}'
-bad "wallpaper monitor empty"    "wallpaper.monitors.DP-1: must be a non-empty path" '{"wallpaper":{"monitors":{"DP-1":""}}}'
-bad "wallpaper monitor not text" "wallpaper.monitors.DP-1: must be a non-empty path" '{"wallpaper":{"monitors":{"DP-1":3}}}'
+bad "wallpaper monitor empty"    "wallpaper.monitors.DP-1: must be a non-empty path (or moonrise)" '{"wallpaper":{"monitors":{"DP-1":""}}}'
+bad "wallpaper monitor not text" "wallpaper.monitors.DP-1: must be a non-empty path (or moonrise)" '{"wallpaper":{"monitors":{"DP-1":3}}}'
 
 good() { # good <description> <user-json>
   fresh
@@ -187,6 +195,7 @@ good() { # good <description> <user-json>
 }
 good "wallpaper: image and monitors" '{"wallpaper":{"image":"/home/u/Pictures/Wallpapers/a.png","monitors":{"DP-1":"/x/b.jpg","desc:Acer X34, 1":"/x/c.png"}}}'
 good "wallpaper: empty image"  '{"wallpaper":{"image":""}}'
+good "wallpaper: moonrise sentinel for a monitor" '{"wallpaper":{"image":"/x/a.png","monitors":{"DP-1":"moonrise"}}}'
 good "clock format 0"  '{"bar":{"clockFormat":0}}'
 good "clock format 3"  '{"bar":{"clockFormat":3}}'
 good "code: key"       '{"binds":{"custom.1":{"mods":"SUPER","key":"code:11","label":"A","group":"Apps","action":{"exec":"a"}}}}'

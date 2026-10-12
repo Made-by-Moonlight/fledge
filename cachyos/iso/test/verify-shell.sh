@@ -94,4 +94,14 @@ unlock
 is "right password unlocks"      unlocked "$(ipc lock status)"
 is "relock flag cleared after unlock" "" "$(lockflag)"
 
+# GTK dark is seeded once: with the marker present, bootstrap's seeding must leave a
+# user's light choice alone. Runs the function exactly as bootstrap.sh defines it.
+GTK_KEY="gsettings get org.gnome.desktop.interface color-scheme"
+gtk_prev="$($GTK_KEY)"
+[[ -e ~/.local/state/mbm/gtk-dark-seeded ]] || { mkdir -p ~/.local/state/mbm; : > ~/.local/state/mbm/gtk-dark-seeded; }
+gsettings set org.gnome.desktop.interface color-scheme default
+bash -c "$(sed -n '/^seed_gtk_dark() {/,/^}/p' "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../bootstrap.sh"); seed_gtk_dark"
+is "gtk dark not re-applied once seeded" "'default'" "$($GTK_KEY)"
+gsettings set org.gnome.desktop.interface color-scheme "${gtk_prev//\'/}"
+
 exit $bad

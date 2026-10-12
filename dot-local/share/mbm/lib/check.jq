@@ -82,9 +82,10 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
  | unknown(["image", "monitors"]; "wallpaper"),
    (if (.image // "" | type == "string") then empty else "wallpaper.image must be text (a file path, or empty for Moonrise)" end),
    (if (.monitors // {} | type == "object") then
+      (.monitors // {} | keys[] | select(test("[\"\\\\]")) | "wallpaper.monitors: monitor name can't contain a quote or backslash: \(tojson)"),
       (.monitors // {} | to_entries[]
        | select(.value | type != "string" or length == 0)
-       | "wallpaper.monitors.\(.key): must be a non-empty path")
+       | "wallpaper.monitors.\(.key): must be a non-empty path (or moonrise)")
     else "wallpaper.monitors must be an object" end)),
 
 (.bar // {}

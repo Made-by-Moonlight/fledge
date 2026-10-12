@@ -83,16 +83,19 @@ Flickable {
     readonly property string moonrise: Theme.assets + "/moonrise-2560x1440.png"
     property string wallTarget: ""
     property var wallFiles: []
+    // Like monitorValue, but a name with a quote or backslash can't be a settings path key: use the connector.
+    function wallKey(m) { const v = page.monitorValue(m); return /["\\]/.test(v) ? m.name : v; }
     function wallPath(target) { return target === "" ? ".wallpaper.image" : ".wallpaper.monitors[" + JSON.stringify(target) + "]"; }
     // What this target shows now: the chosen file, "" for Moonrise (All), null when a monitor follows All.
     function wallCurrent(target) {
-        if (target === "") return Settings.wallpaperImage === "" ? page.moonrise : Settings.wallpaperImage;
-        const o = Settings.wallpaperMonitors?.[target];
-        return typeof o === "string" ? o : null;
+        const o = target === "" ? Settings.wallpaperImage : Settings.wallpaperMonitors?.[target];
+        if (typeof o !== "string") return null;
+        return o === "" || o === "moonrise" ? page.moonrise : o;
     }
     function wallPick(path) {
-        // Moonrise for All is the empty setting, so the shipped default stays the default.
-        const v = path === page.moonrise && page.wallTarget === "" ? "" : path;
+        // Moonrise is a setting, not the asset's path: "" for All (the shipped default stays the default),
+        // "moonrise" for one monitor, so the shell picks the asset that fits that screen.
+        const v = path !== page.moonrise ? path : page.wallTarget === "" ? "" : "moonrise";
         Settings.set([[page.wallPath(page.wallTarget), v]], false);
     }
     function wallReset() {
@@ -107,7 +110,7 @@ Flickable {
     }
     Process {
         id: lister
-        command: ["find", page.wallDir, "-maxdepth", "1", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg",
+        command: ["find", "-L", page.wallDir, "-maxdepth", "1", "-type", "f", "(", "-iname", "*.jpg", "-o", "-iname", "*.jpeg",
                   "-o", "-iname", "*.png", "-o", "-iname", "*.webp", ")", "-print0"]
         stdout: StdioCollector {
             onStreamFinished: page.wallFiles = text.split("\0").filter(f => f !== "").sort()
@@ -180,10 +183,10 @@ Flickable {
         RowLayout {
             Layout.fillWidth: true; spacing: 12
             Choice { label: "Monitor"; value: page.wallTarget
-                     options: { const o = [["", "All"]]; for (const m of Hyprland.monitors.values) o.push([page.monitorValue(m), m.name]); return o; }
+                     options: { const o = [["", "All"]]; for (const m of Hyprland.monitors.values) o.push([page.wallKey(m), m.name]); return o; }
                      onPicked: v => page.wallTarget = v }
             Item { Layout.fillWidth: true }
-            Button { text: page.wallTarget === "" ? "Use Moonrise" : "Same as all"; Layout.alignment: Qt.AlignBottom
+            Button { text: page.wallTarget === "" ? "Moonrise on all monitors" : "Same as all"; Layout.alignment: Qt.AlignBottom
                      enabled: page.wallTarget === "" ? (Settings.wallpaperImage !== "" || Object.keys(Settings.wallpaperMonitors ?? {}).length > 0) : page.wallCurrent(page.wallTarget) !== null
                      onClicked: page.wallReset() }
             Button { text: "Rescan"; Layout.alignment: Qt.AlignBottom; onClicked: page.wallScan() }
