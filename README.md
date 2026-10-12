@@ -8,7 +8,9 @@ The desktop is its own Quickshell shell (`mbm`): an attached bar with three
 hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
 emoji, system), notifications, OSD, lock screen, quick settings and a
 settings window. Settings are one JSON file that generates the Hyprland
-config.
+config; pinning workspaces to monitors is edited on the Displays page of the
+settings window. Audio is PipeWire (wireplumber, pipewire-pulse), and the
+desktop ships an emoji font for the emoji picker.
 
 ![Desktop with btop and a terminal](docs/screenshots/06-desktop-apps.png)
 

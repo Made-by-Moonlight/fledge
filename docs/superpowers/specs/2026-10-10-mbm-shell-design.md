@@ -247,7 +247,7 @@ when a generated section changed, showing any `check` error inline.
 
 **slievr-menu**
 Callers keep working through compat shims that B deletes: `slievr-launch-walker`
-(dmenu → `mbm dmenu`, modes → launcher), `slievr-swayosd-client` (→ `osd.show`),
+(dmenu → `mbm dmenu`, modes → launcher), `slievr-swayosd-client` (→ `osd.popup`),
 `slievr-system-lock`, `slievr-toggle-waybar`, `slievr-toggle-idle`,
 `slievr-toggle-notification-silencing`, `slievr-notification-dismiss` (→ IPC).
 `slievr-menu-keybindings` and the restart/refresh scripts of retired tools are deleted,
