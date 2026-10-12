@@ -39,6 +39,9 @@ PACMAN_PACKAGES=(
   starship
   git stow fzf mise base-devel
   zsh
+  # The quick-settings night light tile (slievr-toggle-nightlight); it used to
+  # arrive transitively and nothing pulls it in any more.
+  hyprsunset
   # kitty.conf font_family names a specific nerd font, and the mbm shell's
   # glyphs come from nerd fonts too (missing ones render as boxes).
   # JetBrainsMono Nerd Font: the mbm shell's text and the vendored sddm

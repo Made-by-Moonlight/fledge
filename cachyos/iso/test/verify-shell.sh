@@ -23,6 +23,8 @@ unlock() {
 # is emptied (not removed) when unlocked.
 lockflag() { tr -d '[:space:]' < ~/.local/state/mbm/locked 2>/dev/null; }
 
+nl_temp() { hyprctl hyprsunset temperature 2>/dev/null | grep -xE '[0-9]+'; }
+
 # Leave the session as found however the run ends: unlocked, no test bind, no
 # open popup. Passwords are only typed while the shell reports "locked", so a
 # failed lock never types into whatever window has focus.
@@ -33,6 +35,8 @@ cleanup() {
   ipc launcher close >/dev/null; ipc quicksettings close >/dev/null; ipc settings close >/dev/null
   ipc notifications dismissAll >/dev/null
   rm -f "$DMENU_OUT"
+  # Night light is left off (6000 = hyprsunset's identity), even if a check died mid-toggle.
+  [[ "$(nl_temp)" == 4000 ]] && hyprctl hyprsunset temperature 6000 >/dev/null 2>&1
 }
 trap cleanup EXIT INT TERM
 trap 'exit 130' INT TERM
@@ -66,6 +70,14 @@ is "custom bind removed"         0      "$(hyprctl binds -j | jq '[.[] | select(
 
 (printf 'x\ny\n' | timeout 10 mbm dmenu --select 2 >"$DMENU_OUT") & sleep 0.8; wtype -k Return; wait
 is "dmenu returns the choice"    y      "$(cat "$DMENU_OUT")"
+
+# Night light: the tile runs slievr-toggle-nightlight and reads hyprsunset's temperature.
+nl0="$(nl_temp)"
+slievr-toggle-nightlight >/dev/null 2>&1; sleep 1; nl1="$(nl_temp)"
+slievr-toggle-nightlight >/dev/null 2>&1; sleep 1; nl2="$(nl_temp)"
+is "night light toggles on"      4000   "$nl1"
+is "night light toggles back"    "${nl0:-6000}" "$nl2"
+is "night light ends off"        6000   "$nl2"
 
 is "relock flag empty while unlocked" "" "$(lockflag)"
 ipc lock lock; sleep 1

@@ -15,7 +15,8 @@ fi
 # Query the current temperature
 CURRENT_TEMP=$(hyprctl hyprsunset temperature 2>/dev/null | grep -oE '[0-9]+')
 
-if [[ $CURRENT_TEMP == $OFF_TEMP ]]; then
+# An empty reading (cold start, no temperature yet) counts as off, so the click turns it on.
+if [[ -z $CURRENT_TEMP || $CURRENT_TEMP == "$OFF_TEMP" ]]; then
   hyprctl hyprsunset temperature $ON_TEMP
   notify-send -u low "  Nightlight screen temperature"
 else

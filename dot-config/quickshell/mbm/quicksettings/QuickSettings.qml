@@ -42,6 +42,14 @@ PanelWindow {
     HyprlandFocusGrab { active: win.visible; windows: [win]; onCleared: ShellState.qsOpen = false }
     onVisibleChanged: if (visible) { Brightness.refresh(); nlQuery.running = true; }
 
+    // hyprsunset is optional; without it the tile is hidden rather than erroring.
+    property bool nightLightAvailable: false
+    Process {
+        running: true
+        command: ["sh", "-c", "command -v hyprsunset"]
+        stdout: StdioCollector { onStreamFinished: win.nightLightAvailable = text.trim() !== "" }
+    }
+
     // Night light state is hyprsunset's temperature (4000 K = on, the vendored toggle's ON_TEMP).
     Process {
         id: nlQuery
@@ -76,7 +84,7 @@ PanelWindow {
                            expandable: Bt.available; onClicked: Bt.setEnabled(!Bt.enabled); onExpand: win.picker("bluetooth") }
                     Tile { Layout.fillWidth: true; glyph: Notifs.dnd ? "󰂛" : "󰂚"; title: "Do not disturb"; sub: Notifs.dnd ? "on" : "off"; on: Notifs.dnd
                            onClicked: Notifs.toggleDnd() }
-                    Tile { Layout.fillWidth: true; glyph: "󰖔"; title: "Night light"; sub: win.nightLight ? "on" : "off"; on: win.nightLight
+                    Tile { Layout.fillWidth: true; glyph: "󰖔"; title: "Night light"; visible: win.nightLightAvailable; sub: win.nightLight ? "on" : "off"; on: win.nightLight
                            onClicked: { Quickshell.execDetached(["slievr-toggle-nightlight"]); nlRecheck.restart(); } }
                 }
 
