@@ -28,11 +28,10 @@ Scope {
     property int attempts: 0
     property bool answered: false     // this attempt's password prompt has been answered
     readonly property bool secure: wl.secure
-    // `held`: the current lock object has been granted. Hyprland lets another locker replace
-    // ours (allow_session_lock_restore) and tells the replaced client nothing: secure stays
-    // true. So a granted lock is never trusted to still be ours: an explicit lock() while held
-    // re-acquires (see lock()). `lost` covers a compositor that does report it (secure drops
-    // while we hold the lock).
+    // `held`: the current lock object has been granted. Since the cutover nothing else locks
+    // the session (hyprlock and hypridle are retired), so a held, secure lock is trusted and
+    // lock() while it is held does nothing. `lost` covers a compositor that reports another
+    // locker taking over (secure drops while we hold the lock).
     property bool held: false
     property bool lost: false
     // Not a binding to wl.locked: Quickshell 0.3.2 doesn't emit lockStateChanged on release.
@@ -40,9 +39,6 @@ Scope {
     readonly property string flagDir: Quickshell.env("HOME") + "/.local/state/mbm"
     readonly property string flagPath: flagDir + "/locked"
     readonly property string instance: Quickshell.env("HYPRLAND_INSTANCE_SIGNATURE") ?? ""
-    // Set by mbm-shell.service. Not INVOCATION_ID: Hyprland runs as a uwsm unit, so a qs it
-    // execs (the dev loop) inherits Hyprland's INVOCATION_ID without being supervised.
-    readonly property bool supervised: Quickshell.env("MBM_SHELL_SUPERVISED") === "1"
     signal unlockedNow()
 
     Binding { target: ShellState; property: "locked"; value: root.locked }
@@ -58,26 +54,17 @@ Scope {
     function clear() { if (!pam.active) wipe(); }
 
     function lock(fromSleep) {
-        if (persist.locked && !held && !lost) return;   // the grant is still in flight
-        ShellState.closePopups();               // popups give up the keyboard; a waiting dmenu gets "cancel"
-        wipe(); status = ""; note = ""; attempts = 0;
+        // Already locked (granted, or the grant still in flight): a no-op, so repeated lock
+        // binds, idle and sleep never disturb a held lock. Re-acquiring after a takeover used to
+        // restart the shell; with no second locker left there is nothing to re-acquire from,
+        // and Quickshell 0.3.2 can't re-acquire in process (a second WlSessionLock is refused
+        // while the first exists).
         if (persist.locked) {
-            // Re-acquire without ever asking for an unlock. Quickshell 0.3.2 can't do it in
-            // process: the old lock object can only be released by unlocking it, a second
-            // WlSessionLock is refused ("Failed to acquire session lock") while it exists, and a
-            // reload hands the old object to the new generation. So restart the process: its
-            // lock object dies with it (if it is still the session's lock, Hyprland keeps the
-            // session locked), and the new shell locks from the relock flag, rewritten here
-            // (blockWrites: it is on disk before exit). Under mbm-shell.service, exit 1 makes
-            // systemd restart it (and a spare would race that restart, then die with the cgroup).
-            // Unsupervised (the dev loop), a spare start takes its place; -n stops a duplicate.
-            writeFlag();
-            console.warn("mbm lock: re-acquiring the session lock by restarting the shell");
-            if (!root.supervised)
-                Quickshell.execDetached(["setsid", "-f", "sh", "-c", "sleep 1; exec qs -c mbm -n"]);
-            Qt.exit(1);
+            if (lost) console.warn("mbm lock: lock requested after another locker took over; leaving it to that locker");
             return;
         }
+        ShellState.closePopups();               // popups give up the keyboard; a waiting dmenu gets "cancel"
+        wipe(); status = ""; note = ""; attempts = 0;
         persist.locked = true;                  // wl.locked follows
         writeFlag();
         Quickshell.execDetached(["hyprctl", "switchxkblayout", "all", "0"]);
@@ -113,7 +100,7 @@ Scope {
         if (s) { held = true; lost = false; }
         else if (held && persist.locked) {
             held = false; lost = true;
-            console.warn("mbm lock: another locker took over the session lock; the next lock() re-acquires");
+            console.warn("mbm lock: another locker took over the session lock");
         }
     }
 

@@ -19,7 +19,12 @@ ShellRoot {
     settings.watchFiles: false
     // Singletons are lazy; touch Settings now so its files are loaded before the first IPC call or bar paint.
     // DisplayConfirm too: at startup it reverts a display change the last shell never got confirmed.
-    Component.onCompleted: { Settings.home; DisplayConfirm.active; }
+    // A shell that died while recording a key left Hyprland in the empty mbm-record submap,
+    // where no bind fires: leave it.
+    Component.onCompleted: {
+        Settings.home; DisplayConfirm.active;
+        Quickshell.execDetached(["sh", "-c", '[ "$(hyprctl submap 2>/dev/null)" = mbm-record ] && exec hyprctl dispatch submap reset']);
+    }
 
     Variants {
         model: Quickshell.screens
@@ -39,9 +44,9 @@ ShellRoot {
     SettingsWindow {}
     Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
     Connections { target: launcher.systemMode; function onIdleToggleRequested() { Idle.toggle(); } }
-    // Idle lock only when nothing holds the lock: lock() while locked restarts the shell to
-    // re-acquire it (Lock.lock()), and while another locker has taken over (lost) the session is
-    // locked anyway. true: no forced screens-off after it; idle.screenOffSec decides that.
+    // Idle lock only when nothing holds the lock (lock() while locked is a no-op anyway, and
+    // while another locker has taken over (lost) the session is locked).
+    // true: no forced screens-off after it; idle.screenOffSec decides that.
     Connections {
         target: Idle
         function onLockRequested() { if (!lockScreen.locked && !lockScreen.lost && !lockScreen.secure) lockScreen.lock(true); }
@@ -50,8 +55,7 @@ ShellRoot {
     Connections {
         target: Sleep
         function onPreparingForSleep() {
-            // A lock we already hold is trusted here: re-acquiring means a shell restart, which
-            // would drop the inhibitor before the new lock is up (see Lock.lock()).
+            // A lock we already hold is trusted: release the inhibitor straight away.
             if (Settings.lockOnSleep && !lockScreen.secure) lockScreen.lock(true);
             else Sleep.release();
         }
