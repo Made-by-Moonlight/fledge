@@ -14,6 +14,15 @@ FloatingWindow {
     color: Theme.bg
     onVisibleChanged: if (!visible) ShellState.settingsOpen = false
 
+    // Escape closes, same as the settings.close IPC. Not mid-recording: there Escape cancels the
+    // recording (Hyprland's mbm-record submap takes the key), and a stray one must not also close.
+    // DisplayConfirm outlives this window, so closing never cancels its revert countdown.
+    Shortcut {
+        sequence: "Escape"
+        enabled: win.visible && !ShellState.recording
+        onActivated: ShellState.settingsOpen = false
+    }
+
     // [id, glyph, label, page file]. Task 17's pages slot in by file name.
     readonly property var pages: [
         ["keybinds", "⌨", "Keybinds", "Keybinds"], ["displays", "󰍹", "Displays", "Displays"], ["bar", "󰕮", "Bar", "Bar"],
@@ -28,7 +37,21 @@ FloatingWindow {
             Layout.fillHeight: true; Layout.preferredWidth: 170; color: Qt.darker(Theme.bg, 1.25)
             Column {
                 anchors.fill: parent; anchors.margins: 10; spacing: 2
-                Glyph { text: "◐ settings"; color: Theme.accent; bottomPadding: 12; leftPadding: 8 }
+                Item {
+                    width: parent.width; height: 34
+                    Glyph { anchors.verticalCenter: parent.verticalCenter; x: 8; text: "◐ settings"; color: Theme.accent }
+                    Rectangle {
+                        id: closeBtn
+                        anchors { right: parent.right; verticalCenter: parent.verticalCenter }
+                        width: 26; height: 26; radius: 7
+                        color: closeArea.containsMouse ? Theme.surface : "transparent"
+                        Accessible.role: Accessible.Button
+                        Accessible.name: "Close settings"
+                        Glyph { anchors.centerIn: parent; text: "×"; font.pixelSize: Theme.fontLarge; color: closeArea.containsMouse ? Theme.error : Theme.fgDim }
+                        MouseArea { id: closeArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                    onClicked: ShellState.settingsOpen = false }
+                    }
+                }
                 Repeater {
                     model: win.pages
                     delegate: Rectangle {

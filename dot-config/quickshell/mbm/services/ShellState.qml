@@ -17,6 +17,7 @@ Singleton {
     onQsOpenChanged: if (!qsOpen) qsPicker = ""
     property bool settingsOpen: false
     property string settingsPage: "keybinds"
+    property bool recording: false      // the Keybinds page is capturing keys (Escape then cancels, not closes)
     property string recordRequest: ""   // test hook: settings.record(id) asks the Keybinds page to record this bind
     property var dmenu: null
     property bool locked: false

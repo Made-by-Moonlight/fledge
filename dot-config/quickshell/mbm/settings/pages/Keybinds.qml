@@ -39,6 +39,9 @@ Item {
         return "custom." + (n + 1);
     }
 
+    onRecordingChanged: ShellState.recording = recording !== ""
+    Component.onDestruction: ShellState.recording = false
+
     function startRecording(id) { recording = id; recorder.start(); }
 
     KeyRecorder {
