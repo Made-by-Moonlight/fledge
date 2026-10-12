@@ -11,3 +11,4 @@ __pycache__/
 release/
 # superpowers brainstorming scratch
 .superpowers/
+dot-config/fish/fish_variables

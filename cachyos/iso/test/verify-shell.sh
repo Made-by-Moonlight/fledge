@@ -51,6 +51,13 @@ is "shell answers IPC"           pong   "$(ipc shell ping)"
 is "settings valid"              ""     "$(mbm settings check 2>&1)"
 is "generated config present"    4      "$(ls ~/.local/state/mbm/hypr/*.conf 2>/dev/null | wc -l)"
 
+# Login shell is fish: abbreviations and the starship prompt load, zsh is gone.
+is "login shell is fish"         /usr/bin/fish "$(getent passwd "$USER" | cut -d: -f7)"
+is "gst abbreviation defined"    yes "$(fish -c 'abbr --show' 2>/dev/null | grep -q ' gst ' && echo yes || echo no)"
+is "starship on PATH"            yes "$(fish -c 'type -q starship' 2>/dev/null && echo yes || echo no)"
+is "starship prompt initialised" yes "$(fish -ic 'functions fish_prompt' 2>/dev/null | grep -q starship && echo yes || echo no)"
+is "zsh not installed"           no  "$(pacman -Qi zsh >/dev/null 2>&1 && echo yes || echo no)"
+
 ipc launcher open apps; sleep 0.3; is "launcher opens"     true  "$(state launcher)"
 ipc launcher close;   sleep 0.3; is "launcher closes"      false "$(state launcher)"
 ipc quicksettings open wifi; sleep 0.3; is "quick settings opens a picker" wifi "$(state picker)"

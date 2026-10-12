@@ -19,7 +19,14 @@ vm_ip() {
   printf '%s\n' "$ip"
 }
 
-ssh_vm() { ssh -o BatchMode=yes -o ConnectTimeout=5 "$VM_USER@$(vm_ip)" "$@"; }
+# The login shell is fish, which can't parse the POSIX commands below, so the
+# command travels base64-encoded into an explicit bash (stdin stays free for
+# the tar and sudo-password pipes). "$(...)" works in both fish and bash.
+ssh_vm() {
+  local enc
+  enc="$(printf '%s' "$*" | base64 -w0)"
+  ssh -o BatchMode=yes -o ConnectTimeout=5 "$VM_USER@$(vm_ip)" "exec bash -c \"\$(printf %s $enc | base64 -d)\""
+}
 
 # Session env for commands run over SSH: the Wayland socket and Hyprland
 # instance of the user's graphical login, plus the project bin dirs.

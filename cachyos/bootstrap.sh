@@ -40,7 +40,8 @@ PACMAN_PACKAGES=(
   git stow fzf mise base-devel
   # gsettings' persistent backend: the GTK dark seeding below needs it.
   dconf
-  zsh
+  # Login shell (dot-config/fish); pkgfile backs fish's command-not-found.
+  fish pkgfile
   # The quick-settings night light tile (slievr-toggle-nightlight); it used to
   # arrive transitively and nothing pulls it in any more.
   hyprsunset
@@ -183,14 +184,16 @@ fi
 # a real directory (otherwise mbm-shell.service never starts: no desktop shell).
 # ~/.config/uwsm too: the repo ships dot-config/uwsm/env-hyprland, but env
 # (written below) must stay a real, untracked file rather than land in the repo.
+# ~/.config/fish too: fish writes fish_variables beside the stowed config.
 mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" \
-  "$HOME/.config/systemd/user/graphical-session.target.wants" "$HOME/.config/uwsm"
+  "$HOME/.config/systemd/user/graphical-session.target.wants" "$HOME/.config/uwsm" "$HOME/.config/fish"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 
 # Links stow made into the repo for files the repo has since dropped (the
 # cutover removed waybar, walker, mako, swayosd, elephant's unit, ...) are left
 # dangling: restow only manages what is still there. Remove them.
+find "$HOME" -maxdepth 1 -xtype l -name .zshrc -lname "*slievr-cachy/dot-zshrc" -delete 2>/dev/null || true
 find "$HOME/.config" "$HOME/.local/share" -maxdepth 4 -xtype l -lname "*slievr-cachy/dot-*" -delete 2>/dev/null || true
 
 # The vendored dot-local/share/slievr-cachy/bin/ scripts (stowed above) need
@@ -347,27 +350,31 @@ if [[ -n $in_session ]]; then
   hyprctl reload >/dev/null 2>&1 || echo "WARN: hyprctl reload failed" >&2
 fi
 
-# dot-zshrc expects mise at ~/.local/bin/mise (the host's curl-installer
+# dot-config/fish/conf.d/tools.fish expects mise at ~/.local/bin/mise (the host's curl-installer
 # location); the pacman package above installs to /usr/bin/mise instead.
 mkdir -p "$HOME/.local/bin"
 if [ ! -e "$HOME/.local/bin/mise" ]; then
   ln -s "$(command -v mise)" "$HOME/.local/bin/mise"
 fi
 
-# dot-zshrc's zinit bootstrap clones over SSH (git@github.com:...) on
-# first shell start; without GitHub's host key already trusted (as it
-# would be on a machine with prior git history) that clone fails
-# non-interactively instead of prompting.
-mkdir -p "$HOME/.ssh"
-touch "$HOME/.ssh/known_hosts"
-if ! ssh-keygen -F github.com &>/dev/null; then
-  ssh-keyscan -t ed25519 github.com >>"$HOME/.ssh/known_hosts" 2>/dev/null
+# Default shell: fish (dot-config/fish). Switched before zsh is retired below,
+# so the login shell never points at a removed binary. bash and zsh (the
+# stock and the previous default) are switched; anything else is the user's
+# own choice and stays.
+fish_path=$(command -v fish)
+if ! grep -qx "$fish_path" /etc/shells; then
+  echo "$fish_path" | sudo tee -a /etc/shells >/dev/null
 fi
+current_shell=$(getent passwd "$USER" | cut -d: -f7)
+case "$current_shell" in
+  "$fish_path") ;;
+  */zsh | */bash) sudo usermod --shell "$fish_path" "$USER" ;;
+  *) echo "NOTE: login shell is $current_shell; leaving it. Switch with: chsh -s $fish_path" >&2 ;;
+esac
 
-# Default shell: zsh (dot-zshrc), not bash.
-zsh_path=$(command -v zsh)
-if [ "$(getent passwd "$USER" | cut -d: -f7)" != "$zsh_path" ]; then
-  sudo usermod --shell "$zsh_path" "$USER"
+# fish's command-not-found suggestions read pkgfile's database.
+if command -v pkgfile >/dev/null; then
+  sudo pkgfile -u || echo "WARN: could not update the pkgfile database" >&2
 fi
 
 # Removals come last, after everything that can fail (paru and the AUR loop,
@@ -396,7 +403,9 @@ fi
 RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapplications-bin elephant-calc-bin
   elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
   elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
-  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
+  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix
+  # fish replaced zsh (the login shell was switched above).
+  zsh zsh-completions)
 # Exact names (the set reloaded here, after the removal just before): `pacman
 # -R walker`, or a name already gone, would fail the whole list.
 load_installed

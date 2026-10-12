@@ -56,7 +56,7 @@ them if needed, don't extend them.
 
 ## Layout and conventions
 
-- `dot-config/`, `dot-local/`, `dot-zshrc` are GNU stow `--dotfiles` names
+- `dot-config/` and `dot-local/` are GNU stow `--dotfiles` names
   (`dot-config` → `~/.config`). `bootstrap.sh` stows the whole repo into `~`.
 - `cachyos/install/`: installer (bash). `cachyos/iso/`: ISO build/test.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.

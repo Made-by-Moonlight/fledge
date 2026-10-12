@@ -23,7 +23,7 @@ bindings = [
 ]
 
 # [terminal]
-# shell = { program ="/bin/zsh"}
+# shell = { program ="/usr/bin/fish"}
 
 [terminal]
 osc52 = "CopyPaste"
