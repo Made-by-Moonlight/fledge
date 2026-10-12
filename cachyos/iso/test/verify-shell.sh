@@ -56,6 +56,12 @@ is "login shell is fish"         /usr/bin/fish "$(getent passwd "$USER" | cut -d
 # Apps launched through uwsm inherit SHELL from the user systemd manager, which
 # outlives the login-shell switch; a stale value launches a removed zsh.
 is "session SHELL is the login shell" "$(getent passwd "$USER" | cut -d: -f7)" "$(systemctl --user show-environment | sed -n 's/^SHELL=//p')"
+# Keybind execs run with Hyprland's own environment, a second copy of SHELL.
+rm -f /tmp/verify-bind-shell
+hyprctl dispatch exec "sh -c 'echo \$SHELL > /tmp/verify-bind-shell'" >/dev/null 2>&1
+for _ in $(seq 20); do [[ -s /tmp/verify-bind-shell ]] && break; sleep 0.25; done
+is "bind-launched apps see the login shell" "$(getent passwd "$USER" | cut -d: -f7)" "$(cat /tmp/verify-bind-shell 2>/dev/null)"
+rm -f /tmp/verify-bind-shell
 is "gst abbreviation defined"    yes "$(fish -ic 'abbr --show' 2>/dev/null | grep -q ' gst ' && echo yes || echo no)"
 is "starship on PATH"            yes "$(fish -c 'type -q starship' 2>/dev/null && echo yes || echo no)"
 is "starship prompt initialised" yes "$(fish -ic 'functions fish_prompt' 2>/dev/null | grep -q starship && echo yes || echo no)"

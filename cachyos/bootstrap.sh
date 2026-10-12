@@ -384,6 +384,12 @@ if [[ -n ${XDG_RUNTIME_DIR:-} ]] || systemctl --user show-environment >/dev/null
     dbus-update-activation-environment --systemd "SHELL=$login_shell" || echo "WARN: could not update the D-Bus activation SHELL" >&2
   fi
 fi
+# Keybind execs (Super+Return) run with Hyprland's own process environment,
+# which still holds the login-time SHELL. After the one hyprctl reload above,
+# so nothing re-reads config over it.
+if [[ -n $in_session ]]; then
+  hyprctl keyword env "SHELL,$login_shell" >/dev/null 2>&1 || echo "WARN: could not update Hyprland's SHELL" >&2
+fi
 
 # fish's command-not-found suggestions read pkgfile's database.
 if command -v pkgfile >/dev/null; then
