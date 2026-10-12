@@ -312,20 +312,20 @@ show_font_menu() {
 }
 
 show_setup_menu() {
-  local options="  Audio\n  Wifi\n󰂯  Bluetooth\n󱐋  Power Profile\n  System Sleep\n󰍹  Monitors"
-  [[ -f ~/.config/hypr/bindings.conf ]] && options="$options\n  Keybindings"
-  [[ -f ~/.config/hypr/input.conf ]] && options="$options\n  Input"
-  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Config"
+  local options="  Audio\n  Wifi\n󰂯  Bluetooth\n󱐋  Power Profile\n  System Sleep\n󰍹  Monitors\n  Keybindings\n  Input"
+  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Config"
 
+  # Audio, Wi-Fi, Bluetooth, monitors, binds and input belong to the mbm shell since the
+  # cutover (wiremix and bluetui are gone; the hypr .conf files are generated).
   case $(menu "Setup" "$options") in
-  *Audio*) slievr-launch-audio ;;
-  *Wifi*) slievr-launch-wifi ;;
-  *Bluetooth*) slievr-launch-bluetooth ;;
+  *Audio*) qs -c mbm ipc call quicksettings open audio ;;
+  *Wifi*) qs -c mbm ipc call quicksettings open wifi ;;
+  *Bluetooth*) qs -c mbm ipc call quicksettings open bluetooth ;;
   *Power*) show_setup_power_menu ;;
   *System*) show_setup_system_menu ;;
-  *Monitors*) open_in_editor ~/.config/hypr/monitors.conf ;;
-  *Keybindings*) open_in_editor ~/.config/hypr/bindings.conf ;;
-  *Input*) open_in_editor ~/.config/hypr/input.conf ;;
+  *Monitors*) qs -c mbm ipc call settings open displays ;;
+  *Keybindings*) qs -c mbm ipc call settings open keybinds ;;
+  *Input*) qs -c mbm ipc call settings open input ;;
   *Defaults*) show_setup_default_menu ;;
   *DNS*) present_terminal slievr-setup-dns ;;
   *Security*) show_setup_security_menu ;;

@@ -62,6 +62,8 @@ PACMAN_PACKAGES=(
   # The mbm shell (dot-config/quickshell/mbm, run by mbm-shell.service): bar,
   # launcher, notifications, OSD, lock, idle, polkit agent. cliphist backs its
   # clipboard history, unicode-emoji its emoji picker (noto-fonts-emoji draws them).
+  # Needs Quickshell >= 0.3.2 (the version it was built and tested against;
+  # the lock and idle code relies on 0.3.2 behaviour).
   quickshell cliphist unicode-emoji noto-fonts-emoji
   # Audio session: pipewire alone arrives only as a dependency; without a
   # session manager there are no sinks, so volume controls (and apps) have
@@ -288,16 +290,26 @@ sudo systemctl enable sddm.service
 
 # mbm-shell.service (the desktop shell) is a user unit started with the
 # graphical session: the stowed graphical-session.target.wants/ link enables it,
-# so no `systemctl --user` call here (it would hang from slievr-firstboot).
+# so no `systemctl --user enable` here (it would hang from slievr-firstboot).
+# Run from inside a session, the end of this script starts it (see there).
 
 # Generate the Hyprland binds/monitors/input from mbm settings; hyprland.conf
 # sources ~/.local/state/mbm/hypr/*.conf and errors if nothing matches.
-# No reload: from slievr-firstboot there is no Hyprland, and in a running
-# session the new config (and the shell) take over at the next login.
 # Invalid user settings must not stop the rest of bootstrap: warn, and the
 # uwsm env hook (dot-config/uwsm/env-hyprland) falls back to the defaults.
+# Run from inside a Hyprland session (an upgrade: git pull, then bootstrap),
+# Hyprland already auto-reloaded the pulled hyprland.conf, which sources these
+# files: until they exist every bind is gone. So reload as soon as they're
+# written. From slievr-firstboot there is no Hyprland and nothing to reload.
+in_session=""
+if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl version >/dev/null 2>&1; then
+  in_session=1
+fi
 if ! MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply; then
   echo "WARN: mbm settings apply failed; fix ~/.config/mbm/settings.json (mbm settings check)" >&2
+fi
+if [[ -n $in_session ]]; then
+  hyprctl reload >/dev/null 2>&1 || echo "WARN: hyprctl reload failed" >&2
 fi
 
 # dot-zshrc expects mise at ~/.local/bin/mise (the host's curl-installer
@@ -359,6 +371,25 @@ for pkg in "${RETIRED_PKGS[@]}"; do
 done
 if ((${#retired[@]})); then
   sudo pacman -Rns --noconfirm "${retired[@]}" || echo "WARN: could not remove some retired packages: ${retired[*]}" >&2
+fi
+
+# In a running session the switch happens now, not at the next login: the old
+# daemons keep running until they're stopped, and hypridle's before_sleep_cmd
+# would call the lock shim with no shell up, so the machine would suspend
+# unlocked. Stop them (polkit-gnome first gives up the session's agent slot,
+# which the shell's agent needs), then start the shell. After the package
+# removals above, so D-Bus can't re-activate mako. Best effort: nothing here
+# fails bootstrap.
+if [[ -n $in_session ]]; then
+  pkill -x 'waybar|mako|swayosd-server|hypridle|hyprlock|walker|elephant|swaybg' || true
+  polkit_gnome="^/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
+  pkill -f "$polkit_gnome" || true
+  for _ in $(seq 20); do pgrep -f "$polkit_gnome" >/dev/null || break; sleep 0.25; done
+  if systemctl --user daemon-reload && systemctl --user start mbm-shell; then
+    echo "The made by moonlight desktop is live: Super+Space opens the launcher."
+  else
+    echo "WARN: could not start mbm-shell; it starts at the next login" >&2
+  fi
 fi
 
 echo "Bootstrap complete."
