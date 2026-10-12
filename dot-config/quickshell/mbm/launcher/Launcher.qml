@@ -98,7 +98,7 @@ PanelWindow {
     Pill {
         anchors.fill: parent
         radius: Theme.radiusLarge
-        color: Qt.alpha(Theme.bg, 0.97)
+        color: Theme.panelSolid
 
         ColumnLayout {
             anchors.fill: parent
@@ -119,7 +119,7 @@ PanelWindow {
                         color: Theme.fg; selectionColor: Theme.accent; selectedTextColor: Theme.bg
                         font.family: Theme.font; font.pixelSize: Theme.fontSize
                         onTextChanged: { win.query = win.parse(text); if (win.visible) win.refresh(); }
-                        Text { visible: !parent.text; text: win.mode.placeholder; color: Theme.muted; font: parent.font }
+                        Text { visible: !parent.text; text: win.mode.placeholder; textFormat: Text.PlainText; color: Theme.muted; font: parent.font }
                         Keys.onPressed: e => {
                             if (e.key === Qt.Key_Escape) { ShellState.closePopups(); e.accepted = true; }
                             else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter) { win.runCurrent(); e.accepted = true; }

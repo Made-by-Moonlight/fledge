@@ -31,7 +31,7 @@ PanelWindow {
 
     visible: false
     anchors.bottom: true
-    margins.bottom: 80
+    margins.bottom: Theme.osdBottom
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "mbm-osd"

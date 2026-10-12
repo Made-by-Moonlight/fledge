@@ -23,7 +23,7 @@ Column {
             color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fontSize
             onTextEdited: f.edited(text)
             onEditingFinished: f.committed(text)
-            Text { visible: !parent.text; text: f.placeholder; color: Theme.muted; font: parent.font }
+            Text { visible: !parent.text; text: f.placeholder; textFormat: Text.PlainText; color: Theme.muted; font: parent.font }
         }
     }
 }

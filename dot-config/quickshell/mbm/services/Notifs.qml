@@ -107,7 +107,7 @@ Singleton {
     function invokeLast() { invokeDefault(newest()); }
     // Re-sends the last dismissed one (the server can't un-dismiss).
     function restoreLast() {
-        if (lastDismissed) Quickshell.execDetached(["notify-send", "-a", lastDismissed.app, lastDismissed.summary, lastDismissed.body]);
+        if (lastDismissed) Quickshell.execDetached(["notify-send", "-a", lastDismissed.app, "--", lastDismissed.summary, lastDismissed.body]);
     }
     function toggleDnd() { dnd = !dnd; if (dnd) popups = []; }
 }

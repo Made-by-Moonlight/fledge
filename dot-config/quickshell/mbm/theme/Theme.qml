@@ -33,6 +33,7 @@ Singleton {
     // Popups ignore exclusive zones, so they place themselves against the frame from the screen edge.
     readonly property int popupTop: barHeight + gap   // a popup hangs one gap below a tab
     readonly property int popupSide: frame + gap      // and sits one gap inside the border
+    readonly property int osdBottom: barHeight + 6 * gap   // the OSD floats clear of a bottom bar, with room to spare
     readonly property int anim: 140
 
     readonly property string assets: Quickshell.env("HOME") + "/.local/share/mbm/assets"

@@ -92,7 +92,7 @@ Scope {
         if (!current || current.isCompleted) { current = f; return; }
         console.warn("mbm polkit: refused a second authentication request while one is open: " + f.actionId);
         // The refusal is a cancel, which faillock counts as a failure: say so every time.
-        Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "mbm", "Authentication request cancelled",
+        Quickshell.execDetached(["notify-send", "-u", "normal", "-a", "mbm", "--", "Authentication request cancelled",
             "Another app asked for admin access while a prompt was open: " + f.actionId]);
         // Not from inside the agent's own flow change.
         Qt.callLater(() => { if (f && !f.isCompleted) f.cancelAuthenticationRequest(); });
