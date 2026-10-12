@@ -27,18 +27,26 @@ unset _display_gpu _driver
 # settings apply` generates into ~/.local/state/mbm/hypr. Bootstrap generates
 # them, but if that state is ever lost (a wiped ~/.local/state, a new user),
 # Hyprland would start with no binds at all: regenerate before it reads its
-# config. If the user's settings are invalid, generate from the shipped defaults
-# alone (an empty config dir), so the session still has binds. Silent, never
-# fails the login, and no reload: Hyprland isn't running yet.
+# config. If the user's settings are invalid, render the shipped defaults alone
+# into a scratch dir and copy in only the confs that are missing: the user's
+# last good confs, and the merged state the shell reads, are never replaced
+# with defaults. Silent, never fails the login, and no reload: Hyprland isn't
+# running yet.
 _mbm="$HOME/.local/share/mbm/bin/mbm"
 _gen="$HOME/.local/state/mbm/hypr"
 if [ -x "$_mbm" ] && ! { [ -e "$_gen/binds.conf" ] && [ -e "$_gen/monitors.conf" ] \
   && [ -e "$_gen/workspaces.conf" ] && [ -e "$_gen/input.conf" ]; }; then
   if ! MBM_NO_RELOAD=1 "$_mbm" settings apply >/dev/null 2>&1; then
-    _empty="$(mktemp -d 2>/dev/null)" && {
-      MBM_NO_RELOAD=1 MBM_CONFIG_DIR="$_empty" "$_mbm" settings apply >/dev/null 2>&1
-      rm -rf "$_empty"
+    _tmp="$(mktemp -d 2>/dev/null)" && {
+      if MBM_NO_RELOAD=1 MBM_CONFIG_DIR="$_tmp/config" MBM_STATE_DIR="$_tmp/state" \
+        MBM_HYPR_DIR="$_tmp/hypr" "$_mbm" settings apply >/dev/null 2>&1; then
+        mkdir -p "$_gen" || :
+        for _f in binds monitors workspaces input; do
+          [ -e "$_gen/$_f.conf" ] || cp "$_tmp/hypr/$_f.conf" "$_gen/$_f.conf" || :
+        done
+      fi
+      rm -rf "$_tmp" || :
     }
   fi
 fi
-unset _mbm _gen _empty
+unset _mbm _gen _tmp _f

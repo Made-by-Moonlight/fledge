@@ -146,38 +146,6 @@ if ((${#wanted[@]})); then
   sudo pacman -D --asexplicit "${wanted[@]}" >/dev/null
 fi
 
-# cachyos-hyprland-settings (an earlier version of this script installed
-# it) pulls in a lot we don't want or already have our own equivalent
-# for: kvantum/qt5ct/cachyos-nord-gtk-theme-git (GTK/QT theming we don't
-# use), wofi/bemenu (the mbm launcher replaces these), grimblast-git (our own
-# grim+slurp+satty), polkit-kde-agent (the mbm shell is the agent),
-# swaylock-effects-git/swaylock-fancy-git/wlogout/wob, cachyos-wallpapers
-# (the theme's own vendored backgrounds are used instead),
-# cachyos-alacritty-config (kitty only, no alacritty). Removing it here
-# rather than leaving it installed; -Rns cascades to its now-orphaned
-# deps, but not to anything this script's own PACMAN_PACKAGES loop above
-# already made explicit (hyprland, kitty, brightnessctl, etc.).
-if pacman -Qi cachyos-hyprland-settings &>/dev/null; then
-  sudo pacman -Rns --noconfirm cachyos-hyprland-settings
-fi
-
-# Tools the mbm shell replaced (earlier versions of this script installed
-# them). Their configs left the repo with the cutover, so nothing uses them.
-RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapplications-bin elephant-calc-bin
-  elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
-  elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
-  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
-# Exact names (the set above, reloaded after the removal just before): `pacman
-# -R walker`, or a name already gone, would fail the whole list.
-load_installed
-retired=()
-for pkg in "${RETIRED_PKGS[@]}"; do
-  if [[ -n ${installed[$pkg]:-} ]]; then retired+=("$pkg"); fi
-done
-if ((${#retired[@]})); then
-  sudo pacman -Rns --noconfirm "${retired[@]}" || echo "WARN: could not remove some retired packages: ${retired[*]}" >&2
-fi
-
 # Use CachyOS's own cachyos/paru package, not AUR paru-bin: paru-bin is
 # linked against stock Arch's libalpm ABI, which mismatches CachyOS's
 # custom pacman/libalpm build and fails at runtime
@@ -353,6 +321,44 @@ fi
 zsh_path=$(command -v zsh)
 if [ "$(getent passwd "$USER" | cut -d: -f7)" != "$zsh_path" ]; then
   sudo usermod --shell "$zsh_path" "$USER"
+fi
+
+# Removals come last, after everything that can fail (paru and the AUR loop,
+# the clone, stow, the generated config): on an upgrade, a failure before this
+# point leaves the old desktop's packages in place instead of a half-switched
+# one with no bar and no binds. Keeping them installed until now is harmless:
+# hyprland.conf and autostart no longer launch any of them.
+#
+# cachyos-hyprland-settings (an earlier version of this script installed
+# it) pulls in a lot we don't want or already have our own equivalent
+# for: kvantum/qt5ct/cachyos-nord-gtk-theme-git (GTK/QT theming we don't
+# use), wofi/bemenu (the mbm launcher replaces these), grimblast-git (our own
+# grim+slurp+satty), polkit-kde-agent (the mbm shell is the agent),
+# swaylock-effects-git/swaylock-fancy-git/wlogout/wob, cachyos-wallpapers
+# (the theme's own vendored backgrounds are used instead),
+# cachyos-alacritty-config (kitty only, no alacritty). Removing it here
+# rather than leaving it installed; -Rns cascades to its now-orphaned
+# deps, but never to a PACMAN_PACKAGES entry: those were all made explicit
+# right after installing them, above.
+if pacman -Qi cachyos-hyprland-settings &>/dev/null; then
+  sudo pacman -Rns --noconfirm cachyos-hyprland-settings || echo "WARN: could not remove cachyos-hyprland-settings" >&2
+fi
+
+# Tools the mbm shell replaced (earlier versions of this script installed
+# them). Their configs left the repo with the cutover, so nothing uses them.
+RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapplications-bin elephant-calc-bin
+  elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
+  elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
+  mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
+# Exact names (the set reloaded here, after the removal just before): `pacman
+# -R walker`, or a name already gone, would fail the whole list.
+load_installed
+retired=()
+for pkg in "${RETIRED_PKGS[@]}"; do
+  if [[ -n ${installed[$pkg]:-} ]]; then retired+=("$pkg"); fi
+done
+if ((${#retired[@]})); then
+  sudo pacman -Rns --noconfirm "${retired[@]}" || echo "WARN: could not remove some retired packages: ${retired[*]}" >&2
 fi
 
 echo "Bootstrap complete."

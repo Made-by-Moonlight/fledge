@@ -27,7 +27,13 @@ case "$mode" in
   menus:*)
     # elephant's Lua menus (themes, backgrounds, unlocks) were deleted with it;
     # say so instead of opening an unrelated launcher.
-    notify-send -u low "${mode#menus:} isn't available in the mbm shell yet"
+    case "$mode" in
+      menus:omarchyBackgroundSelector) what="The background picker" ;;
+      menus:omarchythemes) what="The theme picker" ;;
+      menus:omarchyunlocks) what="The unlock menu" ;;
+      *) what="This menu" ;;
+    esac
+    notify-send -u low "$what isn't available in the mbm shell yet"
     exit 1 ;;
   *) exec qs -c mbm ipc call launcher open apps ;;
 esac
