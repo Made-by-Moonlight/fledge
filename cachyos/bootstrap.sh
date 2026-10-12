@@ -372,6 +372,19 @@ case "$current_shell" in
   *) echo "NOTE: login shell is $current_shell; leaving it. Switch with: chsh -s $fish_path" >&2 ;;
 esac
 
+# The running session keeps the old SHELL: the user systemd manager outlives the
+# switch (other sessions hold it open) and uwsm-launched apps inherit its
+# environment, so kitty would still try a removed zsh after an in-session
+# upgrade. Also on re-runs where the shell is already fish. Best effort.
+login_shell=$(getent passwd "$USER" | cut -d: -f7)
+export SHELL="$login_shell"
+if [[ -n ${XDG_RUNTIME_DIR:-} ]] || systemctl --user show-environment >/dev/null 2>&1; then
+  systemctl --user set-environment "SHELL=$login_shell" || echo "WARN: could not update the session's SHELL" >&2
+  if command -v dbus-update-activation-environment >/dev/null; then
+    dbus-update-activation-environment --systemd "SHELL=$login_shell" || echo "WARN: could not update the D-Bus activation SHELL" >&2
+  fi
+fi
+
 # fish's command-not-found suggestions read pkgfile's database.
 if command -v pkgfile >/dev/null; then
   sudo pkgfile -u || echo "WARN: could not update the pkgfile database" >&2

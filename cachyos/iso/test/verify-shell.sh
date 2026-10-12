@@ -53,6 +53,9 @@ is "generated config present"    4      "$(ls ~/.local/state/mbm/hypr/*.conf 2>/
 
 # Login shell is fish: abbreviations and the starship prompt load, zsh is gone.
 is "login shell is fish"         /usr/bin/fish "$(getent passwd "$USER" | cut -d: -f7)"
+# Apps launched through uwsm inherit SHELL from the user systemd manager, which
+# outlives the login-shell switch; a stale value launches a removed zsh.
+is "session SHELL is the login shell" "$(getent passwd "$USER" | cut -d: -f7)" "$(systemctl --user show-environment | sed -n 's/^SHELL=//p')"
 is "gst abbreviation defined"    yes "$(fish -ic 'abbr --show' 2>/dev/null | grep -q ' gst ' && echo yes || echo no)"
 is "starship on PATH"            yes "$(fish -c 'type -q starship' 2>/dev/null && echo yes || echo no)"
 is "starship prompt initialised" yes "$(fish -ic 'functions fish_prompt' 2>/dev/null | grep -q starship && echo yes || echo no)"
