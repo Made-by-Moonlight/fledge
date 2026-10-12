@@ -234,6 +234,31 @@ if [ ! -f "$HOME/.config/xdg-terminals.list" ]; then
   echo "kitty.desktop" >"$HOME/.config/xdg-terminals.list"
 fi
 
+# GTK apps (Thunar...) follow the dark desktop. Nothing else sets this: the
+# theme switcher that did (slievr-theme-set-gnome) is unused. GTK4/libadwaita
+# follow color-scheme. GTK3 ignores it and wants gtk-application-prefer-dark-theme
+# in gtk-3.0/settings.ini (below) on the built-in Adwaita theme. Don't set
+# gtk-theme to Adwaita-dark: gtk3 no longer ships that theme (gnome-themes-extra
+# does), and a missing theme name makes GTK3 apps fall back to light. Set
+# once and idempotently. gsettings needs a D-Bus session: firstboot has none, so
+# use a private one (dconf writes ~/.config/dconf/user, which persists).
+set_gtk_dark() {
+  local run=()
+  [[ -S ${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/bus || -n ${DBUS_SESSION_BUS_ADDRESS:-} ]] || run=(dbus-run-session --)
+  "${run[@]}" gsettings set org.gnome.desktop.interface color-scheme prefer-dark &&
+    "${run[@]}" gsettings set org.gnome.desktop.interface gtk-theme Adwaita
+}
+if command -v gsettings >/dev/null 2>&1; then
+  set_gtk_dark || echo "WARN: could not set GTK dark mode via gsettings" >&2
+else
+  echo "WARN: gsettings not found; relying on gtk-3.0/settings.ini for GTK dark mode" >&2
+fi
+# Not stow-managed (GTK tools rewrite it), so seed it only when the user hasn't made one.
+mkdir -p "$HOME/.config/gtk-3.0"
+if [ ! -e "$HOME/.config/gtk-3.0/settings.ini" ]; then
+  printf '[Settings]\ngtk-application-prefer-dark-theme=1\n' >"$HOME/.config/gtk-3.0/settings.ini"
+fi
+
 # btop: use the Omarchy theme's btop.theme. btop rewrites btop.conf on exit,
 # so it isn't stowed; seed it once and point themes/current.theme at the theme.
 mkdir -p "$HOME/.config/btop/themes"
