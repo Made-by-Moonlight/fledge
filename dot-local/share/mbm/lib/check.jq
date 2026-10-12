@@ -88,7 +88,8 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
     else "wallpaper.monitors must be an object" end)),
 
 (.bar // {}
- | unknown(["position", "left", "centre", "right", "glyphs"]; "bar"),
+ | unknown(["position", "left", "centre", "right", "glyphs", "clockFormat"]; "bar"),
+   (if (.clockFormat // 0 | isint and . >= 0 and . <= 3) then empty else "bar.clockFormat must be a whole number from 0 to 3" end),
    (if (.position // "top" | IN("top", "bottom")) then empty else "bar.position must be top or bottom" end),
    modules("left"), modules("centre"), modules("right"),
    ((.glyphs // []) | if type != "array" then "bar.glyphs must be a list"

@@ -60,6 +60,7 @@ Singleton {
 
     readonly property var binds: merged.binds ?? defaults.binds ?? ({})
     readonly property string barPosition: get("bar", "position", "top")
+    readonly property int clockFormat: get("bar", "clockFormat", 0)
     readonly property var barLeft: get("bar", "left", ["workspaces", "title"])
     readonly property var barCentre: get("bar", "centre", ["clock", "media"])
     readonly property var barRight: get("bar", "right", ["tray", "glyphs", "cog"])

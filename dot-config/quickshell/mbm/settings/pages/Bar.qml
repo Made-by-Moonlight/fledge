@@ -80,6 +80,11 @@ Flickable {
             Layout.fillWidth: true; spacing: 24
             Choice { label: "Bar position"; value: Settings.barPosition; options: [["top", "Top"], ["bottom", "Bottom"]]
                      onPicked: v => Settings.set([[".bar.position", v]], false) }
+            Choice { label: "Clock format (click the clock to cycle)"; value: Settings.clockFormat
+                     readonly property var now: new Date()
+                     options: [[0, Qt.formatDateTime(now, "HH:mm  ddd d MMM").toLowerCase()], [1, Qt.formatDateTime(now, "HH:mm")],
+                               [2, Qt.formatDateTime(now, "HH:mm:ss  dddd d MMMM yyyy").toLowerCase()], [3, Qt.formatDateTime(now, "hh:mm ap  ddd d MMM").toLowerCase()]]
+                     onPicked: v => Settings.set([[".bar.clockFormat", v]], false) }
             Choice { label: "Launcher position"; value: Settings.launcherPosition; options: [["centre", "Centre"], ["anchored", "Under the bar's left section"]]
                      onPicked: v => Settings.set([[".launcher.position", v]], false) }
             Choice { label: "Notifications"; value: Settings.notifCorner
