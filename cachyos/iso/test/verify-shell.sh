@@ -62,9 +62,17 @@ hyprctl dispatch exec "sh -c 'echo \$SHELL > /tmp/verify-bind-shell'" >/dev/null
 for _ in $(seq 20); do [[ -s /tmp/verify-bind-shell ]] && break; sleep 0.25; done
 is "bind-launched apps see the login shell" "$(getent passwd "$USER" | cut -d: -f7)" "$(cat /tmp/verify-bind-shell 2>/dev/null)"
 rm -f /tmp/verify-bind-shell
-is "gst abbreviation defined"    yes "$(fish -ic 'abbr --show' 2>/dev/null | grep -q ' gst ' && echo yes || echo no)"
+is "gst abbreviation defined"    yes "$(fish -ic 'abbr --show' 2>/dev/null | grep -c ' gst ' >/dev/null && echo yes || echo no)"
 is "starship on PATH"            yes "$(fish -c 'type -q starship' 2>/dev/null && echo yes || echo no)"
 is "starship prompt initialised" yes "$(fish -ic 'functions fish_prompt' 2>/dev/null | grep -q starship && echo yes || echo no)"
+# The full oh-my-zsh git/kubectl sets, as abbreviations that expand to the same commands.
+abbr_of() { fish -ic "abbr --show" 2>/dev/null | grep -a -- " $1 " | head -n1; }
+for pair in "gcam|git commit --all --message" "gcmsg|git commit --message" "gcb|git checkout -b" \
+            "glola|--all" "gsta|git stash push" "kgp|kubectl get pods" "kdp|kubectl describe pods" \
+            "gpsup|\$(git_current_branch)"; do
+  is "abbr ${pair%%|*} expands" yes "$(abbr_of "${pair%%|*}" | grep -cF -- "${pair#*|}" >/dev/null && echo yes || echo no)"
+done
+is "git_main_branch finds main"  main "$(cd ~/proj/slievr-cachy && fish -c git_main_branch 2>/dev/null)"
 is "zsh not installed"           no  "$(pacman -Qi zsh >/dev/null 2>&1 && echo yes || echo no)"
 
 ipc launcher open apps; sleep 0.3; is "launcher opens"     true  "$(state launcher)"
