@@ -76,6 +76,22 @@ check "broken user file: get fails"   "1"        "$rc"
 contains "broken user file: message names the file" "settings.json is not a valid JSON object" "$(cat "$T/err")"
 check "broken user file: merged state untouched" "$good_state" "$(cat "$MBM_STATE_DIR/settings.json")"
 
+# --- empty user file: no overrides, not a broken file ---------------------------
+fresh
+mkdir -p "$MBM_CONFIG_DIR"
+: >"$MBM_CONFIG_DIR/settings.json"
+check "empty user file: get reads defaults" '"centre"' "$("$MBM" settings get .launcher.position 2>&1)"
+"$MBM" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
+check "empty user file: set works"    "0"        "$rc"
+check "empty user file: set writes only the override" '{"launcher":{"position":"anchored"}}' "$(jq -c . <<<"$(user_file)" 2>&1)"
+fresh
+mkdir -p "$MBM_CONFIG_DIR"
+printf ' \n' >"$MBM_CONFIG_DIR/settings.json"
+"$MBM" settings check 2>"$T/err"; rc=$?
+check "whitespace-only user file: check passes" "0" "$rc"
+"$MBM" settings reset .launcher.position 2>"$T/err"; rc=$?
+check "whitespace-only user file: reset works" "0" "$rc"
+
 # --- check -------------------------------------------------------------------
 bad() { # bad <description> <expected message part> <user-json>
   fresh
@@ -209,6 +225,13 @@ printf '{"binds":{"x":{"mods":"SUPER","key":"RETURN","label":"Dup","group":"A","
 check "apply: invalid -> exit 1"      "1"        "$rc"
 check "apply: invalid -> old binds kept" "$good" "$(cat "$MBM_HYPR_DIR/binds.conf")"
 check "apply: no temp files left"     ""         "$(find "$MBM_HYPR_DIR" "$MBM_STATE_DIR" -name '*.??????' 2>/dev/null)"
+
+# '#' starts a comment in Hyprland config: generated values double it, so a label or
+# command keeps its '#' (e.g. a URL fragment) instead of losing the rest of the line.
+fresh
+"$MBM" settings set '.binds["custom.1"]' '{"mods":"SUPER ALT","key":"F9","label":"Docs #1","group":"Apps","action":{"exec":"xdg-open https://example.com/#x"}}'
+"$MBM" settings apply
+check "apply: '#' escaped in label and command" "bindd = SUPER ALT, F9, Docs ##1, exec, xdg-open https://example.com/##x" "$(grep ', F9,' "$MBM_HYPR_DIR/binds.conf")"
 
 # hyprctl is only called inside a Hyprland session
 fresh

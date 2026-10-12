@@ -35,7 +35,13 @@ valid_path() {
 }
 
 user_json() { # the overrides, or {} when there are none
+  # A missing, empty or whitespace-only file means no overrides (a user who empties
+  # the file must not break every later write).
+  local content=""
   if [[ -f $MBM_USER ]]; then
+    content="$(<"$MBM_USER")" || die "cannot read $MBM_USER"
+  fi
+  if [[ -n ${content//[[:space:]]/} ]]; then
     jq -e 'if type == "object" then . else error("not an object") end' "$MBM_USER" 2>/dev/null \
       || die "$MBM_USER is not a valid JSON object"
   else
