@@ -45,7 +45,7 @@ each with its own spec, plan and branch, and the desktop works after each one:
 
 | # | Project | Status |
 |---|---|---|
-| A | **mbm shell**: Quickshell bar, launcher, notifications, OSD, lock, wallpaper, quick settings, settings window; settings JSON → generated Hyprland config | spec: `docs/superpowers/specs/2026-10-10-mbm-shell-design.md` |
+| A | **mbm shell**: Quickshell bar, launcher, notifications, OSD, lock, wallpaper, quick settings, settings window; settings JSON → generated Hyprland config | implemented on branch `mbm-shell` (not merged yet): spec + plan in `docs/superpowers/` |
 | B | **`mbm` CLI**: replace the vendored `slievr-*` scripts (`dot-local/share/slievr-cachy/bin/`) | not started |
 | C | **mbm theme**: palette in mbm settings, our own app-theme renderer, retire `dot-config/omarchy/` | not started |
 | D | **Graphical installer**: Quickshell installer on the ISO, reusing A + C | not started |
@@ -60,10 +60,14 @@ them if needed, don't extend them.
   (`dot-config` → `~/.config`). `bootstrap.sh` stows the whole repo into `~`.
 - `cachyos/install/`: installer (bash). `cachyos/iso/`: ISO build/test.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
-- Settings (once project A lands): defaults in `dot-local/share/mbm/defaults/settings.json`,
+- Settings: defaults in `dot-local/share/mbm/defaults/settings.json`,
   user overrides in `~/.config/mbm/settings.json`, Hyprland fragments
   **generated** into `~/.local/state/mbm/hypr/` by `mbm settings apply`. Don't hand-edit generated files;
   change the defaults or the generator.
+- The shell runs as `mbm-shell.service`; IPC: `qs -c mbm ipc call <target> <fn>`
+  (targets in `dot-config/quickshell/mbm/ipc/Ipc.qml`). Dev loop:
+  `cachyos/vm/vm.sh restow && cachyos/vm/vm.sh shell`. End-to-end check:
+  `cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'`.
 - Shell scripts: bash, `set -euo pipefail`, shellcheck-clean (CI runs it).
   Comments explain *why*. Match the density of the surrounding code.
 - Tests: `test-*.sh` scripts using `cachyos/install/test/lib.sh`

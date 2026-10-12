@@ -4,6 +4,12 @@ A CachyOS + Hyprland desktop and the installer ISO that puts it on a machine:
 boot the ISO, answer a few questions, and it installs unattended onto an
 encrypted btrfs disk, then sets up the desktop on first boot.
 
+The desktop is its own Quickshell shell (`mbm`): an attached bar with three
+hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
+emoji, system), notifications, OSD, lock screen, quick settings and a
+settings window. Settings are one JSON file that generates the Hyprland
+config.
+
 ![Desktop with btop and a terminal](docs/screenshots/06-desktop-apps.png)
 
 ## Install
@@ -27,9 +33,11 @@ installer can join Wi-Fi, and the network carries over to the installed system.
 | ![Disk unlock](docs/screenshots/03-unlock.png) | ![Login](docs/screenshots/04-login.png) |
 | Disk unlock (Plymouth) | Login (SDDM) |
 | ![Desktop](docs/screenshots/05-desktop.png) | ![Launcher](docs/screenshots/07-launcher.png) |
-| Desktop | Launcher (Walker) |
-| ![Lock screen](docs/screenshots/08-lock.png) | |
-| Lock screen (hyprlock) | |
+| Desktop: bar tabs and screen frame | Launcher (apps, clipboard, emoji, system) |
+| ![Lock screen](docs/screenshots/08-lock.png) | ![Quick settings](docs/screenshots/09-quick-settings.png) |
+| Lock screen | Quick settings |
+| ![Settings](docs/screenshots/10-settings.png) | |
+| Settings (keybinds, displays, bar, idle, input) | |
 
 ## Repo layout
 
@@ -37,6 +45,8 @@ installer can join Wi-Fi, and the network carries over to the installed system.
 - `cachyos/install/` — the installer itself and first-boot setup
 - `cachyos/bootstrap.sh` — the desktop layer, run on first boot
 - `cachyos/branding/` — owl, palette and theme assets
+- `dot-config/quickshell/mbm/` — the desktop shell (bar, launcher, notifications, lock, settings)
+- `dot-local/share/mbm/` — the `mbm` CLI: settings (defaults + overrides → generated Hyprland config), dmenu
 - `dot-config/`, `dot-local/` — dotfiles, stowed into `~`
 
 Releases are built by GitHub Actions when a `v*` tag is pushed on `main`

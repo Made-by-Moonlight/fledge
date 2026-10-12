@@ -1,7 +1,16 @@
 # mbm shell v1 — design
 
 **Date:** 2026-10-10
-**Status:** approved design, amended during planning (2026-10-11)
+**Status:** implemented on branch `mbm-shell`, not merged (plan: `docs/superpowers/plans/2026-10-11-mbm-shell.md`; end-to-end check: `cachyos/iso/test/verify-shell.sh`). Design amended during planning (2026-10-11).
+
+**Known limitations:**
+- Bluetooth devices that need a PIN or passkey must be paired with `bluetoothctl`: there is no pairing agent.
+- Idle timeouts honour only Wayland idle inhibitors.
+- The Wi-Fi and Bluetooth connect flows were verified only against the API; check them on real hardware.
+- Lock-before-sleep and suspend could not be tested in the VM.
+- Faillock locks the account for 10 minutes after 3 failures, and a polkit Cancel counts as a failure (inherent to polkit).
+- The theme and background pickers are unavailable until project C.
+- Some legacy `slievr-*` scripts still assume walker or swaybg; they are left for project B.
 **Branch:** `mbm-shell` (off `main` @ 4abc949)
 **Mockups:** visual-companion screens in `.superpowers/brainstorm/` (gitignored):
 `bar-style-v2.html`, `launcher-style.html`, `quick-settings.html`, `settings-window.html`
