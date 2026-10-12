@@ -23,7 +23,9 @@ Singleton {
         stdout: StdioCollector { onStreamFinished: { root.entries = text.split("\n").filter(l => l.length); root.changed(); } }
     }
     function refresh() { lister.running = true; }
-    function copy(line) { Quickshell.execDetached(["sh", "-c", 'printf "%s" "$1" | cliphist decode | wl-copy', "sh", line]); }
+    // wl-copy stays running to serve the selection: as its own uwsm app unit, so a
+    // shell restart doesn't take the clipboard with it (EmojiMode does the same).
+    function copy(line) { Quickshell.execDetached(["uwsm", "app", "--", "sh", "-c", 'printf "%s" "$1" | cliphist decode | wl-copy', "sh", line]); }
     function remove(line) {
         Quickshell.execDetached(["sh", "-c", 'printf "%s" "$1" | cliphist delete', "sh", line]);
         entries = entries.filter(e => e !== line);

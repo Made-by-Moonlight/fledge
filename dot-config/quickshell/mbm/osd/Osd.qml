@@ -16,7 +16,10 @@ PanelWindow {
     readonly property var iconMap: ({
         "display-brightness-symbolic": "󰃠", "keyboard-brightness-symbolic": "󰌌",
         "input-touchpad-symbolic": "󰟸", "touchpad-disabled-symbolic": "󰤳",
-        "audio-input-microphone-symbolic": "󰍬", "microphone-sensitivity-muted-symbolic": "󰍭"
+        "audio-input-microphone-symbolic": "󰍬", "microphone-sensitivity-muted-symbolic": "󰍭",
+        "sink-volume-muted-symbolic": "󰝟", "sink-volume-low-symbolic": "󰕿",
+        "sink-volume-medium-symbolic": "󰖀", "sink-volume-high-symbolic": "󰕾",
+        "device-support-touch-symbolic": "󰝁", "touch-disabled-symbolic": "󰜺"
     })
 
     function show(icon, text, value) {

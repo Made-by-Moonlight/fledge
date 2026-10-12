@@ -8,6 +8,9 @@ Item {
     readonly property string label: "System"
     readonly property string placeholder: "Power, settings, menus…"
     function sh(cmd) { return () => Quickshell.execDetached(["sh", "-c", cmd]); }
+    // Menus start long-lived work (a screen recording, a share): run them as their own
+    // uwsm app unit, so a shell restart (lock re-acquire, crash) doesn't kill it.
+    function app(cmd) { return () => Quickshell.execDetached(["uwsm", "app", "--", "sh", "-c", cmd]); }
     readonly property var actions: [
         { text: "Lock", glyph: "󰌾", run: () => lockRequested() },
         { text: "Suspend", glyph: "󰒲", run: sh("systemctl suspend") },
@@ -19,11 +22,11 @@ Item {
         { text: "Toggle do not disturb", glyph: "󰂛", run: () => Notifs.toggleDnd() },
         { text: "Toggle idle lock", glyph: "󱫖", run: () => idleToggleRequested() },
         // Omarchy-era menus, kept reachable until project B replaces them.
-        { text: "Capture…", glyph: "󰄀", sub: "screenshot, recording, colour", run: sh("slievr-menu capture") },
-        { text: "Toggle…", glyph: "󰔡", sub: "toggles", run: sh("slievr-menu toggle") },
-        { text: "Hardware…", glyph: "󰍹", run: sh("slievr-menu hardware") },
-        { text: "Share…", glyph: "󰒖", run: sh("slievr-menu share") },
-        { text: "Setup…", glyph: "󰒓", run: sh("slievr-menu setup") }
+        { text: "Capture…", glyph: "󰄀", sub: "screenshot, recording, colour", run: app("slievr-menu capture") },
+        { text: "Toggle…", glyph: "󰔡", sub: "toggles", run: app("slievr-menu toggle") },
+        { text: "Hardware…", glyph: "󰍹", run: app("slievr-menu hardware") },
+        { text: "Share…", glyph: "󰒖", run: app("slievr-menu share") },
+        { text: "Setup…", glyph: "󰒓", run: app("slievr-menu setup") }
     ]
     // Connected from shell.qml once the lock (Task 14) and idle (Task 15) exist.
     signal lockRequested()

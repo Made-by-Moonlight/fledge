@@ -4,6 +4,12 @@ set -euo pipefail
 DOTFILES_REPO="https://github.com/slievr/slievr-cachy.git"
 DOTFILES_DIR="$HOME/proj/slievr-cachy"
 
+# The lock screen's own PAM service, separate from the real login stack so a
+# mistake here can't break logging in. Written first, before anything that can
+# fail: without it the mbm lock falls back to PAM's `other` service, which
+# denies everything, and a locked session could never be unlocked.
+printf 'auth include login\n' | sudo tee /etc/pam.d/mbm-lock >/dev/null
+
 # Vulkan driver per GPU vendor present (PCI display class 0x03xxxx), read from
 # sysfs so it needs no pciutils. Mixed vendors (e.g. RTX 3080 + RX 9070 XT) get
 # both, plus Mesa's device-select layer, which dot-config/uwsm/env-hyprland
@@ -64,6 +70,10 @@ PACMAN_PACKAGES=(
   # Bluetooth stack for quick settings' Bluetooth picker. It used to arrive
   # only as bluetui's dependency, so retiring bluetui would cascade it away.
   bluez
+  # slievr-transcode (Super+Ctrl+Period, pictures) and slievr-transcode-ascii
+  # (Style -> About, the screensaver). It used to arrive only as an elephant
+  # dependency, so retiring elephant would cascade it away.
+  imagemagick
   # Activity monitor (Super+Ctrl+T); calculator key.
   btop gnome-calculator
   # Wi-Fi, Bluetooth and audio are the mbm quick settings now (Super+A,
@@ -114,6 +124,28 @@ if [ "${#missing[@]}" -gt 0 ]; then
   sudo pacman -S --needed --noconfirm "${missing[@]}"
 fi
 
+# Exact installed names: `pacman -Qi walker` also matches walker-bin (it
+# provides walker), so name lookups below go through this set instead.
+declare -A installed=()
+load_installed() {
+  installed=()
+  local p
+  while read -r p; do installed[$p]=1; done < <(pacman -Qq)
+}
+load_installed
+
+# Everything this script wants becomes explicitly installed. One that an
+# earlier install got only as a dependency (bluez via bluetui, imagemagick via
+# elephant) is skipped by the missing-package loop above, and the -Rns steps
+# below would otherwise cascade it away with the retired package that pulled it in.
+wanted=()
+for pkg in "${PACMAN_PACKAGES[@]}"; do
+  if [[ -n ${installed[$pkg]:-} ]]; then wanted+=("$pkg"); fi
+done
+if ((${#wanted[@]})); then
+  sudo pacman -D --asexplicit "${wanted[@]}" >/dev/null
+fi
+
 # cachyos-hyprland-settings (an earlier version of this script installed
 # it) pulls in a lot we don't want or already have our own equivalent
 # for: kvantum/qt5ct/cachyos-nord-gtk-theme-git (GTK/QT theming we don't
@@ -135,10 +167,9 @@ RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapp
   elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
   elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
   mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
-# Exact installed names only: `pacman -Qi walker` also matches walker-bin (it
-# provides walker), and `pacman -R walker` would then fail on the whole list.
-declare -A installed=()
-while read -r pkg; do installed[$pkg]=1; done < <(pacman -Qq)
+# Exact names (the set above, reloaded after the removal just before): `pacman
+# -R walker`, or a name already gone, would fail the whole list.
+load_installed
 retired=()
 for pkg in "${RETIRED_PKGS[@]}"; do
   if [[ -n ${installed[$pkg]:-} ]]; then retired+=("$pkg"); fi
@@ -291,15 +322,15 @@ sudo systemctl enable sddm.service
 # graphical session: the stowed graphical-session.target.wants/ link enables it,
 # so no `systemctl --user` call here (it would hang from slievr-firstboot).
 
-# The lock screen's own PAM service, separate from the real login stack so a
-# mistake here can't break logging in.
-printf 'auth include login\n' | sudo tee /etc/pam.d/mbm-lock >/dev/null
-
 # Generate the Hyprland binds/monitors/input from mbm settings; hyprland.conf
 # sources ~/.local/state/mbm/hypr/*.conf and errors if nothing matches.
 # No reload: from slievr-firstboot there is no Hyprland, and in a running
 # session the new config (and the shell) take over at the next login.
-MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply
+# Invalid user settings must not stop the rest of bootstrap: warn, and the
+# uwsm env hook (dot-config/uwsm/env-hyprland) falls back to the defaults.
+if ! MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply; then
+  echo "WARN: mbm settings apply failed; fix ~/.config/mbm/settings.json (mbm settings check)" >&2
+fi
 
 # dot-zshrc expects mise at ~/.local/bin/mise (the host's curl-installer
 # location); the pacman package above installs to /usr/bin/mise instead.

@@ -17,9 +17,13 @@ is "firstboot finished bootstrap"      1      "$(grep -c 'Bootstrap complete.' /
 is "no failed units (TPM measurement excluded)" 0 "$(systemctl --failed --no-legend --plain | grep -vE '^(systemd-pcr|systemd-tpm2-setup)' | grep -c .)"
 is "quickshell installed"              yes    "$(command -v qs >/dev/null && echo yes || echo no)"
 is "mbm shell enabled"                 enabled "$(systemctl --user is-enabled mbm-shell 2>/dev/null)"
+is "mbm shell running"                 active "$(systemctl --user is-active mbm-shell 2>/dev/null)"
+is "no retired desktop daemons"        ""     "$(pgrep -x 'waybar|mako|swayosd-server|hypridle|hyprlock|walker|elephant' 2>/dev/null; pgrep -f '^/usr/lib/polkit-gnome/' 2>/dev/null)"
+# Holds the Hyprland instance only while locked; this runs in an unlocked session.
+is "relock flag clear"                 ""     "$(cat "$HOME/.local/state/mbm/locked" 2>/dev/null)"
 is "mbm settings valid"                ""     "$("$HOME/.local/share/mbm/bin/mbm" settings check 2>&1)"
-# shellcheck disable=SC2012 # counting plain *.conf names
-is "generated Hyprland config"         4      "$(ls "$HOME"/.local/state/mbm/hypr/*.conf 2>/dev/null | wc -l)"
+gen="$HOME/.local/state/mbm/hypr"
+is "generated Hyprland config"         yes    "$( [[ -s $gen/binds.conf && -s $gen/monitors.conf && -s $gen/workspaces.conf && -s $gen/input.conf ]] && echo yes || echo no )"
 is "btop uses the theme"               yes    "$( [[ -L "$HOME/.config/btop/themes/current.theme" ]] && grep -q '^color_theme = "current"' "$HOME/.config/btop/btop.conf" && echo yes || echo no )"
 is "sddm active"                       active "$(systemctl is-active sddm)"
 is "firstboot disabled"                disabled "$(systemctl is-enabled slievr-firstboot.service 2>/dev/null)"

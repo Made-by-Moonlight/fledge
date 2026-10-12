@@ -16,7 +16,7 @@ Item {
         for (const e of Emoji.all) {
             const s = Fuzzy.score(query, e.name);
             if (s > 0) out.push({ key: e.char, text: e.name, glyph: e.char, score: s,
-                                  run: () => Quickshell.execDetached(["wl-copy", e.char]) });
+                                  run: () => Quickshell.execDetached(["uwsm", "app", "--", "wl-copy", e.char]) });
         }
         return out.sort((a, b) => b.score - a.score).slice(0, 80);
     }
