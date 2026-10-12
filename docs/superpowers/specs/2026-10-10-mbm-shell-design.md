@@ -11,6 +11,7 @@
 - Faillock locks the account for 10 minutes after 3 failures, and a polkit Cancel counts as a failure (inherent to polkit).
 - The theme and background pickers are unavailable until project C.
 - Some legacy `slievr-*` scripts still assume walker or swaybg; they are left for project B.
+- If the shell crash-loops, systemd stops restarting it after 5 failed starts in 10 s. Recover from a TTY (Ctrl+Alt+F3): `systemctl --user reset-failed mbm-shell && systemctl --user start mbm-shell`.
 **Branch:** `mbm-shell` (off `main` @ 4abc949)
 **Mockups:** visual-companion screens in `.superpowers/brainstorm/` (gitignored):
 `bar-style-v2.html`, `launcher-style.html`, `quick-settings.html`, `settings-window.html`
@@ -60,7 +61,7 @@ After each one merges, the desktop works end to end.
 
 | Topic | Decision |
 | --- | --- |
-| Toolkit | `quickshell` 0.3.1 from `extra` (built with PAM, PipeWire). Modules used: Hyprland, Io, Wayland (`WlSessionLock`, `IdleMonitor`, `IdleInhibitor`), Networking (NetworkManager), Bluetooth, Services.{Pipewire, UPower, Mpris, Notifications, SystemTray, Pam, Polkit}, Widgets. |
+| Toolkit | `quickshell` from `extra`, **minimum 0.3.2** (built and tested against 0.3.2) (built with PAM, PipeWire). Modules used: Hyprland, Io, Wayland (`WlSessionLock`, `IdleMonitor`, `IdleInhibitor`), Networking (NetworkManager), Bluetooth, Services.{Pipewire, UPower, Mpris, Notifications, SystemTray, Pam, Polkit}, Widgets. |
 | Architecture | Quickshell renders and interacts. Anything that writes system config goes through the bash + `jq` CLI `mbm settings …`. |
 | Process | One `quickshell -c mbm` instance (bar, popups, lock, settings window), started by uwsm, restarted on crash. |
 | Bar | **Attached bar + screen frame** (replaces floating islands, user's call 2026-10-11; reference `.superpowers/bar-attached-reference.png`): a thin dark border (frame width) along the screen edge with three tabs hanging from it, each sized to its content (left: workspaces + focused title; centre: clock/date + now playing, centred on the screen; right: status glyphs + tray + settings cog). Every join between a tab or the border and the desktop is a concave fillet, and the desktop between the tabs reaches up to the thin border. The same border runs down the other three edges, and the desktop area inside has rounded corners. Windows tile inside the frame (exclusive zones on all four edges). `bar.position` top/bottom flips the strip and tab; hiding the bar hides the whole frame. |
@@ -214,8 +215,8 @@ when a generated section changed, showing any `check` error inline.
 
 - Binds that drive the shell call `qs -c mbm ipc call <target> <fn>`. IPC targets:
   `launcher` (toggle, open <mode>), `quicksettings` (toggle, open [picker]), `settings`
-  (open [page]), `lock` (lock), `osd` (volume ±n, brightness ±n, mic-mute),
-  `notifications` (dismiss, dismiss-all, dnd-toggle), `dmenu` (used by `mbm dmenu`).
+  (open [page]), `lock` (lock), `osd` (volume ±n, brightness ±n, mic),
+  `notifications` (dismiss, dismissAll, dndToggle), `dmenu` (used by `mbm dmenu`).
 - Workspaces, focused title and monitors come from `Quickshell.Hyprland`.
 - `misc:allow_session_lock_restore = true`, so a restarted shell can lock again.
 - The Keybinds page records keys inside an empty Hyprland submap (mbm-record, generated with binds.conf) so compositor binds don't fire while recording; SUPER+CTRL+ALT+Escape always leaves it.
@@ -237,7 +238,7 @@ when a generated section changed, showing any `check` error inline.
 - `Super+Ctrl+L` → `lock.lock`. `Super+Ctrl+I` → idle-lock toggle (shell).
 - `Super+K` → settings window, Keybinds page.
 - `Super+Shift+Space` (toggle bar) → shell bar toggle.
-- `Super+,` / `Super+Shift+,` → notifications dismiss / dismiss-all.
+- `Super+,` / `Super+Shift+,` → notifications dismiss / dismissAll.
 - Media/brightness keys → `osd.*` (shell does the change and shows the OSD).
 - Quick settings: new bind `Super+A` (free today; `Super+S` / `Super+Alt+S` stay scratchpad).
 - `Super+Ctrl+W` / `Super+Ctrl+B` / `Super+Ctrl+A` (today: nmtui, bluetui, wiremix) →
