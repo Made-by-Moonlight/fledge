@@ -162,7 +162,9 @@ if ! command -v paru &>/dev/null; then
   sudo pacman -S --needed --noconfirm paru
 fi
 
-for aur_pkg in zen-browser-bin xdg-terminal-exec 1password 1password-cli; do
+# limusic-bin: YouTube Music client. It publishes MPRIS, so the bar's
+# now-playing pill and the media keys control it with no shell code.
+for aur_pkg in zen-browser-bin xdg-terminal-exec 1password 1password-cli limusic-bin; do
   if ! pacman -Qi "$aur_pkg" &>/dev/null; then
     paru -S --noconfirm "$aur_pkg"
   fi
