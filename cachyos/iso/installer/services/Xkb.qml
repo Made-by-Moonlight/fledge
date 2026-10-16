@@ -9,6 +9,9 @@ Singleton {
     id: k
     property var layouts: []        // [{ value, label }]
     property var variants: ({})     // layout -> [{ value, label }]
+    // When apply() last switched: the shell tells the "activelayout" events this
+    // causes apart from the ones a VT switch back to the installer causes.
+    property real appliedAt: 0
     FileView {
         path: "/usr/share/X11/xkb/rules/base.lst"
         onLoaded: k.parse(text())
@@ -30,6 +33,7 @@ Singleton {
     }
     function apply(layout, variant) {
         if (Installer.dev) return;      // don't rewire the dev VM's desktop keyboard
+        appliedAt = Date.now();
         Quickshell.execDetached(["hyprctl", "keyword", "input:kb_layout", layout]);
         Quickshell.execDetached(["hyprctl", "keyword", "input:kb_variant", variant]);
     }
