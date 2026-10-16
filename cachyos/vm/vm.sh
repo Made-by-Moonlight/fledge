@@ -105,6 +105,10 @@ case "${1:-}" in
         /) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_SLASH >/dev/null ;;
         .) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_DOT >/dev/null ;;
         :) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_LEFTSHIFT KEY_SEMICOLON >/dev/null ;;
+        =) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_EQUAL >/dev/null ;;
+        _) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_LEFTSHIFT KEY_MINUS >/dev/null ;;
+        '>') $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_LEFTSHIFT KEY_DOT >/dev/null ;;
+        '|') $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_LEFTSHIFT KEY_BACKSLASH >/dev/null ;;
         *) echo "vm.sh type: can't type '$c'" >&2; exit 1 ;;
       esac
       sleep 0.15   # back-to-back send-keys get dropped by the guest
