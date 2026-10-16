@@ -3,6 +3,7 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 import "../lib/Validate.js" as V
+import "../lib/Answers.js" as A
 
 // Every answer and the step machine. Steps only read and set these; nothing
 // leaves the UI until Review's "Erase and install" hands answers() to mbm-install.
@@ -45,8 +46,7 @@ Singleton {
 
     readonly property var facts: Probe.facts
     readonly property var diskInfo: facts ? (facts.disks.find(d => d.path === disk) ?? null) : null
-    // Typed to confirm the erase. Disks without a model (virtio) use their name.
-    readonly property string confirmWord: diskInfo ? (diskInfo.model || diskInfo.path.split("/").pop()) : ""
+    readonly property string confirmWord: A.confirmWord(diskInfo)
     readonly property var dataRows: facts ? facts.datafs.filter(f => f.disk !== disk) : []
     readonly property string home: "/home/" + (username || "you")
 
@@ -150,14 +150,11 @@ Singleton {
         else if (Run.state === "failed") Run.cleanup(() => { Probe.refresh(); step = indexOf("review"); });
     }
 
-    // KEY=value lines for mbm-install, END-terminated (it reads until END).
+    // The answers file mbm-install reads (lib/Answers.js).
     function answers() {
-        const dm = dataRows.filter(r => mounts[r.uuid]?.on)
-                           .map(r => r.uuid + ":" + V.expand(mounts[r.uuid].path, "/home/" + username)).join(",");
-        return ["DISK=" + disk, "DISK_CONFIRMED=yes", "HOSTNAME=" + hostname, "TIMEZONE=" + timezone,
-                "USERNAME=" + username, "USER_PASSWORD=" + password,
-                "LUKS_PASSPHRASE=" + (sameLuks ? password : luks),
-                "XKB_LAYOUT=" + layout, "XKB_VARIANT=" + variant, "DATA_MOUNTS=" + dm, "END", ""].join("\n");
+        return A.text({ disk: disk, hostname: hostname, timezone: timezone, username: username,
+                        password: password, sameLuks: sameLuks, luks: luks, layout: layout, variant: variant,
+                        mounts: dataRows.filter(r => mounts[r.uuid]?.on).map(r => ({ uuid: r.uuid, path: mounts[r.uuid].path })) });
     }
 
     // The installer layer steps aside (Frame.qml) while the terminal is open.

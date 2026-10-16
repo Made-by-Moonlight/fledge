@@ -1,3 +1,39 @@
 import QtQuick
+import "../theme"
+import "../components"
+import "../services"
 import "../ui"
-Title { text: "(next task)" }
+import "../lib/Format.js" as Fmt
+
+Column {
+    spacing: 14
+    readonly property var f: Installer.facts
+    readonly property var ticked: Installer.dataRows.filter(r => Installer.mounts[r.uuid]?.on)
+    readonly property var rows: [
+        ["Keyboard", Installer.layout + (Installer.variant ? " (" + Installer.variant + ")" : ""), "keyboard"],
+        ["Timezone", Installer.timezone, "region"],
+        ["Account", Installer.username + "  ·  root locked", "account"],
+        ["Computer name", Installer.hostname, "account"],
+        ["Disk unlock", Installer.sameLuks ? "Same as your password" : "Its own passphrase", "account"],
+        ["Erase", Installer.confirmWord + "  ·  " + (Installer.diskInfo ? Fmt.size(Installer.diskInfo.size) : "") + "  ·  " + Installer.disk, "disk"],
+        ["Data disks", ticked.length === 0 ? "None" : ticked.map(r => (r.label || r.uuid.slice(0, 13)) + "  →  " + Installer.mounts[r.uuid].path).join("\n"),
+         Installer.dataRows.length > 0 ? "data" : ""],
+        ["Microcode", f?.ucode ?? "", ""],
+        ["Graphics", f?.gpu || "generic (Mesa)", ""],
+        ["Memory", f ? f.memMiB + " MiB  ·  zram " + f.zramMiB + " MiB  ·  hibernate swap " + f.swapMiB + " MiB" : "", ""]
+    ]
+    Title { text: "Review"; sub: "Nothing has changed yet. Erase and install starts the install." }
+    Repeater {
+        model: parent.rows
+        delegate: Row {
+            required property var modelData
+            spacing: 16
+            Glyph { width: 160; text: modelData[0]; color: Theme.muted }
+            Glyph { width: 480; text: modelData[1]; wrapMode: Text.WordWrap; color: modelData[0] === "Erase" ? Theme.error : Theme.fg }
+            Glyph {
+                visible: modelData[2] !== ""; text: "Edit"; color: Theme.accent
+                MouseArea { anchors.fill: parent; anchors.margins: -4; onClicked: Installer.edit(modelData[2]) }
+            }
+        }
+    }
+}

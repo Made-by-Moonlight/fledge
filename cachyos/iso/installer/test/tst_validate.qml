@@ -2,6 +2,7 @@ import QtQuick
 import QtTest
 import "../lib/Validate.js" as V
 import "../lib/Progress.js" as P
+import "../lib/Answers.js" as A
 
 TestCase {
     name: "installer"
@@ -42,5 +43,22 @@ TestCase {
         compare(P.fraction(ids, { prepare: true, disk: true, base: true, config: true, boot: true, desktop: true, finish: true }, "", 0, 0), 1);
         const half = P.fraction(ids, { prepare: true, disk: true }, "base", 20, 40);
         verify(half > 0.2 && half < 0.3);
+    }
+    function test_confirmWord() {
+        compare(A.confirmWord({ path: "/dev/nvme2n1", model: "WD Blue SN570 1TB" }), "WD Blue SN570 1TB");
+        compare(A.confirmWord({ path: "/dev/vda", model: "" }), "vda");
+        compare(A.confirmWord(null), "");
+    }
+    function test_answers() {
+        const t = A.text({ disk: "/dev/vda", hostname: "glaux", timezone: "Europe/London", username: "ethan",
+                           password: "pw one", sameLuks: true, luks: "", layout: "gb", variant: "",
+                           mounts: [{ uuid: "u-1", path: "~/storage1" }, { uuid: "u-2", path: "/data" }] });
+        compare(t, "DISK=/dev/vda\nDISK_CONFIRMED=yes\nHOSTNAME=glaux\nTIMEZONE=Europe/London\nUSERNAME=ethan\n"
+                 + "USER_PASSWORD=pw one\nLUKS_PASSPHRASE=pw one\nXKB_LAYOUT=gb\nXKB_VARIANT=\n"
+                 + "DATA_MOUNTS=u-1:/home/ethan/storage1,u-2:/data\nEND\n");
+        const own = A.text({ disk: "/dev/vda", hostname: "h", timezone: "UTC", username: "e", password: "a",
+                             sameLuks: false, luks: "b", layout: "us", variant: "", mounts: [] });
+        verify(own.includes("LUKS_PASSPHRASE=b\n"));
+        verify(own.includes("DATA_MOUNTS=\n"));
     }
 }
