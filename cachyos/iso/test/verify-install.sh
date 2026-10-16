@@ -36,7 +36,14 @@ is "root account locked"               L      "$(sudo passwd -S root | awk '{pri
 bloat="$(pacman -Qq | grep -E '^(plasma|kde|kwin|gnome-shell|xfce|lxqt|cinnamon|mate-|cachyos-.+-settings$)' || true)"
 is "no desktop bloat"                  ""     "$bloat"
 is "linux-cachyos kernel"              yes    "$(pacman -Q linux-cachyos >/dev/null 2>&1 && echo yes || echo no)"
-is "running kernel >= 7.2"             yes    "$( (( $(vercmp "$(uname -r | sed 's/-.*//')" 7.2) >= 0 )) && echo yes || echo no)"
+# The CachyOS repos chroot-setup.sh wrote, for this CPU's level, above [core].
+# shellcheck source=../../install/lib/cachyos-repos.sh
+source ~/proj/slievr-cachy/cachyos/install/lib/cachyos-repos.sh
+want="$(cachyos_repo_sections "$(cachyos_repo_level "$(/lib/ld-linux-x86-64.so.2 --help)" /proc/cpuinfo)" | grep '^\[' | tr '\n' ' ')[core] "
+is "cachyos repos for this CPU"        "$want" "$(grep -E '^\[(cachyos.*|core)\]' /etc/pacman.conf | tr '\n' ' ')"
+is "cachyos keyring + mirrorlists"     4      "$(pacman -Qq cachyos-keyring cachyos-mirrorlist cachyos-v3-mirrorlist cachyos-v4-mirrorlist 2>/dev/null | grep -c .)"
+is "cachyos key trusted"               yes    "$(sudo pacman-key --list-keys F3B607488DB35A47 2>/dev/null | grep -q '\[ *full *\]\|\[ultimate\]' && echo yes || echo no)"
+is "running kernel >= 7.2"            yes    "$( (( $(vercmp "$(uname -r | sed 's/-.*//')" 7.2) >= 0 )) && echo yes || echo no)"
 is "repo origin is GitHub"             yes    "$(git -C ~/proj/slievr-cachy remote get-url origin | grep -q '^https://github.com/' && echo yes || echo no)"
 is "bootstrap.sh is executable"        yes    "$([[ -x ~/proj/slievr-cachy/cachyos/bootstrap.sh ]] && echo yes || echo no)"
 is "$HOME/.config is a real directory"     yes    "$( [[ -d $HOME/.config && ! -L $HOME/.config ]] && echo yes || echo no )"
