@@ -133,7 +133,14 @@ Singleton {
     function next() {
         if (current === "install") { primary(); return; }
         if (!valid(current)) { show(current); return; }
-        if (current === "review") { step = indexOf("install"); Run.start(answers()); return; }
+        if (current === "review") {
+            // Review's Edit lets a step be left half-changed (Back doesn't check
+            // everything a refresh can break either): re-check every earlier step
+            // before anything is erased, and send the user to the first bad one.
+            const bad = V.firstInvalid(steps.slice(0, step).map((s, i) => ({ skipped: skipped(i), valid: valid(s.id) })));
+            if (bad >= 0) { show(steps[bad].id); returnTo = step; step = bad; return; }
+            step = indexOf("install"); Run.start(answers()); return;
+        }
         if (returnTo >= 0) { step = returnTo; returnTo = -1; return; }
         let i = step + 1;
         while (i < steps.length - 1 && skipped(i)) i++;
@@ -141,7 +148,12 @@ Singleton {
     }
     function back() {
         if (current === "install") return;
-        if (returnTo >= 0) { step = returnTo; returnTo = -1; return; }
+        // Back from Review's Edit returns to Review, so it must not carry a
+        // half-edited step (an unconfirmed password, an unconfirmed disk) there.
+        if (returnTo >= 0) {
+            if (!valid(current)) { show(current); return; }
+            step = returnTo; returnTo = -1; return;
+        }
         let i = step - 1;
         while (i > 0 && skipped(i)) i--;
         step = Math.max(i, 0);

@@ -28,8 +28,23 @@ TestCase {
         verify(V.mountPath("/data/", h) !== "");
         verify(V.mountPath("/a/../b", h) !== "");
         verify(V.mountPath("/my disk", h) !== "");
+        verify(V.mountPath("~/.config", h) !== "");
+        verify(V.mountPath("~/.local/share/x", h) !== "");
+        verify(V.mountPath("/.data", h) !== "");
+        compare(V.mountPath("/data/games.old", h), "");
+        verify(V.mountPath("~/proj", h) !== "");
+        verify(V.mountPath("~/proj/slievr-cachy", h) !== "");
+        verify(V.mountPath("/home/other/proj", h) !== "");
+        compare(V.mountPath("~/projects", h), "");
+        compare(V.mountPath("~/storage1/proj", h), "");
         compare(V.expand("~/s", h), "/home/ethan/s");
         compare(V.expand("/x/~", h), "/x/~");
+    }
+    function test_firstInvalid() {
+        compare(V.firstInvalid([]), -1);
+        compare(V.firstInvalid([{ skipped: false, valid: true }, { skipped: true, valid: false }]), -1);
+        compare(V.firstInvalid([{ skipped: false, valid: true }, { skipped: false, valid: false }, { skipped: false, valid: false }]), 1);
+        compare(V.firstInvalid([{ skipped: true, valid: false }, { skipped: false, valid: false }]), 1);
     }
     function test_progress() {
         compare(P.parse("hello"), null);

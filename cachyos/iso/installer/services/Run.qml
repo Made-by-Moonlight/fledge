@@ -6,6 +6,7 @@ import "../lib/Progress.js" as P
 
 // Runs mbm-install (or dev/replay.sh), reads its @@mbm markers into stage
 // state, keeps the log. Exit 3 = only the Desktop stage failed.
+// state: idle, running, done, desktopFailed, failed, rebooting.
 Singleton {
     id: r
     readonly property var stages: [["prepare", "Prepare"], ["disk", "Partition & encrypt"], ["base", "Base system"],
@@ -55,13 +56,28 @@ Singleton {
         proc.running = true;
     }
     property var afterCleanup: null
-    function cleanup(after) {
+    property bool cleanupForce: false   // run afterCleanup even if mbm-cleanup fails
+    property string cleanupError: ""    // shown by Welcome and Installing
+    function cleanup(after, force) {
         afterCleanup = after ?? null;
+        cleanupForce = force ?? false;
+        cleanupError = "";
         cleanProc.running = true;
     }
+    // Once only: the countdown, Return and the button can all ask.
+    property bool rebootSent: false
     function reboot() {
+        if (rebootSent) return;
+        rebootSent = true;
+        state = "rebooting";
         if (Installer.dev) { Qt.quit(); return; }
         Quickshell.execDetached(["sudo", "-n", "/usr/bin/reboot"]);
+    }
+    // After a Desktop failure the system is installed: tidy up if possible, but
+    // reboot regardless (systemd unmounts and closes LUKS on the way down).
+    function rebootAnyway() {
+        state = "rebooting";
+        cleanup(() => reboot(), true);
     }
 
     Process {
@@ -70,9 +86,12 @@ Singleton {
         onStarted: if (r.pending !== "") { write(r.pending); r.pending = ""; }
         stdout: SplitParser { onRead: line => r.handle(line) }
         stderr: SplitParser { onRead: line => r.push(line) }
-        onExited: code => {
-            r.state = code === 0 ? "done" : code === 3 ? "desktopFailed" : "failed";
-            if (code !== 0 && r.failedStage === "") r.failedStage = r.current || "prepare";
+        // Exit codes only mean something on a normal exit. Killed by a signal
+        // (QProcess::CrashExit, 1) is a failure whatever the code says.
+        onExited: (code, status) => {
+            const ok = status !== 1 && code === 0;
+            r.state = ok ? "done" : status !== 1 && code === 3 ? "desktopFailed" : "failed";
+            if (!ok && r.failedStage === "") r.failedStage = r.current || "prepare";
         }
     }
     Process {
@@ -80,9 +99,15 @@ Singleton {
         command: Installer.dev ? ["true"] : ["sudo", "-n", "/usr/local/bin/mbm-cleanup"]
         stderr: SplitParser { onRead: line => r.push(line) }
         onExited: code => {
-            if (code !== 0) { r.push("mbm-cleanup failed (exit " + code + ")"); return; }
-            r.state = "idle";
-            const f = r.afterCleanup; r.afterCleanup = null;
+            const f = r.afterCleanup, force = r.cleanupForce;
+            r.afterCleanup = null; r.cleanupForce = false;
+            if (code !== 0) {
+                r.cleanupError = "Cleaning up failed (mbm-cleanup exit " + code + "). Open a terminal to see what is still mounted or unlocked.";
+                r.push("mbm-cleanup failed (exit " + code + ")");
+                if (force && f) f();
+                return;
+            }
+            if (r.state !== "rebooting") r.state = "idle";
             if (f) f();
         }
     }

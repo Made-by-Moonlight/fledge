@@ -28,8 +28,13 @@ FocusScope {
     Keys.onUpPressed: move(-1)
     Keys.onDownPressed: move(1)
     // Handled here so it runs before Frame's Return (plain next(), which would only show the error).
-    Keys.onReturnPressed: ev => { if (Installer.diskInfo) confirm(); else ev.accepted = false; }
-    Keys.onEnterPressed: ev => { if (Installer.diskInfo) confirm(); else ev.accepted = false; }
+    // A held Return's repeats are swallowed: confirming the erase takes its own press.
+    function returnKey(ev) {
+        if (ev.isAutoRepeat) return;
+        if (Installer.diskInfo) confirm(); else ev.accepted = false;
+    }
+    Keys.onReturnPressed: ev => returnKey(ev)
+    Keys.onEnterPressed: ev => returnKey(ev)
     Column {
         spacing: 14
         Title { text: "Disk"; sub: "The disk you pick is erased completely. USB drives and this installer's own stick aren't listed. ↑ ↓ to choose." }

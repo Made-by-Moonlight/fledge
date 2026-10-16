@@ -30,6 +30,7 @@ Column {
             spacing: 10
             Glyph { width: parent.width; wrapMode: Text.WordWrap; text: "A previous install attempt is still open: its disk is mounted or unlocked." }
             Button { text: "Clean up"; onClicked: Run.cleanup(() => Probe.refresh()) }
+            Glyph { visible: text !== ""; width: parent.width; wrapMode: Text.WordWrap; color: Theme.error; text: Run.cleanupError }
         }
     }
 }

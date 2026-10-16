@@ -15,8 +15,10 @@ Column {
     property bool cancelled: false
     Title {
         text: Run.state === "done" ? "Installed" : Run.state === "running" ? "Installing fledge"
+            : Run.state === "rebooting" ? "Rebooting…"
             : Run.state === "desktopFailed" ? "Installed, but the desktop setup failed" : "The install failed"
-        sub: Run.state === "running" ? "This takes a while. You can leave it." : Run.state === "idle" ? "" : "Return does the highlighted action."
+        sub: Run.state === "running" ? "This takes a while. You can leave it."
+            : Run.state === "idle" || Run.state === "rebooting" ? "" : "Return does the highlighted action."
     }
     Repeater {
         model: Run.stages
@@ -58,7 +60,10 @@ Column {
     Timer {
         interval: 1000; repeat: true
         running: Run.state === "done" && !page.cancelled
-        onTriggered: { page.secs -= 1; if (page.secs <= 0) Run.reboot(); }
+        onTriggered: {
+            page.secs = Math.max(0, page.secs - 1);
+            if (page.secs === 0) { stop(); Run.reboot(); }
+        }
     }
 
     // Failed in a base stage: the disk is half-written, start over.
@@ -66,6 +71,10 @@ Column {
         visible: Run.state === "failed"; spacing: 10
         Button { primary: true; text: "Clean up and start over"; onClicked: Installer.primary() }
         Button { text: "Open terminal"; onClicked: Installer.openTerminal() }
+    }
+    Glyph {
+        visible: Run.state === "failed" && Run.cleanupError !== ""
+        width: page.width; wrapMode: Text.WordWrap; color: Theme.error; text: Run.cleanupError
     }
     // Failed in Desktop: the system is installed and firstboot can finish it.
     Column {
@@ -77,7 +86,7 @@ Column {
         Row {
             spacing: 10
             Button { primary: true; text: "Retry desktop"; onClicked: Installer.primary() }
-            Button { text: "Reboot anyway"; onClicked: Run.cleanup(() => Run.reboot()) }
+            Button { text: "Reboot anyway"; onClicked: Run.rebootAnyway() }
             Button { text: "Open terminal"; onClicked: Installer.openTerminal() }
         }
     }

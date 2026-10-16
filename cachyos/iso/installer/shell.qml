@@ -9,16 +9,30 @@ import "theme"
 import "ui"
 
 // The fledge installer (made by moonlight): one full-screen layer per monitor; the
-// first screen gets the installer, the others the owl. Run by the live ISO's
-// Hyprland (/etc/mbm-installer/hyprland.conf); dev: dev/run.sh.
+// monitor Hyprland has focused at startup gets the installer, the others the
+// owl. Run by the live ISO's Hyprland (/etc/mbm-installer/hyprland.conf); dev:
+// dev/run.sh.
 ShellRoot {
+    id: shell
     settings.watchFiles: Installer.dev
+    // Taken once, from the first focused monitor Hyprland reports (it fills in
+    // after startup), so the installer doesn't follow the pointer between
+    // monitors. Unplugged, or never reported: the first screen.
+    property string mainName: ""
+    readonly property ShellScreen mainScreen: {
+        const all = Quickshell.screens;
+        for (let i = 0; i < all.length; i++) if (all[i].name === mainName) return all[i];
+        return all.length > 0 ? all[0] : null;
+    }
+    function latchMain() { if (mainName === "" && Hyprland.focusedMonitor) mainName = Hyprland.focusedMonitor.name; }
+    Component.onCompleted: latchMain()
+    Connections { target: Hyprland; function onFocusedMonitorChanged() { shell.latchMain(); } }
     Variants {
         model: Quickshell.screens
         PanelWindow {
             id: win
             required property ShellScreen modelData
-            readonly property bool main: modelData === Quickshell.screens[0]
+            readonly property bool main: modelData === shell.mainScreen
             screen: modelData
             anchors { top: true; bottom: true; left: true; right: true }
             exclusionMode: ExclusionMode.Ignore
@@ -47,6 +61,7 @@ ShellRoot {
             // then is lost too, so wait a second (nobody types that fast after a
             // VT switch). Qt can come back with no active focus item as well;
             // forcing focus on the scope chain restores the field that had it.
+            // A keyboard plugged in also says "activelayout": the same, harmlessly.
             Timer {
                 id: settle; interval: 1000
                 onTriggered: { Hyprland.dispatch("forcerendererreload"); refocus.restart(); }

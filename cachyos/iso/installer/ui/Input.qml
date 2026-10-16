@@ -28,8 +28,9 @@ Column {
             verticalAlignment: TextInput.AlignVCenter
             color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fontSize
             echoMode: f.secret && !f.shown ? TextInput.Password : TextInput.Normal
-            Keys.onReturnPressed: ev => { ev.accepted = true; f.accepted(); }
-            Keys.onEnterPressed: ev => { ev.accepted = true; f.accepted(); }
+            // Repeats of a held Return are swallowed: accepted() can mean next().
+            Keys.onReturnPressed: ev => { ev.accepted = true; if (!ev.isAutoRepeat) f.accepted(); }
+            Keys.onEnterPressed: ev => { ev.accepted = true; if (!ev.isAutoRepeat) f.accepted(); }
             Text { visible: !parent.text; text: f.placeholder; textFormat: Text.PlainText; color: Theme.muted; font: parent.font; anchors.verticalCenter: parent.verticalCenter }
         }
         Glyph {
