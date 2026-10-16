@@ -20,6 +20,13 @@ seed_user_settings() {
   chown "$uid:$gid" "$dir/settings.json"
 }
 
+# remove_install_sudoers  ->  drop the temporary passwordless sudo. Called by
+# install-cachyos.sh's EXIT trap too, so a cancelled or killed install never
+# leaves the installed system with NOPASSWD:ALL.
+remove_install_sudoers() {
+  rm -f "$MBM_TARGET/etc/sudoers.d/99-mbm-install"
+}
+
 # run_desktop_stage <user>  ->  0 once bootstrap.sh completed in the target.
 # bootstrap.sh calls sudo throughout: passwordless sudo for this stage only.
 # runuser -l starts from a clean login environment, so bootstrap sees no
@@ -40,7 +47,7 @@ run_desktop_stage() {
       arch-chroot "$MBM_TARGET" pacman -Syy --noconfirm || true
     fi
   done
-  rm -f "$sudoers"
+  remove_install_sudoers
   (( ok )) || return 1
   arch-chroot "$MBM_TARGET" systemctl disable slievr-firstboot.service
   touch "$MBM_TARGET/var/lib/slievr-firstboot-done"
