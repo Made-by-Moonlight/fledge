@@ -20,6 +20,14 @@ in=$'( 1/245) installing base\n:: Running post-transaction hooks...\n(245/245) u
 check "filter adds counts after install lines" \
   $'( 1/245) installing base\n@@mbm count 1 245\n:: Running post-transaction hooks...\n(245/245) upgrading zstd\n@@mbm count 245 245\nwarning: ( 3/4) is not a count' \
   "$(progress_filter <<<"$in")"
+piped=$'Packages (3) a-1  b-1  c-1\n\ninstalling a...\nOptional dependencies for a\n    x: y [installed]\nupgrading b...\ninstalling c...\ninstalling d...'
+check "filter counts piped pacman output against its Packages line" \
+  $'Packages (3) a-1  b-1  c-1\n\ninstalling a...\n@@mbm count 1 3\nOptional dependencies for a\n    x: y [installed]\nupgrading b...\n@@mbm count 2 3\ninstalling c...\n@@mbm count 3 3\ninstalling d...' \
+  "$(progress_filter <<<"$piped")"
+check "filter: each transaction restarts the count (VerbosePkgLists header too)" \
+  $'Package (1)  New Version\ninstalling z...\n@@mbm count 1 1' \
+  "$(progress_filter <<<$'Package (1)  New Version\ninstalling z...')"
+check "filter: no count before a Packages line" "installing a..." "$(progress_filter <<<'installing a...')"
 check "filter passes markers through" "@@mbm stage x X" "$(progress_filter <<<'@@mbm stage x X')"
 
 exit $fail
