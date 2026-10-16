@@ -1,7 +1,7 @@
 # Graphical installer (roadmap D) — design
 
 **Date:** 2026-10-16
-**Status:** design approved, plan pending
+**Status:** implemented (see plan)
 **Branch:** `graphical-installer`
 
 ## Problem
@@ -58,6 +58,12 @@ dependable on that machine (Radeon RX 9070 + Raphael iGPU, root on
 | Data disks | Detected in the installer, defaults from `profile.sh` | Works on any machine and any username |
 | Live Hyprland config | One small hand-written `hyprland.conf` on the ISO | ~10 lines, no binds; listed in the 0.57 migration risk below |
 
+## Naming
+
+The distro is **fledge**: the ISO is `fledge-<date>-x86_64.iso`, the boot
+menu says "fledge installer" and the installer's title is "fledge". "made by
+moonlight" is the org byline under it (rail, Welcome), never the distro name.
+
 ## User flow
 
 Full-screen window on every monitor; the UI lives on the focused/primary one,
@@ -81,8 +87,10 @@ the rail opens `foot`.
    rules, mirrored in JS and re-checked by `install-cachyos.sh`.
 6. **Disk**: a card per installable disk (model, size, transport, existing
    partitions + labels). USB disks and the ISO's own device are hidden.
-   Selecting one shows a red panel "Everything on *<model>* will be erased";
-   Next unlocks only after typing the model name.
+   Selecting one shows a red panel "Everything on *<model>* will be erased"
+   with one **Erase this disk** button (Return presses it), which confirms
+   and moves on. No typed confirmation: the Review page names the disk
+   again before anything is written.
 7. **Data disks**: every filesystem on the *other* disks (swap, LUKS, the
    ESP and anything on the target disk excluded): checkbox, label, fstype,
    size, editable mountpoint. Rows whose UUID is in `profile.sh`'s

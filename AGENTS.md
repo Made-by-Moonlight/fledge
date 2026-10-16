@@ -48,7 +48,7 @@ each with its own spec, plan and branch, and the desktop works after each one:
 | A | **mbm shell**: Quickshell bar, launcher, notifications, OSD, lock, wallpaper, quick settings, settings window; settings JSON → generated Hyprland config | done (merged, released in `v2026.10.12`): spec + plan in `docs/superpowers/` |
 | B | **`mbm` CLI**: replace the vendored `slievr-*` scripts (`dot-local/share/slievr-cachy/bin/`) | not started |
 | C | **mbm theme**: palette in mbm settings, our own app-theme renderer, retire `dot-config/omarchy/` | not started |
-| D | **Graphical installer**: Quickshell installer on the ISO, reusing A + C | not started |
+| D | **Graphical installer**: Quickshell installer on the ISO, reusing A + C | done (branch graphical-installer): spec + plan in `docs/superpowers/` |
 
 Until B lands, the `slievr-*` scripts are a vendored, renamed Omarchy fork
 (see `dot-local/share/slievr-cachy/README.md`). Treat them as legacy: call

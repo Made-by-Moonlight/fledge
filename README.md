@@ -1,8 +1,9 @@
 # made by moonlight
 
 A CachyOS + Hyprland desktop and the installer ISO that puts it on a machine:
-boot the ISO, answer a few questions, and it installs unattended onto an
-encrypted btrfs disk, then sets up the desktop on first boot.
+boot the ISO (fledge), answer a few questions in its graphical installer, and
+it installs unattended onto an encrypted btrfs disk, desktop included, then
+reboots to the login screen.
 
 The desktop is its own Quickshell shell (`mbm`): an attached bar with three
 hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
@@ -44,9 +45,9 @@ installer can join Wi-Fi, and the network carries over to the installed system.
 
 ## Repo layout
 
-- `cachyos/iso/` — the installer ISO (build, test, release)
+- `cachyos/iso/` — the installer ISO and its graphical installer (build, test, release)
 - `cachyos/install/` — the installer itself and first-boot setup
-- `cachyos/bootstrap.sh` — the desktop layer, run on first boot
+- `cachyos/bootstrap.sh` — the desktop layer, run by the installer (or on first boot if that failed)
 - `cachyos/branding/` — owl, palette and theme assets
 - `dot-config/quickshell/mbm/` — the desktop shell (bar, launcher, notifications, lock, settings)
 - `dot-local/share/mbm/` — the `mbm` CLI: settings (defaults + overrides → generated Hyprland config), dmenu

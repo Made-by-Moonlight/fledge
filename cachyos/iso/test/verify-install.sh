@@ -11,7 +11,9 @@ no()  { printf 'FAIL  %s\n' "$1"; bad=1; }
 is()  { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 
 is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager | tail -n +2 | grep -c .)"
-is "firstboot finished bootstrap"      1      "$(grep -c 'Bootstrap complete.' /var/log/slievr-firstboot.log)"
+is "desktop installed before reboot"   1      "$(sudo grep -c 'Bootstrap complete.' /var/log/mbm-install.log 2>/dev/null)"
+is "firstboot done-guard present"      yes    "$([[ -e /var/lib/slievr-firstboot-done ]] && echo yes || echo no)"
+is "console layout in vconsole.conf"   yes    "$(grep -q '^XKBLAYOUT=' /etc/vconsole.conf && echo yes || echo no)"
 # systemd 262's TPM measurement units (systemd-pcr*, systemd-tpm2-setup*) fail
 # with "Could not extend NvPCR" on swtpm; nothing here uses measured boot.
 is "no failed units (TPM measurement excluded)" 0 "$(systemctl --failed --no-legend --plain | grep -vE '^(systemd-pcr|systemd-tpm2-setup)' | grep -c .)"
@@ -36,5 +38,18 @@ is "repo origin is GitHub"             yes    "$(git -C ~/proj/slievr-cachy remo
 is "bootstrap.sh is executable"        yes    "$([[ -x ~/proj/slievr-cachy/cachyos/bootstrap.sh ]] && echo yes || echo no)"
 is "$HOME/.config is a real directory"     yes    "$( [[ -d $HOME/.config && ! -L $HOME/.config ]] && echo yes || echo no )"
 is "repo has no local changes"         ""     "$(git -C ~/proj/slievr-cachy status --porcelain)"
+
+# VERIFY_LAYOUT=gb: the installer's keyboard choice reached the user's settings.
+if [[ -n "${VERIFY_LAYOUT:-}" ]]; then
+  is "settings kbLayout"               "$VERIFY_LAYOUT" "$(jq -r '.input.kbLayout' "$HOME/.config/mbm/settings.json" 2>/dev/null)"
+  is "vconsole XKBLAYOUT"              "XKBLAYOUT=$VERIFY_LAYOUT" "$(grep '^XKBLAYOUT=' /etc/vconsole.conf)"
+fi
+# VERIFY_DATA_MOUNT=~/testdata: the data disk is in fstab and mounts on access.
+if [[ -n "${VERIFY_DATA_MOUNT:-}" ]]; then
+  d="${VERIFY_DATA_MOUNT/#\~/$HOME}"
+  is "data disk in fstab (nofail, automount)" 1 "$(grep -c " $d ext4 defaults,nofail,x-systemd.automount" /etc/fstab)"
+  ls "$d" >/dev/null 2>&1
+  is "data disk mounts on access"       yes   "$(findmnt -n "$d" -t ext4 >/dev/null && echo yes || echo no)"
+fi
 
 exit $bad
