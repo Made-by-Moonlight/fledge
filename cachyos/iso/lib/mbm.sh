@@ -1,11 +1,7 @@
 # shellcheck shell=bash
 # Helpers for the live ISO's installer scripts (mbm-probe, mbm-install). Pure where
-# possible so test-mbm.sh can cover them without an ISO.
-
-# valid_hostname <name>  ->  0 for a single RFC 1123 label in lowercase
-valid_hostname() {
-  [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]
-}
+# possible so test-mbm.sh can cover them without an ISO. (valid_hostname lives in
+# cachyos/install/lib/answers.sh, where install-cachyos.sh checks the answers.)
 
 # write_answers <file> KEY=value...  ->  mode-600 answers file for
 # install-cachyos.sh --answers (one KEY=value per line, unquoted). Refuses,

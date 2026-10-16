@@ -16,6 +16,11 @@ valid_username() {
   esac
 }
 
+# valid_hostname <name>  ->  0 for a single RFC 1123 label in lowercase
+valid_hostname() {
+  [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$ ]]
+}
+
 # load_answers <file>  ->  sets the ANSWER_KEYS globals present in the file,
 # then deletes it. Returns 1 (file kept) on any problem. Never echoes a value.
 load_answers() {
@@ -57,15 +62,21 @@ valid_xkb_variant() {
 
 # valid_mount_path <path>  ->  0 for an absolute, clean path that is safe to
 # mount a data disk on: not a system tree, not a whole home, not /home or /mnt
-# themselves. Mirrored in cachyos/iso/installer/lib/Validate.js.
+# themselves, not hidden, not ~/proj. Mirrored in cachyos/iso/installer/lib/Validate.js.
 valid_mount_path() {
   local p="$1" parts
   [[ "$p" =~ ^/[A-Za-z0-9._/-]+$ ]] || return 1
   [[ "$p" == *//* || "$p" == */ || "$p/" == *"/./"* || "$p/" == *"/../"* ]] && return 1
+  # Hidden folders (~/.config, ~/.local …) belong to the desktop, not to data.
+  [[ "$p" == */.* ]] && return 1
   IFS=/ read -ra parts <<<"${p#/}"
   case "${parts[0]}" in
     boot|efi|usr|var|etc|bin|sbin|lib|lib64|root|run|proc|sys|dev|tmp|swap) return 1 ;;
-    home) (( ${#parts[@]} >= 3 )) || return 1 ;;
+    # ~/proj holds the staged repo the dotfile symlinks point into: a disk
+    # mounted on it or inside it would hide it. Its ancestors (/home, a whole
+    # home) are refused by the length check.
+    home) (( ${#parts[@]} >= 3 )) || return 1
+          [[ "${parts[2]}" != proj ]] || return 1 ;;
     mnt|srv|media|opt) (( ${#parts[@]} >= 2 )) || return 1 ;;
   esac
   return 0

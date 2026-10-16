@@ -95,6 +95,9 @@ if [[ -n "$ANSWERS" ]]; then
   # USERNAME is optional (profile.sh has the default) but always re-checked:
   # it reaches useradd, paths and a sed expression.
   valid_username "$USERNAME" || die "answers USERNAME is not a valid login name: $USERNAME"
+  # The UI checks it too, but an answers file is the last word: it reaches
+  # /etc/hostname and /etc/hosts.
+  valid_hostname "$HOSTNAME" || die "answers HOSTNAME is not a valid host name: $HOSTNAME"
 fi
 progress_stage prepare "Prepare"
 
