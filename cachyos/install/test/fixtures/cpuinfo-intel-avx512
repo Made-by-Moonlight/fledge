@@ -1,0 +1,6 @@
+processor	: 0
+vendor_id	: GenuineIntel
+cpu family	: 6
+model		: 143
+model name	: Intel(R) Xeon(R) w5-2455X
+flags		: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx lm avx avx2 bmi1 bmi2 fma avx512f avx512dq avx512cd avx512bw avx512vl

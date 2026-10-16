@@ -256,10 +256,12 @@ pkgs=(
   btrfs-progs cryptsetup mkinitcpio
   "${UCODE}"
   networkmanager sudo git openssh vim
-  curl tar
   plymouth
   zram-generator
   limine limine-mkinitcpio-hook efibootmgr
+  # From the live ISO's [cachyos] repo, so always current; chroot-setup.sh
+  # points the target's pacman.conf at them.
+  cachyos-keyring cachyos-mirrorlist cachyos-v3-mirrorlist cachyos-v4-mirrorlist
 )
 if [[ -n "$GPU_PKGS" ]]; then
   read -ra gpu_arr <<<"$GPU_PKGS"
@@ -292,6 +294,7 @@ rule "System configuration (chroot)"
 ########################################################################
 install -Dm755 "$HERE/lib/chroot-setup.sh" /mnt/root/chroot-setup.sh
 install -Dm644 "$HERE/lib/bootloader.sh"   /mnt/root/bootloader.sh
+install -Dm644 "$HERE/lib/cachyos-repos.sh" /mnt/root/cachyos-repos.sh
 
 # Vendored Plymouth theme (graphical boot splash + LUKS prompt). Not stow-
 # managed - Plymouth reads themes from a system path. chroot-setup.sh selects it.
@@ -310,7 +313,7 @@ arch-chroot /mnt env \
   USER_PASSWORD="$USER_PASSWORD" ROOT_PASSWORD="$ROOT_PASSWORD" \
   bash /root/chroot-setup.sh
 
-rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh
+rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh /mnt/root/cachyos-repos.sh
 add_data_mounts
 # The Bootloader marker is printed inside the chroot, so this script's own
 # stage must follow it, or a failure in the rest of that stage reports `fail config`.

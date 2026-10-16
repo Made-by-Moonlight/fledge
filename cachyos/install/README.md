@@ -28,6 +28,7 @@ the first reboot.
 | `lib/disk.sh` | partition + LUKS + btrfs + swapfile |
 | `lib/bootloader.sh` | Limine UKI setup (runs in chroot) |
 | `lib/chroot-setup.sh` | system config (runs in chroot) |
+| `lib/cachyos-repos.sh` | the target's CachyOS repo sections (v3 / v4 / znver4 by CPU), used by chroot-setup |
 | `lib/answers.sh` | parse unattended answers file; user name, host name and data-mount checks |
 | `lib/desktop.sh` | the Desktop stage (bootstrap.sh in the target before reboot) and Finish |
 | `lib/progress.sh` | `@@mbm` progress markers for the graphical installer (`MBM_PROGRESS=1`) |
@@ -37,6 +38,7 @@ the first reboot.
 | `test-desktop.sh` | `lib/desktop.sh`'s pure parts and the `--desktop-only` guards |
 | `test-progress.sh` | `lib/progress.sh`'s markers and pacman output filter |
 | `test-network.sh` | `lib/network.sh` against a temporary directory |
+| `test-cachyos-repos.sh` | `lib/cachyos-repos.sh` against cpuinfo, ld.so and pacman.conf fixtures |
 
 ## Before you run it, per machine
 

@@ -34,7 +34,8 @@ jobs:
         run: |
           set -euo pipefail
           for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
-                   cachyos/install/test-progress.sh cachyos/install/test-desktop.sh cachyos/iso/test-probe.sh \
+                   cachyos/install/test-progress.sh cachyos/install/test-desktop.sh cachyos/install/test-cachyos-repos.sh \
+                   cachyos/iso/test-probe.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
                    dot-local/share/mbm/test/test-dmenu.sh; do
