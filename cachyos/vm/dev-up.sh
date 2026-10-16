@@ -32,7 +32,11 @@ fi
 echo "Waiting for an IP address..."
 vm_ip=""
 for _ in $(seq 1 30); do
-  vm_ip=$($VIRSH domifaddr "$VM_NAME" 2>/dev/null | awk '/ipv4/{print $4}' | cut -d/ -f1)
+  # Two leases after a reinstall (live ISO + installed system): take the one
+  # whose sshd answers, else keep waiting.
+  for ip in $($VIRSH domifaddr "$VM_NAME" 2>/dev/null | awk '/ipv4/{print $4}' | cut -d/ -f1); do
+    timeout 1 bash -c "echo >/dev/tcp/$ip/22" 2>/dev/null && { vm_ip=$ip; break; }
+  done
   [ -n "$vm_ip" ] && break
   sleep 2
 done

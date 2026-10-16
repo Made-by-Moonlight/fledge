@@ -12,11 +12,16 @@ VIRSH="virsh -c qemu:///system"
 REPO="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
 VM_REPO="proj/slievr-cachy"
 
+# After a reinstall from the ISO the same MAC holds two leases (the live
+# system's and the installed one's): prefer the address where sshd answers.
 vm_ip() {
-  local ip
-  ip="$($VIRSH domifaddr "$VM_NAME" 2>/dev/null | awk '/ipv4/{print $4}' | cut -d/ -f1 | head -n1)"
-  [[ -n $ip ]] || { echo "vm.sh: no IP for $VM_NAME (run cachyos/vm/dev-up.sh first)" >&2; exit 1; }
-  printf '%s\n' "$ip"
+  local ips ip
+  ips="$($VIRSH domifaddr "$VM_NAME" 2>/dev/null | awk '/ipv4/{print $4}' | cut -d/ -f1)"
+  [[ -n $ips ]] || { echo "vm.sh: no IP for $VM_NAME (run cachyos/vm/dev-up.sh first)" >&2; exit 1; }
+  for ip in $ips; do
+    if timeout 1 bash -c "echo >/dev/tcp/$ip/22" 2>/dev/null; then printf '%s\n' "$ip"; return; fi
+  done
+  printf '%s\n' "${ips%%$'\n'*}"
 }
 
 # The login shell is fish, which can't parse the POSIX commands below, so the
