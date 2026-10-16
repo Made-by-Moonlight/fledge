@@ -21,6 +21,11 @@ echo " slievr first-boot bootstrap — $(date)"
 echo " log: $LOG"
 echo "=================================================================="
 
+# The installer's own NOPASSWD rule for its Desktop stage. Its EXIT trap
+# removes it, but power loss or SIGKILL mid-stage can't be trapped, and that
+# is exactly when this service is still enabled: drop it here.
+rm -f /etc/sudoers.d/99-mbm-install
+
 if [[ ! -x "$BOOTSTRAP" ]]; then
   echo "ERROR: $BOOTSTRAP not found or not executable."
   echo "The staged repo should be at ${USER_HOME}/proj/slievr-cachy — check the install."

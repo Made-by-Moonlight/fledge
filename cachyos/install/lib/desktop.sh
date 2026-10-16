@@ -55,10 +55,17 @@ run_desktop_stage() {
 }
 
 # finish_install  ->  keep the install log in the new system, then close it up.
+# Always 0: by now the system is complete, and a busy mount or an open LUKS
+# mapping is torn down by the reboot anyway. Failing here would make the
+# graphical installer offer to erase and start over.
 finish_install() {
   if [[ -f /var/log/mbm-install.log ]]; then
-    install -Dm600 /var/log/mbm-install.log "$MBM_TARGET/var/log/mbm-install.log"
+    install -Dm600 /var/log/mbm-install.log "$MBM_TARGET/var/log/mbm-install.log" \
+      || echo "WARN: couldn't copy the install log into the new system" >&2
   fi
-  umount -R "$MBM_TARGET"
-  cryptsetup close "$LUKS_NAME"
+  umount -R "$MBM_TARGET" \
+    || echo "WARN: couldn't unmount $MBM_TARGET; the reboot will" >&2
+  cryptsetup close "$LUKS_NAME" \
+    || echo "WARN: couldn't close $LUKS_NAME; the reboot will" >&2
+  return 0
 }

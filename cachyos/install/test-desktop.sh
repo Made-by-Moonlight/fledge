@@ -37,6 +37,18 @@ for sig in TERM INT; do
   check "sudoers drop-in removed on SIG$sig" "no" "$([[ -e $MBM_TARGET/etc/sudoers.d/99-mbm-install ]] && echo yes || echo no)"
 done
 
+# A failed unmount or LUKS close after a good install must not fail the
+# install (set -e, as in install-cachyos.sh; umount/cryptsetup stubbed to fail).
+out="$(bash -c '
+  set -euo pipefail
+  source "$1/lib/desktop.sh"
+  umount() { return 32; }; cryptsetup() { return 5; }
+  LUKS_NAME=cryptroot MBM_TARGET="$2"
+  finish_install; echo "rc=$?"' _ "$DIR" "$T/nowhere" 2>&1)"
+contains "finish: unmount failure tolerated" "rc=0" "$out"
+contains "finish: says it couldn't unmount" "couldn't unmount" "$out"
+contains "finish: says it couldn't close LUKS" "couldn't close cryptroot" "$out"
+
 out="$(bash "$DIR/install-cachyos.sh" --desktop-only 'Bad Name' 2>&1)"; rc=$?
 check "desktop-only: bad user refused" 1 "$rc"
 contains "desktop-only: says why" "not a valid user name" "$out"
