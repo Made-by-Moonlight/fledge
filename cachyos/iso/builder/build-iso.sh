@@ -53,7 +53,7 @@ cp -rT "$ISO/configs/airootfs" "$PROFILE/airootfs"
 # picker talks to NM (Quickshell.Networking), and the profiles it saves copy
 # straight into the installed system.
 find "$PROFILE/airootfs/etc/systemd/system" \( -name 'iwd.service' -o -name 'systemd-networkd*' \
-  -o -name 'dbus-org.freedesktop.network1.service' \) -print -delete
+  -o -name 'dbus-org.freedesktop.network1.service' \) -prune -print -exec rm -rf {} +
 mkdir -p "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants"
 ln -sf /usr/lib/systemd/system/NetworkManager.service \
   "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
