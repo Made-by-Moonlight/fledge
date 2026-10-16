@@ -1,0 +1,1 @@
+../../../../../dot-config/quickshell/mbm/quicksettings/pickers/WifiPicker.qml

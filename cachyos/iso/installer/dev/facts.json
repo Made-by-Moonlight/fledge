@@ -1,0 +1,15 @@
+{
+  "disks": [
+    {"path": "/dev/vda", "size": 42949672960, "model": "", "tran": "", "parts": []},
+    {"path": "/dev/nvme0n1", "size": 1000204886016, "model": "WD Blue SN570 1TB", "tran": "nvme",
+     "parts": [{"path": "/dev/nvme0n1p1", "size": 2147483648, "fstype": "vfat", "label": ""},
+               {"path": "/dev/nvme0n1p2", "size": 998056312320, "fstype": "crypto_LUKS", "label": ""}]}
+  ],
+  "datafs": [
+    {"uuid": "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7", "fstype": "ext4", "label": "", "size": 480102916096, "disk": "/dev/sda", "mount": "~/storage1"},
+    {"uuid": "1234-ABCD", "fstype": "exfat", "label": "photos", "size": 64023257088, "disk": "/dev/sdd", "mount": null},
+    {"uuid": "55cefb4f-6b27-4dbc-bbf8-5e9120defa26", "fstype": "ext4", "label": "big", "size": 3900000000000, "disk": "/dev/nvme0n1", "mount": "~/storage4"}
+  ],
+  "ucode": "amd-ucode", "gpu": "vulkan-radeon lib32-vulkan-radeon", "memMiB": 31744, "zramMiB": 8192,
+  "swapMiB": 34816, "timezone": "UTC", "online": true, "leftover": false
+}
