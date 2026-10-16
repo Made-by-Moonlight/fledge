@@ -113,3 +113,26 @@ make_swapfile() {
   RESUME_OFFSET="$(btrfs inspect-internal map-swapfile -r "$sf")"
   _log "resume_offset=$RESUME_OFFSET"
 }
+
+# add_data_mounts  ->  fstab entries + mountpoints for DATA_MOUNTS_TSV
+# ("uuid<TAB>/path" lines) in the target at /mnt. Runs after the user exists
+# (chroot-setup.sh) so ntfs/vfat mounts and folders in the home get their ids.
+# Folders inside the user's home are created owned by the user, parents too.
+add_data_mounts() {
+  local uid gid uuid path dev fs d
+  [[ -n "${DATA_MOUNTS_TSV:-}" ]] || return 0
+  uid="$(arch-chroot /mnt id -u "$USERNAME")"; gid="$(arch-chroot /mnt id -g "$USERNAME")"
+  printf '\n# Data disks (made by moonlight installer): mounted by UUID on every boot;\n# nofail, so a missing disk never holds up boot.\n' >> /mnt/etc/fstab
+  while IFS=$'\t' read -r uuid path; do
+    [[ -n "$uuid" ]] || continue
+    dev="$(blkid -U "$uuid")"
+    fs="$(blkid -s TYPE -o value "$dev")"
+    fstab_line "$uuid" "$fs" "$path" "$uid" "$gid" >> /mnt/etc/fstab
+    mkdir -p "/mnt$path"
+    if [[ "$path" == "/home/$USERNAME/"* ]]; then
+      d="$path"
+      while [[ "$d" != "/home/$USERNAME" ]]; do chown "$uid:$gid" "/mnt$d"; d="${d%/*}"; done
+    fi
+    _log "data disk $uuid ($fs) -> $path"
+  done <<<"$DATA_MOUNTS_TSV"
+}

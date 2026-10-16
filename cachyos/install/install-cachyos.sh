@@ -19,10 +19,16 @@ source "$HERE/lib/disk.sh"
 source "$HERE/lib/answers.sh"
 # shellcheck source=lib/network.sh
 source "$HERE/lib/network.sh"
+# shellcheck source=lib/progress.sh
+source "$HERE/lib/progress.sh"
 
 die()  { printf '\e[31mERROR:\e[0m %s\n' "$*" >&2; exit 1; }
 warn() { printf '\e[33mWARN:\e[0m  %s\n' "$*" >&2; }
 rule() { printf '\n\e[1m== %s ==\e[0m\n' "$*"; }
+
+# Any non-zero exit marks the running stage as failed for the graphical
+# installer (no-op without MBM_PROGRESS). die() lands here too.
+trap 'rc=$?; if (( rc != 0 )); then progress_fail; fi' EXIT
 
 ALLOW_USB=0
 ANSWERS=""
@@ -34,6 +40,9 @@ while (( $# )); do
   esac
   shift
 done
+XKB_LAYOUT="us"
+XKB_VARIANT=""
+DATA_MOUNTS=""
 if [[ -n "$ANSWERS" ]]; then
   load_answers "$ANSWERS" || die "unusable answers file: $ANSWERS"
   for k in DISK HOSTNAME USER_PASSWORD LUKS_PASSPHRASE; do
@@ -43,11 +52,17 @@ if [[ -n "$ANSWERS" ]]; then
     [[ "$TIMEZONE" != *..* && -f "/usr/share/zoneinfo/$TIMEZONE" ]] \
       || die "answers TIMEZONE is not a valid zone: $TIMEZONE"
   fi
+  XKB_LAYOUT="${XKB_LAYOUT:-us}"
+  valid_xkb_layout "$XKB_LAYOUT"   || die "answers XKB_LAYOUT is not a known xkb layout: $XKB_LAYOUT"
+  valid_xkb_variant "$XKB_VARIANT" || die "answers XKB_VARIANT is malformed: $XKB_VARIANT"
+  DATA_MOUNTS_TSV="$(parse_data_mounts "$DATA_MOUNTS")" \
+    || die "answers DATA_MOUNTS is malformed, repeats a disk or folder, or uses a system path"
   ROOT_PASSWORD="${ROOT_PASSWORD:-}"     # empty -> root locked (chroot-setup.sh)
   # USERNAME is optional (profile.sh has the default) but always re-checked:
   # it reaches useradd, paths and a sed expression.
   valid_username "$USERNAME" || die "answers USERNAME is not a valid login name: $USERNAME"
 fi
+progress_stage prepare "Prepare"
 
 ########################################################################
 rule "Preflight"
@@ -88,7 +103,15 @@ else
   SWAPFILE_SIZE="(none)"
 fi
 
-mapfile -t KEEP_FSTAB < <(filter_fstab_entries "$(blkid -s UUID -o value)" "${EXTRA_FSTAB_ENTRIES[@]}")
+# Without answers (manual run), mount every profile.sh data disk that's here.
+if [[ -z "$ANSWERS" ]]; then
+  DATA_MOUNTS_TSV=""
+  while IFS=$'\t' read -r uuid path; do
+    [[ -n "$uuid" ]] || continue
+    DATA_MOUNTS_TSV+="$uuid"$'\t'"${path/#\~//home/$USERNAME}"$'\n'
+  done < <(data_disk_defaults "$(blkid -s UUID -o value)" "${DATA_DISKS[@]}")
+  DATA_MOUNTS_TSV="${DATA_MOUNTS_TSV%$'\n'}"
+fi
 
 cat <<EOF
 
@@ -101,9 +124,11 @@ cat <<EOF
   zram swap      : ${ZRAM_SIZE} MiB
   hibernate swap : ${SWAPFILE_SIZE}$( [[ "$SWAPFILE_SIZE" != "(none)" ]] && echo " MiB (btrfs swapfile)" )
   hostname       : ${HOSTNAME:-(will prompt)}
-  data disks     : ${#KEEP_FSTAB[@]} of ${#EXTRA_FSTAB_ENTRIES[@]} fstab entries present on this machine
+  keyboard       : ${XKB_LAYOUT}${XKB_VARIANT:+ (${XKB_VARIANT})}
+  data disks     : $(grep -c . <<<"$DATA_MOUNTS_TSV" || true) to mount permanently
 EOF
 
+progress_stage disk "Partition & encrypt"
 ########################################################################
 rule "Target disk"
 ########################################################################
@@ -140,6 +165,15 @@ root_src="$(findmnt -nvo SOURCE / || true)"
 if [[ "$DISK_TRAN" == "usb" && $ALLOW_USB -eq 0 ]]; then
   die "$DISK_KNAME is a USB device - pass --allow-usb if you really mean it"
 fi
+# Data disks are mounted, never formatted: one on the disk about to be erased
+# would vanish. The UI hides those; this catches manual runs and bad answers.
+while IFS=$'\t' read -r uuid _; do
+  [[ -n "$uuid" ]] || continue
+  dev="$(blkid -U "$uuid" 2>/dev/null)" || die "data disk $uuid isn't on this machine"
+  if [[ "$dev" == "$DISK_KNAME" || "$(lsblk -no PKNAME "$dev" 2>/dev/null | head -n1)" == "${DISK_KNAME##*/}" ]]; then
+    die "data disk $uuid is on $DISK_KNAME, the disk about to be erased"
+  fi
+done <<<"$DATA_MOUNTS_TSV"
 
 echo
 echo "Target: $DISK"
@@ -176,6 +210,7 @@ luks_format_open "$LUKS_PART"          # LUKS_PASSPHRASE from answers, else prom
 make_filesystems
 make_swapfile
 
+progress_stage base "Base system"
 ########################################################################
 rule "pacstrap"
 ########################################################################
@@ -205,13 +240,11 @@ for attempt in 1 2 3; do
   pacman -Syy --noconfirm || true
 done
 
+progress_stage config "Configure"
 ########################################################################
 rule "fstab"
 ########################################################################
 genfstab -U /mnt >> /mnt/etc/fstab
-for e in "${KEEP_FSTAB[@]}"; do
-  printf '%s\n' "$e" >> /mnt/etc/fstab
-done
 if [[ "${SWAP}" == "hibernate" ]]; then
   grep -q '^/swap/swapfile ' /mnt/etc/fstab \
     || printf '/swap/swapfile none swap defaults 0 0\n' >> /mnt/etc/fstab
@@ -230,7 +263,9 @@ install -d /mnt/usr/share/plymouth/themes
 cp -r "$HERE/../plymouth-theme/slievr-cachy" /mnt/usr/share/plymouth/themes/slievr-cachy
 
 arch-chroot /mnt env \
-  TIMEZONE="$TIMEZONE" LOCALE="$LOCALE" KEYMAP="$KEYMAP" \
+  TIMEZONE="$TIMEZONE" LOCALE="$LOCALE" \
+  KEYMAP="$(console_keymap "$XKB_LAYOUT" "$XKB_VARIANT")" XKB_LAYOUT="$XKB_LAYOUT" XKB_VARIANT="$XKB_VARIANT" \
+  MBM_PROGRESS="${MBM_PROGRESS:-}" \
   USERNAME="$USERNAME" HOSTNAME="$HOSTNAME" KERNEL="$KERNEL" SWAP="$SWAP" \
   LUKS_NAME="$LUKS_NAME" LUKS_PARTUUID="$LUKS_PARTUUID" \
   EXTRA_CMDLINE="$EXTRA_CMDLINE" GPU_CMDLINE="$GPU_CMDLINE" GPU_MODULES="$GPU_MODULES" \
@@ -239,6 +274,7 @@ arch-chroot /mnt env \
   bash /root/chroot-setup.sh
 
 rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh
+add_data_mounts
 
 ########################################################################
 rule "Staging repo + first-boot bootstrap"
@@ -260,9 +296,9 @@ install -Dm644 "$HERE/firstboot/slievr-firstboot.service" /mnt/etc/systemd/syste
 arch-chroot /mnt chown -R "${USERNAME}:${USERNAME}" "/home/${USERNAME}/proj"
 arch-chroot /mnt systemctl enable slievr-firstboot.service
 
-# Wi-Fi the live ISO joined (iwd) -> NetworkManager keyfiles, so first boot is
-# online on a laptop. Wired machines have nothing in /var/lib/iwd.
-install_wifi_profiles /var/lib/iwd /mnt/etc/NetworkManager/system-connections
+# Networks the live session joined (the installer's Wi-Fi picker saves NM
+# keyfiles), so first boot is online on a laptop.
+copy_nm_profiles /etc/NetworkManager/system-connections /mnt/etc/NetworkManager/system-connections
 
 ########################################################################
 rule "Done"

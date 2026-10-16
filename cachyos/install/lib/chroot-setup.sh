@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs INSIDE `arch-chroot /mnt`. Invoked as: bash /root/chroot-setup.sh
 # All inputs arrive as exported env vars (see install-cachyos.sh Task 7 step 4):
-#   TIMEZONE LOCALE KEYMAP USERNAME HOSTNAME KERNEL SWAP
+#   TIMEZONE LOCALE KEYMAP XKB_LAYOUT XKB_VARIANT MBM_PROGRESS USERNAME HOSTNAME KERNEL SWAP
 #   LUKS_NAME LUKS_PARTUUID EXTRA_CMDLINE
 #   GPU_MODULES GPU_CMDLINE ZRAM_SIZE RESUME_OFFSET
 #   USER_PASSWORD ROOT_PASSWORD
@@ -15,7 +15,13 @@ hwclock --systohc
 echo "${LOCALE} UTF-8" >> /etc/locale.gen
 locale-gen
 echo "LANG=${LOCALE}" > /etc/locale.conf
-echo "KEYMAP=${KEYMAP}" > /etc/vconsole.conf
+# KEYMAP for the console and the LUKS prompt (sd-vconsole in the initramfs);
+# XKB* so localectl and anything reading vconsole.conf see the real layout.
+{
+  echo "KEYMAP=${KEYMAP}"
+  echo "XKBLAYOUT=${XKB_LAYOUT}"
+  if [[ -n "${XKB_VARIANT:-}" ]]; then echo "XKBVARIANT=${XKB_VARIANT}"; fi
+} > /etc/vconsole.conf
 
 if [[ -z "${HOSTNAME:-}" ]]; then
   read -rp "Hostname: " HOSTNAME
@@ -78,6 +84,7 @@ pacman -Syu --noconfirm
 echo ">>> services" >&2
 systemctl enable NetworkManager sshd
 
+if [[ "${MBM_PROGRESS:-}" == 1 ]]; then echo "@@mbm stage boot Bootloader"; fi
 echo ">>> bootloader" >&2
 # shellcheck source=bootloader.sh
 source "${HERE}/bootloader.sh"
