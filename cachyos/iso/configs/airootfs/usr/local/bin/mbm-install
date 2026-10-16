@@ -1,38 +1,39 @@
 #!/usr/bin/env bash
-# Runs the unattended install from the configurator's answers file, then
-# reboots into firstboot. On failure: show what failed, keep /mnt mounted, no
-# reboot.
-#   mbm-install [/run/mbm-answers.env]
+# Runs the install for the graphical installer and streams its progress.
+#   mbm-install                       answers on stdin: KEY=value lines, then END
+#   mbm-install --desktop-only USER   retry the Desktop stage on the mounted target
+# stdout: the install log plus @@mbm marker lines (cachyos/install/lib/progress.sh),
+# also appended to /var/log/mbm-install.log. Exit code is install-cachyos.sh's:
+# 0 installed, 3 only the Desktop stage failed (target left mounted), else failed.
 set -uo pipefail
 
 MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
-ANSWERS="${1:-/run/mbm-answers.env}"
 LOG=/var/log/mbm-install.log
+ANSWERS=/run/mbm-answers.env
+# shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
+source "$MBM_REPO/cachyos/install/lib/detect.sh"
+# shellcheck source=SCRIPTDIR/../../../../../../install/lib/progress.sh
+source "$MBM_REPO/cachyos/install/lib/progress.sh"
+# shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
+source "$MBM_REPO/cachyos/iso/lib/mbm.sh"
 
-clear
-gum style --foreground 3 --bold --margin "1 2" "Installing made by moonlight"
-gum style --foreground 8 --margin "0 2" "This takes a while. Full log: $LOG"
-echo
-
-bash "$MBM_REPO/cachyos/install/install-cachyos.sh" --answers "$ANSWERS" 2>&1 | tee -a "$LOG"
-status="${PIPESTATUS[0]}"
-rm -f -- "$ANSWERS"        # normally already deleted by load_answers
-
-if (( status == 0 )); then
-  echo
-  gum style --foreground 2 --bold --margin "0 2" "Installed. Remove the USB stick."
-  trap 'echo; echo "Staying in the live environment. Reboot when ready."; exit 0' INT
-  for s in {10..1}; do printf '\r  Rebooting in %2d s (Ctrl-C to stay)' "$s"; sleep 1; done
-  trap - INT
-  echo
-  reboot
+if [[ "${1:-}" == --desktop-only ]]; then
+  args=(--desktop-only "${2:?--desktop-only needs a user}")
+else
+  # END rather than EOF: the UI writes to a pipe it keeps open.
+  lines=()
+  while IFS= read -r line; do
+    [[ "$line" == END ]] && break
+    # The UI knows disks by kernel path; the installer wants a stable by-id path.
+    if [[ "$line" == DISK=* ]]; then line="DISK=$(disk_by_id "${line#DISK=}")"; fi
+    lines+=("$line")
+  done
+  write_answers "$ANSWERS" "${lines[@]}" || exit 1
+  args=(--answers "$ANSWERS")
 fi
 
-echo
-gum style --foreground 1 --bold --margin "0 2" "The install failed (exit $status)."
-gum style --foreground 8 --margin "0 2" "Last 20 lines of $LOG:"
-tail -n 20 "$LOG"
-echo
-gum style --foreground 8 --margin "0 2" \
-  "Inspect /mnt, then run mbm-configurator - it offers to clean up and start over."
-exit 1
+MBM_PROGRESS=1 bash "$MBM_REPO/cachyos/install/install-cachyos.sh" "${args[@]}" 2>&1 \
+  | progress_filter | tee -a "$LOG"
+status="${PIPESTATUS[0]}"
+rm -f -- "$ANSWERS"        # normally already deleted by load_answers
+exit "$status"

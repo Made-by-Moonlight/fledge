@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Closes a previous install attempt so the installer can start over: a failed
+# install leaves the target mounted at /mnt (for inspection) and LUKS open.
+#   mbm-cleanup     exit 0 when nothing is left open; the error on stderr if not
+set -euo pipefail
+
+MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
+# shellcheck source=SCRIPTDIR/../../../../../../install/profile.sh
+source "$MBM_REPO/cachyos/install/profile.sh"
+
+if mountpoint -q /mnt; then umount -R /mnt; fi
+if [[ -e "/dev/mapper/$LUKS_NAME" ]]; then cryptsetup close "$LUKS_NAME"; fi

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# What the graphical installer needs to know about this machine.
+#   mbm-probe facts    JSON: disks, data filesystems, hardware, defaults
+#   mbm-probe online   exit 0 when the CachyOS mirror answers
+# Root (via the live user's sudoers rule): blkid and lsblk need it for UUIDs.
+set -euo pipefail
+
+MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
+# shellcheck source=SCRIPTDIR/../../../../../../install/profile.sh
+source "$MBM_REPO/cachyos/install/profile.sh"
+# shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
+source "$MBM_REPO/cachyos/install/lib/detect.sh"
+# shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
+source "$MBM_REPO/cachyos/iso/lib/mbm.sh"
+
+case "${1:-}" in
+  online) mbm_online ;;
+  facts)
+    memkb="$(awk '/^MemTotal:/{print $2}' /proc/meminfo)"
+    swap=0
+    if [[ "$SWAP" == hibernate ]]; then swap="$(hibernate_swap_size "$memkb")"; fi
+    online=false; if mbm_online; then online=true; fi
+    leftover=false
+    if mountpoint -q /mnt || [[ -e "/dev/mapper/$LUKS_NAME" ]]; then leftover=true; fi
+    defaults="$(for e in "${DATA_DISKS[@]}"; do printf '%s\t%s\n' "${e%%:*}" "${e#*:}"; done \
+      | jq -Rn '[inputs | split("\t") | {(.[0]): .[1]}] | add // {}')"
+    lsblk -J -b -o PATH,SIZE,MODEL,TRAN,TYPE,FSTYPE,UUID,LABEL,PARTTYPE \
+      | jq --arg live "$(live_disk)" --argjson defaults "$defaults" -f "$MBM_REPO/cachyos/iso/lib/probe.jq" \
+      | jq --arg ucode "$(detect_ucode /proc/cpuinfo || true)" \
+           --arg gpu "$(detect_gpu_pkgs "$(lspci -nn 2>/dev/null || true)")" \
+           --argjson mem "$(( memkb / 1024 ))" --argjson zram "$(zram_size "$memkb")" --argjson swap "$swap" \
+           --arg tz "$TIMEZONE" --argjson online "$online" --argjson leftover "$leftover" \
+           '. + {ucode: $ucode, gpu: $gpu, memMiB: $mem, zramMiB: $zram, swapMiB: $swap,
+                 timezone: $tz, online: $online, leftover: $leftover}' ;;
+  *) echo "usage: mbm-probe facts|online" >&2; exit 2 ;;
+esac
