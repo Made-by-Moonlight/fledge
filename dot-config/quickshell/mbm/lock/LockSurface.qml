@@ -32,9 +32,14 @@ WlSessionLockSurface {
             sourceSize.width: 260
             anchors { horizontalCenter: parent.horizontalCenter; horizontalCenterOffset: -30; verticalCenter: parent.verticalCenter; verticalCenterOffset: -70 }
         }
+        // The distro's wordmark, with the org as a muted byline (as the installer has it).
         Glyph {
-            text: "m a d e   b y   m o o n l i g h t"; font.pixelSize: 23
-            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter; verticalCenterOffset: 110 }
+            text: "f l e d g e"; font.pixelSize: 23
+            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter; verticalCenterOffset: 100 }
+        }
+        Glyph {
+            text: "made by moonlight"; font.pixelSize: 15; color: Theme.muted
+            anchors { horizontalCenter: parent.horizontalCenter; verticalCenter: parent.verticalCenter; verticalCenterOffset: 132 }
         }
 
         Rectangle {

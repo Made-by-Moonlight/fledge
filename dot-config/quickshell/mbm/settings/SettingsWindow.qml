@@ -8,7 +8,7 @@ import "../components"
 FloatingWindow {
     id: win
     visible: ShellState.settingsOpen
-    title: "made by moonlight · settings"
+    title: "fledge · settings"
     implicitWidth: 920
     implicitHeight: 640
     color: Theme.bg

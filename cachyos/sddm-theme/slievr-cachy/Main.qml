@@ -61,13 +61,27 @@ Rectangle {
       anchors.horizontalCenterOffset: -Math.round(width * 0.117)
     }
 
-    Text {
-      text: "made by moonlight"
-      color: "#ffffff"
-      font.family: "JetBrainsMono Nerd Font"
-      font.pixelSize: 18
-      font.letterSpacing: 9
+    // The distro's wordmark, with the org as a muted byline (as the installer has it).
+    Column {
+      spacing: 8
       anchors.horizontalCenter: parent.horizontalCenter
+
+      Text {
+        text: "fledge"
+        color: "#ffffff"
+        font.family: "JetBrainsMono Nerd Font"
+        font.pixelSize: 18
+        font.letterSpacing: 9
+        anchors.horizontalCenter: parent.horizontalCenter
+      }
+
+      Text {
+        text: "made by moonlight"
+        color: "#6c7787"
+        font.family: "JetBrainsMono Nerd Font"
+        font.pixelSize: 12
+        anchors.horizontalCenter: parent.horizontalCenter
+      }
     }
 
     Text {
