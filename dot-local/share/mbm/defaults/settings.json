@@ -103,6 +103,7 @@
   },
   "input": {
     "kbLayout": "us",
+    "kbVariant": "",
     "kbOptions": "compose:caps",
     "repeatRate": 40,
     "repeatDelay": 600,

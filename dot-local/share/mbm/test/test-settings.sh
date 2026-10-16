@@ -166,6 +166,7 @@ bad "numlock"                    "input.numlock"                        '{"input
 bad "sensitivity"                "input.sensitivity"                    '{"input":{"sensitivity":2}}'
 bad "kbLayout"                   "input.kbLayout"                       '{"input":{"kbLayout":""}}'
 bad "kbOptions"                  "input.kbOptions"                      '{"input":{"kbOptions":5}}'
+bad "kbVariant"                  "input.kbVariant"                      '{"input":{"kbVariant":5}}'
 bad "tapToClick"                 "input.touchpad.tapToClick"            '{"input":{"touchpad":{"tapToClick":"yes"}}}'
 bad "scrollFactor"               "input.touchpad.scrollFactor"          '{"input":{"touchpad":{"scrollFactor":0}}}'
 bad "workspace key 0"            "workspaces: 0 is not a workspace number"   '{"workspaces":{"0":{"monitor":"DP-1"}}}'
@@ -214,6 +215,12 @@ check "apply: monitors.conf"          "$(cat "$FIX/expected-monitors.conf")" "$(
 check "apply: input.conf"             "$(cat "$FIX/expected-input.conf")"    "$(cat "$MBM_HYPR_DIR/input.conf")"
 check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$MBM_STATE_DIR/settings.json")"
 check "apply: workspaces.conf"        "$(cat "$FIX/expected-workspaces.conf")" "$(cat "$MBM_HYPR_DIR/workspaces.conf")"
+
+fresh
+mkdir -p "$MBM_CONFIG_DIR"; printf '{"input":{"kbLayout":"gb","kbVariant":"extd"}}\n' >"$MBM_CONFIG_DIR/settings.json"
+MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null
+contains "input: variant rendered" "kb_variant = extd" "$(cat "$MBM_HYPR_DIR/input.conf")"
+contains "input: layout rendered"  "kb_layout = gb"    "$(cat "$MBM_HYPR_DIR/input.conf")"
 
 fresh
 "$MBM" settings set '.workspaces["2"]' null

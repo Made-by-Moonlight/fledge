@@ -27,6 +27,7 @@ Flickable {
         ColumnLayout {
             Layout.alignment: Qt.AlignTop; Layout.fillWidth: true; spacing: 14
             Field { Layout.fillWidth: true; label: "Keyboard layout (e.g. us, gb, us,de)"; text: page.val("kbLayout", "us"); onEdited: t => page.put("kbLayout", t) }
+            Field { Layout.fillWidth: true; label: "Keyboard variant (xkb, e.g. dvorak; empty for default)"; text: page.val("kbVariant", ""); onEdited: t => page.put("kbVariant", t) }
             Field { Layout.fillWidth: true; label: "Keyboard options (xkb, e.g. compose:caps)"; text: page.val("kbOptions", ""); onEdited: t => page.put("kbOptions", t) }
             Stepper { label: "Key repeat rate"; value: page.val("repeatRate", 40); from: 1; to: 200; step: 5; suffix: " /s"; onChanged: v => page.put("repeatRate", v) }
             Stepper { label: "Key repeat delay"; value: page.val("repeatDelay", 600); from: 100; to: 2000; step: 50; suffix: " ms"; onChanged: v => page.put("repeatDelay", v) }

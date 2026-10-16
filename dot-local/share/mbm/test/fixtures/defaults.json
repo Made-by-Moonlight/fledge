@@ -29,7 +29,7 @@
   "launcher": { "position": "centre" },
   "notifications": { "corner": "top-right", "timeoutMs": 5000 },
   "idle": { "dimSec": 0, "lockSec": 0, "screenOffSec": 0, "suspendSec": 0, "lockOnSleep": true },
-  "input": { "kbLayout": "us", "kbOptions": "compose:caps", "repeatRate": 40, "repeatDelay": 600,
+  "input": { "kbLayout": "us", "kbVariant": "", "kbOptions": "compose:caps", "repeatRate": 40, "repeatDelay": 600,
              "numlock": true, "sensitivity": 0,
              "touchpad": { "naturalScroll": false, "tapToClick": true, "scrollFactor": 0.4 } }
 }

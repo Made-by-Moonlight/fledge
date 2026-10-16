@@ -113,8 +113,9 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
    (if ((.dimSec // 0) > 0 and (.lockSec // 0) > 0 and (.lockSec // 0) < (.dimSec // 0)) then "idle.lockSec must be >= dimSec" else empty end)),
 
 (.input // {}
- | unknown(["kbLayout", "kbOptions", "repeatRate", "repeatDelay", "numlock", "sensitivity", "touchpad"]; "input"),
+ | unknown(["kbLayout", "kbVariant", "kbOptions", "repeatRate", "repeatDelay", "numlock", "sensitivity", "touchpad"]; "input"),
    (if (.kbLayout // "us" | type == "string" and length > 0) then empty else "input.kbLayout is required" end),
+   (if (.kbVariant // "" | type == "string") then empty else "input.kbVariant must be text" end),
    (if (.kbOptions // "" | type == "string") then empty else "input.kbOptions must be text" end),
    (if (.repeatRate // 25 | isint and . >= 1 and . <= 200) then empty else "input.repeatRate must be 1-200" end),
    (if (.repeatDelay // 600 | isint and . >= 100 and . <= 2000) then empty else "input.repeatDelay must be 100-2000" end),
