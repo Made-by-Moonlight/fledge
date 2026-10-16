@@ -2,7 +2,8 @@
 # What the graphical installer needs to know about this machine.
 #   mbm-probe facts    JSON: disks, data filesystems, hardware, defaults
 #   mbm-probe online   exit 0 when the CachyOS mirror answers
-# Root (via the live user's sudoers rule): blkid and lsblk need it for UUIDs.
+# Root (via the live user's sudoers rule): lsblk only reports UUIDs and labels
+# for every device as root, and the /mnt and LUKS mapper checks look at root's view.
 set -euo pipefail
 
 MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"

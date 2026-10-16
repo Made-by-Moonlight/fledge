@@ -21,18 +21,22 @@ if [[ "${1:-}" == --desktop-only ]]; then
   args=(--desktop-only "${2:?--desktop-only needs a user}")
 else
   # END rather than EOF: the UI writes to a pipe it keeps open.
-  lines=()
+  lines=(); got_end=0
   while IFS= read -r line; do
-    [[ "$line" == END ]] && break
+    if [[ "$line" == END ]]; then got_end=1; break; fi
     # The UI knows disks by kernel path; the installer wants a stable by-id path.
     if [[ "$line" == DISK=* ]]; then line="DISK=$(disk_by_id "${line#DISK=}")"; fi
     lines+=("$line")
   done
+  if (( ! got_end )); then
+    echo "mbm-install: stdin closed before END; refusing to install on partial answers" >&2
+    exit 1
+  fi
   write_answers "$ANSWERS" "${lines[@]}" || exit 1
   args=(--answers "$ANSWERS")
 fi
 
-MBM_PROGRESS=1 bash "$MBM_REPO/cachyos/install/install-cachyos.sh" "${args[@]}" 2>&1 \
+MBM_PROGRESS=1 bash "$MBM_REPO/cachyos/install/install-cachyos.sh" "${args[@]}" </dev/null 2>&1 \
   | progress_filter | tee -a "$LOG"
 status="${PIPESTATUS[0]}"
 rm -f -- "$ANSWERS"        # normally already deleted by load_answers

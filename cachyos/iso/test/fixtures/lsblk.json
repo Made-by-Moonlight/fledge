@@ -19,6 +19,7 @@
        {"path": "/dev/nvme0n1p3", "size": 3900000000000, "model": null, "tran": null, "type": "part", "fstype": "ext4", "uuid": "55cefb4f-6b27-4dbc-bbf8-5e9120defa26", "label": "big", "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"},
        {"path": "/dev/nvme0n1p4", "size": 34359738368, "model": null, "tran": null, "type": "part", "fstype": "swap", "uuid": "37299452-ecec-4937-8e67-b00311334d13", "label": null, "parttype": "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"}
      ]},
+    {"path": "/dev/vde", "size": 1073741824, "model": "Blank", "tran": "sata", "type": "disk", "fstype": "vfat", "uuid": null, "label": null, "parttype": null},
     {"path": "/dev/zram0", "size": 4294967296, "model": null, "tran": null, "type": "disk", "fstype": "swap", "uuid": null, "label": null, "parttype": null}
   ]
 }

@@ -18,5 +18,6 @@ def esp: (.parttype // "" | ascii_downcase) == "c12a7328-f81f-11d2-ba4b-00a0c93e
     datafs: [$all[] | .path as $disk | (., (.children // [])[])
       | select((.fstype // "") | IN("ext4", "btrfs", "xfs", "ntfs", "exfat", "vfat"))
       | select(esp | not)
+      | select(.uuid != null)       # DATA_MOUNTS is keyed by UUID; no UUID, no mount
       | {uuid, fstype, label: (.label // ""), size, disk: $disk, mount: ($defaults[.uuid] // null)}]
   }
