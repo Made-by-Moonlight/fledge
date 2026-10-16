@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 # Post-install checks for a VM installed from the made by moonlight ISO.
-# Run as slievr on the installed system, e.g.
-#   scp cachyos/iso/test/verify-install.sh slievr@<vm-ip>:/tmp/ && ssh -t slievr@<vm-ip> bash /tmp/verify-install.sh
-# (needs a tty for sudo, so don't pipe it into ssh)
+# Run as slievr on the installed system, before any `vm.sh sync` (it rewrites
+# ~/proj/slievr-cachy, which must still be clean), e.g.
+#   ip="$(cachyos/vm/vm.sh ip)"
+#   scp cachyos/iso/test/verify-install.sh "slievr@$ip:/tmp/"
+#   ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
+# (needs a tty for sudo, so not `vm.sh run` and don't pipe it into ssh)
 set -uo pipefail
 
 bad=0

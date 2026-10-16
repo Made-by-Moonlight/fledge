@@ -28,9 +28,15 @@ the first reboot.
 | `lib/disk.sh` | partition + LUKS + btrfs + swapfile |
 | `lib/bootloader.sh` | Limine UKI setup (runs in chroot) |
 | `lib/chroot-setup.sh` | system config (runs in chroot) |
-| `lib/answers.sh` | parse unattended answers file |
+| `lib/answers.sh` | parse unattended answers file; user name, host name and data-mount checks |
+| `lib/desktop.sh` | the Desktop stage (bootstrap.sh in the target before reboot) and Finish |
+| `lib/progress.sh` | `@@mbm` progress markers for the graphical installer (`MBM_PROGRESS=1`) |
+| `lib/network.sh` | carry the live session's NetworkManager profiles into the target |
 | `test-detect.sh` | runs `lib/detect.sh` against fixtures; `bash test-detect.sh` |
 | `test-answers.sh` | runs `lib/answers.sh` against fixtures; `bash test-answers.sh` |
+| `test-desktop.sh` | `lib/desktop.sh`'s pure parts and the `--desktop-only` guards |
+| `test-progress.sh` | `lib/progress.sh`'s markers and pacman output filter |
+| `test-network.sh` | `lib/network.sh` against a temporary directory |
 
 ## Before you run it, per machine
 

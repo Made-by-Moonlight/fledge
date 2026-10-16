@@ -31,22 +31,27 @@ Everything runs in the test VM (`cachyos/vm/`), never on the host:
 
     cachyos/vm/vm.sh sync
     cachyos/vm/vm.sh run 'cd ~/proj/slievr-cachy && bash cachyos/iso/test-mbm.sh && bash cachyos/iso/test-probe.sh'
+    cachyos/vm/vm.sh run 'cd ~/proj/slievr-cachy && bash cachyos/iso/test-installer-qml.sh'   # the UI's JS (qmltestrunner)
     cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/installer/dev/run.sh'   # the UI, canned facts, fake install
     cachyos/vm/vm.sh run 'qs -p /tmp/mbm-installer ipc call installer go review'       # jump to a step
-    cachyos/vm/vm.sh run 'qs -p /tmp/mbm-installer ipc call installer set USERNAME ethan'
+    cachyos/vm/vm.sh run 'qs -p /tmp/mbm-installer ipc call installer set username ethan'
 
 `installer/dev/run.sh` starts the installer in the VM's desktop session in
 dev mode (`installer/dev/facts.json`, `installer/dev/replay.sh` stands in
 for the install, keyboard layout left alone). The IPC target `installer` has
-`go <step>`, `set <key> <value>`, `setDisk <path>`, `next` and `current`.
+`go <step>`, `set <key> <value>` (`key` is an `Installer` property: `username`,
+`hostname`, `password`, …), `setDisk <path>`, `next` and `current`.
 
 Full run: `cachyos/vm/destroy-vm.sh; cachyos/iso/bin/slievr-iso-boot` boots
 the newest ISO and, when the install powers the VM off, boots the installed
 system. `cachyos/vm/vm.sh type` / `key` drive the console. After the install,
-`cachyos/vm/dev-up.sh`, then:
+`cachyos/vm/dev-up.sh`, then run the checks **before any `vm.sh sync`** (sync
+rewrites the installed repo, and the checks expect it clean) and **with a tty**
+(the script's `sudo` asks for the password; `vm.sh run` has no tty):
 
-    cachyos/vm/vm.sh sync
-    cachyos/vm/vm.sh run 'VERIFY_LAYOUT=gb VERIFY_DATA_MOUNT=~/testdata bash ~/proj/slievr-cachy/cachyos/iso/test/verify-install.sh'
+    ip="$(cachyos/vm/vm.sh ip)"
+    scp cachyos/iso/test/verify-install.sh "slievr@$ip:/tmp/"
+    ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
 
 (`VERIFY_*` only when the run chose that layout and data disk: format the
 VM's second disk first with `mkfs.ext4 -U 00000000-0000-4000-8000-00000000da7a
@@ -81,7 +86,7 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 | `builder/build-iso.sh` | in container: patch releng, overlay, bake, mkarchiso |
 | `installer/` | the graphical installer (Quickshell config `mbm-installer`; `dev/` is the VM dev loop) |
 | `lib/probe.jq` | `mbm-probe`'s disk logic: install targets and data filesystems (tested by `test-probe.sh`) |
-| `lib/mbm.sh` | helpers for the root helpers: hostname check, answers file, online check (tested by `test-mbm.sh`) |
+| `lib/mbm.sh` | helpers for the root helpers: answers file, online check (tested by `test-mbm.sh`) |
 | `configs/airootfs/` | files overlaid onto the live system |
 | `configs/airootfs/usr/local/bin/mbm-probe` | root helper: disk and hardware facts as JSON, online check |
 | `configs/airootfs/usr/local/bin/mbm-install` | root helper: runs `install-cachyos.sh --answers` with progress markers, logs to `/var/log/mbm-install.log` |
