@@ -49,16 +49,6 @@ rm -rf "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/reflector.s
        "$PROFILE/airootfs/etc/xdg/reflector"
 cp -rT "$ISO/configs/airootfs" "$PROFILE/airootfs"
 
-# The live installer user (uid 1000). releng ships these four files; refuse to
-# build if that changes rather than produce an ISO with no installer user.
-for f in passwd shadow group gshadow; do
-  [[ -f "$PROFILE/airootfs/etc/$f" ]] || die "releng no longer ships airootfs/etc/$f"
-done
-echo 'moonlight:x:1000:1000::/home/moonlight:/usr/bin/bash' >> "$PROFILE/airootfs/etc/passwd"
-echo 'moonlight:!*:14871::::::'                          >> "$PROFILE/airootfs/etc/shadow"
-echo 'moonlight:x:1000:'                                 >> "$PROFILE/airootfs/etc/group"
-echo 'moonlight:!*::'                                    >> "$PROFILE/airootfs/etc/gshadow"
-
 # NetworkManager instead of iwd + systemd-networkd: the installer's Wi-Fi
 # picker talks to NM (Quickshell.Networking), and the profiles it saves copy
 # straight into the installed system.
@@ -97,7 +87,6 @@ file_permissions+=(
   ["/usr/local/bin/mbm-probe"]="0:0:755"
   ["/usr/local/bin/mbm-cleanup"]="0:0:755"
   ["/etc/sudoers.d/mbm-installer"]="0:0:440"
-  ["/etc/gshadow"]="0:0:400"
   ["/home/moonlight"]="1000:1000:750"
   ["/home/moonlight/.bash_profile"]="1000:1000:644"
 )
@@ -136,7 +125,7 @@ step "sanity checks"
 for f in usr/share/slievr-cachy/cachyos/install/install-cachyos.sh usr/share/slievr-cachy/.git/HEAD \
          usr/share/slievr-cachy/dot-local/share/mbm/assets/owl.png \
          usr/local/bin/mbm-install usr/local/bin/mbm-probe usr/local/bin/mbm-cleanup \
-         etc/sudoers.d/mbm-installer etc/mbm-installer/hyprland.conf home/moonlight/.bash_profile \
+         etc/sudoers.d/mbm-installer etc/sysusers.d/mbm-installer.conf etc/mbm-installer/hyprland.conf home/moonlight/.bash_profile \
          etc/xdg/quickshell/mbm-installer/shell.qml etc/xdg/quickshell/mbm-installer/theme/Theme.qml \
          etc/xdg/quickshell/mbm-installer/components/Button.qml etc/xdg/quickshell/mbm-installer/services/Net.qml \
          etc/xdg/quickshell/mbm-installer/quicksettings/pickers/WifiPicker.qml etc/pacman.conf; do
@@ -145,7 +134,7 @@ done
 if find "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer" -type l | grep -q .; then
   die "installer config still has symlinks (cp -rL should have resolved them)"
 fi
-grep -q '^moonlight:' "$PROFILE/airootfs/etc/passwd" || die "no moonlight user"
+grep -q '^u moonlight 1000 ' "$PROFILE/airootfs/etc/sysusers.d/mbm-installer.conf" || die "no moonlight user"
 [[ -e "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service" ]] || die "NetworkManager not enabled"
 grep -q '^\[cachyos\]' "$PROFILE/airootfs/etc/pacman.conf" || die "live pacman.conf lacks [cachyos]"
 [[ "$(git -C "$PROFILE/airootfs/usr/share/slievr-cachy" remote get-url origin)" == https://* ]] \
