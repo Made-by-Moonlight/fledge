@@ -28,6 +28,7 @@ check "filter: each transaction restarts the count (VerbosePkgLists header too)"
   $'Package (1)  New Version\ninstalling z...\n@@mbm count 1 1' \
   "$(progress_filter <<<$'Package (1)  New Version\ninstalling z...')"
 check "filter: no count before a Packages line" "installing a..." "$(progress_filter <<<'installing a...')"
+check "filter strips colour codes" "WARN:  the desktop layer failed" "$(progress_filter <<<$'\e[33mWARN:\e[0m  the desktop layer failed')"
 check "filter passes markers through" "@@mbm stage x X" "$(progress_filter <<<'@@mbm stage x X')"
 
 exit $fail

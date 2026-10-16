@@ -24,14 +24,17 @@ progress_done() {
   if progress_on; then printf '@@mbm done\n'; fi
 }
 
-# progress_filter: stdin -> stdout unchanged, plus "@@mbm count n m" after each
+# progress_filter: stdin -> stdout, plus "@@mbm count n m" after each
 # package pacman/pacstrap/paru installs, so the UI can show package counts
 # without pacman knowing about it. Piped (as here) pacman prints no "( n/m)"
 # bar: the transaction's "Packages (m)" line (or "Package (m)" with
 # VerbosePkgLists) gives the total and each "installing x..." line counts one.
-# The tty form is matched too. Flushes per line: the UI reads live.
+# The tty form is matched too. Colour codes (warn/die, tools that colour
+# anyway) are stripped: the UI's log box and the log file show plain text.
+# Flushes per line: the UI reads live.
 progress_filter() {
   awk '{
+    gsub(/\033\[[0-9;]*[A-Za-z]/, "")
     print
     if (match($0, /^\( *[0-9]+\/[0-9]+\) (installing|upgrading|reinstalling|downgrading) /)) {
       s = substr($0, RSTART, RLENGTH); gsub(/[^0-9\/]/, "", s); split(s, a, "/")
