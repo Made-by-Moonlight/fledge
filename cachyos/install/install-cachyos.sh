@@ -312,12 +312,13 @@ arch-chroot /mnt env \
   ZRAM_SIZE="$ZRAM_SIZE" RESUME_OFFSET="${RESUME_OFFSET:-}" \
   USER_PASSWORD="$USER_PASSWORD" ROOT_PASSWORD="$ROOT_PASSWORD" \
   bash /root/chroot-setup.sh
+# The Bootloader marker is printed inside the chroot, so this script's own
+# stage must follow it, or a failure in the rest of that stage reports `fail config`.
+# shellcheck disable=SC2034  # read by progress_fail in the EXIT trap
+MBM_STAGE=boot
 
 rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh /mnt/root/cachyos-repos.sh
 add_data_mounts
-# The Bootloader marker is printed inside the chroot, so this script's own
-# stage must follow it, or a failure in the rest of that stage reports `fail config`.
-MBM_STAGE=boot
 seed_user_settings "$USERNAME" "$XKB_LAYOUT" "$XKB_VARIANT" \
   "$(arch-chroot /mnt id -u "$USERNAME")" "$(arch-chroot /mnt id -g "$USERNAME")"
 

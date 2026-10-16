@@ -75,6 +75,7 @@ check "mount: under home"           yes "$(ok valid_mount_path /home/ethan/stora
 check "mount: own top-level dir"    yes "$(ok valid_mount_path /data)"
 check "mount: under /mnt"           yes "$(ok valid_mount_path /mnt/games)"
 check "mount: relative refused"      no "$(ok valid_mount_path storage1)"
+# shellcheck disable=SC2088  # a literal ~ on purpose: callers expand it first
 check "mount: tilde refused"         no "$(ok valid_mount_path '~/storage1')"
 check "mount: root refused"          no "$(ok valid_mount_path /)"
 check "mount: a home itself refused" no "$(ok valid_mount_path /home/ethan)"
