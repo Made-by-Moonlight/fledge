@@ -6,12 +6,11 @@
 # time by lib/detect.sh and must never be added here.
 #
 # Reviewed by eye before every run. Two vars are per-machine:
-#   HOSTNAME              - leave "" to be prompted
-#   EXTRA_FSTAB_ENTRIES   - set to () on machines with no extra data disks
+#   HOSTNAME     - leave "" to be prompted
+#   DATA_DISKS   - set to () on machines with no extra data disks
 
 TIMEZONE="UTC"
 LOCALE="en_US.UTF-8"
-KEYMAP="us"
 USERNAME="slievr"          # default; the ISO configurator asks and overrides it
 HOSTNAME=""                       # empty -> prompt at install time
 
@@ -39,12 +38,16 @@ HIBERNATE_SWAP_SIZE=""            # empty -> auto: round(RAM up to GiB) + 2 GiB
 # Plymouth then forces its plain text "details" screen at the LUKS prompt.
 EXTRA_CMDLINE="quiet splash plymouth.ignore-serial-consoles zswap.enabled=0"
 
-# Per-machine, optional. Full fstab lines, appended verbatim after genfstab.
-# Empty on the laptop. On the desktop: the 4 data disks, copied from the
-# current host /etc/fstab (UUIDs are stable across the reinstall).
-EXTRA_FSTAB_ENTRIES=(
-  "UUID=ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7 /home/slievr/storage1 ext4 defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10 0 0"
-  "UUID=5e62f799-8df9-4ee3-b4d7-4da62c8c65ff /home/slievr/storage2 ext4 defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10 0 0"
-  "UUID=77d7988e-2e64-4654-bda2-481d321eecdd /home/slievr/storage3 ext4 defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10 0 0"
-  "UUID=55cefb4f-6b27-4dbc-bbf8-5e9120defa26 /home/slievr/storage4 ext4 defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10 0 0"
+# Per-machine, optional: data filesystems the installer pre-selects for a
+# permanent mount, "uuid:mountpoint" (~ = the new user's home). Entries whose
+# UUID isn't on the machine are ignored, so one list serves every machine.
+# The installer writes them to fstab by UUID with nofail + automount.
+DATA_DISKS=(
+  "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7:~/storage1"
+  "5e62f799-8df9-4ee3-b4d7-4da62c8c65ff:~/storage2"
+  "77d7988e-2e64-4654-bda2-481d321eecdd:~/storage3"
+  "55cefb4f-6b27-4dbc-bbf8-5e9120defa26:~/storage4"
+  # The VM's test data disk (cachyos/vm, formatted with this UUID by the
+  # end-to-end test); absent on every real machine.
+  "00000000-0000-4000-8000-00000000da7a:~/testdata"
 )

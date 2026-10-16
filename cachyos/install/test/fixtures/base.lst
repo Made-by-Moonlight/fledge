@@ -1,0 +1,15 @@
+! model
+  pc105           Generic 105-key PC
+
+! layout
+  us              English (US)
+  gb              English (UK)
+  de              German
+
+! variant
+  dvorak          us: English (Dvorak)
+  extd            gb: English (UK, extended, Windows)
+  nodeadkeys      de: German (no dead keys)
+
+! option
+  grp                  Switching to another layout

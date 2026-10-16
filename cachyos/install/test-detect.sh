@@ -41,16 +41,26 @@ check "hibernate_swap 61GiB box"  "65536" "$(hibernate_swap_size 64000000)"
 check "hibernate_swap 16GiB box"  "18432" "$(hibernate_swap_size 16777216)"
 
 present=$'aaaa-1111\nbbbb-2222'
-A="UUID=aaaa-1111 /a ext4 defaults,nofail 0 0"
-B="UUID=bbbb-2222 /b ext4 defaults,nofail 0 0"
-C="UUID=cccc-3333 /c ext4 defaults,nofail 0 0"
-check "fstab filter keeps present"       "$A" "$(filter_fstab_entries "$present" "$A")"
-check "fstab filter drops absent"        ""   "$(filter_fstab_entries "$present" "$C")"
-check "fstab filter mixed keeps order"   "$A"$'\n'"$B" "$(filter_fstab_entries "$present" "$A" "$C" "$B")"
-check "fstab filter no entries"          ""   "$(filter_fstab_entries "$present")"
-check "fstab filter non-UUID passes"     "/dev/sdz1 /z ext4 defaults 0 0" \
-  "$(filter_fstab_entries "" "/dev/sdz1 /z ext4 defaults 0 0")"
-check "fstab filter exact match only"    ""   "$(filter_fstab_entries "aaaa-11112" "$A")"
+check "data defaults keep present, in order" $'aaaa-1111\t~/s1\nbbbb-2222\t/data' \
+  "$(data_disk_defaults "$present" "aaaa-1111:~/s1" "cccc-3333:~/s3" "bbbb-2222:/data")"
+check "data defaults none present" "" "$(data_disk_defaults "" "aaaa-1111:~/s1")"
+check "data defaults exact uuid only" "" "$(data_disk_defaults "aaaa-11112" "aaaa-1111:~/s1")"
+
+O="defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10"
+check "fstab ext4"  "UUID=u1 /home/e/s1 ext4 $O 0 0"                         "$(fstab_line u1 ext4 /home/e/s1 1000 1000)"
+check "fstab ntfs"  "UUID=u2 /data ntfs3 $O,uid=1000,gid=1000 0 0"          "$(fstab_line u2 ntfs /data 1000 1000)"
+check "fstab vfat"  "UUID=u3 /data vfat $O,uid=1000,gid=1000,umask=022 0 0" "$(fstab_line u3 vfat /data 1000 1000)"
+check "fstab exfat" "UUID=u4 /data exfat $O,uid=1000,gid=1000,umask=022 0 0" "$(fstab_line u4 exfat /data 1000 1000)"
+
+KM="$FIX/kbd-model-map"
+check "keymap us"            us                   "$(console_keymap us '' "$KM")"
+check "keymap gb"            uk                   "$(console_keymap gb '' "$KM")"
+check "keymap variant"       de-latin1-nodeadkeys "$(console_keymap de nodeadkeys "$KM")"
+check "keymap us dvorak"     dvorak               "$(console_keymap us dvorak "$KM")"
+check "keymap unknown variant falls back to layout" uk "$(console_keymap gb extd "$KM")"
+check "keymap first of several layouts" de        "$(console_keymap de,us '' "$KM")"
+check "keymap unknown layout" us                  "$(console_keymap zz '' "$KM")"
+check "keymap missing map file" us                "$(console_keymap gb '' /nonexistent)"
 
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 mkdir -p "$T/dev" "$T/by-id"

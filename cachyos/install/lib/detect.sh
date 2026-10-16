@@ -86,36 +86,61 @@ hibernate_swap_size() {
   echo "$(( gib * 1024 + 2048 ))"
 }
 
-# filter_fstab_entries <present_uuids> <entry>...  ->  the entries whose
-# UUID= source is in present_uuids (newline-separated, as printed by
-# `blkid -s UUID -o value`), one per line, in order. Entries that don't start
-# with UUID= pass through. Lets one profile.sh list every machine's data disks.
-filter_fstab_entries() {
-  local present="$1" entry; shift
-  for entry in "$@"; do
-    if [[ "$entry" =~ ^UUID=([^[:space:]]+) ]]; then
-      grep -qxF -- "${BASH_REMATCH[1]}" <<<"$present" || continue
-    fi
-    printf '%s\n' "$entry"
+# data_disk_defaults <present_uuids> <uuid:path>...  ->  "uuid<TAB>path" for
+# the profile.sh DATA_DISKS entries whose UUID is on this machine
+# (present_uuids is newline-separated, as `blkid -s UUID -o value` prints).
+# Paths stay as written (may start with ~); callers expand them.
+data_disk_defaults() {
+  local present="$1" e; shift
+  for e in "$@"; do
+    grep -qxF -- "${e%%:*}" <<<"$present" || continue
+    printf '%s\t%s\n' "${e%%:*}" "${e#*:}"
   done
+}
+
+# fstab_line <uuid> <fstype> <path> <uid> <gid>  ->  a permanent data mount:
+# by UUID, automounted on first access, and nofail with a short timeout so a
+# missing disk never holds up boot. Filesystems without Unix owners (ntfs,
+# vfat, exfat) are mounted as the user so they're writable.
+fstab_line() {
+  local uuid="$1" fs="$2" path="$3" uid="$4" gid="$5"
+  local opts="defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10"
+  case "$fs" in
+    ntfs|ntfs3) fs=ntfs3; opts+=",uid=$uid,gid=$gid" ;;
+    vfat|exfat) opts+=",uid=$uid,gid=$gid,umask=022" ;;
+  esac
+  printf 'UUID=%s %s %s %s 0 0\n' "$uuid" "$path" "$fs" "$opts"
+}
+
+# console_keymap <xkb layout> <xkb variant> [kbd-model-map]  ->  the console
+# keymap localectl would pick (first layout only): exact variant match, else
+# the layout's plain entry, else us. The LUKS prompt uses this keymap.
+console_keymap() {
+  local layout="${1%%,*}" variant="${2%%,*}" map="${3:-/usr/share/systemd/kbd-model-map}" km=""
+  km="$(awk -v l="$layout" -v v="${variant:--}" '!/^#/ && $2 == l && $4 == v {print $1; exit}' "$map" 2>/dev/null)" || km=""
+  if [[ -z "$km" && -n "$variant" ]]; then
+    km="$(awk -v l="$layout" '!/^#/ && $2 == l && $4 == "-" {print $1; exit}' "$map" 2>/dev/null)" || km=""
+  fi
+  echo "${km:-us}"
+}
+
+# live_disk  ->  /dev/<disk> backing the live medium, or nothing when it can't
+# be identified (e.g. Ventoy's device-mapper node, which lsblk can't resolve).
+live_disk() {
+  local src pk
+  src="$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null \
+    || findmnt -no SOURCE /run/archiso/cowspace 2>/dev/null || true)"
+  [[ -n "$src" ]] || return 0
+  pk="$({ lsblk -no PKNAME "$src" 2>/dev/null || true; } | head -n1)"
+  if [[ -n "$pk" ]]; then echo "/dev/$pk"; fi
 }
 
 # list_disks  ->  lines: NAME<TAB>SIZE<TAB>MODEL<TAB>TRAN
 # Whole disks only, excluding the live-media disk (when it can be identified)
-# and, unless the caller allows them, USB devices. Tested with stubbed
-# findmnt/lsblk in test-detect.sh.
+# and zram/ramdisks. Tested with stubbed findmnt/lsblk in test-detect.sh.
 list_disks() {
-  local livesrc lminusb
-  # disk backing the live media, if any
-  livesrc="$(findmnt -no SOURCE /run/archiso/bootmnt 2>/dev/null \
-    || findmnt -no SOURCE /run/archiso/cowspace 2>/dev/null || true)"
-  # Under Ventoy the source is a device-mapper node lsblk can't always resolve;
-  # a failed lookup must not abort the listing in callers running set -e.
-  lminusb=""
-  if [[ -n "$livesrc" ]]; then
-    lminusb="$({ lsblk -no PKNAME "$livesrc" 2>/dev/null || true; } | head -n1)"
-  fi
-  lsblk -dpno NAME,SIZE,MODEL,TRAN,TYPE | awk -v live="/dev/$lminusb" '
+  local live; live="$(live_disk)"
+  lsblk -dpno NAME,SIZE,MODEL,TRAN,TYPE | awk -v live="$live" '
     $NF == "disk" {
       name=$1; $NF=""; sub(/[ \t]+$/, "")
       if (name == live) next
