@@ -29,7 +29,7 @@ if [ "$state" != "running" ]; then
   $VIRSH start "$VM_NAME"
 fi
 
-echo "Waiting for an IP address..."
+echo "Waiting for an IP address with sshd..."
 vm_ip=""
 for _ in $(seq 1 30); do
   # Two leases after a reinstall (live ISO + installed system): take the one
@@ -41,7 +41,7 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 if [ -z "$vm_ip" ]; then
-  echo "Timed out waiting for an IP address (is the disk still locked?)." >&2
+  echo "Timed out waiting for an IP address or sshd (is the disk still locked?)." >&2
   exit 1
 fi
 echo "VM IP: $vm_ip"
