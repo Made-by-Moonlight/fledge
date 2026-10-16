@@ -135,7 +135,7 @@ if find "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer" -type l | grep -q .
   die "installer config still has symlinks (cp -rL should have resolved them)"
 fi
 grep -q '^u moonlight 1000 ' "$PROFILE/airootfs/etc/sysusers.d/mbm-installer.conf" || die "no moonlight user"
-[[ -e "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service" ]] || die "NetworkManager not enabled"
+[[ -L "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service" ]] || die "NetworkManager not enabled"
 grep -q '^\[cachyos\]' "$PROFILE/airootfs/etc/pacman.conf" || die "live pacman.conf lacks [cachyos]"
 [[ "$(git -C "$PROFILE/airootfs/usr/share/slievr-cachy" remote get-url origin)" == https://* ]] \
   || die "baked repo's origin is not the GitHub URL"
