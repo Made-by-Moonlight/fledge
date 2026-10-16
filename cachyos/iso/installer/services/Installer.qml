@@ -71,6 +71,10 @@ Singleton {
         mounts = m;
     }
     function setMount(uuid, on, path) {
+        // Unchanged: no new object, so DataDisks' bound field writing back its own
+        // text doesn't re-trigger its binding (a binding loop).
+        const r = mounts[uuid];
+        if (r && r.on === on && r.path === path) return;
         const m = Object.assign({}, mounts);
         m[uuid] = { on: on, path: path };
         mounts = m;

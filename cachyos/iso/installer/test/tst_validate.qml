@@ -61,4 +61,16 @@ TestCase {
         verify(own.includes("LUKS_PASSPHRASE=b\n"));
         verify(own.includes("DATA_MOUNTS=\n"));
     }
+    // A pasted or IPC-set value must not add a KEY= line or end the file early.
+    function test_answersNoNewlines() {
+        const t = A.text({ disk: "/dev/vda", hostname: "glaux", timezone: "UTC", username: "ethan",
+                           password: "pw\nEND\nDISK=/dev/sda", sameLuks: true, luks: "", layout: "us\r\n", variant: "",
+                           mounts: [{ uuid: "u-1\n", path: "/data\r" }] });
+        compare(t.split("\n").length, 12);
+        compare(t.indexOf("\r"), -1);
+        verify(t.includes("USER_PASSWORD=pwENDDISK=/dev/sda\n"));
+        verify(t.includes("LUKS_PASSPHRASE=pwENDDISK=/dev/sda\n"));
+        verify(t.includes("XKB_LAYOUT=us\n"));
+        verify(t.includes("DATA_MOUNTS=u-1:/data\n"));
+    }
 }

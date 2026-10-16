@@ -31,9 +31,11 @@ Column {
             Input {
                 width: 320; label: "Mount at"; opacity: row.m.on ? 1 : 0.5
                 error: Installer.err("data", row.modelData.uuid)
+                // Bound both ways, like Account: a Probe refresh that changes the stored
+                // path shows here; writing back the same text is a no-op for TextInput.
+                text: row.m.path
                 onTextChanged: Installer.setMount(row.modelData.uuid, row.m.on, text)
                 onAccepted: Installer.next()
-                Component.onCompleted: text = row.m.path
             }
         }
     }
