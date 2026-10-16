@@ -34,6 +34,7 @@ jobs:
         run: |
           set -euo pipefail
           for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
+                   cachyos/install/test-progress.sh cachyos/install/test-desktop.sh cachyos/iso/test-probe.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
                    dot-local/share/mbm/test/test-dmenu.sh; do
@@ -48,7 +49,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mapfile -t files < <(git ls-files 'cachyos/*.sh' 'cachyos/iso/bin/*' \
             'cachyos/iso/configs/airootfs/usr/local/bin/*' \
-            'cachyos/iso/configs/airootfs/root/.automated_script.sh' \
+            'cachyos/iso/configs/airootfs/home/moonlight/.bash_profile' \
             'dot-local/share/mbm/bin/*' 'dot-local/share/mbm/**/*.sh')
           shellcheck -x -S warning "${files[@]}"
 

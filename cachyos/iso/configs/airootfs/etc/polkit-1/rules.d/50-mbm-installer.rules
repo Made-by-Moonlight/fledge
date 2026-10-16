@@ -1,0 +1,6 @@
+// The live installer user manages networks (the Wi-Fi picker) without a prompt.
+polkit.addRule(function (action, subject) {
+    if (subject.user === "moonlight" && action.id.indexOf("org.freedesktop.NetworkManager.") === 0) {
+        return polkit.Result.YES;
+    }
+});

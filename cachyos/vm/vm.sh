@@ -2,7 +2,7 @@
 # Drive the cachyos-test VM from the host: sync the working tree in, run
 # commands inside the logged-in Hyprland session, take screenshots. All
 # project code runs in the VM, never on the host (AGENTS.md rule 1).
-#   vm.sh ip | sync | restow | shell | run CMD... | sudo CMD... | shot NAME | type TEXT | relogin
+#   vm.sh ip | sync | restow | shell | run CMD... | sudo CMD... | shot NAME | type TEXT | key KEY... | relogin
 set -euo pipefail
 
 VM_NAME="cachyos-test"
@@ -101,11 +101,18 @@ case "${1:-}" in
         [A-Z]) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_LEFTSHIFT "KEY_$c" >/dev/null ;;
         [0-9]) $VIRSH send-key "$VM_NAME" --holdtime 40 "KEY_$c" >/dev/null ;;
         ' ') $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_SPACE >/dev/null ;;
+        -) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_MINUS >/dev/null ;;
+        /) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_SLASH >/dev/null ;;
+        .) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_DOT >/dev/null ;;
+        :) $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_LEFTSHIFT KEY_SEMICOLON >/dev/null ;;
         *) echo "vm.sh type: can't type '$c'" >&2; exit 1 ;;
       esac
       sleep 0.15   # back-to-back send-keys get dropped by the guest
     done
     $VIRSH send-key "$VM_NAME" --holdtime 40 KEY_ENTER >/dev/null ;;
+  key)
+    # Send keys without typing text, e.g. vm.sh key KEY_DOWN, vm.sh key KEY_LEFTCTRL KEY_LEFTALT KEY_F2
+    shift; $VIRSH send-key "$VM_NAME" --holdtime 40 "$@" >/dev/null ;;
   relogin)
     # End the session and log back in at SDDM by typing the password.
     ssh_vm "$SESSION_ENV"$'\n''(uwsm stop >/dev/null 2>&1 &)' || true

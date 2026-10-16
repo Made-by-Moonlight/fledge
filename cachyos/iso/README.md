@@ -10,7 +10,7 @@ Plan:   `../../docs/superpowers/plans/2026-10-01-custom-iso.md`
 ## Build
 
     cachyos/vm/host-deps.sh            # once: gum, libvirt, ... (docker must already be running)
-    cachyos/iso/bin/slievr-iso-make    # -> release/made-by-moonlight-*.iso
+    cachyos/iso/bin/slievr-iso-make    # -> release/fledge-*.iso
 
 The ISO contains the repo's **committed HEAD** (uncommitted changes are
 listed and left out). It contains `profile.sh`, so treat it as private until
@@ -41,7 +41,7 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 ## Write to a USB stick
 
     sha256sum -c release/*.sha256
-    sudo dd if=release/made-by-moonlight-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+    sudo dd if=release/fledge-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 ## Layout
 

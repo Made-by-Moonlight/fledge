@@ -1,5 +1,4 @@
 # Added to releng's packages.x86_64 by builder/build-iso.sh.
-gum
 git
 curl
 gptfdisk
@@ -11,3 +10,14 @@ dosfstools
 efibootmgr
 cachyos-keyring
 cachyos-mirrorlist
+# graphical installer
+hyprland
+quickshell
+qt6-svg
+networkmanager
+foot
+ttf-jetbrains-mono-nerd
+jq
+sudo
+polkit
+xkeyboard-config

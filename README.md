@@ -21,8 +21,8 @@ Download the ISO and its `.sha256` from the
 [latest release](https://github.com/slievr/slievr-cachy/releases/latest),
 check it, and write it to a USB stick (or copy it onto a Ventoy stick):
 
-    sha256sum -c made-by-moonlight-*.iso.sha256
-    sudo dd if=made-by-moonlight-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
+    sha256sum -c fledge-*.iso.sha256
+    sudo dd if=fledge-*.iso of=/dev/sdX bs=4M status=progress oflag=sync
 
 Secure Boot must be off. The install needs an internet connection; the
 installer can join Wi-Fi, and the network carries over to the installed system.

@@ -49,6 +49,29 @@ rm -rf "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/reflector.s
        "$PROFILE/airootfs/etc/xdg/reflector"
 cp -rT "$ISO/configs/airootfs" "$PROFILE/airootfs"
 
+# The live installer user (uid 1000). releng ships these four files; refuse to
+# build if that changes rather than produce an ISO with no installer user.
+for f in passwd shadow group gshadow; do
+  [[ -f "$PROFILE/airootfs/etc/$f" ]] || die "releng no longer ships airootfs/etc/$f"
+done
+echo 'moonlight:x:1000:1000::/home/moonlight:/usr/bin/bash' >> "$PROFILE/airootfs/etc/passwd"
+echo 'moonlight:!*:14871::::::'                          >> "$PROFILE/airootfs/etc/shadow"
+echo 'moonlight:x:1000:'                                 >> "$PROFILE/airootfs/etc/group"
+echo 'moonlight:!*::'                                    >> "$PROFILE/airootfs/etc/gshadow"
+
+# NetworkManager instead of iwd + systemd-networkd: the installer's Wi-Fi
+# picker talks to NM (Quickshell.Networking), and the profiles it saves copy
+# straight into the installed system.
+find "$PROFILE/airootfs/etc/systemd/system" \( -name 'iwd.service' -o -name 'systemd-networkd*' \
+  -o -name 'dbus-org.freedesktop.network1.service' \) -print -delete
+mkdir -p "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants"
+ln -sf /usr/lib/systemd/system/NetworkManager.service \
+  "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
+
+# The installer UI, symlinks into dot-config/quickshell/mbm resolved (-L).
+mkdir -p "$PROFILE/airootfs/etc/xdg/quickshell"
+cp -rL "$ISO/installer" "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer"
+
 # packages: releng's + ours, de-duplicated
 grep -v '^#' "$ISO/configs/packages.extra" | sed '/^$/d' >> "$PROFILE/packages.x86_64"
 sort -u -o "$PROFILE/packages.x86_64" "$PROFILE/packages.x86_64"
@@ -63,16 +86,20 @@ install -Dm644 "$PROFILE/pacman.conf" "$PROFILE/airootfs/etc/pacman.conf"
 # profiledef: our name, label, publisher; permissions for our scripts
 # shellcheck disable=SC2016  # $(date ...) is evaluated when mkarchiso sources profiledef.sh
 sed -i \
-  -e 's/^iso_name=.*/iso_name="made-by-moonlight"/' \
-  -e 's/^iso_label=.*/iso_label="MBM_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"/' \
+  -e 's/^iso_name=.*/iso_name="fledge"/' \
+  -e 's/^iso_label=.*/iso_label="FLEDGE_$(date --date="@${SOURCE_DATE_EPOCH:-$(date +%s)}" +%Y%m)"/' \
   -e 's/^iso_publisher=.*/iso_publisher="made by moonlight"/' \
-  -e 's/^iso_application=.*/iso_application="made by moonlight installer"/' \
+  -e 's/^iso_application=.*/iso_application="fledge installer"/' \
   "$PROFILE/profiledef.sh"
 cat >> "$PROFILE/profiledef.sh" <<'EOF'
 file_permissions+=(
-  ["/root/.automated_script.sh"]="0:0:755"
-  ["/usr/local/bin/mbm-configurator"]="0:0:755"
   ["/usr/local/bin/mbm-install"]="0:0:755"
+  ["/usr/local/bin/mbm-probe"]="0:0:755"
+  ["/usr/local/bin/mbm-cleanup"]="0:0:755"
+  ["/etc/sudoers.d/mbm-installer"]="0:0:440"
+  ["/etc/gshadow"]="0:0:400"
+  ["/home/moonlight"]="1000:1000:750"
+  ["/home/moonlight/.bash_profile"]="1000:1000:644"
 )
 EOF
 
@@ -82,13 +109,13 @@ step "boot menu"
 #   grep -rn title "$PROFILE"/efiboot "$PROFILE"/grub "$PROFILE"/syslinux
 # and adjust the patterns if releng renamed them.
 grep -rlZ 'Arch Linux install medium' "$PROFILE"/efiboot "$PROFILE"/grub "$PROFILE"/syslinux 2>/dev/null \
-  | xargs -0r sed -i 's/Arch Linux install medium/made by moonlight installer/g'
+  | xargs -0r sed -i 's/Arch Linux install medium/fledge installer/g'
 for f in "$PROFILE"/efiboot/loader/entries/*linux*.conf; do
   [[ -e "$f" && "$f" != *speech* ]] || continue
   sed -e 's/^title .*/& (safe graphics)/' -e 's/^options .*/& nomodeset/' "$f" > "${f%.conf}-nomodeset.conf"
   break
 done
-grep -rq 'made by moonlight installer' "$PROFILE"/efiboot || die "boot entries were not retitled"
+grep -rq 'fledge installer' "$PROFILE"/efiboot || die "boot entries were not retitled"
 compgen -G "$PROFILE/efiboot/loader/entries/*nomodeset.conf" >/dev/null || die "no safe-graphics boot entry"
 
 step "bake repo + branding"
@@ -104,22 +131,29 @@ cp -a /src "$PROFILE/airootfs/usr/share/slievr-cachy"
   done
   echo ')'
 } >> "$PROFILE/profiledef.sh"
-mkdir -p "$PROFILE/airootfs/usr/share/mbm"
-python3 /src/cachyos/branding/render-console.py /src/cachyos/branding/owl.svg --cols 40 --ansi \
-  > "$PROFILE/airootfs/usr/share/mbm/owl.ansi"
 
 step "sanity checks"
 for f in usr/share/slievr-cachy/cachyos/install/install-cachyos.sh usr/share/slievr-cachy/.git/HEAD \
-         usr/share/mbm/owl.ansi usr/local/bin/mbm-configurator usr/local/bin/mbm-install \
-         root/.automated_script.sh etc/pacman.conf; do
+         usr/share/slievr-cachy/dot-local/share/mbm/assets/owl.png \
+         usr/local/bin/mbm-install usr/local/bin/mbm-probe usr/local/bin/mbm-cleanup \
+         etc/sudoers.d/mbm-installer etc/mbm-installer/hyprland.conf home/moonlight/.bash_profile \
+         etc/xdg/quickshell/mbm-installer/shell.qml etc/xdg/quickshell/mbm-installer/theme/Theme.qml \
+         etc/xdg/quickshell/mbm-installer/components/Button.qml etc/xdg/quickshell/mbm-installer/services/Net.qml \
+         etc/xdg/quickshell/mbm-installer/quicksettings/pickers/WifiPicker.qml etc/pacman.conf; do
   [[ -s "$PROFILE/airootfs/$f" ]] || die "missing or empty airootfs/$f"
 done
+if find "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer" -type l | grep -q .; then
+  die "installer config still has symlinks (cp -rL should have resolved them)"
+fi
+grep -q '^moonlight:' "$PROFILE/airootfs/etc/passwd" || die "no moonlight user"
+[[ -e "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service" ]] || die "NetworkManager not enabled"
 grep -q '^\[cachyos\]' "$PROFILE/airootfs/etc/pacman.conf" || die "live pacman.conf lacks [cachyos]"
 [[ "$(git -C "$PROFILE/airootfs/usr/share/slievr-cachy" remote get-url origin)" == https://* ]] \
   || die "baked repo's origin is not the GitHub URL"
 
 step "mkarchiso"
 mkarchiso -v -w /tmp/work -o "$OUT" "$PROFILE"
+du -h "$OUT"/*.iso   # the 2 GiB limit should stay visible
 
 step "check modes inside the image"
 command -v unsquashfs >/dev/null || pacman --noconfirm -S squashfs-tools
