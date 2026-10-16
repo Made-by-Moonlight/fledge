@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Hardware-adaptive CachyOS installer. Run as root in the stock CachyOS live ISO.
-#   sudo /path/to/cachyos/install/install-cachyos.sh [--allow-usb] [--answers FILE]
+#   sudo /path/to/cachyos/install/install-cachyos.sh [--allow-usb] [--answers FILE] [--desktop-only USER]
 #
 # See ./README.md and ../../docs/superpowers/specs/2026-08-28-bare-metal-install-design.md
 set -euo pipefail
@@ -21,6 +21,8 @@ source "$HERE/lib/answers.sh"
 source "$HERE/lib/network.sh"
 # shellcheck source=lib/progress.sh
 source "$HERE/lib/progress.sh"
+# shellcheck source=lib/desktop.sh
+source "$HERE/lib/desktop.sh"
 
 die()  { printf '\e[31mERROR:\e[0m %s\n' "$*" >&2; exit 1; }
 warn() { printf '\e[33mWARN:\e[0m  %s\n' "$*" >&2; }
@@ -30,16 +32,43 @@ rule() { printf '\n\e[1m== %s ==\e[0m\n' "$*"; }
 # installer (no-op without MBM_PROGRESS). die() lands here too.
 trap 'rc=$?; if (( rc != 0 )); then progress_fail; fi' EXIT
 
+# The last two stages. Also the whole of --desktop-only, which the graphical
+# installer's "Retry desktop" runs against the still-mounted target.
+desktop_and_finish() {
+  rule "Desktop (bootstrap.sh in the new system)"
+  progress_stage desktop "Desktop"
+  if ! run_desktop_stage "$USERNAME"; then
+    warn "the desktop layer failed. The system is installed; /mnt is still mounted."
+    warn "Retry with --desktop-only $USERNAME, or reboot: firstboot runs it on first boot."
+    exit 3
+  fi
+  rule "Finish"
+  progress_stage finish "Finish"
+  finish_install
+  progress_done
+}
+
 ALLOW_USB=0
 ANSWERS=""
+DESKTOP_ONLY=""
 while (( $# )); do
   case "$1" in
     --allow-usb) ALLOW_USB=1 ;;
     --answers)   ANSWERS="${2:?--answers needs a file}"; shift ;;
+    --desktop-only) DESKTOP_ONLY="${2:?--desktop-only needs a user}"; shift ;;
     *)           die "unknown argument: $1" ;;
   esac
   shift
 done
+if [[ -n "$DESKTOP_ONLY" ]]; then
+  valid_username "$DESKTOP_ONLY" || die "--desktop-only: not a valid user name: $DESKTOP_ONLY"
+  [[ $EUID -eq 0 ]] || die "must run as root"
+  mountpoint -q /mnt || die "--desktop-only: the target isn't mounted at /mnt"
+  [[ -d "/mnt/home/$DESKTOP_ONLY/proj/slievr-cachy" ]] || die "--desktop-only: no staged repo for $DESKTOP_ONLY in /mnt"
+  USERNAME="$DESKTOP_ONLY"
+  desktop_and_finish
+  exit 0
+fi
 XKB_LAYOUT="us"
 XKB_VARIANT=""
 DATA_MOUNTS=""
@@ -275,6 +304,11 @@ arch-chroot /mnt env \
 
 rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh
 add_data_mounts
+# The Bootloader marker is printed inside the chroot, so this script's own
+# stage must follow it, or a failure in the rest of that stage reports `fail config`.
+MBM_STAGE=boot
+seed_user_settings "$USERNAME" "$XKB_LAYOUT" "$XKB_VARIANT" \
+  "$(arch-chroot /mnt id -u "$USERNAME")" "$(arch-chroot /mnt id -g "$USERNAME")"
 
 ########################################################################
 rule "Staging repo + first-boot bootstrap"
@@ -286,9 +320,10 @@ mkdir -p "${target_home}/proj"
 rm -rf "${target_home}/proj/slievr-cachy"
 cp -r "$REPO_ROOT" "${target_home}/proj/slievr-cachy"
 
-# First-boot service: runs bootstrap.sh as the user, unattended, on TTY1, then
-# starts SDDM. install-cachyos.sh does NOT enable sddm - firstboot does, so a
-# failed bootstrap leaves a TTY + log instead of a broken greeter.
+# First-boot service, the fallback: the Desktop stage below runs bootstrap.sh
+# before the reboot and disables this on success. If that stage didn't finish,
+# firstboot runs bootstrap.sh as the user, unattended, on TTY1, then starts
+# SDDM - so a failed bootstrap leaves a TTY + log instead of a broken greeter.
 install -Dm755 "$HERE/firstboot/slievr-firstboot.sh"      /mnt/usr/local/sbin/slievr-firstboot.sh
 sed -i "s/@USERNAME@/${USERNAME}/g"                        /mnt/usr/local/sbin/slievr-firstboot.sh
 install -Dm644 "$HERE/firstboot/slievr-firstboot.service" /mnt/etc/systemd/system/slievr-firstboot.service
@@ -300,19 +335,11 @@ arch-chroot /mnt systemctl enable slievr-firstboot.service
 # keyfiles), so first boot is online on a laptop.
 copy_nm_profiles /etc/NetworkManager/system-connections /mnt/etc/NetworkManager/system-connections
 
-########################################################################
-rule "Done"
-########################################################################
-umount -R /mnt
-cryptsetup close "$LUKS_NAME"
+desktop_and_finish
 cat <<EOF
 
-Install complete.
-
-On reboot: unlock the disk, then slievr-firstboot runs bootstrap.sh
-automatically on TTY1 (log: /var/log/slievr-firstboot.log) and starts SDDM
-when it finishes. No manual step. If bootstrap fails you land at a TTY with
-the repo at /home/${USERNAME}/proj/slievr-cachy and instructions on screen.
+Install complete. On reboot, unlock the disk, then log in.
+If anything in the desktop layer is missing, its log is /var/log/mbm-install.log.
 
 EOF
 if [[ -z "$ANSWERS" ]]; then

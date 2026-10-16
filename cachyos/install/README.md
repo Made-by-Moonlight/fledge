@@ -36,8 +36,8 @@ the first reboot.
 
 1. Edit `profile.sh`:
    - `HOSTNAME` — set it, or leave `""` to be prompted.
-   - `EXTRA_FSTAB_ENTRIES` — set to `()` on any machine without the
-     desktop's four extra data disks.
+   - `DATA_DISKS` — the data disks to mount permanently (matched by UUID;
+     disks not present on the machine are skipped). Set to `()` for none.
 2. Get this repo onto a partition the install will **not** touch:
    - Desktop: copy `~/proj/slievr-cachy` onto one of the data disks.
    - Laptop: copy it onto a USB stick.
@@ -54,25 +54,35 @@ sudo /mnt-repo/slievr-cachy/cachyos/install/install-cachyos.sh
 
 It prints a detection summary, lists candidate disks, and makes you type
 the target disk's model string before it touches anything. After it
-finishes and reboots:
+finishes it has already run `bootstrap.sh` (the desktop layer) inside the
+new system as the new user, so after the reboot you unlock the disk and land
+on the login screen. If that stage fails the installer exits 3 with the
+target still mounted; either reboot (`slievr-firstboot.service`, still
+enabled, runs `bootstrap.sh` on first boot as the fallback) or retry it:
 
 ```sh
-# log in as the user, then from the staged repo:
-~/proj/slievr-cachy/cachyos/bootstrap.sh
+sudo install-cachyos.sh --desktop-only USER   # needs /mnt still mounted
 ```
+
+`--desktop-only USER` runs just the Desktop and Finish stages (exit 0 done,
+3 desktop failed again). The install log is kept in the new system at
+`/var/log/mbm-install.log`.
 
 ## Unattended (`--answers`)
 
-The ISO's configurator writes `/run/mbm-answers.env` (mode 600) and runs
+The ISO's graphical installer (`mbm-install`, not the configurator) writes
+`/run/mbm-answers.env` (mode 600) and runs
 
     install-cachyos.sh --answers /run/mbm-answers.env
 
 Keys: `DISK` (by-id path), `DISK_CONFIRMED=yes`, `HOSTNAME`, `TIMEZONE`,
 `USER_PASSWORD`, `LUKS_PASSPHRASE`, optional `ROOT_PASSWORD` (empty → root
-locked). One `KEY=value` per line, unquoted; parsed by `lib/answers.sh`, never
+locked), `XKB_LAYOUT` / `XKB_VARIANT` (keyboard; default `us`, seeded into the
+user's mbm settings) and `DATA_MOUNTS` (`uuid:/abs/path,…`, `~` already
+expanded, may be empty). One `KEY=value` per line, unquoted; parsed by `lib/answers.sh`, never
 sourced; deleted once read. Without `--answers` everything prompts as before.
-Data-disk fstab entries from `profile.sh` are only written when their UUID is
-present on the machine.
+Without `--answers`, data-disk fstab entries from `profile.sh` are only
+written when their UUID is present on the machine.
 
 ## Testing the detection logic (no VM)
 
