@@ -1,7 +1,7 @@
 .pragma library
 .import "Validate.js" as V
 
-// Typed to confirm the erase. Disks without a model (virtio) use their name.
+// How the target disk is named on screen. Disks without a model (virtio) use their name.
 function confirmWord(d) { return d ? (d.model || d.path.split("/").pop()) : ""; }
 
 // KEY=value lines for mbm-install, END-terminated (it reads until END).

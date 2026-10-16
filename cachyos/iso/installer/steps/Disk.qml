@@ -5,7 +5,8 @@ import "../services"
 import "../ui"
 import "../lib/Format.js" as Fmt
 
-// Up/Down pick a disk (they reach here from the confirm field, which doesn't use them).
+// Up/Down pick a disk; Return (or the button) confirms the erase and moves on.
+// Picking another disk un-confirms (Installer.onDiskChanged).
 FocusScope {
     id: page
     focus: true
@@ -16,13 +17,19 @@ FocusScope {
         const j = i < 0 ? 0 : Math.max(0, Math.min(disks.length - 1, i + d));
         pick(disks[j].path);
     }
-    // A new disk clears the confirm word (Installer.onDiskChanged); the field follows.
     function pick(path) {
         Installer.disk = path;
-        confirm.focusInput();
+        page.forceActiveFocus();
+    }
+    function confirm() {
+        Installer.diskConfirmed = true;
+        Installer.next();
     }
     Keys.onUpPressed: move(-1)
     Keys.onDownPressed: move(1)
+    // Handled here so it runs before Frame's Return (plain next(), which would only show the error).
+    Keys.onReturnPressed: ev => { if (Installer.diskInfo) confirm(); else ev.accepted = false; }
+    Keys.onEnterPressed: ev => { if (Installer.diskInfo) confirm(); else ev.accepted = false; }
     Column {
         spacing: 14
         Title { text: "Disk"; sub: "The disk you pick is erased completely. USB drives and this installer's own stick aren't listed. ↑ ↓ to choose." }
@@ -63,16 +70,14 @@ FocusScope {
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 14 }
                 spacing: 10
                 Glyph { text: "Everything on " + Installer.confirmWord + " will be erased."; color: Theme.error; font.bold: true }
-                Input {
-                    id: confirm; width: 420
-                    label: "Type " + Installer.confirmWord + " to confirm"
-                    error: Installer.err("disk", "confirm")
-                    text: Installer.confirmText
-                    onTextChanged: Installer.confirmText = text
-                    onAccepted: Installer.next()
+                Row {
+                    spacing: 14
+                    Button { primary: true; text: "Erase this disk"; onClicked: page.confirm() }
+                    Glyph { text: "Return to confirm"; color: Theme.muted; font.pixelSize: Theme.fontSmall; anchors.verticalCenter: parent.verticalCenter }
                 }
+                Glyph { text: Installer.err("disk", "confirm"); color: Theme.error; font.pixelSize: Theme.fontSmall; visible: text !== "" }
             }
         }
     }
-    Component.onCompleted: if (Installer.diskInfo) confirm.focusInput(); else page.forceActiveFocus()
+    Component.onCompleted: page.forceActiveFocus()
 }

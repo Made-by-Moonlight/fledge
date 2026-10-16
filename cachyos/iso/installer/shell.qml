@@ -47,7 +47,7 @@ ShellRoot {
         function set(key: string, value: string): void {
             Installer[key] = value === "true" ? true : value === "false" ? false : value;
         }
-        function setDisk(path: string): void { Installer.disk = path; Installer.confirmText = Installer.confirmWord; }
+        function setDisk(path: string): void { Installer.disk = path; Installer.diskConfirmed = true; }
         function next(): void { Installer.next(); }
         function current(): string { return Installer.current; }
     }

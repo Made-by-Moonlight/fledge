@@ -41,7 +41,7 @@ Singleton {
     property string luks: ""
     property string luks2: ""
     property string disk: ""           // kernel path, e.g. /dev/nvme2n1
-    property string confirmText: ""
+    property bool diskConfirmed: false  // "Erase this disk" pressed for the current disk
     property var mounts: ({})          // uuid -> { on, path }
 
     readonly property var facts: Probe.facts
@@ -50,7 +50,7 @@ Singleton {
     readonly property var dataRows: facts ? facts.datafs.filter(f => f.disk !== disk) : []
     readonly property string home: "/home/" + (username || "you")
 
-    onDiskChanged: confirmText = ""
+    onDiskChanged: diskConfirmed = false
     onLayoutChanged: Xkb.apply(layout, variant)
     onVariantChanged: Xkb.apply(layout, variant)
     onFactsChanged: {
@@ -108,7 +108,7 @@ Singleton {
             break;
         case "disk":
             if (!diskInfo) e.disk = "Pick the disk to install to";
-            else if (confirmText !== confirmWord) e.confirm = "Type " + confirmWord + " to confirm";
+            else if (!diskConfirmed) e.confirm = "Confirm the erase to continue";
             break;
         case "data":
             for (const r of dataRows) { const m = mountError(r.uuid); if (m) e[r.uuid] = m; }
