@@ -24,5 +24,7 @@ check "no live disk known: stick listed as usb, still hidden" "/dev/sda /dev/nvm
   "$(jq -c --arg live '' --argjson defaults '{}' -f "$DIR/lib/probe.jq" "$FIX" | jq -r '[.disks[].path] | join(" ")')"
 check "datafs: filesystem without a uuid excluded, output still valid" "3" "$(probe '.datafs | length')"
 check "disks: the uuid-less disk is still an install target" "/dev/vde" "$(probe '.disks[-1].path')"
+check "disks: a whole-disk filesystem is listed as its content" "/dev/vde vfat" "$(probe '.disks[-1].parts[] | "\(.path) \(.fstype)"')"
+check "disks: partitioned disk lists only its partitions" "1" "$(probe '.disks[0].parts | length')"
 
 exit $fail

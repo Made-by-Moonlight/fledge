@@ -13,7 +13,9 @@ def esp: (.parttype // "" | ascii_downcase) == "c12a7328-f81f-11d2-ba4b-00a0c93e
       path, size,
       model: ((.model // "") | sub("\\s+$"; "")),
       tran: (.tran // ""),
-      parts: [(.children // [])[] | {path, size, fstype: (.fstype // ""), label: (.label // "")}]
+      # A filesystem made on the whole disk (no partition table) counts too,
+      # or the card would call a disk full of data "Empty".
+      parts: [((select(.fstype != null)), (.children // [])[]) | {path, size, fstype: (.fstype // ""), label: (.label // "")}]
     }],
     datafs: [$all[] | .path as $disk | (., (.children // [])[])
       | select((.fstype // "") | IN("ext4", "btrfs", "xfs", "ntfs", "exfat", "vfat"))
