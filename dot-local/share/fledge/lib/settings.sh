@@ -1,17 +1,17 @@
 # shellcheck shell=bash
-# mbm settings: shipped defaults + the user's overrides -> one merged state
+# fledge settings: shipped defaults + the user's overrides -> one merged state
 # file (read live by the shell) + generated Hyprland config. The merge and the
 # validation live only here, so the shell and bootstrap can't disagree.
 # Every path can be overridden from the environment (the tests use a temp HOME).
 
-MBM_DEFAULTS="${MBM_DEFAULTS:-$MBM_ROOT/defaults/settings.json}"
+MBM_DEFAULTS="${MBM_DEFAULTS:-$FLEDGE_ROOT/defaults/settings.json}"
 MBM_CONFIG_DIR="${MBM_CONFIG_DIR:-$HOME/.config/mbm}"
 MBM_STATE_DIR="${MBM_STATE_DIR:-$HOME/.local/state/mbm}"
 MBM_HYPR_DIR="${MBM_HYPR_DIR:-$HOME/.local/state/mbm/hypr}"
 MBM_USER="$MBM_CONFIG_DIR/settings.json"
 MBM_MERGED="$MBM_STATE_DIR/settings.json"
 
-die() { printf 'mbm: %s\n' "$*" >&2; exit 1; }
+die() { printf 'fledge settings: %s\n' "$*" >&2; exit 1; }
 
 # atomic_write <file>: stdin -> temp file beside <file>, then mv, so readers
 # (Hyprland, the shell's file watcher) never see a half-written file. An
@@ -63,7 +63,7 @@ user_json() { # the overrides as settings v2, or {} when there are none
 # replaced: the first one holds the user's real original. Whatever the table
 # can't convert stays as {dispatch}; `check` names it.
 migrate_user_file() {
-  local lib="$MBM_ROOT/lib" out backup="$MBM_USER.v1" kept="backup"
+  local lib="$FLEDGE_ROOT/lib" out backup="$MBM_USER.v1" kept="backup"
   if [[ $(jq -L "$lib" 'include "migrate-dispatch"; needs_migration' <<<"$1") != true ]]; then
     printf '%s\n' "$1"
     return
@@ -77,7 +77,7 @@ migrate_user_file() {
         || die "could not back up $MBM_USER"
     fi
     jq '.settings' <<<"$out" | atomic_write "$MBM_USER" || die "could not write $MBM_USER"
-    printf 'mbm: migrated %s binds to settings v2, %s could not be converted (%s: %s)\n' \
+    printf 'fledge settings: migrated %s binds to settings v2, %s could not be converted (%s: %s)\n' \
       "$(jq .count <<<"$out")" "$(jq .unconverted <<<"$out")" "$kept" "$backup" >&2
   fi
   jq '.settings' <<<"$out"
@@ -94,7 +94,7 @@ lock_settings() {
   [[ $wait =~ ^[0-9]+$ ]] || die "MBM_LOCK_TIMEOUT must be a whole number of seconds (got \"$wait\")"
   mkdir -p "$MBM_CONFIG_DIR" || die "cannot create $MBM_CONFIG_DIR"
   exec 9>"$lock" || die "cannot open $lock"
-  flock -w "$wait" 9 || die "settings are busy: another mbm command holds $lock (waited ${wait}s)"
+  flock -w "$wait" 9 || die "settings are busy: another fledge settings command holds $lock (waited ${wait}s)"
   MBM_WRITE_MIGRATION=1
 }
 
@@ -120,7 +120,7 @@ merged_json() {
 # check_json <merged-json>: 0 when valid; one problem per line on stderr.
 check_json() {
   local errs
-  errs="$(jq -r --slurpfile dsp "$MBM_ROOT/lib/dsp-names.json" -f "$MBM_ROOT/lib/check.jq" <<<"$1")" || return 1
+  errs="$(jq -r --slurpfile dsp "$FLEDGE_ROOT/lib/dsp-names.json" -f "$FLEDGE_ROOT/lib/check.jq" <<<"$1")" || return 1
   [[ -z $errs ]] && return 0
   printf '%s\n' "$errs" >&2
   return 1
@@ -152,7 +152,7 @@ settings_get() {
 }
 
 settings_set() {
-  (($# >= 2 && $# % 2 == 0)) || die "usage: mbm settings set <path> <json> [<path> <json>]..."
+  (($# >= 2 && $# % 2 == 0)) || die "usage: fledge settings set <path> <json> [<path> <json>]..."
   local user filter='.' i=0 out
   local -a args=()
   user="$(user_json)" || exit 1
@@ -169,7 +169,7 @@ settings_set() {
 }
 
 settings_reset() {
-  (($# >= 1)) || die "usage: mbm settings reset <path>..."
+  (($# >= 1)) || die "usage: fledge settings reset <path>..."
   local user filter='.' out p
   user="$(user_json)" || exit 1
   for p in "$@"; do
@@ -187,7 +187,7 @@ settings_check() {
 }
 
 settings_apply() {
-  local merged binds monitors input workspaces f lib="$MBM_ROOT/lib"
+  local merged binds monitors input workspaces f lib="$FLEDGE_ROOT/lib"
   merged="$(merged_json)" || exit 1
   check_json "$merged" || die "settings are invalid; nothing applied"
   # Render everything before writing anything, so a jq failure can't leave a mix.
@@ -219,6 +219,6 @@ settings_main() {
     reset) lock_settings; settings_reset "$@" ;;
     check) settings_check ;;
     apply) lock_settings; settings_apply ;;
-    *) die "usage: mbm settings get|set|reset|check|apply" ;;
+    *) die "usage: fledge settings get|set|reset|check|apply" ;;
   esac
 }

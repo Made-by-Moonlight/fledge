@@ -1,6 +1,22 @@
 #!/usr/bin/env bash
-# fledge: the desktop's CLI. For now only `fledge hypr`, the one place that
-# talks Lua to Hyprland 0.57+:
+# fledge: the desktop's one command.
+#   fledge <group> <action> [args]   runs libexec/<group>-<action> [args]
+#   fledge settings get|set|reset|check|apply ...   (lib/settings.sh)
+#   fledge hypr dispatch|set|eval|quote ...          (below)
+#   fledge dmenu [--prompt P] [--select N] [--input-only]   (lib/dmenu.sh)
+#   fledge help [group]
+# Built-ins are checked first, so no script can shadow them. Everything else
+# resolves by the longest run of leading command words naming an executable in
+# libexec/: `fledge a b c x` runs libexec/a-b-c x if it exists, else
+# libexec/a-b c x, else libexec/a b c x. Command words must match
+# ^[a-z0-9][a-z0-9_.]*$ (no /, no .., no -, so a word can't leave libexec/ or
+# split into two). The first word must be one (exit 2 otherwise); a later
+# token that isn't ends the scan and, with everything after it, passes through
+# untouched: binds pass --reverse, suspend-off, URLs and quoted commands.
+# Unknown commands exit 2 with the scripts whose names start the same way.
+# FLEDGE_LIBEXEC overrides libexec/ (tests).
+#
+# fledge hypr is the one place that talks Lua to Hyprland 0.57+:
 #   fledge hypr dispatch '<hl.dsp expr>'   hyprctl dispatch
 #   fledge hypr set '<hl.config body>'     hyprctl eval 'hl.config({ <body> })'
 #   fledge hypr eval '<lua>'               hyprctl eval
@@ -23,15 +39,18 @@
 # HYPRCTL overrides the binary (tests).
 set -euo pipefail
 
-usage() {
-  cat >&2 <<'EOT'
+FLEDGE_ROOT="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/.." && pwd)"
+LIBEXEC="${FLEDGE_LIBEXEC:-$FLEDGE_ROOT/libexec}"
+
+hypr_usage_text() {
+  cat <<'EOT'
 usage: fledge hypr dispatch '<hl.dsp expression>'
        fledge hypr set '<hl.config body>'
        fledge hypr eval '<lua>'
        fledge hypr quote '<text>'
 EOT
-  exit 2
 }
+hypr_usage() { hypr_usage_text >&2; exit 2; }
 
 hyprctl_checked() { # <hyprctl args...>
   local out rc=0
@@ -49,7 +68,7 @@ hyprctl_checked() { # <hyprctl args...>
   done <<<"$out"
 }
 
-# A double-quoted Lua string, escaped like mbm's lib/lua.jq: \ and " and newline,
+# A double-quoted Lua string, escaped like lib/lua.jq: \ and " and newline,
 # other control characters as \ddd (three digits, so a following digit can't
 # join the escape). Byte-wise, so UTF-8 passes through unchanged.
 lua_quote() { # <text>
@@ -68,17 +87,175 @@ lua_quote() { # <text>
   printf '"%s"\n' "$out"
 }
 
-[[ $# -ge 1 ]] || usage
+# What `fledge help` says about each group (the libexec names supply the list;
+# a group missing here is listed without a description).
+declare -A GROUPS_ABOUT=(
+  [dmenu]="Pick a line from stdin in the shell's launcher"
+  [help]="This list, or a group's actions: fledge help <group>"
+  [hypr]="Talk Lua to Hyprland: dispatch, set, eval, quote"
+  [settings]="Settings and the Hyprland config they generate: get, set, reset, check, apply"
+  [ac]="AC power detection"
+  [audio]="Audio output switching"
+  [battery]="Battery status helpers"
+  [branding]="About and screensaver branding"
+  [brightness]="Keyboard brightness"
+  [capture]="Screenshots and screen recording"
+  [cmd]="Command helpers"
+  [config]="System configuration helpers"
+  [default]="Default application selection"
+  [drive]="Drive selection and encryption"
+  [font]="Font management"
+  [hibernation]="Hibernation setup and removal"
+  [hook]="User hook runner"
+  [hw]="Hardware detection"
+  [hyprland]="Hyprland window, monitor and toggle controls"
+  [launch]="Application launchers"
+  [menu]="The fledge menu and its pickers"
+  [notification]="Notification helpers"
+  [pkg]="Package helpers"
+  [powerprofiles]="Power profile management"
+  [reminder]="Desktop notification reminders"
+  [restart]="Restart desktop components"
+  [screensaver]="The screensaver animation"
+  [setup]="Interactive setup wizards"
+  [share]="Share clipboard, files or folders with LocalSend"
+  [show]="Terminal helpers for the menu's tools"
+  [state]="Persistent state flags"
+  [sudo]="Sudo configuration"
+  [swayosd]="OSD messages (forwards to the shell)"
+  [system]="Lock, logout, reboot and shutdown"
+  [theme]="App theme templates"
+  [toggle]="Toggle desktop features"
+  [transcode]="Image and video transcoding"
+  [tz]="Timezone selection"
+  [update]="Firmware and clock updates"
+  [weather]="Weather status"
+)
+BUILTINS=(dmenu help hypr settings)
+
+die_usage() { printf 'fledge: %s\n' "$*" >&2; exit 2; }
+
+is_word() { [[ $1 =~ ^[a-z0-9][a-z0-9_.]*$ && $1 != *..* ]]; }
+
+# libexec names, one per line, executables only.
+scripts() {
+  local f
+  for f in "$LIBEXEC"/*; do
+    [[ -f $f && -x $f ]] && printf '%s\n' "${f##*/}"
+  done
+}
+
+# The first # comment line after the shebang (blank lines skipped), or nothing
+# when the header has none.
+about() { # <libexec name>
+  local line n=0
+  while IFS= read -r line; do
+    n=$((n + 1))
+    ((n == 1)) && [[ $line == '#!'* ]] && continue
+    [[ $line =~ ^[[:space:]]*$ ]] && continue
+    [[ $line == '#'* ]] || return 0
+    [[ $line == '# shellcheck'* ]] && continue
+    line="${line#\#}"; printf '%s\n' "${line# }"; return 0
+  done <"$LIBEXEC/$1"
+}
+
+help_groups() {
+  local g
+  echo "usage: fledge <group> <action> [args]   (fledge help <group> lists its actions)"
+  echo
+  { printf '%s\n' "${BUILTINS[@]}"; scripts | sed 's/-.*//'; } | sort -u | while IFS= read -r g; do
+    if [[ -n ${GROUPS_ABOUT[$g]:-} ]]; then printf '  %-14s %s\n' "$g" "${GROUPS_ABOUT[$g]}"; else printf '  %s\n' "$g"; fi
+  done
+}
+
+help_group() { # <group>
+  local g="$1" name rows=() w=0 cmd
+  case "$g" in
+    hypr) hypr_usage_text | sed 's/^/  /'; exit 0 ;;
+    settings) echo "  fledge settings get <jq path>... | set <path> <json>... | reset <path>... | check | apply"; exit 0 ;;
+    dmenu) echo "  fledge dmenu [--prompt P] [--select N] [--input-only]   (options on stdin, the choice on stdout)"; exit 0 ;;
+    help) echo "  fledge help [group]"; exit 0 ;;
+  esac
+  while IFS= read -r name; do
+    [[ $name == "$g" || $name == "$g"-* ]] || continue
+    rows+=("$name")
+    cmd="fledge ${name//-/ }"; ((${#cmd} > w)) && w=${#cmd}
+  done < <(scripts)
+  ((${#rows[@]})) || { suggest "$g"; die_usage "unknown group: $g"; }
+  [[ -n ${GROUPS_ABOUT[$g]:-} ]] && echo "$g: ${GROUPS_ABOUT[$g]}"
+  for name in "${rows[@]}"; do
+    printf '  %-*s  %s\n' "$w" "fledge ${name//-/ }" "$(about "$name")"
+  done
+}
+
+# Prints the scripts that start like the given words: the most words that match
+# anything, at most eight, to stderr.
+suggest() { # <words...>
+  local -a words=("$@") hits; local n prefix
+  for ((n = ${#words[@]}; n >= 1; n--)); do
+    prefix="$(IFS=-; echo "${words[*]:0:n}")"
+    mapfile -t hits < <(scripts | grep -E "^${prefix//./\\.}" | head -n 8)
+    if ((${#hits[@]})); then
+      echo "did you mean:" >&2
+      printf '  fledge %s\n' "${hits[@]//-/ }" >&2
+      return 0
+    fi
+  done
+}
+
+# Longest-prefix resolution: `fledge a b c x` runs libexec/a-b-c if it exists
+# (with x as its argument), else libexec/a-b (with c x), else libexec/a.
+resolve() {
+  local -a words=("$@") ; local n name
+  for ((n = ${#words[@]}; n >= 1; n--)); do
+    name="$(IFS=-; echo "${words[*]:0:n}")"
+    [[ -x "$LIBEXEC/$name" ]] && { printf '%s\n%d\n' "$name" "$n"; return 0; }
+  done
+  return 1
+}
+
+(($#)) || { help_groups >&2; exit 2; }
 case "$1" in
   hypr)
-    [[ $# -eq 3 ]] || usage
+    [[ $# -eq 3 ]] || hypr_usage
     case "$2" in
       dispatch) hyprctl_checked dispatch "$3" ;;
       set) hyprctl_checked eval "hl.config({ $3 })" ;;
       eval) hyprctl_checked eval "$3" ;;
       quote) lua_quote "$3" ;;
-      *) usage ;;
+      *) hypr_usage ;;
     esac
     ;;
-  *) usage ;;
+  settings)
+    shift
+    # shellcheck source=../lib/settings.sh
+    source "$FLEDGE_ROOT/lib/settings.sh"
+    settings_main "$@"
+    ;;
+  dmenu)
+    shift
+    # shellcheck source=../lib/dmenu.sh
+    source "$FLEDGE_ROOT/lib/dmenu.sh"
+    dmenu_main "$@"
+    ;;
+  help | -h | --help)
+    if (($# >= 2)); then
+      is_word "$2" || die_usage "not a command word: $2"
+      help_group "$2"
+    else
+      help_groups
+    fi
+    ;;
+  *)
+    is_word "$1" || die_usage "not a command word: $1 (fledge help lists the commands)"
+    words=()
+    for w in "$@"; do is_word "$w" || break; words+=("$w"); done
+    if ! found="$(resolve "${words[@]}")"; then
+      echo "fledge: unknown command: ${words[*]}" >&2
+      suggest "${words[@]}"
+      exit 2
+    fi
+    { read -r name; read -r n; } <<<"$found"
+    exec "$LIBEXEC/$name" "${@:n+1}"
+    ;;
 esac

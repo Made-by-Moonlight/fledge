@@ -7,7 +7,7 @@
 # Hyprland 0.57 drops the .conf format, and under a Lua config the legacy strings
 # stop working. Only forms in this table are converted; anything else (other
 # dispatchers, or arguments we can't map exactly) is left as {dispatch} for the
-# user to rewrite, and `mbm settings check` names it. Never guess.
+# user to rewrite, and `fledge settings check` names it. Never guess.
 
 def _dir: {"l": "left", "r": "right", "u": "up", "d": "down"}[.];
 # Plain workspace numbers become numbers; e+1, previous, name:x, special:x stay text.
@@ -70,7 +70,7 @@ def _is_legacy: type == "object" and keys == ["dispatch"] and (.dispatch | type 
 # The v1 defaults' zoom binds ran `hyprctl keyword`, which the Lua config refuses
 # (exit 0, nothing happens). A user file that copied them gets fledge's forms;
 # only these exact strings: any other legacy IPC in a command is left for
-# `mbm settings check` to name.
+# `fledge settings check` to name.
 def _legacy_exec: {
   "hyprctl keyword cursor:zoom_factor $(hyprctl getoption cursor:zoom_factor -j | jq '.float + 1')":
     "fledge hypr eval 'hl.config({ cursor = { zoom_factor = hl.get_config(\"cursor.zoom_factor\") + 1 } })'",

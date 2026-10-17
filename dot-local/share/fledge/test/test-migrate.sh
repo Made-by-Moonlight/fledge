@@ -2,13 +2,13 @@
 # Tests for settings v2: the legacy dispatcher translation table
 # (lib/migrate-dispatch.jq), migrating a version-1 user file on load, and the
 # check rules for structured {dsp, args} actions.
-# Run in the VM:  cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/dot-local/share/mbm/test/test-migrate.sh'
+# Run in the VM:  cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/dot-local/share/fledge/test/test-migrate.sh'
 set -uo pipefail
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REPO="$(cd "$HERE/../../../.." && pwd)"
 # shellcheck source=SCRIPTDIR/../../../../cachyos/install/test/lib.sh
 source "$REPO/cachyos/install/test/lib.sh"
-MBM="$HERE/../bin/mbm"
+FLEDGE="$HERE/../bin/fledge"
 LIB="$HERE/../lib"
 FIX="$HERE/fixtures"
 T="$(mktemp -d)"
@@ -128,8 +128,8 @@ for cmd in check get; do
   fresh; U "$v1"
   before="$(cat "$MBM_CONFIG_DIR/settings.json")"
   case $cmd in
-    check) "$MBM" settings check >"$T/out" 2>"$T/err"; rc=$? ;;
-    get) "$MBM" settings get '.launcher.position, .binds["custom.a"].action' >"$T/out" 2>"$T/err"; rc=$? ;;
+    check) "$FLEDGE" settings check >"$T/out" 2>"$T/err"; rc=$? ;;
+    get) "$FLEDGE" settings get '.launcher.position, .binds["custom.a"].action' >"$T/out" 2>"$T/err"; rc=$? ;;
   esac
   check "in-memory on $cmd: file untouched" "$before" "$(cat "$MBM_CONFIG_DIR/settings.json")"
   check "in-memory on $cmd: no backup" "no" "$([[ -e $MBM_CONFIG_DIR/settings.json.v1 ]] && echo yes || echo no)"
@@ -143,12 +143,12 @@ for cmd in check get; do
 done
 
 fresh; U '{"version":1,"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
-"$MBM" settings check 2>"$T/err"; rc=$?
+"$FLEDGE" settings check 2>"$T/err"; rc=$?
 check "in-memory: convertible file checks clean" "0" "$rc"
 
 fresh; U "$v1"
 chmod 555 "$MBM_CONFIG_DIR"
-out="$("$MBM" settings get '.binds["windows.workspace-1"].action' 2>"$T/err")"; rc=$?
+out="$("$FLEDGE" settings get '.binds["windows.workspace-1"].action' 2>"$T/err")"; rc=$?
 chmod 755 "$MBM_CONFIG_DIR"
 check "read-only config dir: get rc 0" "0" "$rc"
 check "read-only config dir: get migrated value" '{"dsp":"focus","args":{"workspace":2}}' "$(jq -c . <<<"$out")"
@@ -157,16 +157,16 @@ check "read-only config dir: get migrated value" '{"dsp":"focus","args":{"worksp
 for cmd in apply set reset; do
   fresh; U "$v1"; chmod 644 "$MBM_CONFIG_DIR/settings.json"
   case $cmd in
-    apply) MBM_NO_RELOAD=1 "$MBM" settings apply >"$T/out" 2>"$T/err"; rc=$? ;;
-    set) "$MBM" settings set .bar.position '"bottom"' >"$T/out" 2>"$T/err"; rc=$? ;;
-    reset) "$MBM" settings reset .bar.position >"$T/out" 2>"$T/err"; rc=$? ;;
+    apply) MBM_NO_RELOAD=1 "$FLEDGE" settings apply >"$T/out" 2>"$T/err"; rc=$? ;;
+    set) "$FLEDGE" settings set .bar.position '"bottom"' >"$T/out" 2>"$T/err"; rc=$? ;;
+    reset) "$FLEDGE" settings reset .bar.position >"$T/out" 2>"$T/err"; rc=$? ;;
   esac
   f="$MBM_CONFIG_DIR/settings.json"
   check "migrate on $cmd: file is version 2" "2" "$(jq .version "$f")"
   check "migrate on $cmd: backup is the original" "$v1" "$(cat "$f.v1" 2>&1)"
   check "migrate on $cmd: file mode kept" "644" "$(stat -c %a "$f")"
   check "migrate on $cmd: backup mode kept" "644" "$(stat -c %a "$f.v1" 2>&1)"
-  contains "migrate on $cmd: message" "mbm: migrated 3 binds to settings v2, 1 could not be converted (backup: $f.v1)" "$(cat "$T/err")"
+  contains "migrate on $cmd: message" "fledge settings: migrated 3 binds to settings v2, 1 could not be converted (backup: $f.v1)" "$(cat "$T/err")"
   check "migrate on $cmd: converted" '{"dsp":"focus","args":{"workspace":2}}|{"dsp":"window.float","args":{"action":"toggle"}}|[{"exec":"x"},{"dsp":"window.close"}]' \
     "$(jq -r '.binds | [.["windows.workspace-1"], .["custom.a"], .["custom.b"]] | map(.action | tojson) | join("|")' "$f")"
   check "migrate on $cmd: unknown kept" '{"dispatch":"focuswindow class:kitty"}' "$(jq -c '.binds["custom.c"].action' "$f")"
@@ -178,9 +178,9 @@ done
 # A second migration (the leftover {dispatch} with the version reset away) never
 # overwrites the first backup: that one holds the user's real original.
 fresh; U "$v1"
-MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>&1
+MBM_NO_RELOAD=1 "$FLEDGE" settings apply >/dev/null 2>&1
 jq 'del(.version)' "$MBM_CONFIG_DIR/settings.json" >"$T/nov.json" && cp "$T/nov.json" "$MBM_CONFIG_DIR/settings.json"
-MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>"$T/err"
+MBM_NO_RELOAD=1 "$FLEDGE" settings apply >/dev/null 2>"$T/err"
 check "second migration: file is version 2 again" "2" "$(jq .version "$MBM_CONFIG_DIR/settings.json")"
 check "second migration: first backup kept" "$v1" "$(cat "$MBM_CONFIG_DIR/settings.json.v1")"
 contains "second migration: message names the kept backup" "migrated 0 binds to settings v2, 1 could not be converted (earlier backup kept: $MBM_CONFIG_DIR/settings.json.v1)" "$(cat "$T/err")"
@@ -189,52 +189,52 @@ contains "second migration: message names the kept backup" "migrated 0 binds to 
 v1ok="$(jq -c 'del(.binds["custom.c"])' <<<"$v1")"
 fresh; U "$v1ok"
 for i in 1 2 3 4 5 6; do
-  "$MBM" settings set ".binds[\"custom.p$i\"]" "{\"mods\":\"SUPER ALT\",\"key\":\"F$i\",\"label\":\"P\",\"group\":\"Apps\",\"action\":{\"exec\":\"p\"}}" 2>/dev/null &
+  "$FLEDGE" settings set ".binds[\"custom.p$i\"]" "{\"mods\":\"SUPER ALT\",\"key\":\"F$i\",\"label\":\"P\",\"group\":\"Apps\",\"action\":{\"exec\":\"p\"}}" 2>/dev/null &
 done
 wait
 check "concurrent set: every change kept" "6" "$(jq '[.binds | keys[] | select(startswith("custom.p"))] | length' "$MBM_CONFIG_DIR/settings.json")"
 check "concurrent set: backup is the original" "$v1ok" "$(cat "$MBM_CONFIG_DIR/settings.json.v1")"
 
 fresh; U '{"version":1,"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
-MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"; rc=$?
+MBM_NO_RELOAD=1 "$FLEDGE" settings apply 2>"$T/err"; rc=$?
 check "migrate: convertible file applies" "0" "$rc"
 contains "migrate: one bind counted" "migrated 1 binds to settings v2, 0 could not be converted" "$(cat "$T/err")"
-MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"
+MBM_NO_RELOAD=1 "$FLEDGE" settings apply 2>"$T/err"
 check "migrate: second run is silent" "" "$(cat "$T/err")"
 
 # A v1 bind with the 's' flag has no Lua equivalent: counted as unconverted,
 # kept as it was, and check names it.
 fresh; U '{"version":1,"binds":{"windows.workspace-1":{"flags":"s","action":{"dispatch":"workspace 2"}}}}'
-MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"; rc=$?
+MBM_NO_RELOAD=1 "$FLEDGE" settings apply 2>"$T/err"; rc=$?
 check "migrate: s flag -> apply refused" "1" "$rc"
 contains "migrate: s flag counted as unconverted" "migrated 1 binds to settings v2, 1 could not be converted" "$(cat "$T/err")"
 check "migrate: s flag kept" '"s"' "$(jq '.binds["windows.workspace-1"].flags' "$MBM_CONFIG_DIR/settings.json")"
-contains "migrate: check names the s flag" "binds.windows.workspace-1: flag s (separate keysyms)" "$("$MBM" settings check 2>&1)"
+contains "migrate: check names the s flag" "binds.windows.workspace-1: flag s (separate keysyms)" "$("$FLEDGE" settings check 2>&1)"
 
 # A user file without a version (what `settings set` writes) still migrates.
 fresh; U '{"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
-MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>"$T/err"
+MBM_NO_RELOAD=1 "$FLEDGE" settings apply >/dev/null 2>"$T/err"
 check "migrate: unversioned file with dispatch -> version 2" "2" "$(jq .version "$MBM_CONFIG_DIR/settings.json")"
 contains "migrate: unversioned file message" "migrated 1 binds" "$(cat "$T/err")"
 
 # --- merge: a user action replaces the default's, it never deep-merges -----------
 # (windows.workspace-1's default is {"dsp":"focus","args":{"workspace":1}}.)
 fresh; U '{"version":2,"binds":{"windows.workspace-1":{"action":{"dsp":"focus","args":{"direction":"left"}}}}}'
-check "merge: same dsp, other args -> user's args only" '{"dsp":"focus","args":{"direction":"left"}}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+check "merge: same dsp, other args -> user's args only" '{"dsp":"focus","args":{"direction":"left"}}' "$("$FLEDGE" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
 fresh; U '{"version":2,"binds":{"windows.workspace-1":{"action":{"dsp":"window.close"}}}}'
-check "merge: other dsp -> no default args left" '{"dsp":"window.close"}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+check "merge: other dsp -> no default args left" '{"dsp":"window.close"}' "$("$FLEDGE" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
 fresh; U '{"version":1,"binds":{"windows.workspace-1":{"action":{"dispatch":"movefocus l"}}}}'
-check "merge: migrated override -> user's action only" '{"dsp":"focus","args":{"direction":"left"}}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+check "merge: migrated override -> user's action only" '{"dsp":"focus","args":{"direction":"left"}}' "$("$FLEDGE" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
 fresh; U '{"version":2,"binds":{"windows.workspace-1":{"key":"F5"}}}'
-check "merge: override without action keeps the default action" '{"dsp":"focus","args":{"workspace":1}}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
-check "merge: ...and its other fields merge" '"F5"' "$("$MBM" settings get '.binds["windows.workspace-1"].key')"
+check "merge: override without action keeps the default action" '{"dsp":"focus","args":{"workspace":1}}' "$("$FLEDGE" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+check "merge: ...and its other fields merge" '"F5"' "$("$FLEDGE" settings get '.binds["windows.workspace-1"].key')"
 
 # Nothing to migrate: the file is left byte for byte.
 for v2 in '{"version":2,"binds":{"custom.a":{"mods":"SUPER","key":"F1","label":"A","group":"Apps","action":{"dsp":"window.close"}}}}' \
           '{"launcher":{"position":"anchored"}}'; do
   fresh; U "$v2"
   before="$(cat "$MBM_CONFIG_DIR/settings.json")"
-  "$MBM" settings check 2>"$T/err"; rc=$?
+  "$FLEDGE" settings check 2>"$T/err"; rc=$?
   check "no migration: $v2 -> exit 0" "0" "$rc"
   check "no migration: $v2 -> silent" "" "$(cat "$T/err")"
   check "no migration: $v2 -> untouched" "$before" "$(cat "$MBM_CONFIG_DIR/settings.json")"
@@ -246,7 +246,7 @@ bad() { # bad <description> <expected message part> <action-json>
   fresh
   U "{\"version\":2,\"binds\":{\"custom.a\":{\"mods\":\"SUPER\",\"key\":\"F1\",\"label\":\"A\",\"group\":\"Apps\",\"action\":$3}}}"
   local out rc
-  out="$("$MBM" settings check 2>&1)"; rc=$?
+  out="$("$FLEDGE" settings check 2>&1)"; rc=$?
   check "check: $1 -> exit 1" "1" "$rc"
   contains "check: $1 -> message" "$2" "$out"
 }
@@ -254,7 +254,7 @@ good() { # good <description> <action-json>
   fresh
   U "{\"version\":2,\"binds\":{\"custom.a\":{\"mods\":\"SUPER\",\"key\":\"F1\",\"label\":\"A\",\"group\":\"Apps\",\"action\":$2}}}"
   local out rc
-  out="$("$MBM" settings check 2>&1)"; rc=$?
+  out="$("$FLEDGE" settings check 2>&1)"; rc=$?
   check "check: $1 -> exit 0" "0" "$rc"
   check "check: $1 -> silent" "" "$out"
 }

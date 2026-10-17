@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The shipped defaults/settings.json must pass `mbm settings check`. Since the
+# The shipped defaults/settings.json must pass `fledge settings check`. Since the
 # cutover it is the source of truth for binds, monitors, workspaces and input.
 set -uo pipefail
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
@@ -10,7 +10,7 @@ DEF="$HERE/../defaults/settings.json"
 T="$(mktemp -d)"
 trap 'rm -rf "$T"' EXIT
 
-out="$(HOME="$T" XDG_CONFIG_HOME="$T/.config" MBM_DEFAULTS="$DEF" "$HERE/../bin/mbm" settings check 2>&1)"
+out="$(HOME="$T" XDG_CONFIG_HOME="$T/.config" MBM_DEFAULTS="$DEF" "$HERE/../bin/fledge" settings check 2>&1)"
 check "defaults: settings check rc 0" 0 "$?"
 check "defaults: settings check prints nothing" "" "$out"
 
@@ -22,7 +22,7 @@ source "$REPO/cachyos/install/test/luacheck.sh"
 LUA="$(command -v lua || command -v lua5.5 || command -v lua5.4)"
 gen="$T/.local/state/mbm/hypr"
 env -u HYPRLAND_INSTANCE_SIGNATURE HOME="$T" XDG_CONFIG_HOME="$T/.config" MBM_DEFAULTS="$DEF" \
-  "$HERE/../bin/mbm" settings apply
+  "$HERE/../bin/fledge" settings apply
 check "defaults: apply rc 0" 0 "$?"
 for f in binds monitors workspaces input; do
   lua_syntax_ok "$gen/$f.lua"; check "defaults: $f.lua parses" 0 "$?"
