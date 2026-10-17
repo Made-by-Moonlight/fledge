@@ -356,6 +356,20 @@ check "lock: gave up within the timeout" "yes"   "$( ((SECONDS - start <= 3)) &&
 check "lock: busy -> nothing written" ""         "$(user_file)"
 pkill -P "$holder" 2>/dev/null; kill "$holder" 2>/dev/null; wait "$holder" 2>/dev/null; rm -f "$T/held"
 
+for bad_wait in abc -1 1.5 ""; do
+  fresh
+  MBM_LOCK_TIMEOUT="$bad_wait" "$MBM" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
+  if [[ -z $bad_wait ]]; then
+    check "lock: empty MBM_LOCK_TIMEOUT -> default wait" "0" "$rc"
+  else
+    check "lock: MBM_LOCK_TIMEOUT=$bad_wait -> exit 1" "1" "$rc"
+    contains "lock: MBM_LOCK_TIMEOUT=$bad_wait -> message" "MBM_LOCK_TIMEOUT must be a whole number of seconds" "$(cat "$T/err")"
+    check "lock: MBM_LOCK_TIMEOUT=$bad_wait -> nothing written" "" "$(user_file)"
+  fi
+done
+MBM_LOCK_TIMEOUT=0 "$MBM" settings set .launcher.position '"anchored"' 2>"$T/err"
+check "lock: MBM_LOCK_TIMEOUT=0 accepted" "0" "$?"
+
 # hyprctl is only called inside a Hyprland session
 fresh
 mkdir -p "$T/bin"; printf '#!/bin/sh\necho "$@" >>"%s/hyprctl.log"\n' "$T" >"$T/bin/hyprctl"; chmod +x "$T/bin/hyprctl"

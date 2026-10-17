@@ -90,6 +90,8 @@ migrate_user_file() {
 # not stall the session start.
 lock_settings() {
   local lock="$MBM_CONFIG_DIR/.lock" wait="${MBM_LOCK_TIMEOUT:-10}"
+  # flock reads a bad -w as "wait for ever" or fails with its own puzzling message.
+  [[ $wait =~ ^[0-9]+$ ]] || die "MBM_LOCK_TIMEOUT must be a whole number of seconds (got \"$wait\")"
   mkdir -p "$MBM_CONFIG_DIR" || die "cannot create $MBM_CONFIG_DIR"
   exec 9>"$lock" || die "cannot open $lock"
   flock -w "$wait" 9 || die "settings are busy: another mbm command holds $lock (waited ${wait}s)"
