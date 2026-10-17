@@ -158,5 +158,34 @@ check "load.lua broken: it and the broken file notify" "2" "$(field notes)"
 contains "load.lua broken: names load.lua" "fledge: fledge/load.lua: " "$(field note1)"
 contains "load.lua broken: names the broken file" "rules.lua: " "$(field note2)"
 
+# envs.lua reads the theme's gum.env.conf with hyprlang's rules: `#` starts a
+# comment, `##` is a literal `#`.
+mkdir -p "$T/eh/.config/omarchy/current/theme"
+cat >"$T/eh/.config/omarchy/current/theme/gum.env.conf" <<'EOC'
+# a comment line
+env = PLAIN,##ffffff
+env = TRAILING,##171e28   # the background
+env = THREE,###
+env = MIDDLE,a ## b#c
+  env = SPACED , value with spaces  
+#env = COMMENTED,x
+env = EMPTY,# nothing
+EOC
+cat > "$T/driver4.lua" <<'EOL'
+local envs = {}
+hl = { env = function(k, v) envs[#envs + 1] = k .. "=[" .. v .. "]" end }
+dofile(arg[1])
+for _, e in ipairs(envs) do print(e) end
+EOL
+out="$(HOME="$T/eh" lua "$T/driver4.lua" "$REPO/dot-config/hypr/fledge/envs.lua" 2>&1)"; rc=$?
+check "envs.lua: runs" 0 "$rc"
+contains "gum env: ## is a literal #" "PLAIN=[#ffffff]" "$out"
+contains "gum env: inline comment dropped" "TRAILING=[#171e28]" "$out"
+contains "gum env: ### is # then a comment" "THREE=[#]" "$out"
+contains "gum env: comment after text" "MIDDLE=[a # b]" "$out"
+contains "gum env: spaces trimmed" "SPACED=[value with spaces]" "$out"
+contains "gum env: all comment -> empty" "EMPTY=[]" "$out"
+check "gum env: commented-out line skipped" "" "$(grep COMMENTED <<<"$out")"
+
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail

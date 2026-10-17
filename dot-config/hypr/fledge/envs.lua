@@ -3,14 +3,20 @@
 -- monitors, in ~/.config/uwsm/env-hyprland, not here.
 
 -- Gum's colours come from the current theme's gum.env.conf (`env = K,V`
--- lines, `##` for a literal #). It's the one theme file still in Hyprland's
--- old syntax because the theme scripts render it; read it here rather than
--- making every theme ship a Lua copy. A missing file is fine, as before.
+-- lines). It's the one theme file still in Hyprland's old syntax because the
+-- theme scripts render it; read it here rather than making every theme ship a
+-- Lua copy. A missing file is fine, as before. hyprlang's rules: a `#` starts a
+-- comment, `##` is a literal `#` (so "##ff0000 # red" is "#ff0000").
+local function hyprlang_value(v)
+  -- \1 stands in for a literal # while the comment is cut off.
+  v = v:gsub("##", "\1"):gsub("#.*$", ""):gsub("\1", "#")
+  return (v:match("^(.-)%s*$"))
+end
 local gum = io.open(os.getenv("HOME") .. "/.config/omarchy/current/theme/gum.env.conf", "r")
 if gum then
   for line in gum:lines() do
     local k, v = line:match("^%s*env%s*=%s*([%w_]+)%s*,%s*(.-)%s*$")
-    if k then hl.env(k, (v:gsub("##", "#"))) end
+    if k then hl.env(k, hyprlang_value(v)) end
   end
   gum:close()
 end
