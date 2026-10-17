@@ -327,9 +327,10 @@ sudo systemctl enable sddm.service
 # Invalid user settings must not stop the rest of bootstrap: warn, and the
 # uwsm env hook (dot-config/uwsm/env-hyprland) falls back to the defaults.
 # Run from inside a Hyprland session (an upgrade: git pull, then bootstrap),
-# Hyprland already auto-reloaded the pulled config, maybe while stow or the
-# pull had files half-written, and before these existed: every bind is gone
-# until it reloads again. So reload once everything is written (the reload is a
+# Hyprland may already have auto-reloaded the pulled config (a .conf session's
+# config still auto-reloads), maybe while stow or the pull had files
+# half-written, and before these existed: every bind is gone until it reloads
+# again. So reload once everything is written (the reload is a
 # query, the same on both config managers). From slievr-firstboot there is no
 # Hyprland and nothing to reload.
 fledge="$HOME/.local/share/fledge/bin/fledge"
@@ -348,6 +349,17 @@ fi
 if [[ -n $in_session && -z $lua_session ]]; then
   # An upgrade from the .conf config: this session can't load the new config.
   echo "Hyprland switches to the Lua config at your next login."
+fi
+# A .conf session that saw hyprland.conf deleted (this upgrade) writes
+# Hyprland's stub in its place, through the stow link into the repo, and again
+# whenever it is removed while that session runs. fledge/autostart.lua removes
+# it at the next Lua login; remove it here too, unless that session is running.
+# Only an untracked stub (it says so): never a file of the repo's or the user's.
+stub="$DOTFILES_DIR/dot-config/hypr/hyprland.conf"
+if [[ ( -z $in_session || -n $lua_session ) && -f $stub ]] &&
+  ! git -C "$DOTFILES_DIR" ls-files --error-unmatch -- dot-config/hypr/hyprland.conf >/dev/null 2>&1 &&
+  grep -qF 'This config is a STUB!' "$stub"; then
+  rm -f -- "$stub"
 fi
 
 # dot-config/fish/conf.d/tools.fish expects mise at ~/.local/bin/mise (the host's curl-installer
