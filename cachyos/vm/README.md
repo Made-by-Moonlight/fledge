@@ -67,8 +67,8 @@ VM name: `cachyos-test`. Two disks:
 
 `./dev-up.sh` is the whole iteration loop — starts the VM, waits for SSH,
 sets up key auth (via `expect`, using `slievr` / `$VM_PASSWORD`, default
-`TestPass1`), opens the viewer, prints the IP. See the deploy workflow in
-`../NEXT-SESSION.md`.
+`TestPass1`), opens the viewer, prints the IP. Then `./vm.sh` drives it
+(`sync`, `restow`, `run`, `relogin`, `shot`; see its header and AGENTS.md).
 
 ## Notes
 
