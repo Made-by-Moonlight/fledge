@@ -92,8 +92,13 @@ Singleton {
                 const text = (out.text + err.text).trim();
                 if (p === root.proc && root.failed(code, text)) console.warn("Hypr: " + root.label() + ": " + (text || "exit " + code));
             }
-            // A binary that can't start never emits exited, it just drops `running`.
-            onRunningChanged: if (!running) Qt.callLater(() => root.finish(p, p.exited ? "" : "could not run hyprctl for"))
+            // A binary that can't start never emits exited, it just drops `running`. By the time
+            // the deferred call runs, a call the watchdog gave up on may be destroyed: reading
+            // p.exited would throw, so check it is still the current call first.
+            onRunningChanged: if (!running) Qt.callLater(() => {
+                if (p !== root.proc) return;
+                root.finish(p, p.exited ? "" : "could not run hyprctl for");
+            })
         }
     }
 
