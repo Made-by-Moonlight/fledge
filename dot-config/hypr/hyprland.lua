@@ -5,10 +5,10 @@
 -- Later files override earlier ones.
 local found, load = pcall(require, "fledge.load")
 if not found then
-  -- fledge/load.lua missing or broken, e.g. for a moment during a git pull or
-  -- restow while Hyprland auto-reloads: a minimal stand-in, so the rest still
-  -- loads instead of Hyprland falling back to emergency mode. The next reload
-  -- picks the real one up again.
+  -- fledge/load.lua missing or broken, e.g. a reload that ran mid-way through a
+  -- git pull or restow: a minimal stand-in, so the rest still loads instead of
+  -- Hyprland falling back to emergency mode. The next reload picks the real
+  -- one up again.
   local err = load
   local function notify(what, e)
     -- First line only: a failed require lists every path it tried.

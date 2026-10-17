@@ -61,8 +61,8 @@ cmd_sync() {
   reload_hypr
 }
 
-# Hyprland auto-reloads when its config files change, and tar or stow can catch
-# it mid-write (fledge/load.lua briefly missing). Reload once more when they're
+# Hyprland doesn't reload on file changes (misc.disable_autoreload; a .conf
+# session still does, and can catch tar or stow mid-write), so reload once they're
 # done. A query command, the same on both config managers; no session, no-op.
 reload_hypr() {
   ssh_vm "$SESSION_ENV"$'\n''if hyprctl version >/dev/null 2>&1; then hyprctl reload >/dev/null || echo "vm.sh: hyprctl reload failed" >&2; fi'

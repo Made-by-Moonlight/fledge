@@ -35,7 +35,7 @@ Singleton {
     function apply(layout, variant) {
         if (Installer.dev) return;      // don't rewire the dev VM's desktop keyboard
         appliedAt = Date.now();
-        // One call: the new layout never meets the old layout's variant.
+        // Layout and variant change together, in one config call.
         Hypr.set("input = { kb_layout = " + Hypr.lit(layout) + ", kb_variant = " + Hypr.lit(variant) + " }");
     }
 }
