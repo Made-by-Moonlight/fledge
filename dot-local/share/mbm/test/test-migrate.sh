@@ -67,6 +67,10 @@ row "movefocus x"                'null'
 row "killactive now"             'null'
 row "resizeactive 10% 0"         'null'
 row "movetoworkspace 3,address:0x1" 'null'
+row "workspace 1 extra"          'null'
+row "movetoworkspacesilent 2 x"  'null'
+row "sendshortcut CTRL, X,"      'null'
+row "sendshortcut , F5"          '{"dsp":"send_shortcut","args":{"mods":"","key":"F5"}}'
 
 # Every legacy dispatcher in the old defaults has a translation, and the result
 # is exactly the shipped v2 defaults.
@@ -93,44 +97,103 @@ v1='{"version":1,"launcher":{"position":"anchored"},"binds":{
   "custom.b":{"mods":"SUPER","key":"F2","label":"B","group":"Apps","action":[{"exec":"x"},{"dispatch":"killactive"}]},
   "custom.c":{"mods":"SUPER","key":"F3","label":"C","group":"Apps","action":{"dispatch":"focuswindow class:kitty"}}}}'
 
-for cmd in check get apply set; do
+# get and check migrate in memory only: they never write (a read-only command
+# must not race a concurrent `set`, and must work when the config dir isn't writable).
+for cmd in check get; do
   fresh; U "$v1"
+  before="$(cat "$MBM_CONFIG_DIR/settings.json")"
   case $cmd in
     check) "$MBM" settings check >"$T/out" 2>"$T/err"; rc=$? ;;
-    get) "$MBM" settings get .launcher.position >"$T/out" 2>"$T/err"; rc=$? ;;
+    get) "$MBM" settings get '.launcher.position, .binds["custom.a"].action' >"$T/out" 2>"$T/err"; rc=$? ;;
+  esac
+  check "in-memory on $cmd: file untouched" "$before" "$(cat "$MBM_CONFIG_DIR/settings.json")"
+  check "in-memory on $cmd: no backup" "no" "$([[ -e $MBM_CONFIG_DIR/settings.json.v1 ]] && echo yes || echo no)"
+  case $cmd in
+    check) check "in-memory on check: unknown reported -> exit 1" "1" "$rc"
+           contains "in-memory on check: unknown named" "binds.custom.c: can't convert dispatcher \"focuswindow class:kitty\"; rewrite it as {dsp, args}" "$(cat "$T/err")"
+           check "in-memory on check: converted ones pass" "1" "$(grep -c '^binds\.' "$T/err")" ;;
+    get) check "in-memory on get: migrated values" '"anchored"|{"dsp":"window.float","args":{"action":"toggle"}}' "$(jq -c . "$T/out" | paste -sd'|')"
+         check "in-memory on get: rc 0" "0" "$rc" ;;
+  esac
+done
+
+fresh; U '{"version":1,"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
+"$MBM" settings check 2>"$T/err"; rc=$?
+check "in-memory: convertible file checks clean" "0" "$rc"
+
+fresh; U "$v1"
+chmod 555 "$MBM_CONFIG_DIR"
+out="$("$MBM" settings get '.binds["windows.workspace-1"].action' 2>"$T/err")"; rc=$?
+chmod 755 "$MBM_CONFIG_DIR"
+check "read-only config dir: get rc 0" "0" "$rc"
+check "read-only config dir: get migrated value" '{"dsp":"focus","args":{"workspace":2}}' "$(jq -c . <<<"$out")"
+
+# set, reset and apply write the migrated file back, with a backup of what was read.
+for cmd in apply set reset; do
+  fresh; U "$v1"; chmod 644 "$MBM_CONFIG_DIR/settings.json"
+  case $cmd in
     apply) MBM_NO_RELOAD=1 "$MBM" settings apply >"$T/out" 2>"$T/err"; rc=$? ;;
     set) "$MBM" settings set .bar.position '"bottom"' >"$T/out" 2>"$T/err"; rc=$? ;;
+    reset) "$MBM" settings reset .bar.position >"$T/out" 2>"$T/err"; rc=$? ;;
   esac
   f="$MBM_CONFIG_DIR/settings.json"
   check "migrate on $cmd: file is version 2" "2" "$(jq .version "$f")"
-  check "migrate on $cmd: backup kept" "$(jq -c . <<<"$v1")" "$(jq -c . "$f.v1" 2>&1)"
-  contains "migrate on $cmd: message" "mbm: migrated 3 binds to settings v2 (backup: $f.v1)" "$(cat "$T/err")"
+  check "migrate on $cmd: backup is the original" "$v1" "$(cat "$f.v1" 2>&1)"
+  check "migrate on $cmd: file mode kept" "644" "$(stat -c %a "$f")"
+  check "migrate on $cmd: backup mode kept" "644" "$(stat -c %a "$f.v1" 2>&1)"
+  contains "migrate on $cmd: message" "mbm: migrated 3 binds to settings v2, 1 could not be converted (backup: $f.v1)" "$(cat "$T/err")"
   check "migrate on $cmd: converted" '{"dsp":"focus","args":{"workspace":2}}|{"dsp":"window.float","args":{"action":"toggle"}}|[{"exec":"x"},{"dsp":"window.close"}]' \
     "$(jq -r '.binds | [.["windows.workspace-1"], .["custom.a"], .["custom.b"]] | map(.action | tojson) | join("|")' "$f")"
   check "migrate on $cmd: unknown kept" '{"dispatch":"focuswindow class:kitty"}' "$(jq -c '.binds["custom.c"].action' "$f")"
   check "migrate on $cmd: other settings kept" '"anchored"' "$(jq '.launcher.position' "$f")"
-  case $cmd in
-    check) check "migrate on check: unknown reported -> exit 1" "1" "$rc"
-           contains "migrate on check: unknown named" "binds.custom.c: can't convert dispatcher \"focuswindow class:kitty\"; rewrite it as {dsp, args}" "$(cat "$T/err")" ;;
-    get) check "migrate on get: still reads" '"anchored"' "$(cat "$T/out")" ;;
-    apply) check "migrate on apply: refused while one is unconverted" "1" "$rc" ;;
-    set) check "migrate on set: refused while one is unconverted" "1" "$rc" ;;
-  esac
+  check "migrate on $cmd: refused while one is unconverted" "1" "$rc"
+  check "migrate on $cmd: no temp files left" "" "$(find "$MBM_CONFIG_DIR" -name 'settings.json.??????')"
 done
 
-# Fully convertible file: everything works straight after migrating.
+# A second migration (the leftover {dispatch} with the version reset away) never
+# overwrites the first backup: that one holds the user's real original.
+fresh; U "$v1"
+MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>&1
+jq 'del(.version)' "$MBM_CONFIG_DIR/settings.json" >"$T/nov.json" && cp "$T/nov.json" "$MBM_CONFIG_DIR/settings.json"
+MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>"$T/err"
+check "second migration: file is version 2 again" "2" "$(jq .version "$MBM_CONFIG_DIR/settings.json")"
+check "second migration: first backup kept" "$v1" "$(cat "$MBM_CONFIG_DIR/settings.json.v1")"
+contains "second migration: message names the kept backup" "migrated 0 binds to settings v2, 1 could not be converted (earlier backup kept: $MBM_CONFIG_DIR/settings.json.v1)" "$(cat "$T/err")"
+
+# Concurrent writers on a v1 file: the migration and every change survive.
+v1ok="$(jq -c 'del(.binds["custom.c"])' <<<"$v1")"
+fresh; U "$v1ok"
+for i in 1 2 3 4 5 6; do
+  "$MBM" settings set ".binds[\"custom.p$i\"]" "{\"mods\":\"SUPER ALT\",\"key\":\"F$i\",\"label\":\"P\",\"group\":\"Apps\",\"action\":{\"exec\":\"p\"}}" 2>/dev/null &
+done
+wait
+check "concurrent set: every change kept" "6" "$(jq '[.binds | keys[] | select(startswith("custom.p"))] | length' "$MBM_CONFIG_DIR/settings.json")"
+check "concurrent set: backup is the original" "$v1ok" "$(cat "$MBM_CONFIG_DIR/settings.json.v1")"
+
 fresh; U '{"version":1,"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
-"$MBM" settings check 2>"$T/err"; rc=$?
-check "migrate: convertible file then checks clean" "0" "$rc"
-contains "migrate: one bind counted" "migrated 1 binds" "$(cat "$T/err")"
-"$MBM" settings check 2>"$T/err"
+MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"; rc=$?
+check "migrate: convertible file applies" "0" "$rc"
+contains "migrate: one bind counted" "migrated 1 binds to settings v2, 0 could not be converted" "$(cat "$T/err")"
+MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"
 check "migrate: second run is silent" "" "$(cat "$T/err")"
 
 # A user file without a version (what `settings set` writes) still migrates.
 fresh; U '{"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
-"$MBM" settings get .version >/dev/null 2>"$T/err"
+MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>"$T/err"
 check "migrate: unversioned file with dispatch -> version 2" "2" "$(jq .version "$MBM_CONFIG_DIR/settings.json")"
 contains "migrate: unversioned file message" "migrated 1 binds" "$(cat "$T/err")"
+
+# --- merge: a user action replaces the default's, it never deep-merges -----------
+# (windows.workspace-1's default is {"dsp":"focus","args":{"workspace":1}}.)
+fresh; U '{"version":2,"binds":{"windows.workspace-1":{"action":{"dsp":"focus","args":{"direction":"left"}}}}}'
+check "merge: same dsp, other args -> user's args only" '{"dsp":"focus","args":{"direction":"left"}}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+fresh; U '{"version":2,"binds":{"windows.workspace-1":{"action":{"dsp":"window.close"}}}}'
+check "merge: other dsp -> no default args left" '{"dsp":"window.close"}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+fresh; U '{"version":1,"binds":{"windows.workspace-1":{"action":{"dispatch":"movefocus l"}}}}'
+check "merge: migrated override -> user's action only" '{"dsp":"focus","args":{"direction":"left"}}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+fresh; U '{"version":2,"binds":{"windows.workspace-1":{"key":"F5"}}}'
+check "merge: override without action keeps the default action" '{"dsp":"focus","args":{"workspace":1}}' "$("$MBM" settings get '.binds["windows.workspace-1"].action' | jq -c .)"
+check "merge: ...and its other fields merge" '"F5"' "$("$MBM" settings get '.binds["windows.workspace-1"].key')"
 
 # Nothing to migrate: the file is left byte for byte.
 for v2 in '{"version":2,"binds":{"custom.a":{"mods":"SUPER","key":"F1","label":"A","group":"Apps","action":{"dsp":"window.close"}}}}' \

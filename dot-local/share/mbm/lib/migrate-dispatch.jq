@@ -2,7 +2,8 @@
 # A library (jq -L lib 'include "migrate-dispatch"; ...'):
 #   migrate_dispatch  legacy string -> {dsp, args?} (or {exec}), or null when unknown
 #   needs_migration   user settings -> true when the file is version 1 or holds {dispatch}
-#   migrate_user      user settings -> {settings: <version 2>, count: <binds converted>}
+#   migrate_user      user settings -> {settings: <version 2>, count: <binds converted>,
+#                                       unconverted: <binds still holding {dispatch}>}
 # Hyprland 0.57 drops the .conf format, and under a Lua config the legacy strings
 # stop working. Only forms in this table are converted; anything else (other
 # dispatchers, or arguments we can't map exactly) is left as {dispatch} for the
@@ -12,8 +13,9 @@ def _dir: {"l": "left", "r": "right", "u": "up", "d": "down"}[.];
 # Plain workspace numbers become numbers; e+1, previous, name:x, special:x stay text.
 def _ws: if test("^[0-9]+$") then tonumber else . end;
 def _int: test("^-?[0-9]+$");
-# A target that names a window too ("3,address:0x…") has no exact mapping here.
-def _ws_ok: length > 0 and (test(",") | not);
+# One workspace token only: a target that names a window too ("3,address:0x…")
+# or carries more words has no exact mapping here.
+def _ws_ok: length > 0 and (test("[,\\s]") | not);
 
 def migrate_dispatch:
   (capture("^\\s*(?<d>\\S+)\\s*(?<r>.*?)\\s*$") // {d: "", r: ""}) as {d: $d, r: $r}
@@ -49,7 +51,7 @@ def migrate_dispatch:
     elif $d == "layoutmsg" and $r != "" then {dsp: "layout", args: $r}
     elif $d == "sendshortcut" and ($r | split(",") | length | IN(2, 3)) then
       ($r | split(",") | map(sub("^\\s+"; "") | sub("\\s+$"; ""))) as $p
-      | if ($p[1] == "") then null
+      | if $p[1] == "" or $p[2] == "" then null
         else {dsp: "send_shortcut", args: ({mods: $p[0], key: $p[1]} + if ($p | length) == 3 then {window: $p[2]} else {} end)}
         end
     elif $d == "submap" and $r != "" then {dsp: "submap", args: $r}
@@ -79,4 +81,5 @@ def migrate_user:
                             else . end)
      else . end) as $new
   | {settings: ($new | if has("version") then .version = 2 else {version: 2} + . end),
-     count: [($u.binds | objects | keys[]) as $k | select($u.binds[$k] != $new.binds[$k])] | length};
+     count: [($u.binds | objects | keys[]) as $k | select($u.binds[$k] != $new.binds[$k])] | length,
+     unconverted: [$new.binds | objects | .[] | objects | select(has("action")) | select(any(_actions; _is_legacy))] | length};

@@ -14,12 +14,13 @@ MBM_MERGED="$MBM_STATE_DIR/settings.json"
 die() { printf 'mbm: %s\n' "$*" >&2; exit 1; }
 
 # atomic_write <file>: stdin -> temp file beside <file>, then mv, so readers
-# (Hyprland, the shell's file watcher) never see a half-written file.
+# (Hyprland, the shell's file watcher) never see a half-written file. An
+# existing file keeps its mode (mktemp alone would make it 0600).
 atomic_write() {
   local dest="$1" tmp
   mkdir -p "$(dirname "$dest")"
   tmp="$(mktemp "$dest.XXXXXX")"
-  if cat >"$tmp"; then
+  if cat >"$tmp" && { [[ ! -e $dest ]] || chmod --reference="$dest" "$tmp"; }; then
     mv -f "$tmp" "$dest"
   else
     rm -f "$tmp"
@@ -34,44 +35,74 @@ valid_path() {
   [[ $1 =~ $re ]]
 }
 
-user_json() { # the overrides, or {} when there are none
+# Set by the commands that write the user file (set, reset, apply): only they
+# write a migrated file back, and they hold the settings lock while doing it.
+MBM_WRITE_MIGRATION=""
+
+user_json() { # the overrides as settings v2, or {} when there are none
   # A missing, empty or whitespace-only file means no overrides (a user who empties
   # the file must not break every later write).
-  local content=""
+  local raw="" content
   if [[ -f $MBM_USER ]]; then
-    content="$(<"$MBM_USER")" || die "cannot read $MBM_USER"
+    raw="$(<"$MBM_USER")" || die "cannot read $MBM_USER"
   fi
-  if [[ -n ${content//[[:space:]]/} ]]; then
-    content="$(jq -e 'if type == "object" then . else error("not an object") end' "$MBM_USER" 2>/dev/null)" \
+  if [[ -n ${raw//[[:space:]]/} ]]; then
+    content="$(jq -e 'if type == "object" then . else error("not an object") end' <<<"$raw" 2>/dev/null)" \
       || die "$MBM_USER is not a valid JSON object"
-    migrate_user_file "$content"
+    migrate_user_file "$content" "$raw"
   else
     echo '{}'
   fi
 }
 
-# migrate_user_file <user-json>: prints the overrides as settings v2. A v1 file
-# (legacy {"dispatch": "…"} strings, which Hyprland's Lua config can't run) is
-# converted and written back once, keeping the original as settings.json.v1.
-# Whatever the table can't convert stays as {dispatch}; `check` names it.
+# migrate_user_file <user-json> <file-content>: prints the overrides as settings
+# v2. A v1 file (legacy {"dispatch": "…"} strings, which Hyprland's Lua config
+# can't run) is converted; get and check do it in memory only, so a read never
+# races a writer or needs a writable config dir. set/reset/apply write the result
+# back, keeping what was read as settings.json.v1. An existing backup is never
+# replaced: the first one holds the user's real original. Whatever the table
+# can't convert stays as {dispatch}; `check` names it.
 migrate_user_file() {
-  local lib="$MBM_ROOT/lib" out count
+  local lib="$MBM_ROOT/lib" out backup="$MBM_USER.v1" kept="backup"
   if [[ $(jq -L "$lib" 'include "migrate-dispatch"; needs_migration' <<<"$1") != true ]]; then
     printf '%s\n' "$1"
     return
   fi
   out="$(jq -L "$lib" 'include "migrate-dispatch"; migrate_user' <<<"$1")" || die "could not migrate $MBM_USER"
-  count="$(jq '.count' <<<"$out")"
-  cp -p "$MBM_USER" "$MBM_USER.v1" || die "could not back up $MBM_USER"
-  jq '.settings' <<<"$out" | atomic_write "$MBM_USER" || die "could not write $MBM_USER"
-  printf 'mbm: migrated %s binds to settings v2 (backup: %s)\n' "$count" "$MBM_USER.v1" >&2
+  if [[ -n $MBM_WRITE_MIGRATION ]]; then
+    if [[ -e $backup ]]; then
+      kept="earlier backup kept"
+    else
+      printf '%s\n' "$2" | atomic_write "$backup" && chmod --reference="$MBM_USER" "$backup" \
+        || die "could not back up $MBM_USER"
+    fi
+    jq '.settings' <<<"$out" | atomic_write "$MBM_USER" || die "could not write $MBM_USER"
+    printf 'mbm: migrated %s binds to settings v2, %s could not be converted (%s: %s)\n' \
+      "$(jq .count <<<"$out")" "$(jq .unconverted <<<"$out")" "$kept" "$backup" >&2
+  fi
   jq '.settings' <<<"$out"
 }
 
-# merge <user-json>: defaults * overrides; a bind or workspace overridden with null is removed.
+# lock_settings: hold the settings lock until the command exits, so concurrent
+# writers (the settings window, a script, a migration) serialise their
+# read-modify-write of the user file instead of losing each other's changes.
+lock_settings() {
+  mkdir -p "$MBM_CONFIG_DIR" || die "cannot create $MBM_CONFIG_DIR"
+  exec 9>"$MBM_CONFIG_DIR/.lock" || die "cannot open $MBM_CONFIG_DIR/.lock"
+  flock 9 || die "cannot lock $MBM_CONFIG_DIR/.lock"
+  MBM_WRITE_MIGRATION=1
+}
+
+# merge <user-json>: defaults * overrides; a bind or workspace overridden with null
+# is removed, and a bind's action is replaced, not merged.
 merge() {
   jq -n --slurpfile d "$MBM_DEFAULTS" --argjson u "$1" \
-    '($d[0] * $u) | .binds |= with_entries(select(.value != null))
+    '($d[0] * $u)
+     # An overridden action replaces the default one whole: a deep merge would mix
+     # the args of two dispatchers (e.g. {direction, workspace} on one focus).
+     | reduce ($u.binds | objects | to_entries[] | select(.value | type == "object" and has("action"))) as $e
+         (.; .binds[$e.key].action = $e.value.action)
+     | .binds |= with_entries(select(.value != null))
      | if has("workspaces") then .workspaces |= with_entries(select(.value != null)) else . end'
 }
 
@@ -174,10 +205,10 @@ settings_main() {
   shift || true
   case "$sub" in
     get) settings_get "$@" ;;
-    set) settings_set "$@" ;;
-    reset) settings_reset "$@" ;;
+    set) lock_settings; settings_set "$@" ;;
+    reset) lock_settings; settings_reset "$@" ;;
     check) settings_check ;;
-    apply) settings_apply ;;
+    apply) lock_settings; settings_apply ;;
     *) die "usage: mbm settings get|set|reset|check|apply" ;;
   esac
 }
