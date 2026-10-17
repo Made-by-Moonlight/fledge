@@ -73,4 +73,16 @@ contains "kitty uses the brand background" "171e28" "$(cat "$T/real/kitty.conf")
 check "hyprland focus border is amber" "rgb(f4af03)" \
   "$(lua - "$T/real/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
 
+# made by moonlight is the only theme (the leftover Omarchy ones are gone).
+check "shipped themes" "made-by-moonlight" "$(ls "$REPO/dot-config/omarchy/themes")"
+# slievr-theme-set (the theme menu) gives it a hyprland.lua, the file Hyprland's
+# Lua config reads, with no $OMARCHY_PATH, as on fledge. Its steps: copy the
+# theme, then render the vendored templates.
+h="$T/set"; next="$h/.config/omarchy/current/next-theme"
+mkdir -p "$next"; cp -r "$REPO/dot-config/omarchy/themes/made-by-moonlight/." "$next/"
+HOME="$h" PATH="$REPO/dot-local/share/slievr-cachy/bin:$PATH" env -u OMARCHY_PATH \
+  slievr-theme-set-templates >/dev/null 2>&1
+check "theme-set: hyprland.lua rendered, amber border" "rgb(f4af03)" \
+  "$(lua - "$next/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
+
 exit $fail
