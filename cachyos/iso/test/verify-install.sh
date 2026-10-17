@@ -28,7 +28,10 @@ is "no retired desktop daemons"        ""     "$(pgrep -x 'waybar|mako|swayosd-s
 is "relock flag clear"                 ""     "$(cat "$HOME/.local/state/mbm/locked" 2>/dev/null)"
 is "mbm settings valid"                ""     "$("$HOME/.local/share/mbm/bin/mbm" settings check 2>&1)"
 gen="$HOME/.local/state/mbm/hypr"
-is "generated Hyprland config"         yes    "$( [[ -s $gen/binds.conf && -s $gen/monitors.conf && -s $gen/workspaces.conf && -s $gen/input.conf ]] && echo yes || echo no )"
+is "generated Hyprland config"         yes    "$( [[ -s $gen/binds.lua && -s $gen/monitors.lua && -s $gen/workspaces.lua && -s $gen/input.lua ]] && echo yes || echo no )"
+# Hyprland reads ~/.config/hypr/hyprland.lua (stowed); a .conf beside it would be
+# the stub a .conf session writes, which lands in the repo through the stow fold.
+is "Hyprland config is Lua"            yes    "$( [[ -e $HOME/.config/hypr/hyprland.lua && ! -e $HOME/.config/hypr/hyprland.conf ]] && echo yes || echo no )"
 is "btop uses the theme"               yes    "$( [[ -L "$HOME/.config/btop/themes/current.theme" ]] && grep -q '^color_theme = "current"' "$HOME/.config/btop/btop.conf" && echo yes || echo no )"
 is "sddm active"                       active "$(systemctl is-active sddm)"
 is "firstboot disabled"                disabled "$(systemctl is-enabled slievr-firstboot.service 2>/dev/null)"
