@@ -778,7 +778,8 @@ show_update_channel_menu() {
   esac
 }
 show_update_process_menu() {
-  case $(menu "Restart" "  Hyprsunset\n󰍜  Shell") in
+  case $(menu "Restart" "  Hyprland\n  Hyprsunset\n󰍜  Shell") in
+  *Hyprland*) present_terminal slievr-refresh-hyprland ;;
   *Hyprsunset*) slievr-restart-hyprsunset ;;
   *Shell*) systemctl --user restart mbm-shell ;;
   *) show_update_menu ;;
@@ -786,8 +787,7 @@ show_update_process_menu() {
 }
 
 show_update_config_menu() {
-  case $(menu "Use default config" "  Hyprland\n  Hyprsunset\n󱣴  Plymouth\n  Tmux") in
-  *Hyprland*) present_terminal slievr-refresh-hyprland ;;
+  case $(menu "Use default config" "  Hyprsunset\n󱣴  Plymouth\n  Tmux") in
   *Hyprsunset*) present_terminal slievr-refresh-hyprsunset ;;
   *Plymouth*) present_terminal slievr-refresh-plymouth ;;
   *Tmux*) present_terminal slievr-refresh-tmux ;;
