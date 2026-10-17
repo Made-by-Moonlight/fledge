@@ -77,3 +77,6 @@ them if needed, don't extend them.
   (`iso:`, `install:`, `hypr:`, `gpu:`, `docs:`, `shell:`, `mbm:` …).
 - Hyprland is 0.56; 0.57 removes the `.conf` format. Keep new Hyprland
   config generated so only the generator needs to change.
+- Hyprland's autoreload is off (`misc.disable_autoreload`): it caught
+  half-written files. Anything that writes Hyprland config runs
+  `hyprctl reload` itself; after hand-editing `~/.config/hypr`, do the same.

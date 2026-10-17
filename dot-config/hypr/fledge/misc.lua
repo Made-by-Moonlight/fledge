@@ -26,6 +26,13 @@ hl.config({
     -- A restarted mbm shell may take over the existing session lock (otherwise
     -- Hyprland stays locked with "lockscreen died" and no way back in).
     allow_session_lock_restore = true,
+
+    -- No reload on file changes: a write caught half-way (a git pull, a
+    -- restow) put Hyprland in emergency mode, and once it deadlocked drawing
+    -- the error bar. What writes config reloads explicitly (mbm settings
+    -- apply, the toggles, bootstrap, vm.sh sync); after a hand edit, run
+    -- `hyprctl reload`.
+    disable_autoreload = true,
   },
 
   xwayland = {

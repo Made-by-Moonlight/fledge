@@ -15,6 +15,8 @@ hl.config({
     background_color = "0x171e28",
     -- Run straight from .bash_profile; a crashed session is restarted from tty1.
     disable_watchdog_warning = true,
+    -- Nothing here changes at runtime; don't watch the file.
+    disable_autoreload = true,
   },
   ecosystem = { no_update_news = true, no_donation_nag = true },
 })
