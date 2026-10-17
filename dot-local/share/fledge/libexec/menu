@@ -47,8 +47,9 @@ terminal() {
   xdg-terminal-exec --app-id=org.omarchy.terminal "$@"
 }
 
+# The command arrives as words (fledge <group> <action>), so all of them go on.
 present_terminal() {
-  fledge launch floating terminal with presentation $1
+  fledge launch floating terminal with presentation "$@"
 }
 
 open_in_editor() {
