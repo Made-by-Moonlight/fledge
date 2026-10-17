@@ -192,10 +192,9 @@ show_share_menu() {
 }
 
 show_toggle_menu() {
-  local options="󱄄  Screensaver\n󰔎  Nightlight\n󱫖  Idle Lock\n󰂛  Notifications\n󰍜  Top Bar\n󱂬  Workspace Layout\n  Window Gaps\n  1-Window Ratio\n󰍹  Monitor Scaling\n  Direct Boot\n󰟵  Passwordless Sudo"
+  local options="󰔎  Nightlight\n󱫖  Idle Lock\n󰂛  Notifications\n󰍜  Top Bar\n󱂬  Workspace Layout\n  Window Gaps\n  1-Window Ratio\n󰍹  Monitor Scaling\n  Direct Boot\n󰟵  Passwordless Sudo"
 
   case $(menu "Toggle" "$options") in
-  *Screensaver*) fledge toggle screensaver ;;
   *Nightlight*) fledge toggle nightlight ;;
   *Idle*) fledge toggle idle ;;
   *Notifications*) fledge toggle notification silencing ;;
@@ -252,13 +251,12 @@ show_hardware_touchpad_haptics_menu() {
 }
 
 show_style_menu() {
-  case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n  Hyprland\n󱄄  Screensaver\n  About") in
+  case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n  Hyprland\n  About") in
   *Theme*) show_theme_menu ;;
   *Unlock*) fledge launch walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
   *Hyprland*) open_hypr_config ~/.config/hypr/fledge/looknfeel.lua ;;
-  *Screensaver*) show_screensaver_menu ;;
   *About*) show_about_menu ;;
   *) show_main_menu ;;
   esac
@@ -269,15 +267,6 @@ show_about_menu() {
   *Text*) fledge branding about text ;;
   *Image*) fledge branding about image ;;
   *Default*) fledge branding about reset ;;
-  *) show_style_menu ;;
-  esac
-}
-
-show_screensaver_menu() {
-  case $(menu "Screensaver" "  Edit Text\n  Set From Image\n  Restore Default") in
-  *Text*) fledge branding screensaver text ;;
-  *Image*) fledge branding screensaver image ;;
-  *Default*) fledge branding screensaver reset ;;
   *) show_style_menu ;;
   esac
 }
@@ -511,13 +500,12 @@ show_about() {
 }
 
 show_system_menu() {
-  local options="󱄄  Screensaver\n  Lock"
+  local options="  Lock"
   ! fledge toggle enabled suspend-off && options="$options\n󰒲  Suspend"
   fledge hibernation available && options="$options\n󰤁  Hibernate"
   options="$options\n󰍃  Logout\n󰜉  Restart\n󰐥  Shutdown"
 
   case $(menu "System" "$options") in
-  *Screensaver*) fledge launch screensaver force ;;
   *Lock*) fledge system lock ;;
   *Suspend*) systemctl suspend ;;
   *Hibernate*) systemctl hibernate ;;

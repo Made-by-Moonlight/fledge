@@ -2,7 +2,7 @@
 
 # Toggle Omarchy features between enabled and disabled
 # usage: fledge toggle [--enabled-notification <text>] [--disabled-notification <text>] <flag-name>
-# Flag names must contain a '-' (screensaver-off, suspend-off): the dispatcher
+# Flag names must contain a '-' (suspend-off): the dispatcher
 # reads only dash-free words as command words, so `fledge toggle <flag>` can't
 # resolve to a toggle-<flag> script (toggle-idle, toggle-touchpad) instead of
 # this one. test-dispatch.sh checks the flags in use.

@@ -84,7 +84,7 @@ PACMAN_PACKAGES=(
   # only as bluetui's dependency, so retiring bluetui would cascade it away.
   bluez
   # fledge transcode (Super+Ctrl+Period, pictures) and fledge transcode ascii
-  # (Style -> About, the screensaver). It used to arrive only as an elephant
+  # (Style -> About). It used to arrive only as an elephant
   # dependency, so retiring elephant would cascade it away.
   imagemagick
   # Activity monitor (Super+Ctrl+T); calculator key.

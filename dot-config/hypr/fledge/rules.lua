@@ -124,11 +124,6 @@ rule({
 })
 rule({ match = { class = "org.gnome.Calculator" }, float = true })
 
--- Fullscreen screensaver
-rule({ match = { class = "org.omarchy.screensaver" }, fullscreen = true })
-rule({ match = { class = "org.omarchy.screensaver" }, float = true })
-rule({ match = { class = "org.omarchy.screensaver" }, animation = "slide" })
-
 -- No transparency on media windows
 local media = "^(zoom|vlc|mpv|org.kde.kdenlive|com.obsproject.Studio|com.github.PintaProject.Pinta|imv|org.gnome.NautilusPreviewer)$"
 rule({ match = { class = media }, tag = "-default-opacity" })
