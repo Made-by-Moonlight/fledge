@@ -58,12 +58,20 @@ cmd_sync() {
   # And the directories those deletions emptied, as a git checkout would: a stowed
   # link to an empty dir (e.g. ~/.config/waybar after the cutover) never dangles.
   ssh_vm "find ~/$VM_REPO -mindepth 1 -depth -type d -empty -not -path '*/.git/*' -delete"
+  reload_hypr
+}
+
+# Hyprland auto-reloads when its config files change, and tar or stow can catch
+# it mid-write (fledge/load.lua briefly missing). Reload once more when they're
+# done. A query command, the same on both config managers; no session, no-op.
+reload_hypr() {
+  ssh_vm "$SESSION_ENV"$'\n''if hyprctl version >/dev/null 2>&1; then hyprctl reload >/dev/null || echo "vm.sh: hyprctl reload failed" >&2; fi'
 }
 
 case "${1:-}" in
   ip) vm_ip ;;
   sync) cmd_sync ;;
-  restow) cmd_sync; ssh_vm "cd ~/$VM_REPO && stow --dotfiles -R -v -t ~ . 2>&1 | grep -v '^LINK\|^UNLINK' || true" ;;
+  restow) cmd_sync; ssh_vm "cd ~/$VM_REPO && stow --dotfiles -R -v -t ~ . 2>&1 | grep -v '^LINK\|^UNLINK' || true"; reload_hypr ;;
   run) shift; ssh_vm "$SESSION_ENV"$'\n'"$*" ;;
   sudo) shift; printf '%s\n' "$VM_PASSWORD" | ssh_vm "$SESSION_ENV"$'\n'"sudo -S -p '' sh -c $(printf '%q' "$*")" ;;
   shell)
