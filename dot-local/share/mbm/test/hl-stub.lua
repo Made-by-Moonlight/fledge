@@ -3,6 +3,8 @@
 -- anything else is an error. Every hl.dsp.* call returns {name, args} instead
 -- of a dispatcher, and every call is printed one per line, so a test can check
 -- what the file really does (e.g. that an escaped command comes back intact).
+-- HL_STUB_MISSING (comma-separated, e.g. "window.drag") makes those dispatchers
+-- nil, as when a Hyprland release renames one.
 -- Usage: lua hl-stub.lua <generated.lua>...
 local out = {}
 local function show(v)
@@ -18,9 +20,14 @@ local function show(v)
   for _, k in ipairs(keys) do parts[#parts + 1] = k .. "=" .. show(v[k]) end
   return "{" .. table.concat(parts, " ") .. "}"
 end
+local missing = {}
+for name in (os.getenv("HL_STUB_MISSING") or ""):gmatch("[^,]+") do missing["dsp." .. name] = true end
 local function dsp(path)
   return setmetatable({}, {
-    __index = function(_, k) return dsp(path .. "." .. k) end,
+    __index = function(_, k)
+      if missing[path .. "." .. k] then return nil end
+      return dsp(path .. "." .. k)
+    end,
     __call = function(_, ...) return { name = path, args = { ... }, n = select("#", ...) } end,
   })
 end
@@ -49,6 +56,7 @@ hl = {
   monitor = function(spec) out[#out + 1] = "monitor\t" .. show(spec) end,
   workspace_rule = function(spec) out[#out + 1] = "workspace_rule\t" .. show(spec) end,
   config = function(spec) out[#out + 1] = "config\t" .. show(spec) end,
+  notification = { create = function(spec) out[#out + 1] = "notify\t" .. show(spec) end },
 }
 setmetatable(hl, { __index = function(_, k) error("unexpected hl." .. k) end })
 for _, f in ipairs(arg) do dofile(f) end

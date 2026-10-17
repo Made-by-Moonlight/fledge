@@ -213,7 +213,8 @@ good "workspace: connector name"  '{"workspaces":{"3":{"monitor":"HDMI-A-1"}}}'
 source "$REPO/cachyos/install/test/luacheck.sh"
 LUA="$(command -v lua || command -v lua5.5 || command -v lua5.4)"
 stub() { "$LUA" "$HERE/hl-stub.lua" "$@" 2>&1; } # what the generated Lua calls (see hl-stub.lua)
-bindline() { grep -F "\"$1\"" "$MBM_HYPR_DIR/binds.lua"; } # the line binding <keys>
+# The hl.bind call binding <keys>, out of its try("<keys>", function() … end) guard.
+bindline() { grep -F "try(\"$1\"," "$MBM_HYPR_DIR/binds.lua" | sed -E 's/^try\("[^"]*", function\(\) (.*) end\)$/\1/'; }
 
 fresh
 "$MBM" settings apply
@@ -236,6 +237,18 @@ check "apply: submap bind" "bind@mbm-record	SUPER + CTRL + ALT + Escape	dsp.subm
 check "apply: action list is one function bind" \
   "bind	ALT + TAB	fn[dsp.window.cycle_next(); dsp.window.bring_to_top()]	{description=Focus on next window}" \
   "$(stub "$MBM_HYPR_DIR/binds.lua" | grep 'ALT + TAB')"
+check "apply: no notification when every bind loads" "" "$(stub "$MBM_HYPR_DIR/binds.lua" | grep '^notify')"
+# A dispatcher Hyprland doesn't have (renamed in a release, say) costs only its
+# own bind: the rest still load, and one notification names what didn't.
+out="$(HL_STUB_MISSING=window.resize stub "$MBM_HYPR_DIR/binds.lua")"; rc=$?
+check "missing dispatcher: binds.lua still runs to the end" 0 "$rc"
+check "missing dispatcher: every other bind registered (all but one, plus the submap's)" \
+  "$(jq '.binds | length' "$FIX/defaults.json")" "$(grep -c '^bind' <<<"$out")"
+check "missing dispatcher: the submap still defined" 1 "$(grep -c '^bind@mbm-record' <<<"$out")"
+check "missing dispatcher: one notification" 1 "$(grep -c '^notify' <<<"$out")"
+contains "missing dispatcher: it names the bind" "fledge: binds.lua: these binds didn't load: SUPER + mouse:273 (" "$(grep '^notify' <<<"$out")"
+contains "missing dispatcher: shown as an error" "color=rgb(ff5555) icon=error" "$(grep '^notify' <<<"$out")"
+check "missing dispatcher: said on stderr too" 1 "$(grep -c "^fledge: binds.lua: these binds didn't load: SUPER + mouse:273 (" <<<"$out")"
 check "apply: mouse bind"   'hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { description = "Resize window" })' "$(bindline "SUPER + mouse:273")"
 check "apply: empty mods -> just the key" \
   'hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("qs -c mbm ipc call osd volume +5"), { description = "Volume up", locked = true, repeating = true })' \
