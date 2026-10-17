@@ -2,7 +2,7 @@
 # Tests for settings v2: the legacy dispatcher translation table
 # (lib/migrate-dispatch.jq), migrating a version-1 user file on load, and the
 # check rules for structured {dsp, args} actions.
-# Run in the VM:  cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/dot-local/share/fledge/test/test-migrate.sh'
+# Run in the VM:  cachyos/vm/vm.sh run 'bash ~/proj/fledge/dot-local/share/fledge/test/test-migrate.sh'
 set -uo pipefail
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REPO="$(cd "$HERE/../../../.." && pwd)"

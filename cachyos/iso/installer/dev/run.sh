@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Dev loop for the installer UI, in the VM's desktop session (never the host):
-#   cachyos/vm/vm.sh sync && cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/installer/dev/run.sh'
+#   cachyos/vm/vm.sh sync && cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/installer/dev/run.sh'
 # Copies the config with symlinks resolved (as build-iso.sh does) and starts it
 # in dev mode: canned facts, a fake install, no keyboard-layout changes.
 # Ctrl+Q quits (or: pkill -f '^qs -p /tmp/fledge-installer'; anchored, so it can't match the

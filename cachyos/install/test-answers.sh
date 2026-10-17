@@ -92,7 +92,7 @@ check "mount: inside hidden refused"  no "$(ok valid_mount_path /home/ethan/.loc
 check "mount: hidden top-level refused" no "$(ok valid_mount_path /.data)"
 check "mount: dot inside a name ok"  yes "$(ok valid_mount_path /data/games.old)"
 check "mount: ~/proj refused"         no "$(ok valid_mount_path /home/ethan/proj)"
-check "mount: inside ~/proj refused"  no "$(ok valid_mount_path /home/ethan/proj/slievr-cachy)"
+check "mount: inside ~/proj refused"  no "$(ok valid_mount_path /home/ethan/proj/fledge)"
 check "mount: ~/projects ok"         yes "$(ok valid_mount_path /home/ethan/projects)"
 check "mount: deeper proj ok"        yes "$(ok valid_mount_path /home/ethan/storage1/proj)"
 check "data mounts: ~/proj refused"  1 "$(parse_data_mounts 'a-1:/home/e/proj' >/dev/null; echo $?)"

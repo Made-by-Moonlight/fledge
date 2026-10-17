@@ -70,7 +70,7 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
 - The shell runs as `fledge-shell.service`; IPC: `qs -c fledge ipc call <target> <fn>`
   (targets in `dot-config/quickshell/fledge/ipc/Ipc.qml`). Dev loop:
   `cachyos/vm/vm.sh restow && cachyos/vm/vm.sh shell`. End-to-end check:
-  `cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'`.
+  `cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh'`.
 - Shell scripts: bash, `set -euo pipefail`, shellcheck-clean (CI runs it).
   Comments explain *why*. Match the density of the surrounding code.
 - Tests: `test-*.sh` scripts using `cachyos/install/test/lib.sh`

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DOTFILES_REPO="https://github.com/slievr/slievr-cachy.git"
-DOTFILES_DIR="$HOME/proj/slievr-cachy"
+DOTFILES_REPO="https://github.com/made-by-moonlight/fledge.git"
+DOTFILES_DIR="$HOME/proj/fledge"
 
 # The lock screen's own PAM service, separate from the real login stack so a
 # mistake here can't break logging in. Written first, before anything that can
@@ -201,8 +201,8 @@ stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 # config removed ~/.config/hypr/*.conf and hypr-defaults/ where that directory
 # was unfolded) are left dangling: restow only manages what is still there.
 # Remove them.
-find "$HOME" -maxdepth 1 -xtype l -name .zshrc -lname "*slievr-cachy/dot-zshrc" -delete 2>/dev/null || true
-find "$HOME/.config" "$HOME/.local/share" -maxdepth 4 -xtype l -lname "*slievr-cachy/dot-*" -delete 2>/dev/null || true
+find "$HOME" -maxdepth 1 -xtype l -name .zshrc -lname "*fledge/dot-zshrc" -delete 2>/dev/null || true
+find "$HOME/.config" "$HOME/.local/share" -maxdepth 4 -xtype l -lname "*fledge/dot-*" -delete 2>/dev/null || true
 
 # uwsm reads ~/.config/uwsm/env for session env vars; it isn't stow-managed
 # since it's created fresh on any machine. The fledge command gets onto the

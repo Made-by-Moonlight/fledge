@@ -6,7 +6,7 @@
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
-REPO_ROOT="$(cd "$HERE/../.." && pwd)"     # the slievr-cachy checkout being run from
+REPO_ROOT="$(cd "$HERE/../.." && pwd)"     # the fledge checkout being run from
 MIRROR_CHECK_HOST="mirror.cachyos.org"
 
 # shellcheck source=profile.sh
@@ -69,7 +69,7 @@ if [[ -n "$DESKTOP_ONLY" ]]; then
   valid_username "$DESKTOP_ONLY" || die "--desktop-only: not a valid user name: $DESKTOP_ONLY"
   [[ $EUID -eq 0 ]] || die "must run as root"
   mountpoint -q /mnt || die "--desktop-only: the target isn't mounted at /mnt"
-  [[ -d "/mnt/home/$DESKTOP_ONLY/proj/slievr-cachy" ]] || die "--desktop-only: no staged repo for $DESKTOP_ONLY in /mnt"
+  [[ -d "/mnt/home/$DESKTOP_ONLY/proj/fledge" ]] || die "--desktop-only: no staged repo for $DESKTOP_ONLY in /mnt"
   USERNAME="$DESKTOP_ONLY"
   desktop_and_finish
   exit 0
@@ -329,8 +329,8 @@ rule "Staging repo + first-boot bootstrap"
 # are present offline after reboot with no re-staging.
 target_home="/mnt/home/${USERNAME}"
 mkdir -p "${target_home}/proj"
-rm -rf "${target_home}/proj/slievr-cachy"
-cp -r "$REPO_ROOT" "${target_home}/proj/slievr-cachy"
+rm -rf "${target_home}/proj/fledge"
+cp -r "$REPO_ROOT" "${target_home}/proj/fledge"
 
 # First-boot service, the fallback: the Desktop stage below runs bootstrap.sh
 # before the reboot and disables this on success. If that stage didn't finish,

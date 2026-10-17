@@ -21,7 +21,7 @@ desktop ships an emoji font for the emoji picker.
 ## Install
 
 Download the ISO and its `.sha256` from the
-[latest release](https://github.com/slievr/slievr-cachy/releases/latest),
+[latest release](https://github.com/made-by-moonlight/fledge/releases/latest),
 check it, and write it to a USB stick (or copy it onto a Ventoy stick):
 
     sha256sum -c fledge-*.iso.sha256
@@ -32,9 +32,9 @@ installer can join Wi-Fi, and the network carries over to the installed system.
 
 ## Upgrade
 
-An installed system keeps the repo in `~/proj/slievr-cachy`, stowed into `~`:
+An installed system keeps the repo in `~/proj/fledge`, stowed into `~`:
 
-    git -C ~/proj/slievr-cachy pull && bash ~/proj/slievr-cachy/cachyos/bootstrap.sh
+    git -C ~/proj/fledge pull && bash ~/proj/fledge/cachyos/bootstrap.sh
 
 From a system still on Hyprland's old `.conf` config, log out and back in
 straight after: the pull removes `~/.config/hypr/hyprland.conf` at once, the

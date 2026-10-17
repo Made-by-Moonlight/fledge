@@ -50,8 +50,8 @@ VM name: `cachyos-test`. Two disks:
      sgdisk -Zog /dev/vdb && sgdisk -n1:0:0 -t1:8300 /dev/vdb &&
      partprobe /dev/vdb && sleep 1 && mkfs.ext4 -F /dev/vdb1 &&
      mkdir -p /mnt-repo && mount /dev/vdb1 /mnt-repo'
-   scp -r ~/proj/slievr-cachy root@$VM_IP:/mnt-repo/
-   ssh -t root@$VM_IP '/mnt-repo/slievr-cachy/cachyos/install/install-cachyos.sh'
+   scp -r ~/proj/fledge root@$VM_IP:/mnt-repo/
+   ssh -t root@$VM_IP '/mnt-repo/fledge/cachyos/install/install-cachyos.sh'
    ```
    Pick `vda` at the disk prompt (virtio disks report an empty MODEL — just
    press Enter to confirm). It partitions/encrypts, pacstraps, chroot-
@@ -61,7 +61,7 @@ VM name: `cachyos-test`. Two disks:
    `bootstrap.sh` automatically on TTY1 (log:
    `/var/log/fledge-firstboot.log`) and starts SDDM when it finishes — no
    manual bootstrap step. If bootstrap fails you land at a TTY with the
-   repo at `~slievr/proj/slievr-cachy` and on-screen instructions.
+   repo at `~slievr/proj/fledge` and on-screen instructions.
 
 ## After it's installed
 

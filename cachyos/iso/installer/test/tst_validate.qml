@@ -33,7 +33,7 @@ TestCase {
         verify(V.mountPath("/.data", h) !== "");
         compare(V.mountPath("/data/games.old", h), "");
         verify(V.mountPath("~/proj", h) !== "");
-        verify(V.mountPath("~/proj/slievr-cachy", h) !== "");
+        verify(V.mountPath("~/proj/fledge", h) !== "");
         verify(V.mountPath("/home/other/proj", h) !== "");
         compare(V.mountPath("~/projects", h), "");
         compare(V.mountPath("~/storage1/proj", h), "");

@@ -47,7 +47,7 @@ the first reboot.
    - `DATA_DISKS` — the data disks to mount permanently (matched by UUID;
      disks not present on the machine are skipped). Set to `()` for none.
 2. Get this repo onto a partition the install will **not** touch:
-   - Desktop: copy `~/proj/slievr-cachy` onto one of the data disks.
+   - Desktop: copy `~/proj/fledge` onto one of the data disks.
    - Laptop: copy it onto a USB stick.
 
 ## Running
@@ -57,7 +57,7 @@ Boot the stock CachyOS ISO on the target, then:
 ```sh
 # mount the partition holding the staged repo, e.g.
 sudo mount /dev/disk/by-id/<data-disk-partN> /mnt-repo
-sudo /mnt-repo/slievr-cachy/cachyos/install/install-cachyos.sh
+sudo /mnt-repo/fledge/cachyos/install/install-cachyos.sh
 ```
 
 It prints a detection summary, lists candidate disks, and makes you type

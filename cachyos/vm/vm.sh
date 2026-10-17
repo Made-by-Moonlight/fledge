@@ -10,7 +10,7 @@ VM_USER="${VM_USER:-slievr}"
 VM_PASSWORD="${VM_PASSWORD:-TestPass1}"
 VIRSH="virsh -c qemu:///system"
 REPO="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../.." && pwd)"
-VM_REPO="proj/slievr-cachy"
+VM_REPO="proj/fledge"
 
 # After a reinstall from the ISO the same MAC holds two leases (the live
 # system's and the installed one's): prefer the address where sshd answers.

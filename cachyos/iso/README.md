@@ -30,9 +30,9 @@ the repo is public.
 Everything runs in the test VM (`cachyos/vm/`), never on the host:
 
     cachyos/vm/vm.sh sync
-    cachyos/vm/vm.sh run 'cd ~/proj/slievr-cachy && bash cachyos/iso/test-fledge.sh && bash cachyos/iso/test-probe.sh'
-    cachyos/vm/vm.sh run 'cd ~/proj/slievr-cachy && bash cachyos/iso/test-installer-qml.sh'   # the UI's JS (qmltestrunner)
-    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/installer/dev/run.sh'   # the UI, canned facts, fake install
+    cachyos/vm/vm.sh run 'cd ~/proj/fledge && bash cachyos/iso/test-fledge.sh && bash cachyos/iso/test-probe.sh'
+    cachyos/vm/vm.sh run 'cd ~/proj/fledge && bash cachyos/iso/test-installer-qml.sh'   # the UI's JS (qmltestrunner)
+    cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/installer/dev/run.sh'   # the UI, canned facts, fake install
     cachyos/vm/vm.sh run 'qs -p /tmp/fledge-installer ipc call installer go review'       # jump to a step
     cachyos/vm/vm.sh run 'qs -p /tmp/fledge-installer ipc call installer set username ethan'
 
@@ -62,10 +62,10 @@ Then the desktop checks (no tty needed), including a broken generated
 tool the installed system doesn't ship: install it in the VM first.
 
     cachyos/vm/vm.sh sudo 'pacman -S --noconfirm --needed wtype'
-    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'
-    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh break-binds'
+    cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh'
+    cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh break-binds'
     cachyos/vm/vm.sh relogin
-    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh after-relogin'
+    cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh after-relogin'
 
 The installed system's root account is locked, so systemd's emergency/rescue
 shell won't open (sulogin refuses a locked root); recover by booting this ISO.

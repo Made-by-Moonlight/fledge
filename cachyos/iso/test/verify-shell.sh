@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # End-to-end checks for the fledge shell, run inside the logged-in Hyprland
 # session (needs wtype; types the account password for the lock checks):
-#   cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'
+#   cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh'
 # Never suspends: lock-before-sleep can't be exercised in the VM.
 # The broken-fragment check also runs across a login, in two steps around a relogin:
-#   cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh break-binds'
+#   cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh break-binds'
 #   cachyos/vm/vm.sh relogin
-#   cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh after-relogin'
+#   cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh after-relogin'
 # (promptly: the loader's notification times out 15 s after Hyprland starts).
 set -uo pipefail
 
@@ -203,7 +203,7 @@ for pair in "gcam|git commit --all --message" "gcmsg|git commit --message" "gcb|
             "gpsup|\$(git_current_branch)"; do
   is "abbr ${pair%%|*} expands" yes "$(abbr_of "${pair%%|*}" | grep -cF -- "${pair#*|}" >/dev/null && echo yes || echo no)"
 done
-is "git_main_branch finds main"  main "$(cd ~/proj/slievr-cachy && fish -c git_main_branch 2>/dev/null)"
+is "git_main_branch finds main"  main "$(cd ~/proj/fledge && fish -c git_main_branch 2>/dev/null)"
 is "zsh not installed"           no  "$(pacman -Qi zsh >/dev/null 2>&1 && echo yes || echo no)"
 
 ipc launcher open apps; sleep 0.3; is "launcher opens"     true  "$(state launcher)"

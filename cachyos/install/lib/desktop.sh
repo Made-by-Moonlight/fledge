@@ -37,7 +37,7 @@ run_desktop_stage() {
   chmod 440 "$sudoers"
   for attempt in 1 2 3; do
     echo ">>> desktop: bootstrap.sh as $user (attempt $attempt/3)"
-    if arch-chroot "$FLEDGE_TARGET" runuser -l "$user" -c 'bash ~/proj/slievr-cachy/cachyos/bootstrap.sh'; then
+    if arch-chroot "$FLEDGE_TARGET" runuser -l "$user" -c 'bash ~/proj/fledge/cachyos/bootstrap.sh'; then
       ok=1; break
     fi
     # Mirrors are sometimes mid-sync (a listed package 404s); bootstrap.sh is safe to re-run.

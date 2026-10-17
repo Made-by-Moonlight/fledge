@@ -10,7 +10,7 @@ set -uo pipefail
 
 USER_NAME="@USERNAME@"
 USER_HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
-BOOTSTRAP="${USER_HOME}/proj/slievr-cachy/cachyos/bootstrap.sh"
+BOOTSTRAP="${USER_HOME}/proj/fledge/cachyos/bootstrap.sh"
 LOG=/var/log/fledge-firstboot.log
 SUDOERS=/etc/sudoers.d/99-fledge-firstboot
 
@@ -28,7 +28,7 @@ rm -f /etc/sudoers.d/99-fledge-install
 
 if [[ ! -x "$BOOTSTRAP" ]]; then
   echo "ERROR: $BOOTSTRAP not found or not executable."
-  echo "The staged repo should be at ${USER_HOME}/proj/slievr-cachy — check the install."
+  echo "The staged repo should be at ${USER_HOME}/proj/fledge — check the install."
   exit 1
 fi
 
@@ -90,9 +90,9 @@ else
   echo "##################################################################"
   echo "# bootstrap FAILED (exit $rc). Full log: $LOG"
   echo "#"
-  echo "# The repo is at ${USER_HOME}/proj/slievr-cachy — fix the cause,"
+  echo "# The repo is at ${USER_HOME}/proj/fledge — fix the cause,"
   echo "# then re-run as $USER_NAME:"
-  echo "#     ~/proj/slievr-cachy/cachyos/bootstrap.sh"
+  echo "#     ~/proj/fledge/cachyos/bootstrap.sh"
   echo "# and once it succeeds:  sudo systemctl enable --now sddm.service"
   echo "##################################################################"
   systemctl disable fledge-firstboot.service || true

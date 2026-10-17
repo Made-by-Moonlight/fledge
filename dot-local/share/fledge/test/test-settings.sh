@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Tests for `fledge settings`. Every run uses a temp HOME and env-overridden
 # paths; nothing outside the temp dir is read or written (except the repo).
-# Run in the VM:  cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/dot-local/share/fledge/test/test-settings.sh'
+# Run in the VM:  cachyos/vm/vm.sh run 'bash ~/proj/fledge/dot-local/share/fledge/test/test-settings.sh'
 set -uo pipefail
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REPO="$(cd "$HERE/../../../.." && pwd)"
