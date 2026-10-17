@@ -5,8 +5,14 @@
 #   fledge hypr set '<hl.config body>'     hyprctl eval 'hl.config({ <body> })'
 #   fledge hypr eval '<lua>'               hyprctl eval
 # hyprctl exits 0 on many refusals (legacy dispatch strings, `keyword`), so
-# its rc is not trusted: any `error:` in the output, or rc != 0, is a failure
-# (see .superpowers/spikes/hypr-lua/findings.md). Exit 1 = failed, 2 = usage.
+# its rc is not trusted: rc != 0, or output containing `error:` or one of the
+# refusals below, is a failure (see .superpowers/spikes/hypr-lua/findings.md).
+# The refusals print no `error:` and exit 0, e.g. on the old .conf manager:
+#   "only supported with the lua config manager"  (eval/set)
+#   "Invalid dispatcher"                           (a legacy dispatch string)
+#   "non-legacy parsers"                           (keyword refused)
+# A bare `ok` on success is dropped so binds and scripts stay quiet; other
+# output (eval results) goes to stdout. Exit 1 = failed, 2 = usage.
 # HYPRCTL overrides the binary (tests).
 set -euo pipefail
 
@@ -22,11 +28,13 @@ EOT
 hyprctl_checked() { # <hyprctl args...>
   local out rc=0
   out="$("${HYPRCTL:-hyprctl}" "$@" 2>&1)" || rc=$?
-  if ((rc != 0)) || [[ "$out" == *"error:"* ]]; then
+  if ((rc != 0)) || [[ "$out" == *"error:"* ||
+    "$out" == *"only supported with the lua config manager"* ||
+    "$out" == *"Invalid dispatcher"* || "$out" == *"non-legacy parsers"* ]]; then
     printf 'fledge hypr: %s\n' "$out" >&2
     exit 1
   fi
-  [[ -z "$out" ]] || printf '%s\n' "$out"
+  [[ -z "$out" || "$out" == ok ]] || printf '%s\n' "$out"
 }
 
 [[ $# -ge 1 ]] || usage

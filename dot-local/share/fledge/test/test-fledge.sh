@@ -43,6 +43,24 @@ STUB_RC=7 STUB_OUT='nope' run hypr eval 'x'
 check "hyprctl rc 7 -> exit 1" 1 "$rc"
 contains "rc 7 output on stderr" 'fledge hypr: nope' "$err"
 
+for msg in 'only supported with the lua config manager' 'Invalid dispatcher' 'non-legacy parsers'; do
+  STUB_OUT="$msg" run hypr eval 'x'
+  check "refusal [$msg] rc 0 -> exit 1" 1 "$rc"
+  contains "refusal [$msg] on stderr" "fledge hypr: $msg" "$err"
+done
+
+STUB_RC=3 STUB_OUT='' run hypr eval 'x'
+check "rc 3 with empty output -> exit 1" 1 "$rc"
+
+out="$("$FLEDGE" hypr eval 'x' 2>/dev/null)"
+check "bare ok is dropped" "" "$out"
+out="$(STUB_OUT='42' "$FLEDGE" hypr eval 'x' 2>/dev/null)"
+check "other output kept on stdout" "42" "$out"
+
+rm -f "$T/argv"
+"$FLEDGE" hypr dispatch 2>/dev/null; "$FLEDGE" hypr bogus x 2>/dev/null; "$FLEDGE" bogus 2>/dev/null
+check "stub not called on usage errors" "no" "$([[ -e $T/argv ]] && echo yes || echo no)"
+
 run hypr dispatch
 check "dispatch without args -> 2" 2 "$rc"
 run hypr set

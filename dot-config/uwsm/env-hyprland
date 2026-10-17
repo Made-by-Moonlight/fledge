@@ -7,6 +7,14 @@
 #     device-select layer (vulkan-mesa-layers); other GPUs stay selectable.
 #   - The NVIDIA-only vars apply only when NVIDIA is driving the monitors.
 
+# fledge CLI on PATH. Here rather than in ~/.config/uwsm/env (written once by
+# bootstrap) so existing installs get it on restow. uwsm sources env first,
+# then this file, so fledge lands ahead of mbm and slievr-cachy.
+case ":$PATH:" in
+  *":$HOME/.local/share/fledge/bin:"*) ;;
+  *) export PATH="$HOME/.local/share/fledge/bin:$PATH" ;;
+esac
+
 _display_gpu="$HOME/.local/share/slievr-cachy/bin/slievr-hw-display-gpu"
 if [ -x "$_display_gpu" ] && _driver="$("$_display_gpu" --driver)"; then
   AQ_DRM_DEVICES="$("$_display_gpu" --devices)"
