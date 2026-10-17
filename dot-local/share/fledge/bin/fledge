@@ -4,6 +4,8 @@
 #   fledge hypr dispatch '<hl.dsp expr>'   hyprctl dispatch
 #   fledge hypr set '<hl.config body>'     hyprctl eval 'hl.config({ <body> })'
 #   fledge hypr eval '<lua>'               hyprctl eval
+#   fledge hypr quote '<text>'             prints <text> as a Lua string literal,
+#                                          for building the two above from values
 # hyprctl exits 0 on many refusals (legacy dispatch strings, `keyword`), so
 # its rc is not trusted: rc != 0, or output containing `error:` or one of the
 # refusals below, is a failure (see .superpowers/spikes/hypr-lua/findings.md).
@@ -21,6 +23,7 @@ usage() {
 usage: fledge hypr dispatch '<hl.dsp expression>'
        fledge hypr set '<hl.config body>'
        fledge hypr eval '<lua>'
+       fledge hypr quote '<text>'
 EOT
   exit 2
 }
@@ -37,6 +40,25 @@ hyprctl_checked() { # <hyprctl args...>
   [[ -z "$out" || "$out" == ok ]] || printf '%s\n' "$out"
 }
 
+# A double-quoted Lua string, escaped like mbm's lib/lua.jq: \ and " and newline,
+# other control characters as \ddd (three digits, so a following digit can't
+# join the escape). Byte-wise, so UTF-8 passes through unchanged.
+lua_quote() { # <text>
+  local s="$1" out="" c i
+  local LC_ALL=C
+  for ((i = 0; i < ${#s}; i++)); do
+    c="${s:i:1}"
+    case "$c" in
+      \\) out+='\\' ;;
+      '"') out+='\"' ;;
+      $'\n') out+='\n' ;;
+      [[:cntrl:]]) printf -v c '\\%03d' "'$c"; out+="$c" ;;
+      *) out+="$c" ;;
+    esac
+  done
+  printf '"%s"\n' "$out"
+}
+
 [[ $# -ge 1 ]] || usage
 case "$1" in
   hypr)
@@ -45,6 +67,7 @@ case "$1" in
       dispatch) hyprctl_checked dispatch "$3" ;;
       set) hyprctl_checked eval "hl.config({ $3 })" ;;
       eval) hyprctl_checked eval "$3" ;;
+      quote) lua_quote "$3" ;;
       *) usage ;;
     esac
     ;;

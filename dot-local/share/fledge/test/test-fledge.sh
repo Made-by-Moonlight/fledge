@@ -57,6 +57,18 @@ check "bare ok is dropped" "" "$out"
 out="$(STUB_OUT='42' "$FLEDGE" hypr eval 'x' 2>/dev/null)"
 check "other output kept on stdout" "42" "$out"
 
+# quote: a Lua string literal that reads back as the exact text.
+rm -f "$T/argv"
+check "quote: plain" '"address:0x55d0"' "$("$FLEDGE" hypr quote 'address:0x55d0')"
+check "quote: escapes" '"a\\b \"c\" d\ne\009f\0011"' "$("$FLEDGE" hypr quote $'a\\b "c" d\ne\tf\0011' 2>/dev/null || true)"
+for text in '' 'kitty --class=x -e sh -c "echo $HOME"' $'two\nlines\ttab' 'back\\slash \\" end\\' 'ünïcødé 󰍹' $'del\x7f' '#x ]]==] [[' "it's"; do
+  got="$(lua -e "io.write($("$FLEDGE" hypr quote "$text"))")"
+  check "quote round-trips through Lua: [$text]" "$text" "$got"
+done
+check "quote: hyprctl not called" "no" "$([[ -e $T/argv ]] && echo yes || echo no)"
+run hypr quote
+check "quote without args -> 2" 2 "$rc"
+
 rm -f "$T/argv"
 "$FLEDGE" hypr dispatch 2>/dev/null; "$FLEDGE" hypr bogus x 2>/dev/null; "$FLEDGE" bogus 2>/dev/null
 check "stub not called on usage errors" "no" "$([[ -e $T/argv ]] && echo yes || echo no)"

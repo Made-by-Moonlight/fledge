@@ -10,5 +10,5 @@ case "$CURRENT_LAYOUT" in
   *) NEW_LAYOUT=dwindle ;;
 esac
 
-hyprctl keyword workspace $ACTIVE_WORKSPACE, layout:$NEW_LAYOUT
+fledge hypr eval "hl.workspace_rule({ workspace = $(fledge hypr quote "$ACTIVE_WORKSPACE"), layout = \"$NEW_LAYOUT\" })"
 notify-send -u low "󱂬    Workspace layout set to $NEW_LAYOUT"

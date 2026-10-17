@@ -32,7 +32,7 @@ fi
 
 NEW_SCALE=${SCALES[$NEW_IDX]}
 
-hyprctl keyword monitor "$ACTIVE_MONITOR,${WIDTH}x${HEIGHT}@${REFRESH_RATE},auto,$NEW_SCALE"
+fledge hypr eval "hl.monitor({ output = $(fledge hypr quote "$ACTIVE_MONITOR"), mode = $(fledge hypr quote "${WIDTH}x${HEIGHT}@${REFRESH_RATE}"), position = \"auto\", scale = $NEW_SCALE })"
 
 # Persist to monitors.conf if the user has a single generic catch-all line
 # (ignoring disabled monitors), so the scale survives reboots.

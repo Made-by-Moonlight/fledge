@@ -20,32 +20,31 @@ qs -c mbm ipc call launcher close >/dev/null 2>&1
 focused=$(slievr-hyprland-monitor-focused)
 terminal=$(xdg-terminal-exec --print-id)
 
+# Each terminal is started by Hyprland (exec_cmd), on the monitor just focused.
+exec_cmd() { fledge hypr dispatch "hl.dsp.exec_cmd($(fledge hypr quote "$*"))"; }
+
 for m in $(hyprctl monitors -j | jq -r '.[] | .name'); do
-  hyprctl dispatch focusmonitor $m
+  fledge hypr dispatch "hl.dsp.focus({ monitor = $(fledge hypr quote "$m") })"
 
   case $terminal in
   *Alacritty*)
-    hyprctl dispatch exec -- \
-      alacritty --class=org.omarchy.screensaver \
+    exec_cmd alacritty --class=org.omarchy.screensaver \
       --config-file ~/.local/share/omarchy/default/alacritty/screensaver.toml \
       -e slievr-screensaver
     ;;
   *ghostty*)
-    hyprctl dispatch exec -- \
-      ghostty --class=org.omarchy.screensaver \
-      --config-file=~/.local/share/omarchy/default/ghostty/screensaver \
+    exec_cmd ghostty --class=org.omarchy.screensaver \
+      '--config-file=~/.local/share/omarchy/default/ghostty/screensaver' \
       --font-size=18 \
       -e slievr-screensaver
     ;;
   *foot*)
-    hyprctl dispatch exec -- \
-      foot --app-id=org.omarchy.screensaver \
-      --config="$OMARCHY_PATH/default/foot/screensaver.ini" \
+    exec_cmd foot --app-id=org.omarchy.screensaver \
+      "--config=$OMARCHY_PATH/default/foot/screensaver.ini" \
       -e slievr-screensaver
     ;;
   *kitty*)
-    hyprctl dispatch exec -- \
-      kitty --class=org.omarchy.screensaver \
+    exec_cmd kitty --class=org.omarchy.screensaver \
       --override font_size=18 \
       --override window_padding_width=0 \
       -e slievr-screensaver
@@ -56,4 +55,4 @@ for m in $(hyprctl monitors -j | jq -r '.[] | .name'); do
   esac
 done
 
-hyprctl dispatch focusmonitor $focused
+fledge hypr dispatch "hl.dsp.focus({ monitor = $(fledge hypr quote "$focused") })"

@@ -13,7 +13,9 @@ rm -rf /tmp/mbm-installer
 cp -rL "$REPO/cachyos/iso/installer" /tmp/mbm-installer
 : > /tmp/mbm-installer.log
 # Started by Hyprland, not this SSH login, so it lands in the graphical session.
-hyprctl dispatch exec "env MBM_INSTALLER_DEV=1 MBM_REPO=$REPO qs -p /tmp/mbm-installer >/tmp/mbm-installer.log 2>&1" >/dev/null
+fledge="$REPO/dot-local/share/fledge/bin/fledge"
+cmd="env MBM_INSTALLER_DEV=1 MBM_REPO=$REPO qs -p /tmp/mbm-installer >/tmp/mbm-installer.log 2>&1"
+"$fledge" hypr dispatch "hl.dsp.exec_cmd($("$fledge" hypr quote "$cmd"))"
 sleep 3
 # Qt's text-input-v3 logs disableSurface once whenever a layer surface takes the
 # keyboard, which the installer must; it is not a QML problem.

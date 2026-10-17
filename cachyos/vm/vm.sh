@@ -89,7 +89,7 @@ case "${1:-}" in
         # Started by Hyprland, not from this SSH login: polkit binds an agent to the logind
         # session of its process, and one started here would serve the SSH session, not the desktop.
         : >/tmp/mbm.log   # so the grep below shows only this run
-        hyprctl dispatch exec "qs -c mbm >/tmp/mbm.log 2>&1 </dev/null" >/dev/null
+        fledge hypr dispatch "hl.dsp.exec_cmd(\"qs -c mbm >/tmp/mbm.log 2>&1 </dev/null\")"
         sleep 3; grep -E "WARN|ERROR" /tmp/mbm.log | tail -n 40
       fi; true' ;;
   shot)

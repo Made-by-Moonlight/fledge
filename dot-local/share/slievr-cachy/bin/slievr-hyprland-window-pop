@@ -12,23 +12,30 @@ active=$(hyprctl activewindow -j)
 pinned=$(echo "$active" | jq ".pinned")
 addr=$(echo "$active" | jq -r ".address")
 
+# Hyprland's Lua dispatchers (fledge hypr); the window by address, as before.
+win="$(fledge hypr quote "address:$addr")"
+
 if [[ $pinned == "true" ]]; then
-  hyprctl -q --batch \
-    "dispatch pin address:$addr;" \
-    "dispatch togglefloating address:$addr;" \
-    "dispatch tagwindow -pop address:$addr;"
+  fledge hypr eval "
+    hl.dispatch(hl.dsp.window.pin({ window = $win }))
+    hl.dispatch(hl.dsp.window.float({ action = \"toggle\", window = $win }))
+    hl.dispatch(hl.dsp.window.tag({ tag = \"-pop\", window = $win }))"
 elif [[ -n $addr ]]; then
-  hyprctl dispatch togglefloating address:$addr
-  hyprctl dispatch resizeactive exact $width $height address:$addr
+  # Sizes and positions are numbers: anything else would be spliced into Lua.
+  [[ $width =~ ^[0-9]+$ && $height =~ ^[0-9]+$ ]] || { echo "width and height must be numbers" >&2; exit 1; }
+  fledge hypr dispatch "hl.dsp.window.float({ action = \"toggle\", window = $win })"
+  fledge hypr dispatch "hl.dsp.window.resize({ x = $width, y = $height, exact = true, window = $win })"
 
   if [[ -n $x && -n $y ]]; then
-    hyprctl dispatch moveactive $x $y address:$addr
+    [[ $x =~ ^-?[0-9]+$ && $y =~ ^-?[0-9]+$ ]] || { echo "x and y must be numbers" >&2; exit 1; }
+    # moveactive x y moved by that much (relative), not to x,y.
+    fledge hypr dispatch "hl.dsp.window.move({ x = $x, y = $y, relative = true, window = $win })"
   else
-    hyprctl dispatch centerwindow address:$addr
+    fledge hypr dispatch "hl.dsp.window.center({ window = $win })"
   fi
 
-  hyprctl -q --batch \
-    "dispatch pin address:$addr;" \
-    "dispatch alterzorder top address:$addr;" \
-    "dispatch tagwindow +pop address:$addr;"
+  fledge hypr eval "
+    hl.dispatch(hl.dsp.window.pin({ window = $win }))
+    hl.dispatch(hl.dsp.window.alter_zorder({ mode = \"top\", window = $win }))
+    hl.dispatch(hl.dsp.window.tag({ tag = \"+pop\", window = $win }))"
 fi

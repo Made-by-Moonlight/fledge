@@ -1803,7 +1803,7 @@
       "label": "Zoom in",
       "group": "Utilities",
       "action": {
-        "exec": "hyprctl keyword cursor:zoom_factor $(hyprctl getoption cursor:zoom_factor -j | jq '.float + 1')"
+        "exec": "fledge hypr eval 'hl.config({ cursor = { zoom_factor = hl.get_config(\"cursor.zoom_factor\") + 1 } })'"
       }
     },
     "utilities.reset-zoom": {
@@ -1812,7 +1812,7 @@
       "label": "Reset zoom",
       "group": "Utilities",
       "action": {
-        "exec": "hyprctl keyword cursor:zoom_factor 1"
+        "exec": "fledge hypr set 'cursor = { zoom_factor = 1 }'"
       }
     },
     "utilities.lock-system": {

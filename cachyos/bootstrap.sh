@@ -60,7 +60,7 @@ PACMAN_PACKAGES=(
   # the generated binds call (see that dir's README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
-  # autostart.conf's exec-once entries — all missing on a fresh install:
+  # fledge/autostart.lua's startup commands — all missing on a fresh install:
   # input method framework, power-profile D-Bus service
   # (slievr-powerprofiles-init needs powerprofilesctl). No idle daemon or
   # polkit agent: the mbm shell does both.
@@ -92,7 +92,7 @@ PACMAN_PACKAGES=(
   # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
   # (see /usr/share/wayland-sessions/hyprland-uwsm.desktop) — sddm is
   # what Omarchy itself defaults to (dot-local/share/slievr-cachy/bin/
-  # slievr-refresh-sddm and the vendored apps/system.conf both reference
+  # slievr-refresh-sddm and the vendored system app rules both reference
   # it), so matching that rather than picking a different DM.
   # sddm lists this as merely "optional" (for using Qt5 themes), but it's
   # actually required for the vendored QML theme below — without it
@@ -108,7 +108,7 @@ PACMAN_PACKAGES=(
   "${GPU_VULKAN_PKGS[@]}"
   # CachyOS's Jupiter-bootstrapped Steam build.
   steam-jupiter-stable
-  # Discord (windows.conf already pins it to workspace 9).
+  # Discord (fledge/rules.lua already pins it to workspace 9).
   discord
   # GUI file manager — lighter than the GNOME stack, no dependency on the
   # yazi TUI keybind it replaces.
@@ -191,8 +191,10 @@ mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.co
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 
 # Links stow made into the repo for files the repo has since dropped (the
-# cutover removed waybar, walker, mako, swayosd, elephant's unit, ...) are left
-# dangling: restow only manages what is still there. Remove them.
+# cutover removed waybar, walker, mako, swayosd, elephant's unit, ...; the Lua
+# config removed ~/.config/hypr/*.conf and hypr-defaults/ where that directory
+# was unfolded) are left dangling: restow only manages what is still there.
+# Remove them.
 find "$HOME" -maxdepth 1 -xtype l -name .zshrc -lname "*slievr-cachy/dot-zshrc" -delete 2>/dev/null || true
 find "$HOME/.config" "$HOME/.local/share" -maxdepth 4 -xtype l -lname "*slievr-cachy/dot-*" -delete 2>/dev/null || true
 
@@ -331,23 +333,32 @@ sudo systemctl enable sddm.service
 # so no `systemctl --user enable` here (it would hang from slievr-firstboot).
 # Run from inside a session, the end of this script starts it (see there).
 
-# Generate the Hyprland binds/monitors/input from mbm settings; hyprland.conf
-# sources ~/.local/state/mbm/hypr/*.conf and errors if nothing matches.
+# Generate the Hyprland binds/monitors/input from mbm settings; hyprland.lua
+# loads ~/.local/state/mbm/hypr/*.lua (a missing one just loses its settings).
 # Invalid user settings must not stop the rest of bootstrap: warn, and the
 # uwsm env hook (dot-config/uwsm/env-hyprland) falls back to the defaults.
 # Run from inside a Hyprland session (an upgrade: git pull, then bootstrap),
-# Hyprland already auto-reloaded the pulled hyprland.conf, which sources these
-# files: until they exist every bind is gone. So reload as soon as they're
-# written. From slievr-firstboot there is no Hyprland and nothing to reload.
-in_session=""
+# Hyprland already auto-reloaded the pulled config, maybe while stow or the
+# pull had files half-written, and before these existed: every bind is gone
+# until it reloads again. So reload once everything is written (the reload is a
+# query, the same on both config managers). From slievr-firstboot there is no
+# Hyprland and nothing to reload.
+fledge="$HOME/.local/share/fledge/bin/fledge"
+in_session="" lua_session=""
 if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl version >/dev/null 2>&1; then
   in_session=1
+  # Hyprland picks its config manager at session start; only the Lua one answers eval.
+  if "$fledge" hypr eval 'return 1' >/dev/null 2>&1; then lua_session=1; fi
 fi
 if ! MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply; then
   echo "WARN: mbm settings apply failed; fix ~/.config/mbm/settings.json (mbm settings check)" >&2
 fi
 if [[ -n $in_session ]]; then
   hyprctl reload >/dev/null 2>&1 || echo "WARN: hyprctl reload failed" >&2
+fi
+if [[ -n $in_session && -z $lua_session ]]; then
+  # An upgrade from the .conf config: this session can't load the new config.
+  echo "Hyprland switches to the Lua config at your next login."
 fi
 
 # dot-config/fish/conf.d/tools.fish expects mise at ~/.local/bin/mise (the host's curl-installer
@@ -386,9 +397,11 @@ if [[ -n ${XDG_RUNTIME_DIR:-} ]] || systemctl --user show-environment >/dev/null
 fi
 # Keybind execs (Super+Return) run with Hyprland's own process environment,
 # which still holds the login-time SHELL. After the one hyprctl reload above,
-# so nothing re-reads config over it.
-if [[ -n $in_session ]]; then
-  hyprctl keyword env "SHELL,$login_shell" >/dev/null 2>&1 || echo "WARN: could not update Hyprland's SHELL" >&2
+# so nothing re-reads config over it. A .conf session can't take it (no eval);
+# it ends at the next login anyway (see above).
+if [[ -n $lua_session ]]; then
+  "$fledge" hypr eval "hl.env(\"SHELL\", $("$fledge" hypr quote "$login_shell"))" >/dev/null 2>&1 ||
+    echo "WARN: could not update Hyprland's SHELL" >&2
 fi
 
 # fish's command-not-found suggestions read pkgfile's database.
@@ -404,7 +417,7 @@ fi
 # the clone, stow, the generated config): on an upgrade, a failure before this
 # point leaves the old desktop's packages in place instead of a half-switched
 # one with no bar and no binds. Keeping them installed until now is harmless:
-# hyprland.conf and autostart no longer launch any of them.
+# hyprland.lua and its autostart no longer launch any of them.
 #
 # cachyos-hyprland-settings (an earlier version of this script installed
 # it) pulls in a lot we don't want or already have our own equivalent
