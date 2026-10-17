@@ -127,6 +127,7 @@ cat > "$T/driver3.lua" <<'EOL'
 trace, notes = {}, {}
 hl = { notification = { create = function(opts) notes[#notes + 1] = opts end },
        config = function() end }
+if os.getenv("NO_NOTIFY") then hl.notification = nil end
 package.path = os.getenv("HOME") .. "/.config/hypr/?.lua;" .. package.path
 dofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")
 print("trace=" .. table.concat(trace, " "))
@@ -148,6 +149,12 @@ check "load.lua missing: the rest still loads (no toggles)" "envs looknfeel misc
 check "load.lua missing: one notification" "1" "$(field notes)"
 contains "load.lua missing: notification names it" "fledge: fledge/load.lua: " "$(field note1)"
 check "load.lua missing: shown as an error" "error" "$(field icon1)"
+
+# Without hl.notification (an API change, say) the stand-in still only reports.
+out="$(NO_NOTIFY=1 HOME="$T/h2" lua "$T/driver3.lua" 2>&1)"; rc=$?
+check "load.lua missing, no hl.notification: no error escapes" 0 "$rc"
+check "load.lua missing, no hl.notification: the rest still loads" "envs looknfeel misc rules binds autostart" "$(field trace)"
+contains "load.lua missing, no hl.notification: said on stderr" "fledge: fledge/load.lua: " "$out"
 
 mkhome "$T/h3"; printf 'local M = = {}\n' >"$T/h3/.config/hypr/fledge/load.lua"
 printf 'trace[#trace + 1] = "rules"\nerror("rules broke")\n' >"$T/h3/.config/hypr/fledge/rules.lua"

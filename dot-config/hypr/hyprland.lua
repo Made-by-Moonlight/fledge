@@ -14,7 +14,10 @@ if not found then
     -- First line only: a failed require lists every path it tried.
     local text = "fledge: " .. what .. ": " .. tostring(e):match("^[^\n]*")
     io.stderr:write(text, "\n")
-    pcall(hl.notification.create, { text = text, timeout = 15000, icon = "error", color = "rgb(ff5555)" })
+    -- All inside the pcall: even reading hl.notification may fail.
+    pcall(function()
+      hl.notification.create({ text = text, timeout = 15000, icon = "error", color = "rgb(ff5555)" })
+    end)
   end
   load = {
     notify = notify,
