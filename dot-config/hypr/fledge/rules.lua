@@ -50,9 +50,9 @@ rule({
 rule({ match = { class = "([fF]irefox|zen|librewolf)" }, tag = "+firefox-based-browser" })
 rule({ match = { tag = "chromium-based-browser" }, tag = "-default-opacity" })
 rule({ match = { tag = "firefox-based-browser" }, tag = "-default-opacity" })
--- Force chromium-based browsers into a tile to deal with --app bug
+-- Chromium-based browsers always tile (from Omarchy, where its web app windows opened floating)
 rule({ match = { tag = "chromium-based-browser" }, tile = true })
--- Only a subtle opacity change, but not for video sites
+-- Browsers get only a subtle opacity change
 rule({ match = { tag = "chromium-based-browser" }, opacity = "1.0 0.97" })
 rule({ match = { tag = "firefox-based-browser" }, opacity = "1.0 0.97" })
 -- Hide the screen-sharing notification bar (the "Hide" button on it is broken on Wayland)
