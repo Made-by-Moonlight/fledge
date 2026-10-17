@@ -26,7 +26,7 @@ jobs:
     container: archlinux/archlinux:latest
     steps:
       - name: Tools
-        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq
+        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq lua
 
       - uses: actions/checkout@v4
 
@@ -38,7 +38,7 @@ jobs:
                    cachyos/iso/test-probe.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
-                   dot-local/share/mbm/test/test-dmenu.sh \
+                   dot-local/share/mbm/test/test-dmenu.sh dot-local/share/mbm/test/test-lua-syntax.sh \
                    dot-local/share/fledge/test/test-fledge.sh; do
             echo "::group::$t"
             bash "$t"
