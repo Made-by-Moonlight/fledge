@@ -213,6 +213,8 @@ check "autostart: removes Hyprland's stub" "rc=0" \
   "$(autostart $'\n\n# This config is a STUB! This should never be generated.')"
 check "autostart: keeps a hyprland.conf of the user's" $'rc=0\nhyprland.conf' "$(autostart '# my own config')"
 check "autostart: no hyprland.conf is fine" "rc=0" "$(autostart none)"
+check "autostart: the marker past the first 200 bytes isn't the stub" $'rc=0\nhyprland.conf' \
+  "$(autostart "$(printf '#%.0s' {1..250})"$'\n# This config is a STUB!')"
 
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail

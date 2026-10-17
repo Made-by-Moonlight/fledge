@@ -354,13 +354,19 @@ fi
 # Hyprland's stub in its place, through the stow link into the repo, and again
 # whenever it is removed while that session runs. fledge/autostart.lua removes
 # it at the next Lua login; remove it here too, unless that session is running.
-# Only an untracked stub (it says so): never a file of the repo's or the user's.
-stub="$DOTFILES_DIR/dot-config/hypr/hyprland.conf"
-if [[ ( -z $in_session || -n $lua_session ) && -f $stub ]] &&
-  ! git -C "$DOTFILES_DIR" ls-files --error-unmatch -- dot-config/hypr/hyprland.conf >/dev/null 2>&1 &&
-  grep -qF 'This config is a STUB!' "$stub"; then
+# Only an untracked stub (its first 200 bytes say so, the same test as
+# autostart.lua's): never a file of the repo's or the user's.
+# cachyos/test-bootstrap.sh tests this function on its own.
+remove_hypr_stub() { # remove_hypr_stub <repo> <in_session> <lua_session>
+  local repo="$1" in_session="$2" lua_session="$3"
+  local stub="$repo/dot-config/hypr/hyprland.conf"
+  if [[ -n $in_session && -z $lua_session ]]; then return 0; fi
+  if [[ ! -f $stub ]]; then return 0; fi
+  if git -C "$repo" ls-files --error-unmatch -- dot-config/hypr/hyprland.conf >/dev/null 2>&1; then return 0; fi
+  if [[ $(head -c 200 -- "$stub") != *"This config is a STUB!"* ]]; then return 0; fi
   rm -f -- "$stub"
-fi
+}
+remove_hypr_stub "$DOTFILES_DIR" "$in_session" "$lua_session"
 
 # dot-config/fish/conf.d/tools.fish expects mise at ~/.local/bin/mise (the host's curl-installer
 # location); the pacman package above installs to /usr/bin/mise instead.
