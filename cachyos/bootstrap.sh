@@ -65,6 +65,9 @@ PACMAN_PACKAGES=(
   # pulls it in either.
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq gum socat
+  # menu › About (fledge launch about) runs fastfetch with
+  # dot-config/fastfetch, whose logo is the About branding text.
+  fastfetch
   # fledge/autostart.lua's startup commands — all missing on a fresh install:
   # input method framework, power-profile D-Bus service
   # (fledge powerprofiles init needs powerprofilesctl). No idle daemon or

@@ -1,0 +1,30 @@
+// `fledge launch about` (menu › About). The logo is the About branding text
+// that `fledge branding about text|image|reset` edits.
+{
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    "type": "file",
+    "source": "~/.config/omarchy/branding/about.txt",
+    "color": { "1": "38;2;244;175;3" },
+    "padding": { "top": 1, "right": 4, "left": 2 }
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "host",
+    "kernel",
+    "uptime",
+    "packages",
+    "shell",
+    "wm",
+    "terminal",
+    "cpu",
+    "gpu",
+    "memory",
+    "swap",
+    "disk",
+    "break",
+    "colors"
+  ]
+}
