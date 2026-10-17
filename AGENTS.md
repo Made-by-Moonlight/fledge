@@ -5,9 +5,10 @@ Read this first, then the newest spec under `docs/superpowers/specs/`.
 
 ## What this is
 
-**made by moonlight**: a CachyOS + Hyprland desktop and the installer ISO
-that puts it on a machine. `README.md` has the user-facing overview and the
-repo layout.
+**fledge**, by made by moonlight: a CachyOS + Hyprland desktop and the
+installer ISO that puts it on a machine. `README.md` has the user-facing
+overview and the repo layout. The repo is
+`github.com/Made-by-Moonlight/fledge` (private), checked out at `~/proj/fledge`.
 
 ## Hard rules
 
@@ -18,10 +19,16 @@ repo layout.
    is fine. **Everything that runs project code goes in the test VM**
    (`cachyos/vm/`, VM name `cachyos-test`, iterate with `dev-up.sh`), and
    that includes unit tests.
-2. **Brand is "made by moonlight"** (lowercase wordmark, owl mark, palette in
-   `cachyos/branding/palette.sh`). `slievr` is the user's handle, not the
-   brand: never use it as a logo or wordmark. New components use the
-   **`fledge`** name (`fledge` CLI, `~/.config/fledge/`, `qs -c fledge`).
+2. **The product is `fledge`; "made by moonlight" is the byline.** `fledge`
+   (lowercase) names the product and every component, new ones included:
+   the `fledge` CLI, `~/.config/fledge/`, `qs -c fledge`, `fledge-*` units and
+   helpers, `FLEDGE_*` variables. "made by moonlight" (lowercase, with spaces)
+   is the org byline, used only in branding copy, with the owl mark and the
+   palette in `cachyos/branding/palette.sh`. `slievr` is the user's handle (and
+   the default username), not the brand: never a product, logo or wordmark.
+   The old names (`slievr`, `mbm`, `made-by-moonlight`) are gone, and
+   `cachyos/check-names.sh` fails CI if one comes back; a real exception goes
+   in its allowlist.
 3. **No webapps.** Don't add or port webapp support.
 4. **Branch from an up-to-date `main`.** `git fetch` then
    `git merge --ff-only origin/main` (`pull.rebase=true` here refuses to
@@ -45,9 +52,9 @@ each with its own spec, plan and branch, and the desktop works after each one:
 
 | # | Project | Status |
 |---|---|---|
-| A | **mbm shell**: Quickshell bar, launcher, notifications, OSD, lock, wallpaper, quick settings, settings window; settings JSON → generated Hyprland config | done (merged, released in `v2026.10.12`): spec + plan in `docs/superpowers/` |
-| B | **`fledge` CLI**: one command, `fledge <group> <action>`, over the vendored scripts in `dot-local/share/fledge/libexec/`; rewriting their internals | command shape done (rename-fledge); internals not started |
-| C | **mbm theme**: palette in fledge settings, our own app-theme renderer, retire `dot-config/omarchy/` | not started |
+| A | **fledge shell**: Quickshell bar, launcher, notifications, OSD, lock, wallpaper, quick settings, settings window; settings JSON → generated Hyprland config | done (merged, released in `v2026.10.12`): spec `2026-10-10-mbm-shell-design.md` + plan in `docs/superpowers/` (written under its old name) |
+| B | **fledge CLI**: one command, `fledge <group> <action>`, over the vendored scripts in `dot-local/share/fledge/libexec/`; then rewriting their internals | command shape done (branch rename-fledge, spec `2026-10-18-fledge-rename-design.md`); internals not started |
+| C | **fledge theme**: the palette in fledge settings, our own app-theme renderer, retire `dot-config/omarchy/` | not started |
 | D | **Graphical installer**: Quickshell installer on the ISO, reusing A + C | done (branch graphical-installer): spec + plan in `docs/superpowers/` |
 
 Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
@@ -57,7 +64,9 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
 ## Layout and conventions
 
 - `dot-config/` and `dot-local/` are GNU stow `--dotfiles` names
-  (`dot-config` → `~/.config`). `bootstrap.sh` stows the whole repo into `~`.
+  (`dot-config` → `~/.config`). `bootstrap.sh` stows the repo into `~`, and
+  `.stow-local-ignore` keeps everything that isn't `dot-*` out of it: a new
+  top-level file or directory goes in that list.
 - `cachyos/install/`: installer (bash). `cachyos/iso/`: ISO build/test.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
 - Settings: defaults in `dot-local/share/fledge/defaults/settings.json`,
@@ -77,7 +86,7 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
   (`check` / `contains`, then `exit $fail`). VM end-to-end checks live in
   `cachyos/iso/test/verify-*.sh`.
 - Commit messages: `area: what changed and why`, lowercase area
-  (`iso:`, `install:`, `hypr:`, `gpu:`, `docs:`, `shell:`, `mbm:` …).
+  (`iso:`, `install:`, `hypr:`, `gpu:`, `docs:`, `shell:`, `fledge:`, `theme:`, `ci:` …).
 - Hyprland (0.56) runs a **Lua** config, desktop and live ISO alike:
   `dot-config/hypr/hyprland.lua` loads `fledge/*.lua`, the theme, the
   generated `~/.local/state/fledge/hypr/*.lua` and the toggles through a guarded

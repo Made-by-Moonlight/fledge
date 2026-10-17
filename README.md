@@ -1,7 +1,9 @@
-# made by moonlight
+# fledge
+
+*by made by moonlight*
 
 A CachyOS + Hyprland desktop and the installer ISO that puts it on a machine:
-boot the ISO (fledge), answer a few questions in its graphical installer, and
+boot the ISO, answer a few questions in its graphical installer, and
 it installs unattended onto an encrypted btrfs disk, desktop included, then
 reboots to the login screen.
 
@@ -21,7 +23,7 @@ desktop ships an emoji font for the emoji picker.
 ## Install
 
 Download the ISO and its `.sha256` from the
-[latest release](https://github.com/made-by-moonlight/fledge/releases/latest),
+[latest release](https://github.com/Made-by-Moonlight/fledge/releases/latest),
 check it, and write it to a USB stick (or copy it onto a Ventoy stick):
 
     sha256sum -c fledge-*.iso.sha256
@@ -66,7 +68,8 @@ bootstrap from a TTY (Ctrl+Alt+F2) and log in afterwards.
 - `dot-config/quickshell/fledge/` — the desktop shell (bar, launcher, notifications, lock, settings)
 - `dot-config/hypr/` — the Hyprland config: `hyprland.lua` and its `fledge/*.lua` modules
 - `dot-local/share/fledge/` — the `fledge` command: `fledge <group> <action>` over the scripts in `libexec/`, `fledge settings` (defaults + overrides → generated Hyprland Lua), `fledge hypr`, `fledge dmenu`
-- `dot-config/`, `dot-local/` — dotfiles, stowed into `~`
+- `dot-config/`, `dot-local/` — dotfiles, stowed into `~` (`.stow-local-ignore` keeps the rest of the repo out)
 
+The repo is [Made-by-Moonlight/fledge](https://github.com/Made-by-Moonlight/fledge).
 Releases are built by GitHub Actions when a `v*` tag is pushed on `main`
 (see `cachyos/iso/README.md`).
