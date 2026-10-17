@@ -26,7 +26,8 @@ jobs:
     container: archlinux/archlinux:latest
     steps:
       - name: Tools
-        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq lua
+        # qt6-declarative: qmltestrunner (and QtTest) for the shell's and installer's QML tests.
+        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq lua qt6-declarative
 
       - uses: actions/checkout@v4
 
@@ -40,7 +41,8 @@ jobs:
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
                    dot-local/share/mbm/test/test-dmenu.sh dot-local/share/mbm/test/test-lua-syntax.sh \
                    dot-local/share/mbm/test/test-migrate.sh \
-                   dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh; do
+                   dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh \
+                   cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
