@@ -88,5 +88,14 @@ check "unknown command -> 2" 2 "$rc"
 run
 check "no args -> 2" 2 "$rc"
 
+# warning: lines (a dispatcher that found no target) go to stderr, still exit 0
+out="$(STUB_OUT=$'warning: =[C]:-1: send_shortcut: window not found' "$FLEDGE" hypr dispatch x 2>"$T/err")"; rc=$?
+check "warning -> exit 0" 0 "$rc"
+check "warning -> nothing on stdout" "" "$out"
+check "warning -> on stderr" "fledge hypr: warning: =[C]:-1: send_shortcut: window not found" "$(cat "$T/err")"
+out="$(STUB_OUT=$'42\nwarning: w' "$FLEDGE" hypr eval x 2>"$T/err")"
+check "warning beside a result: result on stdout" "42" "$out"
+check "warning beside a result: warning on stderr" "fledge hypr: warning: w" "$(cat "$T/err")"
+
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail

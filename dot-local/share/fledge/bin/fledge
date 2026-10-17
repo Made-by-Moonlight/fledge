@@ -8,13 +8,18 @@
 #                                          for building the two above from values
 # hyprctl exits 0 on many refusals (legacy dispatch strings, `keyword`), so
 # its rc is not trusted: rc != 0, or output containing `error:` or one of the
-# refusals below, is a failure (see .superpowers/spikes/hypr-lua/findings.md).
+# refusals below, is a failure (see docs/superpowers/notes/2026-10-17-hyprland-lua-spike.md).
 # The refusals print no `error:` and exit 0, e.g. on the old .conf manager:
 #   "only supported with the lua config manager"  (eval/set)
 #   "Invalid dispatcher"                           (a legacy dispatch string)
 #   "non-legacy parsers"                           (keyword refused)
-# A bare `ok` on success is dropped so binds and scripts stay quiet; other
-# output (eval results) goes to stdout. Exit 1 = failed, 2 = usage.
+# A bare `ok` on success is dropped so binds and scripts stay quiet; `warning:`
+# lines (e.g. send_shortcut's "window not found": Hyprland still exits 0 and
+# did nothing harmful) go to stderr with exit 0; other output (eval results)
+# goes to stdout. Exit 1 = failed, 2 = usage.
+# Limitation: hyprctl prints an eval's return value and its errors on the same
+# stream with nothing to tell them apart, so a successful eval whose returned
+# data contains "error:" is reported as a failure. Don't return such text.
 # HYPRCTL overrides the binary (tests).
 set -euo pipefail
 
@@ -37,7 +42,11 @@ hyprctl_checked() { # <hyprctl args...>
     printf 'fledge hypr: %s\n' "$out" >&2
     exit 1
   fi
-  [[ -z "$out" || "$out" == ok ]] || printf '%s\n' "$out"
+  [[ -z "$out" || "$out" == ok ]] && return 0
+  local line
+  while IFS= read -r line; do
+    if [[ $line == warning:* ]]; then printf 'fledge hypr: %s\n' "$line" >&2; else printf '%s\n' "$line"; fi
+  done <<<"$out"
 }
 
 # A double-quoted Lua string, escaped like mbm's lib/lua.jq: \ and " and newline,
