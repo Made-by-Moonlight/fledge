@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "binds": {
     "apps.terminal": { "mods": "SUPER", "key": "RETURN", "label": "Terminal", "group": "Apps",
                        "action": { "exec": "uwsm app -- $TERMINAL" } },
@@ -8,11 +8,11 @@
     "media.volume-up": { "mods": "", "key": "XF86AudioRaiseVolume", "flags": "el", "label": "Volume up", "group": "Media",
                          "action": { "shell": "osd.volume +5" } },
     "windows.resize": { "mods": "SUPER", "key": "mouse:273", "flags": "m", "label": "Resize window", "group": "Windows",
-                      "action": { "dispatch": "resizewindow" } },
+                      "action": { "dsp": "window.resize" } },
     "windows.next": { "mods": "ALT", "key": "TAB", "label": "Focus on next window", "group": "Windows",
-                      "action": [ { "dispatch": "cyclenext" }, { "dispatch": "bringactivetotop" } ] },
+                      "action": [ { "dsp": "window.cycle_next" }, { "dsp": "window.bring_to_top" } ] },
     "windows.workspace-1": { "mods": "SUPER", "key": "code:10", "label": "Switch to workspace 1", "group": "Windows",
-                             "action": { "dispatch": "workspace 1" } }
+                             "action": { "dsp": "focus", "args": { "workspace": 1 } } }
   },
   "displays": {
     "DP-1": { "mode": "3440x1440@100", "position": "0x0", "scale": 1 },

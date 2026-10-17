@@ -110,9 +110,9 @@ bad() { # bad <description> <expected message part> <user-json>
 fresh
 check "check: shipped fixture is valid" "" "$("$MBM" settings check 2>&1)"
 bad "unknown top-level key" "unknown setting: foo"            '{"foo": 1}'
-bad "wrong version"         "version must be 1"               '{"version": 2}'
+bad "wrong version"         "version must be 2"               '{"version": 3}'
 bad "duplicate combo"       "use the same keys"               '{"binds":{"custom.1":{"mods":"SUPER","key":"return","label":"Dup","group":"Apps","action":{"exec":"true"}}}}'
-bad "modifier order doesn't hide a clash" "use the same keys" '{"binds":{"custom.1":{"mods":"ALT","key":"TAB","label":"Dup","group":"Windows","action":{"dispatch":"cyclenext"}}}}'
+bad "modifier order doesn't hide a clash" "use the same keys" '{"binds":{"custom.1":{"mods":"ALT","key":"TAB","label":"Dup","group":"Windows","action":{"dsp":"window.cycle_next"}}}}'
 bad "bad modifier"          "bad modifiers"                   '{"binds":{"shell.launcher":{"mods":"SUPR"}}}'
 bad "missing key"           "key is required"                 '{"binds":{"shell.launcher":{"key":""}}}'
 bad "comma in label"        "without commas"                  '{"binds":{"shell.launcher":{"label":"Launch, now"}}}'
@@ -200,10 +200,10 @@ good "wallpaper: moonrise sentinel for a monitor" '{"wallpaper":{"image":"/x/a.p
 good "clock format 0"  '{"bar":{"clockFormat":0}}'
 good "clock format 3"  '{"bar":{"clockFormat":3}}'
 good "code: key"       '{"binds":{"custom.1":{"mods":"SUPER","key":"code:11","label":"A","group":"Apps","action":{"exec":"a"}}}}'
-good "mouse: key"      '{"binds":{"custom.1":{"mods":"SUPER","key":"mouse:272","flags":"m","label":"A","group":"Apps","action":{"dispatch":"movewindow"}}}}'
+good "mouse: key"      '{"binds":{"custom.1":{"mods":"SUPER","key":"mouse:272","flags":"m","label":"A","group":"Apps","action":{"dsp":"window.drag"}}}}'
 good "switch: key"     '{"binds":{"custom.1":{"mods":"","key":"switch:on:Lid Switch","flags":"l","label":"A","group":"Apps","action":{"exec":"a"}}}}'
 good "empty mods"      '{"binds":{"custom.1":{"mods":"","key":"F12","label":"A","group":"Apps","action":{"exec":"a"}}}}'
-good "multi-action"    '{"binds":{"custom.1":{"mods":"SUPER","key":"F11","label":"A","group":"Apps","action":[{"exec":"a"},{"dispatch":"cyclenext"}]}}}'
+good "multi-action"    '{"binds":{"custom.1":{"mods":"SUPER","key":"F11","label":"A","group":"Apps","action":[{"exec":"a"},{"dsp":"window.cycle_next"}]}}}'
 good "workspace: desc monitor with spaces" '{"workspaces":{"3":{"monitor":"desc:Some Maker Model 0x1","persistent":false}}}'
 good "workspace: connector name"  '{"workspaces":{"3":{"monitor":"HDMI-A-1"}}}'
 

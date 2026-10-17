@@ -1,5 +1,5 @@
 {
-  "version": 1,
+  "version": 2,
   "displays": {
     "DP-1": {
       "mode": "3440x1440@100",
@@ -352,7 +352,12 @@
       "label": "Universal copy",
       "group": "Clipboard",
       "action": {
-        "dispatch": "sendshortcut CTRL, Insert, activewindow"
+        "dsp": "send_shortcut",
+        "args": {
+          "mods": "CTRL",
+          "key": "Insert",
+          "window": "activewindow"
+        }
       }
     },
     "clipboard.universal-paste": {
@@ -361,7 +366,12 @@
       "label": "Universal paste",
       "group": "Clipboard",
       "action": {
-        "dispatch": "sendshortcut SHIFT, Insert, activewindow"
+        "dsp": "send_shortcut",
+        "args": {
+          "mods": "SHIFT",
+          "key": "Insert",
+          "window": "activewindow"
+        }
       }
     },
     "clipboard.universal-cut": {
@@ -370,7 +380,12 @@
       "label": "Universal cut",
       "group": "Clipboard",
       "action": {
-        "dispatch": "sendshortcut CTRL, X, activewindow"
+        "dsp": "send_shortcut",
+        "args": {
+          "mods": "CTRL",
+          "key": "X",
+          "window": "activewindow"
+        }
       }
     },
     "clipboard.clipboard-manager": {
@@ -388,7 +403,7 @@
       "label": "Close window",
       "group": "Windows",
       "action": {
-        "dispatch": "killactive"
+        "dsp": "window.close"
       }
     },
     "windows.close-all-windows": {
@@ -406,7 +421,8 @@
       "label": "Toggle window split",
       "group": "Windows",
       "action": {
-        "dispatch": "layoutmsg togglesplit"
+        "dsp": "layout",
+        "args": "togglesplit"
       }
     },
     "windows.pseudo-window": {
@@ -415,7 +431,7 @@
       "label": "Pseudo window",
       "group": "Windows",
       "action": {
-        "dispatch": "pseudo"
+        "dsp": "window.pseudo"
       }
     },
     "windows.toggle-window-floating-tiling": {
@@ -424,7 +440,10 @@
       "label": "Toggle window floating/tiling",
       "group": "Windows",
       "action": {
-        "dispatch": "togglefloating"
+        "dsp": "window.float",
+        "args": {
+          "action": "toggle"
+        }
       }
     },
     "windows.full-screen": {
@@ -433,7 +452,7 @@
       "label": "Full screen",
       "group": "Windows",
       "action": {
-        "dispatch": "fullscreen 0"
+        "dsp": "window.fullscreen"
       }
     },
     "windows.tiled-full-screen": {
@@ -442,7 +461,11 @@
       "label": "Tiled full screen",
       "group": "Windows",
       "action": {
-        "dispatch": "fullscreenstate 0 2"
+        "dsp": "window.fullscreen_state",
+        "args": {
+          "internal": 0,
+          "client": 2
+        }
       }
     },
     "windows.full-width": {
@@ -451,7 +474,10 @@
       "label": "Full width",
       "group": "Windows",
       "action": {
-        "dispatch": "fullscreen 1"
+        "dsp": "window.fullscreen",
+        "args": {
+          "mode": "maximized"
+        }
       }
     },
     "windows.pop-window-out-float-pin": {
@@ -478,7 +504,10 @@
       "label": "Focus on left window",
       "group": "Windows",
       "action": {
-        "dispatch": "movefocus l"
+        "dsp": "focus",
+        "args": {
+          "direction": "left"
+        }
       }
     },
     "windows.focus-on-right-window": {
@@ -487,7 +516,10 @@
       "label": "Focus on right window",
       "group": "Windows",
       "action": {
-        "dispatch": "movefocus r"
+        "dsp": "focus",
+        "args": {
+          "direction": "right"
+        }
       }
     },
     "windows.focus-on-above-window": {
@@ -496,7 +528,10 @@
       "label": "Focus on above window",
       "group": "Windows",
       "action": {
-        "dispatch": "movefocus u"
+        "dsp": "focus",
+        "args": {
+          "direction": "up"
+        }
       }
     },
     "windows.focus-on-below-window": {
@@ -505,7 +540,10 @@
       "label": "Focus on below window",
       "group": "Windows",
       "action": {
-        "dispatch": "movefocus d"
+        "dsp": "focus",
+        "args": {
+          "direction": "down"
+        }
       }
     },
     "windows.switch-to-workspace-1": {
@@ -514,7 +552,10 @@
       "label": "Switch to workspace 1",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 1"
+        "dsp": "focus",
+        "args": {
+          "workspace": 1
+        }
       }
     },
     "windows.switch-to-workspace-2": {
@@ -523,7 +564,10 @@
       "label": "Switch to workspace 2",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 2"
+        "dsp": "focus",
+        "args": {
+          "workspace": 2
+        }
       }
     },
     "windows.switch-to-workspace-3": {
@@ -532,7 +576,10 @@
       "label": "Switch to workspace 3",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 3"
+        "dsp": "focus",
+        "args": {
+          "workspace": 3
+        }
       }
     },
     "windows.switch-to-workspace-4": {
@@ -541,7 +588,10 @@
       "label": "Switch to workspace 4",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 4"
+        "dsp": "focus",
+        "args": {
+          "workspace": 4
+        }
       }
     },
     "windows.switch-to-workspace-5": {
@@ -550,7 +600,10 @@
       "label": "Switch to workspace 5",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 5"
+        "dsp": "focus",
+        "args": {
+          "workspace": 5
+        }
       }
     },
     "windows.switch-to-workspace-6": {
@@ -559,7 +612,10 @@
       "label": "Switch to workspace 6",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 6"
+        "dsp": "focus",
+        "args": {
+          "workspace": 6
+        }
       }
     },
     "windows.switch-to-workspace-7": {
@@ -568,7 +624,10 @@
       "label": "Switch to workspace 7",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 7"
+        "dsp": "focus",
+        "args": {
+          "workspace": 7
+        }
       }
     },
     "windows.switch-to-workspace-8": {
@@ -577,7 +636,10 @@
       "label": "Switch to workspace 8",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 8"
+        "dsp": "focus",
+        "args": {
+          "workspace": 8
+        }
       }
     },
     "windows.switch-to-workspace-9": {
@@ -586,7 +648,10 @@
       "label": "Switch to workspace 9",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 9"
+        "dsp": "focus",
+        "args": {
+          "workspace": 9
+        }
       }
     },
     "windows.switch-to-workspace-10": {
@@ -595,7 +660,10 @@
       "label": "Switch to workspace 10",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace 10"
+        "dsp": "focus",
+        "args": {
+          "workspace": 10
+        }
       }
     },
     "windows.move-window-to-workspace-1": {
@@ -604,7 +672,10 @@
       "label": "Move window to workspace 1",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 1"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 1
+        }
       }
     },
     "windows.move-window-to-workspace-2": {
@@ -613,7 +684,10 @@
       "label": "Move window to workspace 2",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 2"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 2
+        }
       }
     },
     "windows.move-window-to-workspace-3": {
@@ -622,7 +696,10 @@
       "label": "Move window to workspace 3",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 3"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 3
+        }
       }
     },
     "windows.move-window-to-workspace-4": {
@@ -631,7 +708,10 @@
       "label": "Move window to workspace 4",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 4"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 4
+        }
       }
     },
     "windows.move-window-to-workspace-5": {
@@ -640,7 +720,10 @@
       "label": "Move window to workspace 5",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 5"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 5
+        }
       }
     },
     "windows.move-window-to-workspace-6": {
@@ -649,7 +732,10 @@
       "label": "Move window to workspace 6",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 6"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 6
+        }
       }
     },
     "windows.move-window-to-workspace-7": {
@@ -658,7 +744,10 @@
       "label": "Move window to workspace 7",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 7"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 7
+        }
       }
     },
     "windows.move-window-to-workspace-8": {
@@ -667,7 +756,10 @@
       "label": "Move window to workspace 8",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 8"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 8
+        }
       }
     },
     "windows.move-window-to-workspace-9": {
@@ -676,7 +768,10 @@
       "label": "Move window to workspace 9",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 9"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 9
+        }
       }
     },
     "windows.move-window-to-workspace-10": {
@@ -685,7 +780,10 @@
       "label": "Move window to workspace 10",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspace 10"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 10
+        }
       }
     },
     "windows.move-window-silently-to-workspace-1": {
@@ -694,7 +792,11 @@
       "label": "Move window silently to workspace 1",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 1"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 1,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-2": {
@@ -703,7 +805,11 @@
       "label": "Move window silently to workspace 2",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 2"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 2,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-3": {
@@ -712,7 +818,11 @@
       "label": "Move window silently to workspace 3",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 3"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 3,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-4": {
@@ -721,7 +831,11 @@
       "label": "Move window silently to workspace 4",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 4"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 4,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-5": {
@@ -730,7 +844,11 @@
       "label": "Move window silently to workspace 5",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 5"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 5,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-6": {
@@ -739,7 +857,11 @@
       "label": "Move window silently to workspace 6",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 6"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 6,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-7": {
@@ -748,7 +870,11 @@
       "label": "Move window silently to workspace 7",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 7"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 7,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-8": {
@@ -757,7 +883,11 @@
       "label": "Move window silently to workspace 8",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 8"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 8,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-9": {
@@ -766,7 +896,11 @@
       "label": "Move window silently to workspace 9",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 9"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 9,
+          "follow": false
+        }
       }
     },
     "windows.move-window-silently-to-workspace-10": {
@@ -775,7 +909,11 @@
       "label": "Move window silently to workspace 10",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent 10"
+        "dsp": "window.move",
+        "args": {
+          "workspace": 10,
+          "follow": false
+        }
       }
     },
     "windows.toggle-scratchpad": {
@@ -784,7 +922,8 @@
       "label": "Toggle scratchpad",
       "group": "Windows",
       "action": {
-        "dispatch": "togglespecialworkspace scratchpad"
+        "dsp": "workspace.toggle_special",
+        "args": "scratchpad"
       }
     },
     "windows.move-window-to-scratchpad": {
@@ -793,7 +932,11 @@
       "label": "Move window to scratchpad",
       "group": "Windows",
       "action": {
-        "dispatch": "movetoworkspacesilent special:scratchpad"
+        "dsp": "window.move",
+        "args": {
+          "workspace": "special:scratchpad",
+          "follow": false
+        }
       }
     },
     "windows.next-workspace": {
@@ -802,7 +945,10 @@
       "label": "Next workspace",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace e+1"
+        "dsp": "focus",
+        "args": {
+          "workspace": "e+1"
+        }
       }
     },
     "windows.previous-workspace": {
@@ -811,7 +957,10 @@
       "label": "Previous workspace",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace e-1"
+        "dsp": "focus",
+        "args": {
+          "workspace": "e-1"
+        }
       }
     },
     "windows.former-workspace": {
@@ -820,7 +969,10 @@
       "label": "Former workspace",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace previous"
+        "dsp": "focus",
+        "args": {
+          "workspace": "previous"
+        }
       }
     },
     "windows.move-workspace-to-left-monitor": {
@@ -829,7 +981,10 @@
       "label": "Move workspace to left monitor",
       "group": "Windows",
       "action": {
-        "dispatch": "movecurrentworkspacetomonitor l"
+        "dsp": "workspace.move",
+        "args": {
+          "monitor": "l"
+        }
       }
     },
     "windows.move-workspace-to-right-monitor": {
@@ -838,7 +993,10 @@
       "label": "Move workspace to right monitor",
       "group": "Windows",
       "action": {
-        "dispatch": "movecurrentworkspacetomonitor r"
+        "dsp": "workspace.move",
+        "args": {
+          "monitor": "r"
+        }
       }
     },
     "windows.move-workspace-to-up-monitor": {
@@ -847,7 +1005,10 @@
       "label": "Move workspace to up monitor",
       "group": "Windows",
       "action": {
-        "dispatch": "movecurrentworkspacetomonitor u"
+        "dsp": "workspace.move",
+        "args": {
+          "monitor": "u"
+        }
       }
     },
     "windows.move-workspace-to-down-monitor": {
@@ -856,7 +1017,10 @@
       "label": "Move workspace to down monitor",
       "group": "Windows",
       "action": {
-        "dispatch": "movecurrentworkspacetomonitor d"
+        "dsp": "workspace.move",
+        "args": {
+          "monitor": "d"
+        }
       }
     },
     "windows.swap-window-to-the-left": {
@@ -865,7 +1029,10 @@
       "label": "Swap window to the left",
       "group": "Windows",
       "action": {
-        "dispatch": "swapwindow l"
+        "dsp": "window.swap",
+        "args": {
+          "direction": "left"
+        }
       }
     },
     "windows.swap-window-to-the-right": {
@@ -874,7 +1041,10 @@
       "label": "Swap window to the right",
       "group": "Windows",
       "action": {
-        "dispatch": "swapwindow r"
+        "dsp": "window.swap",
+        "args": {
+          "direction": "right"
+        }
       }
     },
     "windows.swap-window-up": {
@@ -883,7 +1053,10 @@
       "label": "Swap window up",
       "group": "Windows",
       "action": {
-        "dispatch": "swapwindow u"
+        "dsp": "window.swap",
+        "args": {
+          "direction": "up"
+        }
       }
     },
     "windows.swap-window-down": {
@@ -892,7 +1065,10 @@
       "label": "Swap window down",
       "group": "Windows",
       "action": {
-        "dispatch": "swapwindow d"
+        "dsp": "window.swap",
+        "args": {
+          "direction": "down"
+        }
       }
     },
     "windows.focus-on-next-window": {
@@ -902,10 +1078,10 @@
       "group": "Windows",
       "action": [
         {
-          "dispatch": "cyclenext"
+          "dsp": "window.cycle_next"
         },
         {
-          "dispatch": "bringactivetotop"
+          "dsp": "window.bring_to_top"
         }
       ]
     },
@@ -916,10 +1092,11 @@
       "group": "Windows",
       "action": [
         {
-          "dispatch": "cyclenext prev"
+          "dsp": "window.cycle_next",
+          "args": false
         },
         {
-          "dispatch": "bringactivetotop"
+          "dsp": "window.bring_to_top"
         }
       ]
     },
@@ -929,7 +1106,10 @@
       "label": "Focus on next monitor",
       "group": "Windows",
       "action": {
-        "dispatch": "focusmonitor +1"
+        "dsp": "focus",
+        "args": {
+          "monitor": "+1"
+        }
       }
     },
     "windows.focus-on-previous-monitor": {
@@ -938,7 +1118,10 @@
       "label": "Focus on previous monitor",
       "group": "Windows",
       "action": {
-        "dispatch": "focusmonitor -1"
+        "dsp": "focus",
+        "args": {
+          "monitor": "-1"
+        }
       }
     },
     "windows.expand-window-left": {
@@ -947,7 +1130,12 @@
       "label": "Expand window left",
       "group": "Windows",
       "action": {
-        "dispatch": "resizeactive -100 0"
+        "dsp": "window.resize",
+        "args": {
+          "x": -100,
+          "y": 0,
+          "relative": true
+        }
       }
     },
     "windows.shrink-window-left": {
@@ -956,7 +1144,12 @@
       "label": "Shrink window left",
       "group": "Windows",
       "action": {
-        "dispatch": "resizeactive 100 0"
+        "dsp": "window.resize",
+        "args": {
+          "x": 100,
+          "y": 0,
+          "relative": true
+        }
       }
     },
     "windows.shrink-window-up": {
@@ -965,7 +1158,12 @@
       "label": "Shrink window up",
       "group": "Windows",
       "action": {
-        "dispatch": "resizeactive 0 -100"
+        "dsp": "window.resize",
+        "args": {
+          "x": 0,
+          "y": -100,
+          "relative": true
+        }
       }
     },
     "windows.expand-window-down": {
@@ -974,7 +1172,12 @@
       "label": "Expand window down",
       "group": "Windows",
       "action": {
-        "dispatch": "resizeactive 0 100"
+        "dsp": "window.resize",
+        "args": {
+          "x": 0,
+          "y": 100,
+          "relative": true
+        }
       }
     },
     "windows.scroll-active-workspace-forward": {
@@ -983,7 +1186,10 @@
       "label": "Scroll active workspace forward",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace e+1"
+        "dsp": "focus",
+        "args": {
+          "workspace": "e+1"
+        }
       }
     },
     "windows.scroll-active-workspace-backward": {
@@ -992,7 +1198,10 @@
       "label": "Scroll active workspace backward",
       "group": "Windows",
       "action": {
-        "dispatch": "workspace e-1"
+        "dsp": "focus",
+        "args": {
+          "workspace": "e-1"
+        }
       }
     },
     "windows.move-window": {
@@ -1001,7 +1210,7 @@
       "label": "Move window",
       "group": "Windows",
       "action": {
-        "dispatch": "movewindow"
+        "dsp": "window.drag"
       },
       "flags": "m"
     },
@@ -1011,7 +1220,7 @@
       "label": "Resize window",
       "group": "Windows",
       "action": {
-        "dispatch": "resizewindow"
+        "dsp": "window.resize"
       },
       "flags": "m"
     },
@@ -1021,7 +1230,7 @@
       "label": "Toggle window grouping",
       "group": "Windows",
       "action": {
-        "dispatch": "togglegroup"
+        "dsp": "group.toggle"
       }
     },
     "windows.move-active-window-out-of-group": {
@@ -1030,7 +1239,10 @@
       "label": "Move active window out of group",
       "group": "Windows",
       "action": {
-        "dispatch": "moveoutofgroup"
+        "dsp": "window.move",
+        "args": {
+          "out_of_group": true
+        }
       }
     },
     "windows.move-window-to-group-on-left": {
@@ -1039,7 +1251,10 @@
       "label": "Move window to group on left",
       "group": "Windows",
       "action": {
-        "dispatch": "moveintogroup l"
+        "dsp": "window.move",
+        "args": {
+          "into_group": "l"
+        }
       }
     },
     "windows.move-window-to-group-on-right": {
@@ -1048,7 +1263,10 @@
       "label": "Move window to group on right",
       "group": "Windows",
       "action": {
-        "dispatch": "moveintogroup r"
+        "dsp": "window.move",
+        "args": {
+          "into_group": "r"
+        }
       }
     },
     "windows.move-window-to-group-on-top": {
@@ -1057,7 +1275,10 @@
       "label": "Move window to group on top",
       "group": "Windows",
       "action": {
-        "dispatch": "moveintogroup u"
+        "dsp": "window.move",
+        "args": {
+          "into_group": "u"
+        }
       }
     },
     "windows.move-window-to-group-on-bottom": {
@@ -1066,7 +1287,10 @@
       "label": "Move window to group on bottom",
       "group": "Windows",
       "action": {
-        "dispatch": "moveintogroup d"
+        "dsp": "window.move",
+        "args": {
+          "into_group": "d"
+        }
       }
     },
     "windows.next-window-in-group": {
@@ -1075,7 +1299,7 @@
       "label": "Next window in group",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive f"
+        "dsp": "group.next"
       }
     },
     "windows.previous-window-in-group": {
@@ -1084,7 +1308,7 @@
       "label": "Previous window in group",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive b"
+        "dsp": "group.prev"
       }
     },
     "windows.move-grouped-window-focus-left": {
@@ -1093,7 +1317,7 @@
       "label": "Move grouped window focus left",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive b"
+        "dsp": "group.prev"
       }
     },
     "windows.move-grouped-window-focus-right": {
@@ -1102,7 +1326,7 @@
       "label": "Move grouped window focus right",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive f"
+        "dsp": "group.next"
       }
     },
     "windows.next-window-in-group-2": {
@@ -1111,7 +1335,7 @@
       "label": "Next window in group",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive f"
+        "dsp": "group.next"
       }
     },
     "windows.previous-window-in-group-2": {
@@ -1120,7 +1344,7 @@
       "label": "Previous window in group",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive b"
+        "dsp": "group.prev"
       }
     },
     "windows.switch-to-group-window-1": {
@@ -1129,7 +1353,10 @@
       "label": "Switch to group window 1",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive 1"
+        "dsp": "group.active",
+        "args": {
+          "index": 1
+        }
       }
     },
     "windows.switch-to-group-window-2": {
@@ -1138,7 +1365,10 @@
       "label": "Switch to group window 2",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive 2"
+        "dsp": "group.active",
+        "args": {
+          "index": 2
+        }
       }
     },
     "windows.switch-to-group-window-3": {
@@ -1147,7 +1377,10 @@
       "label": "Switch to group window 3",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive 3"
+        "dsp": "group.active",
+        "args": {
+          "index": 3
+        }
       }
     },
     "windows.switch-to-group-window-4": {
@@ -1156,7 +1389,10 @@
       "label": "Switch to group window 4",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive 4"
+        "dsp": "group.active",
+        "args": {
+          "index": 4
+        }
       }
     },
     "windows.switch-to-group-window-5": {
@@ -1165,7 +1401,10 @@
       "label": "Switch to group window 5",
       "group": "Windows",
       "action": {
-        "dispatch": "changegroupactive 5"
+        "dsp": "group.active",
+        "args": {
+          "index": 5
+        }
       }
     },
     "windows.cycle-monitor-scaling": {
@@ -1708,7 +1947,8 @@
       "label": "Game workspace",
       "group": "Apps",
       "action": {
-        "dispatch": "togglespecialworkspace game"
+        "dsp": "workspace.toggle_special",
+        "args": "game"
       }
     },
     "apps.youtube": {

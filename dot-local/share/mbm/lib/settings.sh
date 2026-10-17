@@ -42,11 +42,30 @@ user_json() { # the overrides, or {} when there are none
     content="$(<"$MBM_USER")" || die "cannot read $MBM_USER"
   fi
   if [[ -n ${content//[[:space:]]/} ]]; then
-    jq -e 'if type == "object" then . else error("not an object") end' "$MBM_USER" 2>/dev/null \
+    content="$(jq -e 'if type == "object" then . else error("not an object") end' "$MBM_USER" 2>/dev/null)" \
       || die "$MBM_USER is not a valid JSON object"
+    migrate_user_file "$content"
   else
     echo '{}'
   fi
+}
+
+# migrate_user_file <user-json>: prints the overrides as settings v2. A v1 file
+# (legacy {"dispatch": "…"} strings, which Hyprland's Lua config can't run) is
+# converted and written back once, keeping the original as settings.json.v1.
+# Whatever the table can't convert stays as {dispatch}; `check` names it.
+migrate_user_file() {
+  local lib="$MBM_ROOT/lib" out count
+  if [[ $(jq -L "$lib" 'include "migrate-dispatch"; needs_migration' <<<"$1") != true ]]; then
+    printf '%s\n' "$1"
+    return
+  fi
+  out="$(jq -L "$lib" 'include "migrate-dispatch"; migrate_user' <<<"$1")" || die "could not migrate $MBM_USER"
+  count="$(jq '.count' <<<"$out")"
+  cp -p "$MBM_USER" "$MBM_USER.v1" || die "could not back up $MBM_USER"
+  jq '.settings' <<<"$out" | atomic_write "$MBM_USER" || die "could not write $MBM_USER"
+  printf 'mbm: migrated %s binds to settings v2 (backup: %s)\n' "$count" "$MBM_USER.v1" >&2
+  jq '.settings' <<<"$out"
 }
 
 # merge <user-json>: defaults * overrides; a bind or workspace overridden with null is removed.
@@ -65,7 +84,7 @@ merged_json() {
 # check_json <merged-json>: 0 when valid; one problem per line on stderr.
 check_json() {
   local errs
-  errs="$(jq -r -f "$MBM_ROOT/lib/check.jq" <<<"$1")" || return 1
+  errs="$(jq -r --slurpfile dsp "$MBM_ROOT/lib/dsp-names.json" -f "$MBM_ROOT/lib/check.jq" <<<"$1")" || return 1
   [[ -z $errs ]] && return 0
   printf '%s\n' "$errs" >&2
   return 1

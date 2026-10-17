@@ -1,4 +1,5 @@
-# Input: merged settings. Output: one string per problem; nothing = valid.
+# Input: merged settings (and --slurpfile dsp dsp-names.json). Output: one string
+# per problem; nothing = valid.
 # Kept in step with the schema in docs/superpowers/specs/2026-10-10-mbm-shell-design.md.
 
 def isint: type == "number" and . == floor;
@@ -6,10 +7,24 @@ def str_matches($re): type == "string" and test($re);
 def unknown($allowed; $where): (keys - $allowed)[] | "\($where): unknown field \(.)";
 def mods_list: split(" ") | map(select(. != ""));
 def mods_ok: type == "string" and (mods_list | all(IN("SUPER", "SHIFT", "CTRL", "ALT", "MOD2", "MOD3", "MOD5")));
-def action_ok:
-  type == "object"
-  and ((keys - ["shell", "dispatch", "exec"]) | length) == 0
-  and ([.shell, .dispatch, .exec] | map(select(. != null)) | length == 1 and (.[0] | type == "string" and length > 0));
+def scalar: type | IN("string", "number", "boolean");
+# One action: {exec}, {shell} or {dsp[, args]}. Problems as text, nothing = valid.
+# args is a positional value (layout("togglesplit")) or a one-level table of
+# scalars, the shapes the generator can render as a Lua argument.
+def action_problems($id):
+  if type == "object" and keys == ["dispatch"] then
+    "binds.\($id): can't convert dispatcher \(.dispatch | tojson); rewrite it as {dsp, args}"
+  elif type != "object" or ((keys - ["exec", "shell", "dsp", "args"]) | length) > 0
+       or ([has("exec"), has("shell"), has("dsp")] | map(select(.)) | length) != 1
+       or (has("args") and (has("dsp") | not)) then
+    "binds.\($id): action must be one of {exec}, {shell}, {dsp[, args]} (or a list of them)"
+  elif has("dsp") then
+    if (.dsp | type == "string" and IN($dsp[0].names[])) | not then "binds.\($id): unknown dispatcher \(.dsp | tojson)"
+    elif has("args") and (.args | scalar or (type == "object" and all(.[]; scalar)) | not) then
+      "binds.\($id): args for \(.dsp) must be text, a number, true/false or an object of those"
+    else empty end
+  elif (.exec // .shell | type == "string" and length > 0) then empty
+  else "binds.\($id): action must be one of {exec}, {shell}, {dsp[, args]} (or a list of them)" end;
 # What Hyprland treats as "the same keys": modifiers in any order, key case-insensitively, same flags.
 def combo: (.mods | mods_list | sort | join("+")) + "+" + (.key | ascii_downcase)
            + "/" + ((.flags // "") | gsub("d"; "") | split("") | sort | join(""));
@@ -24,8 +39,9 @@ def check_bind($id):
       (if ($b.flags // "" | str_matches("^[elrnmtisp]*$")) then empty else "binds.\($id): bad flags \($b.flags | tojson)" end),
       (if ($b.label | type == "string" and (test(",") | not)) then empty else "binds.\($id): label must be a string without commas" end),
       (if ($b.group | type == "string") then empty else "binds.\($id): group is required" end),
-      (if ($b.action | if type == "array" then length > 0 and all(action_ok) else action_ok end) then empty
-       else "binds.\($id): action must be one of {shell}, {dispatch}, {exec} (or a list of them)" end)
+      ($b.action | if type == "array" and length > 0 then .[] | action_problems($id)
+                   elif type == "array" then "binds.\($id): action must be one of {exec}, {shell}, {dsp[, args]} (or a list of them)"
+                   else action_problems($id) end)
     end;
 
 def check_display($name):
@@ -62,7 +78,7 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
 
 ((keys - ["version", "binds", "displays", "workspaces", "wallpaper", "bar", "launcher", "notifications", "idle", "input"])[] | "unknown setting: \(.)"),
 
-(if .version != 1 then "version must be 1 (got \(.version | tojson))" else empty end),
+(if .version != 2 then "version must be 2 (got \(.version | tojson))" else empty end),
 
 (.binds // {} | to_entries[] | .key as $id | .value | check_bind($id)),
 
