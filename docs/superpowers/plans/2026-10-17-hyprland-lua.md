@@ -8,7 +8,7 @@
 
 **Tech Stack:** Hyprland 0.56.2 Lua API (`hl.*`, stubs at `/usr/share/hypr/stubs/hl.meta.lua`), bash, jq, Quickshell 0.3.2 QML, `luac -p` for syntax checks, archiso.
 
-**Spec:** `docs/superpowers/specs/2026-10-17-hyprland-lua-design.md`. **Spike evidence (read it):** `.superpowers/spikes/hypr-lua/findings.md`.
+**Spec:** `docs/superpowers/specs/2026-10-17-hyprland-lua-design.md`. **Spike evidence (read it):** `docs/superpowers/notes/2026-10-17-hyprland-lua-spike.md`.
 
 ## Global Constraints
 

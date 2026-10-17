@@ -3,7 +3,7 @@
 **Date:** 2026-10-17
 **Status:** implemented on `hypr-lua` (plan `docs/superpowers/plans/2026-10-17-hyprland-lua.md`); verified end to end in the VM (desktop, rebuilt ISO live session, fresh install). Amendments made during implementation are marked **Amended**.
 **Branch:** `hypr-lua` (from `main` with the graphical installer merged)
-**Evidence:** `.superpowers/spikes/hypr-lua/findings.md` (spike run in the VM on Hyprland 0.56.2)
+**Evidence:** `docs/superpowers/notes/2026-10-17-hyprland-lua-spike.md` (spike run in the VM on Hyprland 0.56.2; the key facts are under Problem below)
 
 ## Problem
 
@@ -76,8 +76,9 @@ fledge/misc.lua       anything left: xdph, hyprsunset hooks, allow_session_lock_
 fledge/load.lua       the guarded loader (below)
 ```
 
-`hyprland.lua` order, matching today's `source` order: envs → looknfeel → rules
-→ theme → generated (binds, monitors, workspaces, input) → autostart. Later
+`hyprland.lua` order (**Amended** to what is built): envs → looknfeel → misc →
+rules → theme → binds (or the safety net, below) → input → monitors →
+workspaces → toggles (`~/.local/state/hypr-toggles/*.lua`) → autostart. Later
 `hl.config` calls override earlier ones, as later `source`s did.
 
 Deleted: `hyprland.conf`, every other `dot-config/hypr/*.conf`,
@@ -105,6 +106,14 @@ stay; check each before deleting.
   through a git pull or restow), so even that isn't emergency mode.
 - Paths: generated files live in `~/.local/state/mbm/hypr/`, loaded with
   `dofile` via an absolute path built from `os.getenv("HOME")`.
+
+- **Amended:** inside a file, one refused call costs only itself. `binds.lua`
+  wraps each `hl.bind` (and the submap) in `pcall` and `fledge/rules.lua` each
+  rule; what failed is listed once in a `fledge: binds.lua: …` /
+  `fledge: rules.lua: …` notification (and stderr). If `binds.lua` is missing
+  or fails to load, `hyprland.lua` binds a safety net: Super+Return terminal,
+  Super+Space launcher, Super+K keybind settings, Super+Escape system menu,
+  Super+M exit.
 
 `hyprland.lua` itself must stay tiny and syntax-checked in CI: an error there
 is emergency mode (SUPER+Q terminal, SUPER+R run, SUPER+M exit).
@@ -160,7 +169,14 @@ overrides with a translation table (the spike's dispatcher table, held in
 `lib/migrate-dispatch.jq`), writes the file back atomically with
 `"version": 2`, keeps a backup `settings.json.v1`, and prints what it
 converted. A string it can't translate is left as `{"dispatch": …}` and
-reported by `check` as an error naming the bind; it is never dropped. The
+reported by `check` as an error naming the bind; it is never dropped.
+**Amended:** `exec [rules] cmd` is left unconverted too (`{exec}` has no place
+for rules). The v1 defaults' two zoom commands (`hyprctl keyword
+cursor:zoom_factor …`) are mapped, as exact strings, to their `fledge hypr`
+forms. `check` (and the keybind editor's command field) reject any other
+`exec`/`shell` command running legacy IPC (`hyprctl keyword`, `--batch`/`-b`,
+`dispatch` + a legacy string), naming the bind; CI's
+`cachyos/check-legacy-ipc.sh` fails on such calls in the code. The
 shipped defaults are rewritten to version 2 by hand in this branch (89 binds,
 24 dispatcher kinds), and the migration is tested against them: migrating the
 old defaults must equal the new defaults.
@@ -244,7 +260,11 @@ returning `{ activeBorderColor = "rgb(f4af03)", … }` from the same template
 values; `hyprland.lua` loads it with the guarded loader and applies the
 colours to `general.col.active_border` and `group.col.border_active`. The
 `.conf` theme file is no longer read by Hyprland (kept only if other tools use
-it; checked during implementation).
+it; checked during implementation). **Amended:** a theme may ship its own
+`hyprland.lua` (returning the table, and calling `hl.config` for more); the
+leftover Omarchy themes gruvu and pandora were removed instead of ported, so
+made-by-moonlight (rendered from the template) is the only theme.
+`slievr-theme-set-templates` finds the vendored templates without `$OMARCHY_PATH`.
 
 ## Side fix
 
@@ -264,10 +284,20 @@ which is the repo through the stow fold, and rewrites it whenever it is
 removed while that session runs. So bootstrap removes it only when it is
 untracked, carries the marker in its first 200 bytes and no `.conf` session is
 running, and `fledge/autostart.lua` removes it (same marker check) at the
-first Lua login. A user's own `hyprland.conf` is never touched. A running `.conf`
-session keeps working until then, except that `mbm settings apply` no longer
-writes `.conf` fragments: binds edited mid-session take effect at next login
-(stated in bootstrap's output).
+first Lua login. A user's own `hyprland.conf` is never touched.
+
+**Amended:** the running `.conf` session does *not* keep working: the repo is
+stow-folded, so `git pull` deletes `~/.config/hypr/hyprland.conf` at once, and
+the session (autoreload on) loads that stub within seconds: Hyprland's stock
+binds, rules and monitors. Bootstrap detects the `.conf` session (`fledge hypr
+eval` refused with the `.conf` manager's message; any other failure is
+reported as "could not tell") and ends by saying, on stdout and as a critical
+notification, that the session is on Hyprland's fallback config and to log out
+and back in now. It skips Hyprland's SHELL update there (the next login has
+it). The upgrade instructions (README "Upgrade", AGENTS.md) are: `git pull`,
+bootstrap, log out at once, or do both from a TTY. Verified in the VM: a
+`.conf` session, the pull simulated, bootstrap, then a relogin to Lua with the
+stub gone.
 
 ## Testing
 
@@ -279,10 +309,19 @@ writes `.conf` fragments: binds edited mid-session take effect at next login
   else the closest `luac`; add it to CI's tool list).
 - **VM, desktop:** restow + `mbm settings apply` + relogin. `verify-shell.sh`
   gains: Hyprland log says "Using lua config", `hyprctl configerrors` empty, no
-  ".conf format" notification, bind count and descriptions match settings, the
-  `mbm-record` submap exists, window rules apply (settings window floats),
-  a sample of `slievr-*` actions and the zoom binds work, KeyRecorder records a
-  key, lock/idle dpms works.
+  ".conf format" or fledge notification, bind count and descriptions match
+  settings, the `mbm-record` submap exists and `fledge hypr` enters and leaves
+  it, `fledge hypr dispatch|set` work, the settings window floats at 960x680,
+  the zoom binds' commands work, KeyRecorder records a key (a bare F-key typed
+  with wtype), a manual lock turns the screens off (dpms) and unlock on. A
+  broken `binds.lua` (on a reload and across a relogin) leaves only the
+  safety-net binds, a fledge notification, and look and feel, input, monitors
+  and workspace rules intact. **Amended:** `slievr-*` actions are not sampled
+  beyond the night-light toggle; idle dpms is not exercised (it needs real
+  idle time); every sized window rule (localsend 1100x700, PiP 600x338 pinned,
+  floating-window 875x600, settings 960x680) was checked live once. Steam's
+  size rules don't apply because a later rule tiles every Steam window, as on
+  the `.conf` config.
 - **ISO:** rebuild, boot (live session on Lua, no notice, live keyboard switch
   works), full install, `verify-install.sh`.
 - **Amended (verified):** the migration table's less obvious mappings were
@@ -302,5 +341,5 @@ writes `.conf` fragments: binds edited mid-session take effect at next login
   `check.jq` validation and VM checks are the only guard.
 - A syntax error in `hyprland.lua` = emergency mode. Keep it minimal, CI
   syntax-checks it.
-- `size` in one window rule didn't apply in the spike (not chased); check every
-  sized rule in the VM.
+- `size` in one window rule didn't apply in the spike (not chased). **Amended:**
+  every sized rule was checked in the VM and applies (see Testing).
