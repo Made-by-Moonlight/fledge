@@ -19,7 +19,10 @@ def _ws_ok: length > 0 and (test("[,\\s]") | not);
 
 def migrate_dispatch:
   (capture("^\\s*(?<d>\\S+)\\s*(?<r>.*?)\\s*$") // {d: "", r: ""}) as {d: $d, r: $r}
-  | if $d == "exec" and $r != "" then {exec: $r}
+  # `exec [rules] cmd`: {exec} has no place for the rules (hl.dsp.exec_cmd's
+  # second argument), and running "[float] cmd" as a command would fail, so
+  # it is left for the user, like anything else without an exact mapping.
+  | if $d == "exec" and $r != "" and ($r | startswith("[") | not) then {exec: $r}
     elif $d == "workspace" and ($r | _ws_ok) then {dsp: "focus", args: {workspace: ($r | _ws)}}
     elif $d == "movetoworkspace" and ($r | _ws_ok) then {dsp: "window.move", args: {workspace: ($r | _ws)}}
     elif $d == "movetoworkspacesilent" and ($r | _ws_ok) then {dsp: "window.move", args: {workspace: ($r | _ws), follow: false}}

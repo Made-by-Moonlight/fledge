@@ -63,6 +63,8 @@ row "forcerendererreload"        '{"dsp":"force_renderer_reload"}'
 # Anything outside the table (or a known dispatcher with arguments it can't
 # map) is left for the user to rewrite, never guessed.
 row "focuswindow class:kitty"    'null'
+row "exec [float] kitty"         'null'
+row "exec [workspace 2 silent; float] foot -e x" 'null'
 row "movefocus x"                'null'
 row "killactive now"             'null'
 row "resizeactive 10% 0"         'null'
