@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Display the Omarchy logo in the terminal using green color.
+# Clear the terminal and print the fledge wordmark above a terminal tool.
 
+# One line of text, nothing read from disk: Omarchy's version cat'ed a logo
+# file that fledge doesn't ship. Amber is the palette's accent (palette.sh).
 clear
-echo -e "\033[32m"
-cat <~/.local/share/omarchy/logo.txt
-echo -e "\033[0m"
-echo
+printf '\n\033[38;2;244;175;3m  fledge\033[0m\n\n'
