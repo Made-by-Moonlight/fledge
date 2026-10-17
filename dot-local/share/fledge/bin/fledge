@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# fledge: the desktop's CLI. For now only `fledge hypr`, the one place that
+# talks Lua to Hyprland 0.57+:
+#   fledge hypr dispatch '<hl.dsp expr>'   hyprctl dispatch
+#   fledge hypr set '<hl.config body>'     hyprctl eval 'hl.config({ <body> })'
+#   fledge hypr eval '<lua>'               hyprctl eval
+# hyprctl exits 0 on many refusals (legacy dispatch strings, `keyword`), so
+# its rc is not trusted: any `error:` in the output, or rc != 0, is a failure
+# (see .superpowers/spikes/hypr-lua/findings.md). Exit 1 = failed, 2 = usage.
+# HYPRCTL overrides the binary (tests).
+set -euo pipefail
+
+usage() {
+  cat >&2 <<'EOT'
+usage: fledge hypr dispatch '<hl.dsp expression>'
+       fledge hypr set '<hl.config body>'
+       fledge hypr eval '<lua>'
+EOT
+  exit 2
+}
+
+hyprctl_checked() { # <hyprctl args...>
+  local out rc=0
+  out="$("${HYPRCTL:-hyprctl}" "$@" 2>&1)" || rc=$?
+  if ((rc != 0)) || [[ "$out" == *"error:"* ]]; then
+    printf 'fledge hypr: %s\n' "$out" >&2
+    exit 1
+  fi
+  [[ -z "$out" ]] || printf '%s\n' "$out"
+}
+
+[[ $# -ge 1 ]] || usage
+case "$1" in
+  hypr)
+    [[ $# -eq 3 ]] || usage
+    case "$2" in
+      dispatch) hyprctl_checked dispatch "$3" ;;
+      set) hyprctl_checked eval "hl.config({ $3 })" ;;
+      eval) hyprctl_checked eval "$3" ;;
+      *) usage ;;
+    esac
+    ;;
+  *) usage ;;
+esac

@@ -215,6 +215,11 @@ if ! grep -q 'share/mbm/bin' "$UWSM_ENV"; then
   # shellcheck disable=SC2016 # expanded when uwsm sources the file
   echo 'export PATH=$HOME/.local/share/mbm/bin:$PATH' >>"$UWSM_ENV"
 fi
+# After mbm's, so fledge ends up first on PATH (fledge, mbm, slievr-cachy).
+if ! grep -q 'share/fledge/bin' "$UWSM_ENV"; then
+  # shellcheck disable=SC2016 # expanded when uwsm sources the file
+  echo 'export PATH=$HOME/.local/share/fledge/bin:$PATH' >>"$UWSM_ENV"
+fi
 
 # The terminal keybind ($terminal = uwsm app -- $TERMINAL) and
 # $EDITOR need these too. Previously written to ~/.config/uwsm/default,

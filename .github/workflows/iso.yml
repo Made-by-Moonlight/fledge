@@ -38,7 +38,8 @@ jobs:
                    cachyos/iso/test-probe.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
-                   dot-local/share/mbm/test/test-dmenu.sh; do
+                   dot-local/share/mbm/test/test-dmenu.sh \
+                   dot-local/share/fledge/test/test-fledge.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
@@ -51,7 +52,8 @@ jobs:
           mapfile -t files < <(git ls-files 'cachyos/*.sh' 'cachyos/iso/bin/*' \
             'cachyos/iso/configs/airootfs/usr/local/bin/*' \
             'cachyos/iso/configs/airootfs/home/moonlight/.bash_profile' \
-            'dot-local/share/mbm/bin/*' 'dot-local/share/mbm/**/*.sh')
+            'dot-local/share/mbm/bin/*' 'dot-local/share/mbm/**/*.sh' \
+            'dot-local/share/fledge/bin/*' 'dot-local/share/fledge/**/*.sh')
           shellcheck -x -S warning "${files[@]}"
 
   iso:
