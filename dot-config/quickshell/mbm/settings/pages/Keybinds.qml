@@ -17,6 +17,8 @@ Item {
     FileView {
         path: Settings.home + "/.local/share/mbm/lib/dsp-names.json"
         onLoaded: { try { page.dspNames = JSON.parse(text()).names ?? []; } catch (e) { console.warn("mbm settings: unreadable " + path); } }
+        // Without the list only parse errors show; say why rather than quietly checking less.
+        onLoadFailed: error => console.warn("mbm settings: could not read " + path + " (" + FileViewError.toString(error) + "); dispatcher names go unchecked until mbm settings check")
     }
 
     // What the form edits: "exec", "shell", "dsp", or "" for an action it can't show (a list mixing kinds).
@@ -87,6 +89,12 @@ Item {
         onRecorded: (mods, key) => {
             if (page.recording === "new") {
                 const d = page.draft;
+                // The names list may have loaded (or the draft changed) since Record was enabled.
+                if (!d || page.draftError !== "") {
+                    page.recording = "";
+                    Settings.lastError = d ? page.draftError : "Nothing to save: the new bind's form was closed.";
+                    return;
+                }
                 Settings.set([[page.path(page.nextCustomId()), { mods, key, label: d.label.replace(/,/g, ""), group: "Custom", action: page.draftAction(d) }]], true);
                 page.draft = null;
             } else {
