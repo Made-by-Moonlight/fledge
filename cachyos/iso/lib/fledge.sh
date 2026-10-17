@@ -1,6 +1,6 @@
 # shellcheck shell=bash
 # Helpers for the live ISO's installer scripts (fledge-probe, fledge-install). Pure where
-# possible so test-fledge.sh can cover them without an ISO. (valid_hostname lives in
+# possible so test-iso-lib.sh can cover them without an ISO. (valid_hostname lives in
 # cachyos/install/lib/answers.sh, where install-cachyos.sh checks the answers.)
 
 # write_answers <file> KEY=value...  ->  mode-600 answers file for

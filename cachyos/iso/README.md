@@ -30,7 +30,7 @@ the repo is public.
 Everything runs in the test VM (`cachyos/vm/`), never on the host:
 
     cachyos/vm/vm.sh sync
-    cachyos/vm/vm.sh run 'cd ~/proj/fledge && bash cachyos/iso/test-fledge.sh && bash cachyos/iso/test-probe.sh'
+    cachyos/vm/vm.sh run 'cd ~/proj/fledge && bash cachyos/iso/test-iso-lib.sh && bash cachyos/iso/test-probe.sh'
     cachyos/vm/vm.sh run 'cd ~/proj/fledge && bash cachyos/iso/test-installer-qml.sh'   # the UI's JS (qmltestrunner)
     cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/installer/dev/run.sh'   # the UI, canned facts, fake install
     cachyos/vm/vm.sh run 'qs -p /tmp/fledge-installer ipc call installer go review'       # jump to a step
@@ -96,7 +96,7 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 | `builder/build-iso.sh` | in container: patch releng, overlay, bake, mkarchiso |
 | `installer/` | the graphical installer (Quickshell config `fledge-installer`; `dev/` is the VM dev loop) |
 | `lib/probe.jq` | `fledge-probe`'s disk logic: install targets and data filesystems (tested by `test-probe.sh`) |
-| `lib/fledge.sh` | helpers for the root helpers: answers file, online check (tested by `test-fledge.sh`) |
+| `lib/fledge.sh` | helpers for the root helpers: answers file, online check (tested by `test-iso-lib.sh`) |
 | `configs/airootfs/` | files overlaid onto the live system |
 | `configs/airootfs/usr/local/bin/fledge-probe` | root helper: disk and hardware facts as JSON, online check |
 | `configs/airootfs/usr/local/bin/fledge-install` | root helper: runs `install-cachyos.sh --answers` with progress markers, logs to `/var/log/fledge-install.log` |

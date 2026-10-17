@@ -37,7 +37,7 @@ jobs:
           for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
                    cachyos/install/test-progress.sh cachyos/install/test-desktop.sh cachyos/install/test-cachyos-repos.sh \
                    cachyos/iso/test-probe.sh cachyos/iso/test-live-hypr.sh cachyos/test-bootstrap.sh \
-                   cachyos/iso/test-fledge.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
+                   cachyos/iso/test-iso-lib.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/fledge/test/test-settings.sh dot-local/share/fledge/test/test-defaults.sh \
                    dot-local/share/fledge/test/test-dmenu.sh dot-local/share/fledge/test/test-lua-syntax.sh \
                    dot-local/share/fledge/test/test-migrate.sh dot-local/share/fledge/test/test-dispatch.sh \

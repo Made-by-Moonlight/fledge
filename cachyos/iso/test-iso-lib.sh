@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Unit tests for cachyos/iso/lib/fledge.sh. No ISO, no network.
-#   bash cachyos/iso/test-fledge.sh
+#   bash cachyos/iso/test-iso-lib.sh
 set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
