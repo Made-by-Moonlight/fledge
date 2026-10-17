@@ -9,7 +9,8 @@ The desktop is its own Quickshell shell (`mbm`): an attached bar with three
 hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
 emoji, system), notifications, OSD, lock screen, quick settings and a
 settings window. Settings are one JSON file that generates the Hyprland
-config; pinning workspaces to monitors is edited on the Displays page of the
+config (Hyprland runs a Lua config; after hand-editing `~/.config/hypr`,
+run `hyprctl reload`, as Hyprland doesn't reload on its own); pinning workspaces to monitors is edited on the Displays page of the
 settings window. Wallpapers live in `~/Pictures/Wallpapers` and are chosen
 (per monitor if you like) on the Displays page. Audio is PipeWire (wireplumber, pipewire-pulse), and the
 desktop ships an emoji font for the emoji picker.
@@ -50,7 +51,9 @@ installer can join Wi-Fi, and the network carries over to the installed system.
 - `cachyos/bootstrap.sh` — the desktop layer, run by the installer (or on first boot if that failed)
 - `cachyos/branding/` — owl, palette and theme assets
 - `dot-config/quickshell/mbm/` — the desktop shell (bar, launcher, notifications, lock, settings)
-- `dot-local/share/mbm/` — the `mbm` CLI: settings (defaults + overrides → generated Hyprland config), dmenu
+- `dot-config/hypr/` — the Hyprland config: `hyprland.lua` and its `fledge/*.lua` modules
+- `dot-local/share/mbm/` — the `mbm` CLI: settings (defaults + overrides → generated Hyprland Lua), dmenu
+- `dot-local/share/fledge/` — the `fledge` CLI: `fledge hypr dispatch|set|eval|quote`, the one way scripts talk to Hyprland
 - `dot-config/`, `dot-local/` — dotfiles, stowed into `~`
 
 Releases are built by GitHub Actions when a `v*` tag is pushed on `main`

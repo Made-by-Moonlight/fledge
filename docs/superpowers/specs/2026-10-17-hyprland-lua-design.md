@@ -1,7 +1,7 @@
 # Hyprland on Lua: design
 
 **Date:** 2026-10-17
-**Status:** design approved, plan pending
+**Status:** implemented on `hypr-lua` (plan `docs/superpowers/plans/2026-10-17-hyprland-lua.md`); verified end to end in the VM (desktop, rebuilt ISO live session, fresh install). Amendments made during implementation are marked **Amended**.
 **Branch:** `hypr-lua` (from `main` with the graphical installer merged)
 **Evidence:** `.superpowers/spikes/hypr-lua/findings.md` (spike run in the VM on Hyprland 0.56.2)
 
@@ -95,11 +95,29 @@ stay; check each before deleting.
 - Missing file: silently skipped (fresh account before `mbm settings apply`).
 - Error: `hl.notification.create` with the file and the message, and the error
   is returned so `configerrors`-style checks can see it.
+  **Amended:** the failure surfaces as a notification (`fledge: <file>: <error>`,
+  error icon, colour `rgb(ff5555)`, 15 s) plus a line on stderr (the user
+  journal under uwsm), **not** in `hyprctl configerrors`: Hyprland has no API to
+  add to that list. Tooling checks the notification (`hl.notification.get()`
+  via `hyprctl repl`, as `verify-shell.sh` does) or the journal.
+- **Amended:** `hyprland.lua` requires `fledge/load.lua` under `pcall`, with a
+  minimal inline stand-in loader if it is missing or broken (a reload mid-way
+  through a git pull or restow), so even that isn't emergency mode.
 - Paths: generated files live in `~/.local/state/mbm/hypr/`, loaded with
   `dofile` via an absolute path built from `os.getenv("HOME")`.
 
 `hyprland.lua` itself must stay tiny and syntax-checked in CI: an error there
 is emergency mode (SUPER+Q terminal, SUPER+R run, SUPER+M exit).
+
+### Autoreload (Amended)
+
+Hyprland's file-watch autoreload is **off** (`misc.disable_autoreload = true`,
+desktop `fledge/misc.lua` and the live config). It caught half-written files
+during sync/stow (emergency mode once, and a 0.56.2 deadlock rendering the
+error bar). Everything that writes Hyprland config reloads explicitly:
+`mbm settings apply`, the toggles, theme-set, bootstrap, `vm.sh sync|restow`.
+After hand-editing `~/.config/hypr`, run `hyprctl reload` or slievr-menu ›
+Setup › Config › Reload Hyprland (which also reports config errors).
 
 ## mbm settings
 
@@ -126,7 +144,9 @@ A bind's `action` (or each element of an action list) is exactly one of:
   `function() hl.dispatch(a) hl.dispatch(b) end`.
 - Flags map to `hl.bind` options: `e` repeating, `l` locked, `r` release,
   `n` non_consuming, `t` transparent, `i` ignore_mods, `p` dont_inhibit;
-  `label` → `description`. Mouse binds (`m`) use `hl.dsp.window.drag()` /
+  `label` → `description`. **Amended:** `s` (separate keysyms) has no Lua
+  equivalent, so `check` rejects it and migration reports a v1 bind using it as
+  unconverted (the flag is kept, never silently dropped). Mouse binds (`m`) use `hl.dsp.window.drag()` /
   `window.resize()` on `mouse:272` / `mouse:273`. Each mapping is checked
   against `HL.BindOptions` and in the VM.
 - `exec` / `shell` strings are rendered as Lua string literals (escape `\`,
@@ -173,17 +193,30 @@ fish/bash paths). Subcommands:
 - `fledge hypr set '<hl.config table body>'`, e.g. `'input = { kb_layout = "gb" }'`,
   runs `hyprctl eval 'hl.config({ … })'`
 - `fledge hypr eval '<lua>'`
+- **Amended:** `fledge hypr quote '<text>'` prints a double-quoted Lua string
+  literal (escaped like `lib/lua.jq`), for scripts that splice values
+  (addresses, monitor names, command lines) into the three above.
 
 Each checks `hyprctl`'s output for `error:` and exits non-zero with the
-message on stderr (rc 0 from `hyprctl` is not trusted). Tested with a stub
-`hyprctl` on PATH.
+message on stderr (rc 0 from `hyprctl` is not trusted). **Amended:** also a
+failure: hyprctl rc ≠ 0, and the three refusals the old `.conf` manager prints
+with rc 0 and no `error:` (`only supported with the lua config manager`,
+`Invalid dispatcher`, `non-legacy parsers`). Exit 1 = failed, 2 = usage.
+Tested with a stub `hyprctl` on PATH.
 
 ### QML: `Hypr` singleton
 
 `dot-config/quickshell/mbm/services/Hypr.qml`: `dispatch(expr)` (via
 `Hyprland.dispatch`, which takes a Lua expression under a Lua config) and
 `set(body)` / `eval(lua)` (via a `Process` running `hyprctl eval`), logging
-failures with `console.warn`. The installer's config gets the same file (a
+failures with `console.warn`.
+
+**Amended:** the API is `Hypr.dispatch(expr)`, `Hypr.set(body)`,
+`Hypr.evalLua(code)` (QML forbids a method named `eval`) and `Hypr.lit(v)`
+(a value as a Lua literal, for building `set`/`evalLua` strings). `dispatch`
+runs `hyprctl dispatch` too: `Hyprland.dispatch` gives QML no failure result.
+Calls run one at a time, each in its own `Process`, with the same failure
+rules as `fledge hypr` and a 5 s watchdog. The installer's config gets the same file (a
 symlink into `cachyos/iso/installer/services/`, resolved by `cp -rL`).
 
 ## Callers to change (from the spike)
@@ -223,7 +256,15 @@ the fledge rename).
 
 `bootstrap.sh` stows `hyprland.lua` and the modules, runs `mbm settings apply`
 (which migrates the user file and writes the Lua fragments), and removes the
-now-dangling `*.conf` links. The next login uses Lua. A running `.conf`
+now-dangling `*.conf` links. The next login uses Lua.
+
+**Amended:** a `.conf` session that finds `hyprland.conf` gone writes Hyprland's
+stub `hyprland.conf` ("This config is a STUB!") back into `~/.config/hypr`,
+which is the repo through the stow fold, and rewrites it whenever it is
+removed while that session runs. So bootstrap removes it only when it is
+untracked, carries the marker in its first 200 bytes and no `.conf` session is
+running, and `fledge/autostart.lua` removes it (same marker check) at the
+first Lua login. A user's own `hyprland.conf` is never touched. A running `.conf`
 session keeps working until then, except that `mbm settings apply` no longer
 writes `.conf` fragments: binds edited mid-session take effect at next login
 (stated in bootstrap's output).
@@ -244,6 +285,13 @@ writes `.conf` fragments: binds edited mid-session take effect at next login
   key, lock/idle dpms works.
 - **ISO:** rebuild, boot (live session on Lua, no notice, live keyboard switch
   works), full install, `verify-install.sh`.
+- **Amended (verified):** the migration table's less obvious mappings were
+  checked live by effect: `moveintogroup d` → `window.move({into_group = d})`;
+  `changegroupactive N` → `group.active({index = N})`, 1-based like the legacy
+  form (1 = first window); `sendshortcut M, K, activewindow` →
+  `send_shortcut({mods, key, window = "activewindow"})` (the three clipboard
+  binds deliver CTRL+Insert, SHIFT+Insert, CTRL+X); `alter_zorder top` →
+  `window.alter_zorder({mode = "top"})`.
 
 ## Open risks
 

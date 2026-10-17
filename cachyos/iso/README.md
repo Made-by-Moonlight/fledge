@@ -57,6 +57,14 @@ rewrites the installed repo, and the checks expect it clean) and **with a tty**
 VM's second disk first with `mkfs.ext4 -U 00000000-0000-4000-8000-00000000da7a
 /dev/vdb` from a root console, the UUID `profile.sh` maps to `~/testdata`.)
 
+Then the desktop checks (no tty needed), including a broken generated
+`binds.lua` across a login:
+
+    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'
+    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh break-binds'
+    cachyos/vm/vm.sh relogin
+    cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh after-relogin'
+
 The installed system's root account is locked, so systemd's emergency/rescue
 shell won't open (sulogin refuses a locked root); recover by booting this ISO.
 

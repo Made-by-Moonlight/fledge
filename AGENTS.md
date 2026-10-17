@@ -62,8 +62,11 @@ them if needed, don't extend them.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
 - Settings: defaults in `dot-local/share/mbm/defaults/settings.json`,
   user overrides in `~/.config/mbm/settings.json`, Hyprland fragments
-  **generated** into `~/.local/state/mbm/hypr/` by `mbm settings apply`. Don't hand-edit generated files;
-  change the defaults or the generator.
+  (`binds|monitors|workspaces|input.lua`) **generated** into
+  `~/.local/state/mbm/hypr/` by `mbm settings apply`. Don't hand-edit generated files;
+  change the defaults or the generator. Settings are `version` 2: a bind
+  action is `{"exec"}`, `{"shell"}` or `{"dsp": "<hl.dsp name>", "args": …}`;
+  a version-1 user file is migrated on apply (backup `settings.json.v1`).
 - The shell runs as `mbm-shell.service`; IPC: `qs -c mbm ipc call <target> <fn>`
   (targets in `dot-config/quickshell/mbm/ipc/Ipc.qml`). Dev loop:
   `cachyos/vm/vm.sh restow && cachyos/vm/vm.sh shell`. End-to-end check:
@@ -75,8 +78,22 @@ them if needed, don't extend them.
   `cachyos/iso/test/verify-*.sh`.
 - Commit messages: `area: what changed and why`, lowercase area
   (`iso:`, `install:`, `hypr:`, `gpu:`, `docs:`, `shell:`, `mbm:` …).
-- Hyprland is 0.56; 0.57 removes the `.conf` format. Keep new Hyprland
-  config generated so only the generator needs to change.
+- Hyprland (0.56) runs a **Lua** config, desktop and live ISO alike:
+  `dot-config/hypr/hyprland.lua` loads `fledge/*.lua`, the theme, the
+  generated `~/.local/state/mbm/hypr/*.lua` and the toggles through a guarded
+  loader (`fledge/load.lua`), so a broken file costs only its own settings and
+  raises a red `fledge: <file>: <error>` notification (not a `configerrors`
+  entry: Hyprland has no API for that). Keep `hyprland.lua` tiny; an error in it
+  is emergency mode. Keep Hyprland-specific names in the generators, the two
+  IPC helpers and `fledge/*.lua`.
+- Hyprland IPC goes through **`fledge hypr dispatch|set|eval|quote`** (bash)
+  or the **`Hypr`** QML singleton (`Hypr.dispatch/set/evalLua/lit`); both fail
+  loudly. Never `hyprctl keyword`, a legacy dispatch string (`workspace 2`) or
+  `--batch`: under Lua they are refused, often with exit 0. Queries
+  (`hyprctl clients -j`, `binds -j`, `reload`, …) are fine as they are.
 - Hyprland's autoreload is off (`misc.disable_autoreload`): it caught
   half-written files. Anything that writes Hyprland config runs
-  `hyprctl reload` itself; after hand-editing `~/.config/hypr`, do the same.
+  `hyprctl reload` itself; after hand-editing `~/.config/hypr`, do the same
+  (or slievr-menu › Setup › Config › Reload Hyprland). After changing which
+  config Hyprland loads, test with `cachyos/vm/vm.sh relogin`: the config
+  manager is picked at login, `reload` never switches it.
