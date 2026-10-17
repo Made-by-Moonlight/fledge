@@ -67,6 +67,13 @@ tool the installed system doesn't ship: install it in the VM first.
     cachyos/vm/vm.sh relogin
     cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh after-relogin'
 
+And that every command the desktop runs by name resolves (each `fledge …` in
+the merged settings, libexec, the stowed config, the shell's QML and
+bootstrap is a built-in or a `fledge help` action; each `qs -c fledge ipc
+call T F` and `{shell: "T.F"}` names an `Ipc.qml` function):
+
+    cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-commands.sh'
+
 The installed system's root account is locked, so systemd's emergency/rescue
 shell won't open (sulogin refuses a locked root); recover by booting this ISO.
 
@@ -108,3 +115,4 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 | `configs/pacman-cachyos.conf` | the `[cachyos]` repo section |
 | `test/verify-install.sh` | post-install checks |
 | `test/verify-shell.sh` | desktop shell checks on the installed system |
+| `test/verify-commands.sh` | every `fledge …` and IPC call the desktop makes resolves |
