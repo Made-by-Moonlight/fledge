@@ -4,7 +4,8 @@ import Quickshell.Io
 import QtQuick
 
 // xkb layouts and variants from xkeyboard-config's rules, and live switching
-// (hyprctl) so the chosen layout is what the password fields type.
+// (Hypr, the Lua config's hl.config) so the chosen layout is what the password
+// fields type.
 Singleton {
     id: k
     property var layouts: []        // [{ value, label }]
@@ -34,7 +35,7 @@ Singleton {
     function apply(layout, variant) {
         if (Installer.dev) return;      // don't rewire the dev VM's desktop keyboard
         appliedAt = Date.now();
-        Quickshell.execDetached(["hyprctl", "keyword", "input:kb_layout", layout]);
-        Quickshell.execDetached(["hyprctl", "keyword", "input:kb_variant", variant]);
+        // One call: the new layout never meets the old layout's variant.
+        Hypr.set("input = { kb_layout = " + Hypr.lit(layout) + ", kb_variant = " + Hypr.lit(variant) + " }");
     }
 }

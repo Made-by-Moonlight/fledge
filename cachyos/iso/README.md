@@ -9,7 +9,7 @@ up front, then runs `install-cachyos.sh --answers` through the root helper
 `mbm-install`, `mbm-cleanup` and `reboot`), shows the stages and package
 counts, sets up the desktop before the reboot and boots to SDDM. The other
 ttys are root consoles (no password) for rescue work; leaving the installer
-drops tty1 to a shell, and `Hyprland --config /etc/mbm-installer/hyprland.conf`
+drops tty1 to a shell, and `Hyprland --config /etc/mbm-installer/hyprland.lua`
 starts it again.
 
 Design: `../../docs/superpowers/specs/2026-10-16-graphical-installer-design.md`
@@ -92,7 +92,7 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 | `configs/airootfs/usr/local/bin/mbm-install` | root helper: runs `install-cachyos.sh --answers` with progress markers, logs to `/var/log/mbm-install.log` |
 | `configs/airootfs/usr/local/bin/mbm-cleanup` | root helper: unmount and close the target after a failed install |
 | `configs/airootfs/home/moonlight/` | the live user's `.bash_profile` (starts Hyprland on tty1) |
-| `configs/airootfs/etc/mbm-installer/hyprland.conf` | the live session's Hyprland config (no binds) |
+| `configs/airootfs/etc/mbm-installer/hyprland.lua` | the live session's Hyprland config (no binds) |
 | `configs/packages.extra` | packages added to releng's list |
 | `configs/pacman-cachyos.conf` | the `[cachyos]` repo section |
 | `test/verify-install.sh` | post-install checks |

@@ -10,7 +10,7 @@ import "ui"
 
 // The fledge installer (made by moonlight): one full-screen layer per monitor; the
 // monitor Hyprland has focused at startup gets the installer, the others the
-// owl. Run by the live ISO's Hyprland (/etc/mbm-installer/hyprland.conf); dev:
+// owl. Run by the live ISO's Hyprland (/etc/mbm-installer/hyprland.lua); dev:
 // dev/run.sh.
 ShellRoot {
     id: shell
@@ -64,7 +64,7 @@ ShellRoot {
             // A keyboard plugged in also says "activelayout": the same, harmlessly.
             Timer {
                 id: settle; interval: 1000
-                onTriggered: { Hyprland.dispatch("forcerendererreload"); refocus.restart(); }
+                onTriggered: { Hypr.dispatch('hl.dsp.force_renderer_reload()'); refocus.restart(); }
             }
             Timer { id: refocus; interval: 100; onTriggered: content.forceActiveFocus() }
             Connections {
