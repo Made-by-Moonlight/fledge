@@ -109,5 +109,54 @@ EOL
 out="$(lua "$T/driver2.lua" "$LOAD" "$T/runtime.lua" 2>/dev/null)"; rc=$?
 check "notification failure: caller still continues" "0|false continued" "$rc|$out"
 
+# hyprland.lua itself, run against a stand-in home: every file it loads appends
+# its name to `trace`. fledge/load.lua missing or broken (a git pull or restow
+# mid-way) must not stop the rest: a stand-in loader takes over and says so.
+HYPR_LUA="$REPO/dot-config/hypr/hyprland.lua"
+mkhome() { # mkhome <dir>: the config tree hyprland.lua expects, with tracing stubs
+  local h="$1" f
+  mkdir -p "$h/.config/hypr/fledge" "$h/.local/state/mbm/hypr" "$h/.local/state/hypr-toggles"
+  cp "$HYPR_LUA" "$h/.config/hypr/hyprland.lua"
+  for f in envs looknfeel misc rules autostart; do
+    printf 'trace[#trace + 1] = "%s"\n' "$f" >"$h/.config/hypr/fledge/$f.lua"
+  done
+  printf 'trace[#trace + 1] = "binds"\n' >"$h/.local/state/mbm/hypr/binds.lua"
+  printf 'trace[#trace + 1] = "toggle"\n' >"$h/.local/state/hypr-toggles/t.lua"
+}
+cat > "$T/driver3.lua" <<'EOL'
+trace, notes = {}, {}
+hl = { notification = { create = function(opts) notes[#notes + 1] = opts end },
+       config = function() end }
+package.path = os.getenv("HOME") .. "/.config/hypr/?.lua;" .. package.path
+dofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")
+print("trace=" .. table.concat(trace, " "))
+print("notes=" .. #notes)
+for i, n in ipairs(notes) do print("icon" .. i .. "=" .. tostring(n.icon)) end
+for i, n in ipairs(notes) do print("note" .. i .. "=" .. tostring(n.text)) end
+EOL
+run_hypr() { out="$(HOME="$1" lua "$T/driver3.lua" 2>/dev/null)"; rc=$?; }
+
+mkhome "$T/h1"; cp "$LOAD" "$T/h1/.config/hypr/fledge/load.lua"
+run_hypr "$T/h1"
+check "hyprland.lua: everything loads, in order" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
+check "hyprland.lua: no notification" "0" "$(field notes)"
+
+mkhome "$T/h2"
+run_hypr "$T/h2"
+check "load.lua missing: no error escapes" 0 "$rc"
+check "load.lua missing: the rest still loads (no toggles)" "envs looknfeel misc rules binds autostart" "$(field trace)"
+check "load.lua missing: one notification" "1" "$(field notes)"
+contains "load.lua missing: notification names it" "fledge: fledge/load.lua: " "$(field note1)"
+check "load.lua missing: shown as an error" "error" "$(field icon1)"
+
+mkhome "$T/h3"; printf 'local M = = {}\n' >"$T/h3/.config/hypr/fledge/load.lua"
+printf 'trace[#trace + 1] = "rules"\nerror("rules broke")\n' >"$T/h3/.config/hypr/fledge/rules.lua"
+run_hypr "$T/h3"
+check "load.lua broken: no error escapes" 0 "$rc"
+check "load.lua broken: the rest still loads" "envs looknfeel misc rules binds autostart" "$(field trace)"
+check "load.lua broken: it and the broken file notify" "2" "$(field notes)"
+contains "load.lua broken: names load.lua" "fledge: fledge/load.lua: " "$(field note1)"
+contains "load.lua broken: names the broken file" "rules.lua: " "$(field note2)"
+
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail

@@ -3,7 +3,33 @@
 -- SUPER+Q terminal, SUPER+R run, SUPER+M exit); an error in any file it loads
 -- costs just that file's settings and shows a notification (fledge/load.lua).
 -- Later files override earlier ones.
-local load = require("fledge.load")
+local found, load = pcall(require, "fledge.load")
+if not found then
+  -- fledge/load.lua missing or broken, e.g. for a moment during a git pull or
+  -- restow while Hyprland auto-reloads: a minimal stand-in, so the rest still
+  -- loads instead of Hyprland falling back to emergency mode. The next reload
+  -- picks the real one up again.
+  local err = load
+  local function notify(what, e)
+    -- First line only: a failed require lists every path it tried.
+    local text = "fledge: " .. what .. ": " .. tostring(e):match("^[^\n]*")
+    io.stderr:write(text, "\n")
+    pcall(hl.notification.create, { text = text, timeout = 15000, icon = "error", color = "rgb(ff5555)" })
+  end
+  load = {
+    notify = notify,
+    file = function(path)
+      local f = io.open(path, "r")
+      if not f then return nil end
+      f:close()
+      local ok, res = pcall(dofile, path)
+      if not ok then notify(path, res) end
+      return ok, res
+    end,
+    dir = function() return true end,
+  }
+  notify("fledge/load.lua", err)
+end
 local home = os.getenv("HOME")
 local fledge = home .. "/.config/hypr/fledge/"
 
