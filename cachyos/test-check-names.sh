@@ -28,7 +28,6 @@ put "$ok" cachyos/vm/dev-up.sh 'VM_USER="slievr"'
 put "$ok" cachyos/vm/README.md 'repo at `~slievr/proj/fledge` and' 'sets up key auth (via `expect`, using `slievr` / `$VM_PASSWORD`'
 put "$ok" cachyos/iso/README.md '    scp verify-install.sh "slievr@$ip:/tmp/"'
 put "$ok" cachyos/iso/test/verify-install.sh '# Run as slievr on the installed system' '#   ssh -t "slievr@$ip" bash'
-put "$ok" cachyos/branding/test-theme.sh '  "/home/slievr/.config/omarchy/current/theme/x.png" \'
 put "$ok" AGENTS.md '`slievr` is the user'"'"'s handle (and the default username), not the brand' \
   '   The old names (`slievr`, `mbm`, `made-by-moonlight`) are gone, and'
 put "$ok" dot-local/share/fledge/test/test-migrate.sh '# b970944:dot-local/share/mbm/defaults/settings.json' \
@@ -76,6 +75,7 @@ bad "another repo of the org" README.md 'https://github.com/made-by-moonlight-x/
 bad "a doc dated on the rename day" docs/superpowers/specs/2026-10-18-other-design.md 'mbm'
 bad "a doc dated after the rename" docs/superpowers/plans/2026-10-19-x.md 'slievr'
 bad "a history name outside docs/superpowers" docs/2026-10-01-x.md 'slievr'
+bad "a home path in test-theme.sh (its link is relative now)" cachyos/branding/test-theme.sh '/home/slievr/x.png'
 bad "an untracked file" cachyos/new.sh 'mbm-x'
 
 # Ignored files are not the repo's.

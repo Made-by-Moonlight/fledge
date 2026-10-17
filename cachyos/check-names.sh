@@ -44,7 +44,6 @@ rules=(
   $'cachyos/vm/README.md\t~slievr/proj/|using `slievr` /'
   $'cachyos/iso/README.md\t"slievr@\\$ip'
   $'cachyos/iso/test/verify-install.sh\t"slievr@\\$ip|run as slievr '
-  $'cachyos/branding/test-theme.sh\t/home/slievr/'
   $'AGENTS.md\t`slievr` is the user\'s handle|the old names \\(`slievr`, `mbm`, `made-by-moonlight`\\)'
   # The test of the v1 -> v2 migration: the old strings it rewrites.
   $'dot-local/share/fledge/test/test-migrate.sh\tslievr|b970944:dot-local/share/mbm/'

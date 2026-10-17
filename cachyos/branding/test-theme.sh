@@ -66,9 +66,12 @@ bash "$RENDER" "$REPO/dot-config/omarchy/themes/fledge" "$T/real" >/dev/null
 check "committed current/theme matches a fresh render" "" \
   "$(diff -rq "$REPO/dot-config/omarchy/current/theme" "$T/real" 2>&1)"
 check "theme.name" "fledge" "$(cat "$REPO/dot-config/omarchy/current/theme.name")"
-check "background link points at Moonrise 3440" \
-  "/home/slievr/.config/omarchy/current/theme/backgrounds/1-moonrise-3440x1440.png" \
+# Relative, so it resolves wherever the repo is stowed (it was once an absolute
+# path into one user's home).
+check "background link points at Moonrise 3440, relative" \
+  "theme/backgrounds/1-moonrise-3440x1440.png" \
   "$(readlink "$REPO/dot-config/omarchy/current/background")"
+check "background link resolves" yes "$([[ -f $REPO/dot-config/omarchy/current/background ]] && echo yes || echo no)"
 contains "kitty uses the brand background" "171e28" "$(cat "$T/real/kitty.conf")"
 check "hyprland focus border is amber" "rgb(f4af03)" \
   "$(lua - "$T/real/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
