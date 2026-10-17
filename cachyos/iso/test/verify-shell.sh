@@ -22,17 +22,31 @@ gen=~/.local/state/mbm/hypr
 # Hyprland's own notifications (the ".conf format" notice, fledge's loader
 # errors), one per line. hyprctl has no query for them; Lua does. The prefix
 # keeps the reply non-empty: repl answers an empty string with "unknown request".
+# A reply without the prefix (repl refused or broken) fails, so a negative check
+# ("no such notification") can't pass on a reply that lists nothing.
 hypr_notes() {
-  hyprctl repl 'local t = {} for _, n in ipairs(hl.notification.get()) do if n:is_alive() then t[#t + 1] = n:get_text() end end return "notes:" .. table.concat(t, "\n")' | sed '1s/^notes://'
+  local reply
+  reply="$(hyprctl repl 'local t = {} for _, n in ipairs(hl.notification.get()) do if n:is_alive() then t[#t + 1] = n:get_text() end end return "notes:" .. table.concat(t, "\n")')"
+  if [[ $reply != notes:* ]]; then printf 'hypr_notes: no notification list: %s\n' "$reply" >&2; return 1; fi
+  printf '%s\n' "${reply#notes:}"
+}
+# note_has <grep -E pattern>: yes / no, or "repl failed" (which no check expects).
+note_has() {
+  local notes
+  notes="$(hypr_notes)" || { echo "repl failed"; return; }
+  grep -qE -- "$1" <<<"$notes" && echo yes || echo no
 }
 # What a broken binds.lua must not take with it: settings from the files loaded
-# before it (look and feel) and after it (input, monitors), as they were before
-# the break; and nothing is a config error. Kept in /tmp across the relogin.
+# before it (look and feel) and after it (input, monitors, workspace rules), as
+# they were before the break; and nothing is a config error. Kept in /tmp across
+# the relogin. Input is read by values the settings change from Hyprland's own
+# defaults (repeat rate 40, not 25; compose:caps), so a lost input.lua shows.
 INTACT=/tmp/verify-shell-intact
 snapshot() {
   hyprctl getoption general:gaps_out | head -n1
-  hyprctl getoption input:kb_layout | head -n1
+  printf '%s %s\n' "$(hyprctl getoption input:repeat_rate | head -n1)" "$(hyprctl getoption input:kb_options | head -n1)"
   hyprctl monitors -j | jq -c 'map({name, width, height, scale})'
+  hyprctl workspacerules -j | jq -c 'map({workspaceString, monitor, default, persistent})'
 }
 intact() {
   local want got
@@ -40,13 +54,20 @@ intact() {
   is "$1: look and feel still loaded" "$(sed -n 1p <<<"$want")" "$(sed -n 1p <<<"$got")"
   is "$1: input still loaded"         "$(sed -n 2p <<<"$want")" "$(sed -n 2p <<<"$got")"
   is "$1: monitors still loaded"      "$(sed -n 3p <<<"$want")" "$(sed -n 3p <<<"$got")"
+  is "$1: workspace rules still loaded" "$(sed -n 4p <<<"$want")" "$(sed -n 4p <<<"$got")"
   is "$1: no config errors"           "" "$(hyprctl configerrors)"
 }
 # The fledge loader names the file it couldn't load in a notification...
 broken_binds_noted() {
-  is "$1: fledge notification names binds.lua" yes "$(hypr_notes | grep -qF "fledge: $gen/binds.lua:" && echo yes || echo no)"
+  is "$1: fledge notification names binds.lua" yes "$(note_has "^fledge: $gen/binds.lua:")"
 }
-# ...and the bad file loses only its own binds; apply then writes it back.
+# ...and the bad file loses its own binds, leaving only hyprland.lua's safety
+# net (terminal, launcher, keybind settings, system menu, exit)...
+safety_binds() {
+  is "$1: only the safety-net binds" "Exit Hyprland,Keybinds,Launch apps,System menu,Terminal" \
+    "$(hyprctl binds -j | jq -r '[.[].description] | sort | join(",")')"
+}
+# ...and apply then writes it back.
 binds_restored() {
   mbm settings apply >/dev/null 2>&1
   is "$1: settings apply restores the binds" "$(( $(mbm settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
@@ -61,7 +82,7 @@ case "${1:-}" in
     exit 0 ;;
   after-relogin)
     is "relogin: binds.lua still broken" yes "$(grep -q 'verify-shell.sh break-binds' "$gen/binds.lua" && echo yes || echo no)"
-    is "relogin: no binds loaded" 0 "$(hyprctl binds -j | jq length)"
+    safety_binds relogin
     broken_binds_noted relogin
     # The loader also writes to stderr, which uwsm sends to the journal.
     is "relogin: loader error in the journal" yes "$(journalctl --user -b -o cat _PID="$(pgrep -nx Hyprland)" | grep -qF "fledge: $gen/binds.lua:" && echo yes || echo no)"
@@ -70,7 +91,7 @@ case "${1:-}" in
     hyprctl dismissnotify >/dev/null; rm -f "$INTACT"
     exit $bad ;;
   "") ;;
-  *) sed -n '2,12p' "$0" >&2; exit 2 ;;
+  *) sed -n '2,10p' "$0" >&2; exit 2 ;;
 esac
 ipc() { qs -c mbm ipc call "$@" 2>/dev/null; }
 state() { ipc shell state | jq -r ".$1"; }
@@ -120,8 +141,8 @@ is "no generated .conf left"     0      "$(ls "$gen"/*.conf 2>/dev/null | wc -l)
 # parse, and no notification is up (0.56 posts one on every .conf login).
 is "Hyprland uses the Lua config" yes  "$(grep -q 'Using lua config' "$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/hyprland.log" && echo yes || echo no)"
 is "no Hyprland config errors"   ""     "$(hyprctl configerrors)"
-is "no .conf notification"       no     "$(hypr_notes | grep -qF '.conf' && echo yes || echo no)"
-is "no fledge loader notification" no   "$(hypr_notes | grep -q '^fledge: ' && echo yes || echo no)"
+is "no .conf notification"       no     "$(note_has '\.conf')"
+is "no fledge loader notification" no   "$(note_has '^fledge: ')"
 # Every settings bind is one Hyprland bind, plus the mbm-record submap's way out.
 is "every settings bind loaded"  "$(( $(mbm settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
 is "bind descriptions are the settings labels" "$(mbm settings get .binds | jq -c '[.[].label] | sort')" "$(hyprctl binds -j | jq -c '[.[] | select(.submap == "") | .description] | sort')"
@@ -131,14 +152,23 @@ is "fledge hypr enters the mbm-record submap" mbm-record "$(hyprctl submap)"
 fledge hypr dispatch 'hl.dsp.submap("reset")' >/dev/null
 is "fledge hypr leaves the submap" default "$(hyprctl submap)"
 ws0="$(hyprctl activeworkspace -j | jq .id)"
-fledge hypr dispatch 'hl.dsp.focus({workspace = 2})' >/dev/null
-is "fledge hypr dispatch moves to workspace 2" 2 "$(hyprctl activeworkspace -j | jq .id)"
+ws1=$((ws0 == 2 ? 3 : 2))   # somewhere else, or the check proves nothing
+fledge hypr dispatch "hl.dsp.focus({workspace = $ws1})" >/dev/null
+is "fledge hypr dispatch moves to workspace $ws1" "$ws1" "$(hyprctl activeworkspace -j | jq .id)"
 fledge hypr dispatch "hl.dsp.focus({workspace = $ws0})" >/dev/null
 is "fledge hypr dispatch moves back"  "$ws0" "$(hyprctl activeworkspace -j | jq .id)"
 is "fledge hypr fails on a bad dispatcher" 1 "$(fledge hypr dispatch 'hl.dsp.no_such_thing()' >/dev/null 2>&1; echo $?)"
 zoom0="$(hyprctl getoption cursor:zoom_factor | sed -n 's/^float: //p')"
-is "fledge hypr set succeeds"    0      "$(fledge hypr set 'cursor = { zoom_factor = 1 }' >/dev/null 2>&1; echo $?)"
-is "fledge hypr set applies"     "float: 1.000000" "$(hyprctl getoption cursor:zoom_factor | head -n1)"
+# 1.5, not the default 1, or the check proves nothing; cleanup restores zoom0.
+is "fledge hypr set succeeds"    0      "$(fledge hypr set 'cursor = { zoom_factor = 1.5 }' >/dev/null 2>&1; echo $?)"
+is "fledge hypr set applies"     "float: 1.500000" "$(hyprctl getoption cursor:zoom_factor | head -n1)"
+# The zoom binds' commands (they ran `hyprctl keyword`, refused under Lua).
+zoom_cmd() { mbm settings get ".binds[\"$1\"].action.exec" | jq -r .; }
+sh -c "$(zoom_cmd utilities.reset-zoom)"
+is "reset-zoom bind command resets the zoom" "float: 1.000000" "$(hyprctl getoption cursor:zoom_factor | head -n1)"
+sh -c "$(zoom_cmd utilities.zoom-in)"
+is "zoom-in bind command zooms in"         "float: 2.000000" "$(hyprctl getoption cursor:zoom_factor | head -n1)"
+sh -c "$(zoom_cmd utilities.reset-zoom)"
 
 # A broken generated fragment costs only its own settings, with a fledge
 # notification rather than emergency mode. (Across a login: see the top.)
@@ -146,7 +176,7 @@ hyprctl dismissnotify >/dev/null
 snapshot > "$INTACT"
 printf 'this is not lua (verify-shell.sh)\n' > "$gen/binds.lua"
 hyprctl reload >/dev/null; sleep 1
-is "reload: no binds loaded"     0      "$(hyprctl binds -j | jq length)"
+safety_binds reload
 broken_binds_noted reload
 intact reload
 binds_restored reload
@@ -181,6 +211,9 @@ ipc launcher close;   sleep 0.3; is "launcher closes"      false "$(state launch
 ipc quicksettings open wifi; sleep 0.3; is "quick settings opens a picker" wifi "$(state picker)"
 ipc quicksettings close
 ipc settings open input; sleep 0.5; is "settings opens a page" input "$(state page)"
+# Its window rule (fledge/rules.lua) matches the title: a centred floating dialog.
+is "settings window floats at 960x680" "true [960,680]" \
+  "$(hyprctl clients -j | jq -r '.[] | select(.title == "fledge · settings") | "\(.floating) \(.size | tojson)"')"
 ipc settings close
 
 before="$(ipc notifications count)"
@@ -190,6 +223,16 @@ ipc notifications dismissAll
 
 mbm settings set '.binds["custom.verify"]' '{"mods":"SUPER CTRL ALT","key":"F12","label":"verify","group":"Custom","action":{"exec":"true"}}' && mbm settings apply
 is "custom bind reaches Hyprland" 1     "$(hyprctl binds -j | jq '[.[] | select(.description == "verify")] | length')"
+# Key recording: the settings window puts Hyprland in the mbm-record submap, takes
+# one key (a bare F-key: wtype's -M modifiers don't reach Qt as modifiers) and
+# saves it to the bind.
+ipc settings record custom.verify; sleep 1.5
+is "recording enters the mbm-record submap" mbm-record "$(hyprctl submap)"
+wtype -k F9; sleep 2
+is "recording leaves the submap"  default "$(hyprctl submap)"
+is "the recorded key is saved"    "+F9"  "$(mbm settings get '.binds["custom.verify"] | .mods + "+" + .key' | jq -r .)"
+is "and reaches Hyprland"         1      "$(hyprctl binds -j | jq '[.[] | select(.description == "verify" and .key == "F9")] | length')"
+ipc settings close
 mbm settings reset '.binds["custom.verify"]' && mbm settings apply
 is "custom bind removed"         0      "$(hyprctl binds -j | jq '[.[] | select(.description == "verify")] | length')"
 
@@ -208,6 +251,9 @@ is "relock flag empty while unlocked" "" "$(lockflag)"
 ipc lock lock; sleep 1
 is "locks"                       locked "$(ipc lock status)"
 is "relock flag holds the instance while locked" "${HYPRLAND_INSTANCE_SIGNATURE:-unset}" "$(lockflag)"
+# A manual lock turns the screens off after 3 s (Lock.qml, hl.dsp.dpms); unlock wakes them.
+sleep 4
+is "screens off while locked (dpms)" false "$(hyprctl monitors -j | jq '.[0].dpmsStatus')"
 # The wrong password costs one faillock strike; the successful unlock below
 # resets the count. Only typed when actually locked.
 if [[ "$(ipc lock status)" == locked ]]; then wtype not-the-password; wtype -k Return; sleep 3; fi
@@ -218,6 +264,7 @@ is "still locked after crash"    locked "$(ipc lock status)"
 unlock
 is "right password unlocks"      unlocked "$(ipc lock status)"
 is "relock flag cleared after unlock" "" "$(lockflag)"
+is "screens on after unlock (dpms)" true "$(hyprctl monitors -j | jq 'all(.dpmsStatus)')"
 
 # GTK dark is seeded once: with the marker present, bootstrap's seeding must leave a
 # user's light choice alone. Runs the function exactly as bootstrap.sh defines it.

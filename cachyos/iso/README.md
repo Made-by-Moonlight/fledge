@@ -58,8 +58,10 @@ VM's second disk first with `mkfs.ext4 -U 00000000-0000-4000-8000-00000000da7a
 /dev/vdb` from a root console, the UUID `profile.sh` maps to `~/testdata`.)
 
 Then the desktop checks (no tty needed), including a broken generated
-`binds.lua` across a login:
+`binds.lua` across a login. verify-shell types keys with `wtype`, a test-only
+tool the installed system doesn't ship: install it in the VM first.
 
+    cachyos/vm/vm.sh sudo 'pacman -S --noconfirm --needed wtype'
     cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'
     cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh break-binds'
     cachyos/vm/vm.sh relogin
