@@ -38,11 +38,9 @@ An installed system keeps the repo in `~/proj/fledge`, stowed into `~`:
 
     git -C ~/proj/fledge pull && bash ~/proj/fledge/cachyos/bootstrap.sh
 
-From a system still on Hyprland's old `.conf` config, log out and back in
-straight after: the pull removes `~/.config/hypr/hyprland.conf` at once, the
-running session falls back to Hyprland's stock config within seconds, and only
-a new login starts the Lua config (bootstrap says so too). Or pull and run
-bootstrap from a TTY (Ctrl+Alt+F2) and log in afterwards.
+Installs made before the fledge rename (any install whose repo isn't at
+`~/proj/fledge`) can't upgrade in place: back up your files and reinstall
+from the ISO. Nothing migrates them.
 
 ## Screenshots
 
