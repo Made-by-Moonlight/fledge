@@ -1,17 +1,17 @@
 [Unit]
-Description=slievr first-boot desktop bootstrap
-Documentation=file:///var/log/slievr-firstboot.log
+Description=fledge first-boot desktop bootstrap
+Documentation=file:///var/log/fledge-firstboot.log
 After=network-online.target NetworkManager.service systemd-user-sessions.service
 Wants=network-online.target
-ConditionPathExists=!/var/lib/slievr-firstboot-done
+ConditionPathExists=!/var/lib/fledge-firstboot-done
 
 [Service]
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/usr/local/sbin/slievr-firstboot.sh
+ExecStart=/usr/local/sbin/fledge-firstboot.sh
 # Runs only when ExecStart succeeds. A failed bootstrap disables the unit
 # itself; a run with no internet leaves it enabled to try again next boot.
-ExecStartPost=/usr/bin/touch /var/lib/slievr-firstboot-done
+ExecStartPost=/usr/bin/touch /var/lib/fledge-firstboot-done
 StandardOutput=journal+console
 StandardError=journal+console
 TimeoutStartSec=1800

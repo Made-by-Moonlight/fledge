@@ -1,23 +1,23 @@
 #!/usr/bin/env bash
 # First real boot after install-cachyos.sh. Runs the desktop layer
 # (cachyos/bootstrap.sh) as the user, unattended, with output on TTY1 and in
-# /var/log/slievr-firstboot.log, then hands off to the graphical login.
+# /var/log/fledge-firstboot.log, then hands off to the graphical login.
 #
 # @USERNAME@ is substituted by install-cachyos.sh when this is copied into the
-# target. Installed as /usr/local/sbin/slievr-firstboot.sh, run by
-# slievr-firstboot.service (oneshot, guarded by /var/lib/slievr-firstboot-done).
+# target. Installed as /usr/local/sbin/fledge-firstboot.sh, run by
+# fledge-firstboot.service (oneshot, guarded by /var/lib/fledge-firstboot-done).
 set -uo pipefail
 
 USER_NAME="@USERNAME@"
 USER_HOME="$(getent passwd "$USER_NAME" | cut -d: -f6)"
 BOOTSTRAP="${USER_HOME}/proj/slievr-cachy/cachyos/bootstrap.sh"
-LOG=/var/log/slievr-firstboot.log
-SUDOERS=/etc/sudoers.d/99-slievr-firstboot
+LOG=/var/log/fledge-firstboot.log
+SUDOERS=/etc/sudoers.d/99-fledge-firstboot
 
 exec > >(tee -a "$LOG") 2>&1
 echo
 echo "=================================================================="
-echo " slievr first-boot bootstrap — $(date)"
+echo " fledge first-boot bootstrap — $(date)"
 echo " log: $LOG"
 echo "=================================================================="
 
@@ -57,7 +57,7 @@ if ! online; then
   echo "# 1. Log in as $USER_NAME and connect:"
   echo "#        nmtui"
   echo "# 2. Then finish setup (or just reboot):"
-  echo "#        sudo systemctl start slievr-firstboot"
+  echo "#        sudo systemctl start fledge-firstboot"
   echo "##################################################################"
   exit 1
 fi
@@ -81,7 +81,7 @@ done
 if (( ok )); then
   echo
   echo ">>> bootstrap OK — enabling graphical login"
-  systemctl disable slievr-firstboot.service || true
+  systemctl disable fledge-firstboot.service || true
   systemctl enable sddm.service
   systemctl start sddm.service
   echo ">>> done. SDDM should be up now."
@@ -95,6 +95,6 @@ else
   echo "#     ~/proj/slievr-cachy/cachyos/bootstrap.sh"
   echo "# and once it succeeds:  sudo systemctl enable --now sddm.service"
   echo "##################################################################"
-  systemctl disable slievr-firstboot.service || true
+  systemctl disable fledge-firstboot.service || true
   exit "$rc"
 fi

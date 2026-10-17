@@ -65,7 +65,7 @@ the target disk's model string before it touches anything. After it
 finishes it has already run `bootstrap.sh` (the desktop layer) inside the
 new system as the new user, so after the reboot you unlock the disk and land
 on the login screen. If that stage fails the installer exits 3 with the
-target still mounted; either reboot (`slievr-firstboot.service`, still
+target still mounted; either reboot (`fledge-firstboot.service`, still
 enabled, runs `bootstrap.sh` on first boot as the fallback) or retry it:
 
 ```sh

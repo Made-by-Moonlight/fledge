@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # The desktop layer, installed before the first reboot: bootstrap.sh runs as
 # the new user inside the target (arch-chroot), so the first boot lands on the
-# login screen. If it fails, slievr-firstboot.service (already enabled) runs it
+# login screen. If it fails, fledge-firstboot.service (already enabled) runs it
 # again on first boot, as it always used to.
 # Sourced by install-cachyos.sh. The target is mounted at $FLEDGE_TARGET.
 
@@ -49,8 +49,8 @@ run_desktop_stage() {
   done
   remove_install_sudoers
   (( ok )) || return 1
-  arch-chroot "$FLEDGE_TARGET" systemctl disable slievr-firstboot.service
-  touch "$FLEDGE_TARGET/var/lib/slievr-firstboot-done"
+  arch-chroot "$FLEDGE_TARGET" systemctl disable fledge-firstboot.service
+  touch "$FLEDGE_TARGET/var/lib/fledge-firstboot-done"
   arch-chroot "$FLEDGE_TARGET" systemctl enable sddm.service
 }
 

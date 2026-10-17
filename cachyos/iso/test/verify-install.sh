@@ -15,7 +15,7 @@ is()  { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 
 is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager | tail -n +2 | grep -c .)"
 is "desktop installed before reboot"   1      "$(sudo grep -c 'Bootstrap complete.' /var/log/fledge-install.log 2>/dev/null)"
-is "firstboot done-guard present"      yes    "$([[ -e /var/lib/slievr-firstboot-done ]] && echo yes || echo no)"
+is "firstboot done-guard present"      yes    "$([[ -e /var/lib/fledge-firstboot-done ]] && echo yes || echo no)"
 is "console layout in vconsole.conf"   yes    "$(grep -q '^XKBLAYOUT=' /etc/vconsole.conf && echo yes || echo no)"
 # systemd 262's TPM measurement units (systemd-pcr*, systemd-tpm2-setup*) fail
 # with "Could not extend NvPCR" on swtpm; nothing here uses measured boot.
@@ -34,7 +34,7 @@ is "generated Hyprland config"         yes    "$( [[ -s $gen/binds.lua && -s $ge
 is "Hyprland config is Lua"            yes    "$( [[ -e $HOME/.config/hypr/hyprland.lua && ! -e $HOME/.config/hypr/hyprland.conf ]] && echo yes || echo no )"
 is "btop uses the theme"               yes    "$( [[ -L "$HOME/.config/btop/themes/current.theme" ]] && grep -q '^color_theme = "current"' "$HOME/.config/btop/btop.conf" && echo yes || echo no )"
 is "sddm active"                       active "$(systemctl is-active sddm)"
-is "firstboot disabled"                disabled "$(systemctl is-enabled slievr-firstboot.service 2>/dev/null)"
+is "firstboot disabled"                disabled "$(systemctl is-enabled fledge-firstboot.service 2>/dev/null)"
 is "root account locked"               L      "$(sudo passwd -S root | awk '{print $2}')"
 bloat="$(pacman -Qq | grep -E '^(plasma|kde|kwin|gnome-shell|xfce|lxqt|cinnamon|mate-|cachyos-.+-settings$)' || true)"
 is "no desktop bloat"                  ""     "$bloat"

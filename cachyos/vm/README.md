@@ -56,10 +56,10 @@ VM name: `cachyos-test`. Two disks:
    Pick `vda` at the disk prompt (virtio disks report an empty MODEL — just
    press Enter to confirm). It partitions/encrypts, pacstraps, chroot-
    configures, stages the repo into the target home, enables
-   `slievr-firstboot.service`, and reboots.
-5. Unlock the disk in `virt-viewer`. `slievr-firstboot.service` then runs
+   `fledge-firstboot.service`, and reboots.
+5. Unlock the disk in `virt-viewer`. `fledge-firstboot.service` then runs
    `bootstrap.sh` automatically on TTY1 (log:
-   `/var/log/slievr-firstboot.log`) and starts SDDM when it finishes — no
+   `/var/log/fledge-firstboot.log`) and starts SDDM when it finishes — no
    manual bootstrap step. If bootstrap fails you land at a TTY with the
    repo at `~slievr/proj/slievr-cachy` and on-screen instructions.
 

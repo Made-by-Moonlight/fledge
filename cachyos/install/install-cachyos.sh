@@ -336,12 +336,12 @@ cp -r "$REPO_ROOT" "${target_home}/proj/slievr-cachy"
 # before the reboot and disables this on success. If that stage didn't finish,
 # firstboot runs bootstrap.sh as the user, unattended, on TTY1, then starts
 # SDDM - so a failed bootstrap leaves a TTY + log instead of a broken greeter.
-install -Dm755 "$HERE/firstboot/slievr-firstboot.sh"      /mnt/usr/local/sbin/slievr-firstboot.sh
-sed -i "s/@USERNAME@/${USERNAME}/g"                        /mnt/usr/local/sbin/slievr-firstboot.sh
-install -Dm644 "$HERE/firstboot/slievr-firstboot.service" /mnt/etc/systemd/system/slievr-firstboot.service
+install -Dm755 "$HERE/firstboot/fledge-firstboot.sh"      /mnt/usr/local/sbin/fledge-firstboot.sh
+sed -i "s/@USERNAME@/${USERNAME}/g"                        /mnt/usr/local/sbin/fledge-firstboot.sh
+install -Dm644 "$HERE/firstboot/fledge-firstboot.service" /mnt/etc/systemd/system/fledge-firstboot.service
 
 arch-chroot /mnt chown -R "${USERNAME}:${USERNAME}" "/home/${USERNAME}/proj"
-arch-chroot /mnt systemctl enable slievr-firstboot.service
+arch-chroot /mnt systemctl enable fledge-firstboot.service
 
 # Networks the live session joined (the installer's Wi-Fi picker saves NM
 # keyfiles), so first boot is online on a laptop.

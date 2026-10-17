@@ -280,7 +280,7 @@ rm -f "$HOME/.local/state/hypr-toggles/flags.conf"
 # power-profiles-daemon provides the D-Bus service powerprofilesctl (and
 # fledge powerprofiles init, run at Hyprland startup) needs. Enable only, no
 # --now: p-p-d.service is `After=multi-user.target`, and when bootstrap.sh runs
-# from slievr-firstboot.service (itself ordered before multi-user.target, which
+# from fledge-firstboot.service (itself ordered before multi-user.target, which
 # waits on it), a synchronous `--now` start deadlocks — firstboot waits for the
 # p-p-d job, which waits for multi-user.target, which waits for firstboot. It's
 # only needed post-login at Hyprland startup, so plain enable is enough; it
@@ -312,7 +312,7 @@ sudo systemctl enable sddm.service
 
 # fledge-shell.service (the desktop shell) is a user unit started with the
 # graphical session: the stowed graphical-session.target.wants/ link enables it,
-# so no `systemctl --user enable` here (it would hang from slievr-firstboot).
+# so no `systemctl --user enable` here (it would hang from fledge-firstboot).
 # Run from inside a session, the end of this script starts it (see there).
 
 # Generate the Hyprland binds/monitors/input from fledge settings; hyprland.lua
@@ -324,7 +324,7 @@ sudo systemctl enable sddm.service
 # config still auto-reloads), maybe while stow or the pull had files
 # half-written, and before these existed: every bind is gone until it reloads
 # again. So reload once everything is written (the reload is a
-# query, the same on both config managers). From slievr-firstboot there is no
+# query, the same on both config managers). From fledge-firstboot there is no
 # Hyprland and nothing to reload.
 fledge="$HOME/.local/share/fledge/bin/fledge"
 # hypr_manager <fledge>: the running Hyprland's config manager, picked at session
