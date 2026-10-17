@@ -2,7 +2,6 @@
 -- Each command runs through a shell, as exec-once did.
 hl.on("hyprland.start", function()
   hl.exec_cmd("uwsm-app -- fcitx5 --disable notificationitem")
-  hl.exec_cmd("slievr-first-run")
   hl.exec_cmd("slievr-powerprofiles-init")
   hl.exec_cmd("uwsm-app -- slievr-hyprland-monitor-watch")
 
