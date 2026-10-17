@@ -279,21 +279,10 @@ if [ ! -f "$HOME/.config/btop/btop.conf" ]; then
   printf 'color_theme = "current"\n' >"$HOME/.config/btop/btop.conf"
 fi
 
-# hyprland.conf sources ~/.local/state/hypr-toggles/*.conf for dynamic
-# feature toggles (suspend-off, etc.) — needs to exist (even empty) so the
-# glob source doesn't warn, and enabled/disabled state persists across
-# rebuilds since it's outside the stowed repo.
-mkdir -p "$HOME/.local/state/hypr-toggles"
-rm -f "$HOME/.local/state/hypr-toggles/.keep"
-# Needs to be *.conf (not just present) — hyprland's glob source errors
-# ("globbing error: found no match") if nothing matches the pattern.
-# Checking for *.conf specifically (not just "dir non-empty") matters:
-# an earlier version of this script left a .keep placeholder here, which
-# satisfied an "is dir empty" check without ever fixing the actual error.
-if ! compgen -G "$HOME/.local/state/hypr-toggles/*.conf" >/dev/null; then
-  printf '# Permanent config toggle flags. Do not remove (dir needs >=1 *.conf file).\n' \
-    >"$HOME/.local/state/hypr-toggles/flags.conf"
-fi
+# Hyprland toggles live in ~/.local/state/hypr-toggles (*.lua, loaded by
+# hyprland.lua; a missing or empty dir is fine). The .conf config needed a
+# placeholder flags.conf there for its glob; nothing reads it now.
+rm -f "$HOME/.local/state/hypr-toggles/flags.conf"
 
 # power-profiles-daemon provides the D-Bus service powerprofilesctl (and
 # slievr-powerprofiles-init, run at Hyprland startup) needs. Enable only, no
