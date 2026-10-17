@@ -59,9 +59,12 @@ PACMAN_PACKAGES=(
   # Deps for the vendored scripts in dot-local/share/fledge/libexec/ that
   # the generated binds call (see dot-local/share/fledge/README.md). gum
   # draws the Setup tools' prompts and spinners (timezone and drive pickers,
-  # the "Done!" after each one) and arrives with nothing else.
+  # the "Done!" after each one) and arrives with nothing else. socat feeds
+  # `fledge hyprland monitor watch` the Hyprland event socket (the laptop
+  # panel comes back after an external monitor is unplugged); nothing else
+  # pulls it in either.
   uwsm xdg-desktop-portal-hyprland
-  grim slurp satty hyprpicker wl-clipboard jq gum
+  grim slurp satty hyprpicker wl-clipboard jq gum socat
   # fledge/autostart.lua's startup commands — all missing on a fresh install:
   # input method framework, power-profile D-Bus service
   # (fledge powerprofiles init needs powerprofilesctl). No idle daemon or
