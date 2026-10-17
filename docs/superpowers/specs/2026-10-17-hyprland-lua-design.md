@@ -342,4 +342,5 @@ stub gone.
 - A syntax error in `hyprland.lua` = emergency mode. Keep it minimal, CI
   syntax-checks it.
 - `size` in one window rule didn't apply in the spike (not chased). **Amended:**
-  every sized rule was checked in the VM and applies (see Testing).
+  every sized rule was checked in the VM and applies, except Steam's, which a
+  later rule tiles exactly as the old `.conf` order did (see Testing).
