@@ -4,7 +4,7 @@ import QtQuick
 import "../theme"
 import "../components"
 
-// The approved made-by-moonlight lock (was dot-config/hypr/hyprlock.conf): glow background,
+// The approved made by moonlight lock (was dot-config/hypr/hyprlock.conf): glow background,
 // clock, owl, wordmark, amber dots field. hyprlock offsets are from the centre with y up;
 // here y points down, and its point sizes are ×4/3 in pixels.
 WlSessionLockSurface {

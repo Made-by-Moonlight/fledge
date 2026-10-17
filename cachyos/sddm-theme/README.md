@@ -1,6 +1,6 @@
 # Vendored SDDM theme
 
-`slievr-cachy/` started from Omarchy's default SDDM theme
+`fledge/` started from Omarchy's default SDDM theme
 (part of [basecamp/omarchy](https://github.com/basecamp/omarchy), MIT-licensed)
 and now follows the made by moonlight layout: the Moonrise `background.png`
 with the owl `logo.png` above a clipped password field, themed in the brand
@@ -10,5 +10,5 @@ palette. `Main.qml` is our own.
 `cachyos/branding/build-assets.sh`; don't edit them by hand.
 
 Not stow-managed — `bootstrap.sh` copies it to
-`/usr/share/sddm/themes/slievr-cachy` directly, since SDDM reads themes
+`/usr/share/sddm/themes/fledge` directly, since SDDM reads themes
 from a system path, not `$HOME`.

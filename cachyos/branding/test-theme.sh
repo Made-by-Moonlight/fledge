@@ -62,10 +62,10 @@ check "render: shared-prefix sibling OUT is allowed" "0:yes" \
   "$(bash "$RENDER" "$T/theme" "$T/theme-out" >/dev/null 2>&1; echo "$?:$([[ -f "$T/theme-out/waybar.css" ]] && echo yes || echo no)")"
 
 # the committed render matches a fresh render of the real theme
-bash "$RENDER" "$REPO/dot-config/omarchy/themes/made-by-moonlight" "$T/real" >/dev/null
+bash "$RENDER" "$REPO/dot-config/omarchy/themes/fledge" "$T/real" >/dev/null
 check "committed current/theme matches a fresh render" "" \
   "$(diff -rq "$REPO/dot-config/omarchy/current/theme" "$T/real" 2>&1)"
-check "theme.name" "made-by-moonlight" "$(cat "$REPO/dot-config/omarchy/current/theme.name")"
+check "theme.name" "fledge" "$(cat "$REPO/dot-config/omarchy/current/theme.name")"
 check "background link points at Moonrise 3440" \
   "/home/slievr/.config/omarchy/current/theme/backgrounds/1-moonrise-3440x1440.png" \
   "$(readlink "$REPO/dot-config/omarchy/current/background")"
@@ -73,13 +73,13 @@ contains "kitty uses the brand background" "171e28" "$(cat "$T/real/kitty.conf")
 check "hyprland focus border is amber" "rgb(f4af03)" \
   "$(lua - "$T/real/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
 
-# made by moonlight is the only theme (the leftover Omarchy ones are gone).
-check "shipped themes" "made-by-moonlight" "$(ls "$REPO/dot-config/omarchy/themes")"
+# fledge is the only theme (the leftover Omarchy ones are gone).
+check "shipped themes" "fledge" "$(ls "$REPO/dot-config/omarchy/themes")"
 # Rendering the theme gives it a hyprland.lua, the file Hyprland's Lua config
 # reads, with no $OMARCHY_PATH, as on fledge. The steps Omarchy's theme-set
 # took: copy the theme, then render the vendored templates.
 h="$T/set"; next="$h/.config/omarchy/current/next-theme"
-mkdir -p "$next"; cp -r "$REPO/dot-config/omarchy/themes/made-by-moonlight/." "$next/"
+mkdir -p "$next"; cp -r "$REPO/dot-config/omarchy/themes/fledge/." "$next/"
 HOME="$h" PATH="$REPO/dot-local/share/fledge/bin:$PATH" env -u OMARCHY_PATH \
   fledge theme set templates >/dev/null 2>&1
 check "theme-set: hyprland.lua rendered, amber border" "rgb(f4af03)" \

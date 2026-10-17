@@ -300,12 +300,12 @@ sudo mkdir -p /etc/sddm.conf.d
 printf '[Autologin]\nSession=hyprland-uwsm.desktop\n' \
   | sudo tee /etc/sddm.conf.d/default-session.conf >/dev/null
 
-# Vendored SDDM theme (cachyos/sddm-theme/slievr-cachy/, adapted from
+# Vendored SDDM theme (cachyos/sddm-theme/fledge/, adapted from
 # Omarchy's default one — same style, relabeled logo, see that dir).
 # Not stow-managed: SDDM reads themes from a system path, not $HOME.
-sudo rm -rf /usr/share/sddm/themes/slievr-cachy
-sudo cp -r "$DOTFILES_DIR/cachyos/sddm-theme/slievr-cachy" /usr/share/sddm/themes/slievr-cachy
-printf '[Theme]\nCurrent=slievr-cachy\n' \
+sudo rm -rf /usr/share/sddm/themes/fledge
+sudo cp -r "$DOTFILES_DIR/cachyos/sddm-theme/fledge" /usr/share/sddm/themes/fledge
+printf '[Theme]\nCurrent=fledge\n' \
   | sudo tee /etc/sddm.conf.d/theme.conf >/dev/null
 
 sudo systemctl enable sddm.service

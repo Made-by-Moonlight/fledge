@@ -44,10 +44,10 @@ repo="$(cd "$DIR/../.." && pwd)"
 bash "$DIR/build-assets.sh" "$T/assets" >/dev/null
 check "about.txt is current" "$(cat "$repo/dot-config/omarchy/branding/about.txt")" \
   "$(cat "$T/assets/dot-config/omarchy/branding/about.txt")"
-committed="$repo/cachyos/plymouth-theme/slievr-cachy/logo.png"
-fresh="$T/assets/cachyos/plymouth-theme/slievr-cachy/logo.png"
+committed="$repo/cachyos/plymouth-theme/fledge/logo.png"
+fresh="$T/assets/cachyos/plymouth-theme/fledge/logo.png"
 check "plymouth logo is 320px wide" "320" "$(magick identify -format '%w' "$committed")"
-ply_rel=cachyos/plymouth-theme/slievr-cachy
+ply_rel=cachyos/plymouth-theme/fledge
 for f in entry.png bullet.png progress_box.png progress_bar.png; do
   check "plymouth $f is current" "0" \
     "$(magick compare -metric AE "$repo/$ply_rel/$f" "$T/assets/$ply_rel/$f" null: 2>&1 | awk '{print $1}')"
@@ -58,8 +58,8 @@ check "plymouth logo is current (0 differing pixels)" "0" \
   "$(magick compare -metric AE "$committed" "$fresh" null: 2>&1 | awk '{print $1}')"
 
 # theme + SDDM images
-theme_rel=dot-config/omarchy/themes/made-by-moonlight
-sddm_rel=cachyos/sddm-theme/slievr-cachy
+theme_rel=dot-config/omarchy/themes/fledge
+sddm_rel=cachyos/sddm-theme/fledge
 for spec in "backgrounds/1-moonrise-3440x1440.png 3440x1440" "backgrounds/2-moonrise-2560x1440.png 2560x1440" \
             "backgrounds/3-moonrise-1920x1080.png 1920x1080" "glow.png 1920x1080" "owl.png 520x520" "preview.png 1280x720"; do
   f="${spec% *}"; want="${spec#* }"

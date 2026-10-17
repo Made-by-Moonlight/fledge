@@ -1,6 +1,6 @@
 [SddmGreeterTheme]
 Name=made by moonlight
 Description=made by moonlight login screen: owl, wordmark and amber password field.
-Author=slievr-cachy (adapted from basecamp/omarchy, MIT)
+Author=fledge (adapted from basecamp/omarchy, MIT)
 Type=sddm-theme
 Version=1.0

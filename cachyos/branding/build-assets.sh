@@ -10,7 +10,7 @@ REPO="$(cd "$HERE/../.." && pwd)"
 SVG="$HERE/owl.svg"
 OUT="${1:-$REPO}"
 ABOUT="$OUT/dot-config/omarchy/branding/about.txt"
-LOGO="$OUT/cachyos/plymouth-theme/slievr-cachy/logo.png"
+LOGO="$OUT/cachyos/plymouth-theme/fledge/logo.png"
 mkdir -p "$(dirname "$ABOUT")" "$(dirname "$LOGO")"
 
 # About screen (fledge launch about): plain block art, 54 columns wide.
@@ -21,7 +21,7 @@ sed 's/currentColor/#ffffff/g' "$SVG" \
   | rsvg-convert -w 320 -o "$LOGO"
 
 # Plymouth unlock field, dots and progress bar in the brand palette
-# (same look as the SDDM field). Sizes match what slievr-cachy.script expects.
+# (same look as the SDDM field). Sizes match what fledge.script expects.
 PLY_DIR="$(dirname "$LOGO")"
 magick -size 286x48 xc:'#2f3640' -fill '#212a33' -draw 'rectangle 2,2 283,45' "PNG32:$PLY_DIR/entry.png"
 magick -size 14x14 xc:none -fill '#f4af03' -draw 'circle 7,7 7,2' "PNG32:$PLY_DIR/bullet.png"
@@ -29,8 +29,8 @@ magick -size 300x10 xc:'#2f3640' "PNG32:$PLY_DIR/progress_box.png"
 magick -size 300x10 xc:'#f4af03' "PNG32:$PLY_DIR/progress_bar.png"
 
 # Desktop theme + SDDM images (spec: Moonrise wallpaper, glow, owl).
-THEME_DIR="$OUT/dot-config/omarchy/themes/made-by-moonlight"
-SDDM_DIR="$OUT/cachyos/sddm-theme/slievr-cachy"
+THEME_DIR="$OUT/dot-config/omarchy/themes/fledge"
+SDDM_DIR="$OUT/cachyos/sddm-theme/fledge"
 mkdir -p "$THEME_DIR/backgrounds" "$SDDM_DIR"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

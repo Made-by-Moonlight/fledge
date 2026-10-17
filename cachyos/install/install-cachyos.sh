@@ -298,9 +298,9 @@ install -Dm644 "$HERE/lib/cachyos-repos.sh" /mnt/root/cachyos-repos.sh
 
 # Vendored Plymouth theme (graphical boot splash + LUKS prompt). Not stow-
 # managed - Plymouth reads themes from a system path. chroot-setup.sh selects it.
-rm -rf /mnt/usr/share/plymouth/themes/slievr-cachy
+rm -rf /mnt/usr/share/plymouth/themes/fledge
 install -d /mnt/usr/share/plymouth/themes
-cp -r "$HERE/../plymouth-theme/slievr-cachy" /mnt/usr/share/plymouth/themes/slievr-cachy
+cp -r "$HERE/../plymouth-theme/fledge" /mnt/usr/share/plymouth/themes/fledge
 
 arch-chroot /mnt env \
   TIMEZONE="$TIMEZONE" LOCALE="$LOCALE" \

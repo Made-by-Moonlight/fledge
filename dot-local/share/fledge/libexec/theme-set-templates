@@ -3,7 +3,7 @@
 # Generate themed config files from Omarchy templates
 
 # fledge has no Omarchy checkout ($OMARCHY_PATH is unset): the templates are
-# vendored beside this script. Without them, setting made-by-moonlight (the
+# vendored beside this script. Without them, setting the fledge theme (the
 # theme menu) would leave it with no hyprland.lua, kitty.conf, ... at all.
 TEMPLATES_DIR="${OMARCHY_PATH:-$(dirname "$(realpath "${BASH_SOURCE[0]}")")/..}/default/themed"
 USER_TEMPLATES_DIR="$HOME/.config/omarchy/themed"

@@ -52,9 +52,9 @@ EOF
 
 echo ">>> plymouth theme" >&2
 # Graphical boot splash + LUKS password prompt. Theme was copied to
-# /usr/share/plymouth/themes/slievr-cachy by install-cachyos.sh. 'splash' is
+# /usr/share/plymouth/themes/fledge by install-cachyos.sh. 'splash' is
 # already in the kernel cmdline (profile.sh EXTRA_CMDLINE).
-plymouth-set-default-theme slievr-cachy
+plymouth-set-default-theme fledge
 
 echo ">>> mkinitcpio.conf" >&2
 # plymouth hook goes after kms, before encrypt, so the splash is up before the

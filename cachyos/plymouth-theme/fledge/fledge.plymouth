@@ -1,11 +1,11 @@
 [Plymouth Theme]
-Name=slievr-cachy
+Name=fledge
 Description=made by moonlight boot splash (adapted from Omarchy's).
 ModuleName=script
 
 [script]
-ImageDir=/usr/share/plymouth/themes/slievr-cachy
-ScriptFile=/usr/share/plymouth/themes/slievr-cachy/slievr-cachy.script
+ImageDir=/usr/share/plymouth/themes/fledge
+ScriptFile=/usr/share/plymouth/themes/fledge/fledge.script
 ConsoleLogBackgroundColor=0x171e28
 MonospaceFont=Cantarell 11
 Font=Cantarell 11
