@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Reset the trackpad by unbinding and rebinding its driver.
-# slievr:requires-sudo=true
+# Reset the trackpad by unbinding and rebinding its driver.
 
 for dev in /sys/bus/i2c/drivers/i2c_hid_acpi/i2c-*; do
   [[ -e $dev ]] || continue

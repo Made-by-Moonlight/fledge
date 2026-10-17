@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# slievr:summary=Toggle suspend availability in the system menu
+# Toggle suspend availability in the system menu
 
-slievr-toggle \
+fledge toggle \
   --enabled-notification "󰒲   Suspend removed from system menu" \
   --disabled-notification "󰒲   Suspend now available in system menu" \
   suspend-off

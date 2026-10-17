@@ -123,7 +123,7 @@ cp -a /src "$PROFILE/airootfs/usr/share/slievr-cachy"
 
 step "sanity checks"
 for f in usr/share/slievr-cachy/cachyos/install/install-cachyos.sh usr/share/slievr-cachy/.git/HEAD \
-         usr/share/slievr-cachy/dot-local/share/mbm/assets/owl.png \
+         usr/share/slievr-cachy/dot-local/share/fledge/assets/owl.png \
          usr/local/bin/mbm-install usr/local/bin/mbm-probe usr/local/bin/mbm-cleanup \
          etc/sudoers.d/mbm-installer etc/sysusers.d/mbm-installer.conf etc/mbm-installer/hyprland.lua home/moonlight/.bash_profile \
          etc/systemd/system/getty@tty1.service.d/autologin.conf etc/polkit-1/rules.d/50-mbm-installer.rules \

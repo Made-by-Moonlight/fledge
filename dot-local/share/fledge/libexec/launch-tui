@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Launch a TUI command in the default terminal with Omarchy styling
-# slievr:args=<command> [args...]
+# Launch a TUI command in the default terminal with Omarchy styling
+# usage: fledge launch tui <command> [args...]
 
 exec setsid uwsm-app -- xdg-terminal-exec --app-id=org.omarchy.$(basename $1) -e "$1" "${@:2}"

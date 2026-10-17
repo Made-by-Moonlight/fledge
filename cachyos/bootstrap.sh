@@ -42,7 +42,7 @@ PACMAN_PACKAGES=(
   dconf
   # Login shell (dot-config/fish); pkgfile backs fish's command-not-found.
   fish pkgfile
-  # The quick-settings night light tile (slievr-toggle-nightlight); it used to
+  # The quick-settings night light tile (fledge toggle nightlight); it used to
   # arrive transitively and nothing pulls it in any more.
   hyprsunset
   # kitty.conf font_family names a specific nerd font, and the mbm shell's
@@ -50,19 +50,19 @@ PACMAN_PACKAGES=(
   # JetBrainsMono Nerd Font: the mbm shell's text and the vendored sddm
   # greeter theme's password field.
   ttf-cascadia-mono-nerd ttf-firacode-nerd ttf-jetbrains-mono-nerd
-  # pamixer (slievr-audio-* scripts), brightnessctl (slievr-brightness-
-  # display/-keyboard, the shell's brightness) were both previously only
+  # pamixer (fledge audio …), brightnessctl (fledge brightness keyboard,
+  # the shell's brightness) were both previously only
   # pulled in transitively via cachyos-hyprland-settings (see the removal
   # step below) — its removal cascaded them away too since nothing had
   # them explicit yet.
   pamixer brightnessctl
-  # Deps for the vendored dot-local/share/slievr-cachy/bin/ scripts that
-  # the generated binds call (see that dir's README.md).
+  # Deps for the vendored scripts in dot-local/share/fledge/libexec/ that
+  # the generated binds call (see dot-local/share/fledge/README.md).
   uwsm xdg-desktop-portal-hyprland
   grim slurp satty hyprpicker wl-clipboard jq
   # fledge/autostart.lua's startup commands — all missing on a fresh install:
   # input method framework, power-profile D-Bus service
-  # (slievr-powerprofiles-init needs powerprofilesctl). No idle daemon or
+  # (fledge powerprofiles init needs powerprofilesctl). No idle daemon or
   # polkit agent: the mbm shell does both.
   fcitx5 power-profiles-daemon
   # The mbm shell (dot-config/quickshell/mbm, run by mbm-shell.service): bar,
@@ -78,7 +78,7 @@ PACMAN_PACKAGES=(
   # Bluetooth stack for quick settings' Bluetooth picker. It used to arrive
   # only as bluetui's dependency, so retiring bluetui would cascade it away.
   bluez
-  # slievr-transcode (Super+Ctrl+Period, pictures) and slievr-transcode-ascii
+  # fledge transcode (Super+Ctrl+Period, pictures) and fledge transcode ascii
   # (Style -> About, the screensaver). It used to arrive only as an elephant
   # dependency, so retiring elephant would cascade it away.
   imagemagick
@@ -86,7 +86,7 @@ PACMAN_PACKAGES=(
   btop gnome-calculator
   # Wi-Fi, Bluetooth and audio are the mbm quick settings now (Super+A,
   # Super+Ctrl+W/B/A); nmtui (ships with networkmanager) stays for the
-  # Setup menu (slievr-menu setup).
+  # Setup menu (fledge menu setup).
   # Official ProtonVPN GTK client.
   proton-vpn-gtk-app
   # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
@@ -199,25 +199,12 @@ stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 find "$HOME" -maxdepth 1 -xtype l -name .zshrc -lname "*slievr-cachy/dot-zshrc" -delete 2>/dev/null || true
 find "$HOME/.config" "$HOME/.local/share" -maxdepth 4 -xtype l -lname "*slievr-cachy/dot-*" -delete 2>/dev/null || true
 
-# The vendored dot-local/share/slievr-cachy/bin/ scripts (stowed above) need
-# to be on PATH inside the Hyprland/uwsm session for the generated binds'
-# slievr-* keybindings to resolve. uwsm reads this file for session env
-# vars; it isn't stow-managed since it's created fresh on any machine
-# (matches how the current host's ~/.config/uwsm/env was set up).
+# uwsm reads ~/.config/uwsm/env for session env vars; it isn't stow-managed
+# since it's created fresh on any machine. The fledge command gets onto the
+# session's PATH from the stowed env-hyprland instead, so it isn't here.
 mkdir -p "$HOME/.config/uwsm"
 UWSM_ENV="$HOME/.config/uwsm/env"
 touch "$UWSM_ENV"
-if ! grep -q '^export SLIEVR_BIN_PATH=' "$UWSM_ENV"; then
-  # shellcheck disable=SC2016 # literal $HOME/$SLIEVR_BIN_PATH, expanded when uwsm sources this file later
-  {
-    echo 'export SLIEVR_BIN_PATH=$HOME/.local/share/slievr-cachy'
-    echo 'export PATH=$SLIEVR_BIN_PATH/bin/:$PATH'
-  } >>"$UWSM_ENV"
-fi
-if ! grep -q 'share/mbm/bin' "$UWSM_ENV"; then
-  # shellcheck disable=SC2016 # expanded when uwsm sources the file
-  echo 'export PATH=$HOME/.local/share/mbm/bin:$PATH' >>"$UWSM_ENV"
-fi
 
 # The terminal keybind ($terminal = uwsm app -- $TERMINAL) and
 # $EDITOR need these too. Previously written to ~/.config/uwsm/default,
@@ -225,7 +212,7 @@ fi
 # implying otherwise — uwsm's prepare-env.sh does NOT read: it only
 # sources env and env-<compositor> (confirmed against
 # /usr/lib/uwsm/prepare-env.sh). That file was silently never taking
-# effect; these belong in env instead, same as SLIEVR_BIN_PATH above.
+# effect; these belong in env instead.
 if ! grep -q '^export TERMINAL=' "$UWSM_ENV"; then
   {
     echo 'export TERMINAL=xdg-terminal-exec'
@@ -234,7 +221,7 @@ if ! grep -q '^export TERMINAL=' "$UWSM_ENV"; then
 fi
 
 # xdg-terminal-exec (what $TERMINAL delegates to, and what
-# slievr-launch-tui/omarchy-launch-tui use) picks the first entry here;
+# fledge launch tui uses) picks the first entry here;
 # an empty/missing list falls back to its own probing order, so pin it
 # to kitty explicitly to match this setup's one installed terminal.
 mkdir -p "$HOME/.config"
@@ -286,7 +273,7 @@ fi
 rm -f "$HOME/.local/state/hypr-toggles/flags.conf"
 
 # power-profiles-daemon provides the D-Bus service powerprofilesctl (and
-# slievr-powerprofiles-init, run at Hyprland startup) needs. Enable only, no
+# fledge powerprofiles init, run at Hyprland startup) needs. Enable only, no
 # --now: p-p-d.service is `After=multi-user.target`, and when bootstrap.sh runs
 # from slievr-firstboot.service (itself ordered before multi-user.target, which
 # waits on it), a synchronous `--now` start deadlocks — firstboot waits for the
@@ -323,7 +310,7 @@ sudo systemctl enable sddm.service
 # so no `systemctl --user enable` here (it would hang from slievr-firstboot).
 # Run from inside a session, the end of this script starts it (see there).
 
-# Generate the Hyprland binds/monitors/input from mbm settings; hyprland.lua
+# Generate the Hyprland binds/monitors/input from fledge settings; hyprland.lua
 # loads ~/.local/state/mbm/hypr/*.lua (a missing one just loses its settings).
 # Invalid user settings must not stop the rest of bootstrap: warn, and the
 # uwsm env hook (dot-config/uwsm/env-hyprland) falls back to the defaults.
@@ -358,8 +345,8 @@ if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl version >/dev/null 2>&1;
     unknown*) echo "WARN: could not tell which config Hyprland is running (${manager#unknown: }); if your binds are gone, log out and back in" >&2 ;;
   esac
 fi
-if ! MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply; then
-  echo "WARN: mbm settings apply failed; fix ~/.config/mbm/settings.json (mbm settings check)" >&2
+if ! MBM_NO_RELOAD=1 "$fledge" settings apply; then
+  echo "WARN: fledge settings apply failed; fix ~/.config/mbm/settings.json (fledge settings check)" >&2
 fi
 if [[ -n $in_session ]]; then
   hyprctl reload >/dev/null 2>&1 || echo "WARN: hyprctl reload failed" >&2

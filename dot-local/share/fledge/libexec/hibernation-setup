@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Set up hibernation with swap and boot resume configuration
-# slievr:requires-sudo=true
-# slievr:args=[--force] [--no-rebuild]
+# Set up hibernation with swap and boot resume configuration
+# usage: fledge hibernation setup [--force] [--no-rebuild]
 
 FORCE=false
 NO_REBUILD=false
@@ -128,5 +127,5 @@ if ! $NO_REBUILD; then
 fi
 
 if ! $FORCE && ! $NO_REBUILD && gum confirm "Reboot to enable hibernation?"; then
-  slievr-system-reboot
+  fledge system reboot
 fi

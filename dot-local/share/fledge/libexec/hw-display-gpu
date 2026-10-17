@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Report the GPU(s) driving connected monitors (primary = most connected outputs).
-# slievr:args=[--driver|--devices|--pci-id]
-# slievr:examples=slievr-hw-display-gpu | slievr-hw-display-gpu --devices
+# Report the GPU(s) driving connected monitors (primary = most connected outputs).
+# usage: fledge hw display gpu [--driver|--devices|--pci-id]
 
 # --driver  (default) kernel driver of the primary display GPU: amdgpu, nvidia, i915, ...
 # --devices colon-joined /dev/dri/cardN of every GPU with a connected output,
@@ -12,7 +11,7 @@
 # GPUs with no monitor attached (e.g. a headless compute card) are left out, so
 # the compositor never opens them. Exits 1 when no connected output is found.
 
-drm="${SLIEVR_SYSFS_DRM:-/sys/class/drm}"
+drm="${FLEDGE_SYSFS_DRM:-/sys/class/drm}"
 
 declare -A connected=()
 for status in "$drm"/card*-*/status; do

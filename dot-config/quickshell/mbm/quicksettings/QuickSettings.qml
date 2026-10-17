@@ -86,7 +86,7 @@ PanelWindow {
                     Tile { Layout.fillWidth: true; Layout.columnSpan: win.nightLightAvailable ? 1 : 2; glyph: Notifs.dnd ? "󰂛" : "󰂚"; title: "Do not disturb"; sub: Notifs.dnd ? "on" : "off"; on: Notifs.dnd
                            onClicked: Notifs.toggleDnd() }
                     Tile { Layout.fillWidth: true; glyph: "󰖔"; title: "Night light"; visible: win.nightLightAvailable; sub: win.nightLight ? "on" : "off"; on: win.nightLight
-                           onClicked: { Quickshell.execDetached(["slievr-toggle-nightlight"]); nlRecheck.restart(); } }
+                           onClicked: { Quickshell.execDetached(["fledge", "toggle", "nightlight"]); nlRecheck.restart(); } }
                 }
 
                 Loader { Layout.fillWidth: true; active: ShellState.qsPicker === "wifi"; visible: active; sourceComponent: WifiPicker { width: body.width; onReleaseFocus: panel.forceActiveFocus() } }

@@ -69,8 +69,8 @@ safety_binds() {
 }
 # ...and apply then writes it back.
 binds_restored() {
-  mbm settings apply >/dev/null 2>&1
-  is "$1: settings apply restores the binds" "$(( $(mbm settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
+  fledge settings apply >/dev/null 2>&1
+  is "$1: settings apply restores the binds" "$(( $(fledge settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
 }
 
 case "${1:-}" in
@@ -114,7 +114,7 @@ cleanup() {
   trap - EXIT INT TERM
   [[ "$(ipc lock status)" == locked ]] && unlock
   # apply also rewrites a binds.lua the broken-fragment check left behind.
-  mbm settings reset '.binds["custom.verify"]' >/dev/null 2>&1; mbm settings apply >/dev/null 2>&1
+  fledge settings reset '.binds["custom.verify"]' >/dev/null 2>&1; fledge settings apply >/dev/null 2>&1
   [[ -n "${ws0:-}" ]] && fledge hypr dispatch "hl.dsp.focus({workspace = $ws0})" >/dev/null 2>&1
   [[ -n "${zoom0:-}" ]] && fledge hypr set "cursor = { zoom_factor = $zoom0 }" >/dev/null 2>&1
   ipc launcher close >/dev/null; ipc quicksettings close >/dev/null; ipc settings close >/dev/null
@@ -133,7 +133,7 @@ done
 # The comm name is truncated to 15 chars, so match polkit-gnome by path.
 is "polkit-gnome not running"    no     "$(pgrep -f '^/usr/lib/polkit-gnome/' >/dev/null && echo yes || echo no)"
 is "shell answers IPC"           pong   "$(ipc shell ping)"
-is "settings valid"              ""     "$(mbm settings check 2>&1)"
+is "settings valid"              ""     "$(fledge settings check 2>&1)"
 is "generated config present"    4      "$(ls "$gen"/{binds,monitors,workspaces,input}.lua 2>/dev/null | wc -l)"
 is "no generated .conf left"     0      "$(ls "$gen"/*.conf 2>/dev/null | wc -l)"
 
@@ -144,8 +144,8 @@ is "no Hyprland config errors"   ""     "$(hyprctl configerrors)"
 is "no .conf notification"       no     "$(note_has '\.conf')"
 is "no fledge loader notification" no   "$(note_has '^fledge: ')"
 # Every settings bind is one Hyprland bind, plus the mbm-record submap's way out.
-is "every settings bind loaded"  "$(( $(mbm settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
-is "bind descriptions are the settings labels" "$(mbm settings get .binds | jq -c '[.[].label] | sort')" "$(hyprctl binds -j | jq -c '[.[] | select(.submap == "") | .description] | sort')"
+is "every settings bind loaded"  "$(( $(fledge settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
+is "bind descriptions are the settings labels" "$(fledge settings get .binds | jq -c '[.[].label] | sort')" "$(hyprctl binds -j | jq -c '[.[] | select(.submap == "") | .description] | sort')"
 is "mbm-record submap has its reset bind" 1 "$(hyprctl binds -j | jq '[.[] | select(.submap == "mbm-record" and .key == "Escape")] | length')"
 fledge hypr dispatch 'hl.dsp.submap("mbm-record")' >/dev/null
 is "fledge hypr enters the mbm-record submap" mbm-record "$(hyprctl submap)"
@@ -163,7 +163,7 @@ zoom0="$(hyprctl getoption cursor:zoom_factor | sed -n 's/^float: //p')"
 is "fledge hypr set succeeds"    0      "$(fledge hypr set 'cursor = { zoom_factor = 1.5 }' >/dev/null 2>&1; echo $?)"
 is "fledge hypr set applies"     "float: 1.500000" "$(hyprctl getoption cursor:zoom_factor | head -n1)"
 # The zoom binds' commands (they ran `hyprctl keyword`, refused under Lua).
-zoom_cmd() { mbm settings get ".binds[\"$1\"].action.exec" | jq -r .; }
+zoom_cmd() { fledge settings get ".binds[\"$1\"].action.exec" | jq -r .; }
 sh -c "$(zoom_cmd utilities.reset-zoom)"
 is "reset-zoom bind command resets the zoom" "float: 1.000000" "$(hyprctl getoption cursor:zoom_factor | head -n1)"
 sh -c "$(zoom_cmd utilities.zoom-in)"
@@ -221,7 +221,7 @@ notify-send verify-shell hello; sleep 0.5
 is "notification recorded"       yes    "$( (( $(ipc notifications count) > before )) && echo yes || echo no)"
 ipc notifications dismissAll
 
-mbm settings set '.binds["custom.verify"]' '{"mods":"SUPER CTRL ALT","key":"F12","label":"verify","group":"Custom","action":{"exec":"true"}}' && mbm settings apply
+fledge settings set '.binds["custom.verify"]' '{"mods":"SUPER CTRL ALT","key":"F12","label":"verify","group":"Custom","action":{"exec":"true"}}' && fledge settings apply
 is "custom bind reaches Hyprland" 1     "$(hyprctl binds -j | jq '[.[] | select(.description == "verify")] | length')"
 # Key recording: the settings window puts Hyprland in the mbm-record submap, takes
 # one key (a bare F-key: wtype's -M modifiers don't reach Qt as modifiers) and
@@ -230,19 +230,19 @@ ipc settings record custom.verify; sleep 1.5
 is "recording enters the mbm-record submap" mbm-record "$(hyprctl submap)"
 wtype -k F9; sleep 2
 is "recording leaves the submap"  default "$(hyprctl submap)"
-is "the recorded key is saved"    "+F9"  "$(mbm settings get '.binds["custom.verify"] | .mods + "+" + .key' | jq -r .)"
+is "the recorded key is saved"    "+F9"  "$(fledge settings get '.binds["custom.verify"] | .mods + "+" + .key' | jq -r .)"
 is "and reaches Hyprland"         1      "$(hyprctl binds -j | jq '[.[] | select(.description == "verify" and .key == "F9")] | length')"
 ipc settings close
-mbm settings reset '.binds["custom.verify"]' && mbm settings apply
+fledge settings reset '.binds["custom.verify"]' && fledge settings apply
 is "custom bind removed"         0      "$(hyprctl binds -j | jq '[.[] | select(.description == "verify")] | length')"
 
-(printf 'x\ny\n' | timeout 10 mbm dmenu --select 2 >"$DMENU_OUT") & sleep 0.8; wtype -k Return; wait
+(printf 'x\ny\n' | timeout 10 fledge dmenu --select 2 >"$DMENU_OUT") & sleep 0.8; wtype -k Return; wait
 is "dmenu returns the choice"    y      "$(cat "$DMENU_OUT")"
 
-# Night light: the tile runs slievr-toggle-nightlight and reads hyprsunset's temperature.
+# Night light: the tile runs fledge toggle nightlight and reads hyprsunset's temperature.
 nl0="$(nl_temp)"
-slievr-toggle-nightlight >/dev/null 2>&1; sleep 1; nl1="$(nl_temp)"
-slievr-toggle-nightlight >/dev/null 2>&1; sleep 1; nl2="$(nl_temp)"
+fledge toggle nightlight >/dev/null 2>&1; sleep 1; nl1="$(nl_temp)"
+fledge toggle nightlight >/dev/null 2>&1; sleep 1; nl2="$(nl_temp)"
 is "night light toggles on"      4000   "$nl1"
 is "night light toggles back"    "${nl0:-6000}" "$nl2"
 is "night light ends off"        6000   "$nl2"

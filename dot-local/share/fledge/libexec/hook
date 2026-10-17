@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# slievr:summary=Run a named hook from ~/.config/omarchy/hooks/<name> and ~/.config/omarchy/hooks/<name>.d/.
-# slievr:args=[name] [args...]
+# Run a named hook from ~/.config/omarchy/hooks/<name> and ~/.config/omarchy/hooks/<name>.d/.
+# usage: fledge hook [name] [args...]
 
 set -e
 
 if (( $# < 1 )); then
-  echo "Usage: slievr-hook [name] [args...]"
+  echo "Usage: fledge hook [name] [args...]"
   exit 1
 fi
 

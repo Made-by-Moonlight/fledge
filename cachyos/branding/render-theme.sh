@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Render an Omarchy-style theme (colors.toml + files) into a theme directory,
-# filling the vendored Omarchy templates the way slievr-theme-set-templates
+# filling the vendored Omarchy templates the way fledge theme set templates
 # does. Files the theme provides win over templates.
 #   cachyos/branding/render-theme.sh [THEME_DIR] [OUT_DIR]
 # Defaults: dot-config/omarchy/themes/made-by-moonlight -> dot-config/omarchy/current/theme
@@ -10,7 +10,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO="$(cd "$HERE/../.." && pwd)"
 THEME="${1:-$REPO/dot-config/omarchy/themes/made-by-moonlight}"
 OUT="${2:-$REPO/dot-config/omarchy/current/theme}"
-TEMPLATES="$REPO/dot-local/share/slievr-cachy/default/themed"
+TEMPLATES="$REPO/dot-local/share/fledge/default/themed"
 COLORS="$THEME/colors.toml"
 die() { echo "render-theme: $*" >&2; exit 1; }
 

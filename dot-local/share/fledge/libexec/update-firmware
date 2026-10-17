@@ -1,13 +1,12 @@
 #!/bin/bash
 
-# slievr:summary=Update system firmware using fwupd. Ensures the fwupd EFI binary is installed
-# slievr:requires-sudo=true
+# Update system firmware using fwupd. Ensures the fwupd EFI binary is installed
 
 set -e
 echo -e "\e[32mUpdate Firmware\e[0m"
 
-if slievr-cmd-missing fwupdmgr; then
-  slievr-pkg-add fwupd
+if fledge cmd missing fwupdmgr; then
+  fledge pkg add fwupd
 fi
 
 if [[ -d /sys/firmware/efi ]] && [[ -f /usr/lib/fwupd/efi/fwupdx64.efi ]]; then

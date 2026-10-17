@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# slievr:summary=List available monospace fonts
-# slievr:examples=omarchy font list | omarchy font set "CaskaydiaMono Nerd Font"
+# List available monospace fonts
 
 fc-list :spacing=100 -f "%{family[0]}\n" | grep -v -i -E 'emoji|signwriting|omarchy' | sort -u

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Generate themed config files from Omarchy templates
-# slievr:hidden=true
+# Generate themed config files from Omarchy templates
 
 # fledge has no Omarchy checkout ($OMARCHY_PATH is unset): the templates are
 # vendored beside this script. Without them, setting made-by-moonlight (the

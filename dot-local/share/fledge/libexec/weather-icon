@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Returns a weather condition icon, adjusted for live sunrise and sunset.
+# Returns a weather condition icon, adjusted for live sunrise and sunset.
 
 weather_data=$(curl -fsS --max-time 3 "https://wttr.in?format=j1" 2>/dev/null | jq -er '[.current_condition[0].weatherCode, .weather[0].astronomy[0].sunrise, .weather[0].astronomy[0].sunset] | select(all(. != null and . != "")) | @tsv' 2>/dev/null) || exit 1
 

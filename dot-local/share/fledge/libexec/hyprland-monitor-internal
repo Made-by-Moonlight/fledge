@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Enable, disable, toggle, or recover the internal laptop display
-# slievr:args=<on|off|toggle|recover>
+# Enable, disable, toggle, or recover the internal laptop display
+# usage: fledge hyprland monitor internal <on|off|toggle|recover>
 
 TOGGLE="internal-monitor-disable"
 TOGGLE_FLAG="$HOME/.local/state/hypr-toggles/$TOGGLE.lua"
@@ -11,17 +11,17 @@ MIRROR_TOGGLE="internal-monitor-mirror"
 INTERNAL=$(hyprctl monitors -j | jq -r '.[] | select(.name | contains("eDP")).name' | head -n 1)
 
 enable() {
-  if slievr-hyprland-toggle-enabled "$TOGGLE"; then
-    slievr-hyprland-toggle --disabled-notification "󰍹    Laptop display enabled" "$TOGGLE"
+  if fledge hyprland toggle enabled "$TOGGLE"; then
+    fledge hyprland toggle --disabled-notification "󰍹    Laptop display enabled" "$TOGGLE"
   fi
 }
 
 disable() {
-  if ! slievr-hw-external-monitors; then
+  if ! fledge hw external monitors; then
     notify-send -u low "󰍹    Can't disable the only active display"
     exit 1
   fi
-  if slievr-hyprland-toggle-disabled "$TOGGLE" && slievr-hyprland-toggle-disabled "$MIRROR_TOGGLE"; then
+  if fledge hyprland toggle disabled "$TOGGLE" && fledge hyprland toggle disabled "$MIRROR_TOGGLE"; then
     mkdir -p "${TOGGLE_FLAG%/*}"
     printf 'hl.monitor({ output = %s, disabled = true })\n' "$(fledge hypr quote "$INTERNAL")" >"$TOGGLE_FLAG"
     notify-send -u low "󰍹    Laptop display disabled"
@@ -30,15 +30,15 @@ disable() {
 }
 
 recover() {
-  if ! slievr-hw-external-monitors && slievr-hyprland-toggle-enabled "$TOGGLE"; then
-    slievr-hyprland-toggle "$TOGGLE"
+  if ! fledge hw external monitors && fledge hyprland toggle enabled "$TOGGLE"; then
+    fledge hyprland toggle "$TOGGLE"
   fi
 }
 
 case "$1" in
   on) enable ;;
   off) disable ;;
-  toggle) if slievr-hyprland-toggle-enabled "$TOGGLE"; then enable; else disable; fi ;;
+  toggle) if fledge hyprland toggle enabled "$TOGGLE"; then enable; else disable; fi ;;
   recover) recover ;;
   *)
     echo "Usage: $(basename "$0") {on|off|toggle|recover}" >&2

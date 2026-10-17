@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# slievr:summary=Restart the XCompose input method service (fcitx5) to apply new compose key settings.
+# Restart the XCompose input method service (fcitx5) to apply new compose key settings.
 
-slievr-restart-app fcitx5 --disable notificationitem
+fledge restart app fcitx5 --disable notificationitem

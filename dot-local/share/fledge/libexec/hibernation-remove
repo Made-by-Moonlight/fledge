@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Remove hibernation setup including swap and boot resume settings
-# slievr:requires-sudo=true
+# Remove hibernation setup including swap and boot resume settings
 
 MKINITCPIO_CONF="/etc/mkinitcpio.conf.d/omarchy_resume.conf"
 

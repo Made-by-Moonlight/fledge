@@ -1,10 +1,9 @@
 #!/bin/bash
 
-# slievr:summary=Toggle dedicated vs integrated GPU mode via supergfxd (for hybrid gpu laptops, like Asus G14).
-# slievr:requires-sudo=true
+# Toggle dedicated vs integrated GPU mode via supergfxd (for hybrid gpu laptops, like Asus G14).
 
-if slievr-cmd-missing supergfxctl; then
-  slievr-pkg-add supergfxctl
+if fledge cmd missing supergfxctl; then
+  fledge pkg add supergfxctl
 
   # Create config before starting service to prevent hang on first boot
   sudo tee /etc/supergfxd.conf >/dev/null <<'CONF'
@@ -36,7 +35,7 @@ case "$gpu_mode" in
     # Remove the startup delay override (not needed for Hybrid mode)
     sudo rm -rf /etc/systemd/system/supergfxd.service.d/delay-start.conf
 
-    slievr-system-reboot
+    fledge system reboot
   fi
   ;;
 "Hybrid")
@@ -54,7 +53,7 @@ case "$gpu_mode" in
     sudo mkdir -p /etc/systemd/system/supergfxd.service.d
     sudo cp -p $OMARCHY_PATH/default/systemd/system/supergfxd.service.d/delay-start.conf /etc/systemd/system/supergfxd.service.d/
 
-    slievr-system-reboot
+    fledge system reboot
   fi
   ;;
 *)

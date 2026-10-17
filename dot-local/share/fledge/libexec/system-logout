@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# slievr:summary=Log out after closing application windows
-# slievr:examples=omarchy logout | omarchy system logout
-# slievr:aliases=omarchy logout
+# Log out after closing application windows
 
 nohup bash -c "sleep 2 && uwsm stop" >/dev/null 2>&1 &
 
 # Now close all windows
-slievr-hyprland-window-close-all
+fledge hyprland window close all
 sleep 1 # Allow apps like Chrome to shutdown correctly

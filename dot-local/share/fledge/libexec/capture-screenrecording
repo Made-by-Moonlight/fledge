@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Start or stop screen recording
-# slievr:group=capture
-# slievr:args=[--with-desktop-audio] [--with-microphone-audio] [--with-webcam] [--webcam-device=<device>] [--resolution=<size>] [--stop-recording]
-# slievr:examples=omarchy screenrecord | omarchy capture screenrecord --with-desktop-audio
-# slievr:aliases=omarchy screenrecord
+# Start or stop screen recording
+# usage: fledge capture screenrecording [--with-desktop-audio] [--with-microphone-audio] [--with-webcam] [--webcam-device=<device>] [--resolution=<size>] [--stop-recording]
 #
 # Env: OMARCHY_SCREENRECORD_USE_PORTAL=true skips the built-in slurp picker and
 # uses gpu-screen-recorder's xdg-desktop-portal capture backend instead. The
@@ -15,7 +12,7 @@
 # start.
 #
 # Env: OMARCHY_SCREENRECORD_DEBUG=true appends gpu-screen-recorder's stderr (and
-# the picker target it was launched with) to /tmp/slievr-screenrecord.log so
+# the picker target it was launched with) to /tmp/fledge-screenrecord.log so
 # users can attach a log when reporting capture failures.
 
 [[ -f ~/.config/user-dirs.dirs ]] && source ~/.config/user-dirs.dirs
@@ -32,8 +29,8 @@ WEBCAM="false"
 WEBCAM_DEVICE=""
 RESOLUTION=""
 STOP_RECORDING="false"
-RECORDING_FILE="/tmp/slievr-screenrecord-filename"
-LOG_FILE=$([[ ${OMARCHY_SCREENRECORD_DEBUG:-false} == "true" ]] && echo "/tmp/slievr-screenrecord.log" || echo "/dev/null")
+RECORDING_FILE="/tmp/fledge-screenrecord-filename"
+LOG_FILE=$([[ ${OMARCHY_SCREENRECORD_DEBUG:-false} == "true" ]] && echo "/tmp/fledge-screenrecord.log" || echo "/dev/null")
 
 for arg in "$@"; do
   case "$arg" in
@@ -101,7 +98,7 @@ default_resolution() {
 }
 
 # Monitor + window rectangles on the focused workspace, in slurp's "X,Y WxH" format.
-# Mirrors slievr-capture-screenshot so the picker UX is identical.
+# Mirrors fledge capture screenshot so the picker UX is identical.
 get_rectangles() {
   local active_workspace=$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .activeWorkspace.id')
   hyprctl monitors -j | jq -r --arg ws "$active_workspace" '

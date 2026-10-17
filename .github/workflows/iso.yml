@@ -38,9 +38,9 @@ jobs:
                    cachyos/install/test-progress.sh cachyos/install/test-desktop.sh cachyos/install/test-cachyos-repos.sh \
                    cachyos/iso/test-probe.sh cachyos/iso/test-live-hypr.sh cachyos/test-bootstrap.sh \
                    cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
-                   dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
-                   dot-local/share/mbm/test/test-dmenu.sh dot-local/share/mbm/test/test-lua-syntax.sh \
-                   dot-local/share/mbm/test/test-migrate.sh \
+                   dot-local/share/fledge/test/test-settings.sh dot-local/share/fledge/test/test-defaults.sh \
+                   dot-local/share/fledge/test/test-dmenu.sh dot-local/share/fledge/test/test-lua-syntax.sh \
+                   dot-local/share/fledge/test/test-migrate.sh dot-local/share/fledge/test/test-dispatch.sh \
                    dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh \
                    cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh; do
             echo "::group::$t"
@@ -61,7 +61,6 @@ jobs:
           mapfile -t files < <(git ls-files 'cachyos/*.sh' 'cachyos/iso/bin/*' \
             'cachyos/iso/configs/airootfs/usr/local/bin/*' \
             'cachyos/iso/configs/airootfs/home/moonlight/.bash_profile' \
-            'dot-local/share/mbm/bin/*' 'dot-local/share/mbm/**/*.sh' \
             'dot-local/share/fledge/bin/*' 'dot-local/share/fledge/**/*.sh')
           shellcheck -x -S warning "${files[@]}"
 

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# slievr:summary=Enable, disable, or toggle the touchpad
-# slievr:args=[on|off|toggle]
+# Enable, disable, or toggle the touchpad
+# usage: fledge toggle touchpad [on|off|toggle]
 
 # A toggle snippet hyprland.lua loads, so the device stays off across reloads and logins.
 STATE_CONF="$HOME/.local/state/hypr-toggles/touchpad-disabled.lua"
 
-device="$(slievr-hw-touchpad)"
+device="$(fledge hw touchpad)"
 
 if [[ -z $device ]]; then
   echo "No touchpad device found" >&2
@@ -16,14 +16,14 @@ fi
 enable() {
   fledge hypr eval "hl.device({ name = $(fledge hypr quote "$device"), enabled = true })"
   rm -f "$STATE_CONF"
-  slievr-swayosd-client --custom-icon input-touchpad-symbolic --custom-message "Touchpad enabled"
+  fledge swayosd client --custom-icon input-touchpad-symbolic --custom-message "Touchpad enabled"
 }
 
 disable() {
   fledge hypr eval "hl.device({ name = $(fledge hypr quote "$device"), enabled = false })"
   mkdir -p "$(dirname "$STATE_CONF")"
   printf 'hl.device({ name = %s, enabled = false })\n' "$(fledge hypr quote "$device")" >"$STATE_CONF"
-  slievr-swayosd-client --custom-icon touchpad-disabled-symbolic --custom-message "Touchpad disabled"
+  fledge swayosd client --custom-icon touchpad-disabled-symbolic --custom-message "Touchpad disabled"
 }
 
 case "${1:-toggle}" in

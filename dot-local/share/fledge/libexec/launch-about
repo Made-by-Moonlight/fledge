@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# slievr:summary=Launch the fastfetch TUI that gives information about the current system.
+# Launch the fastfetch TUI that gives information about the current system.
 
-exec slievr-launch-or-focus-tui "bash -c 'fastfetch; read -n 1 -s'"
+exec fledge launch or focus tui "bash -c 'fastfetch; read -n 1 -s'"

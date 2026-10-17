@@ -22,11 +22,11 @@ Item {
         { text: "Toggle do not disturb", glyph: "󰂛", run: () => Notifs.toggleDnd() },
         { text: "Toggle idle lock", glyph: "󱫖", run: () => idleToggleRequested() },
         // Omarchy-era menus, kept reachable until project B replaces them.
-        { text: "Capture…", glyph: "󰄀", sub: "screenshot, recording, colour", run: app("slievr-menu capture") },
-        { text: "Toggle…", glyph: "󰔡", sub: "toggles", run: app("slievr-menu toggle") },
-        { text: "Hardware…", glyph: "󰍹", run: app("slievr-menu hardware") },
-        { text: "Share…", glyph: "󰒖", run: app("slievr-menu share") },
-        { text: "Setup…", glyph: "󰒓", run: app("slievr-menu setup") }
+        { text: "Capture…", glyph: "󰄀", sub: "screenshot, recording, colour", run: app("fledge menu capture") },
+        { text: "Toggle…", glyph: "󰔡", sub: "toggles", run: app("fledge menu toggle") },
+        { text: "Hardware…", glyph: "󰍹", run: app("fledge menu hardware") },
+        { text: "Share…", glyph: "󰒖", run: app("fledge menu share") },
+        { text: "Setup…", glyph: "󰒓", run: app("fledge menu setup") }
     ]
     // Connected from shell.qml once the lock (Task 14) and idle (Task 15) exist.
     signal lockRequested()

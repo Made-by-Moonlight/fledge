@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Match against the computer's DMI product name or product family (case-insensitive).
-# slievr:args=<pattern>
+# Match against the computer's DMI product name or product family (case-insensitive).
+# usage: fledge hw match <pattern>
 
 grep -qi "$1" /sys/class/dmi/id/product_name 2>/dev/null ||
 grep -qi "$1" /sys/class/dmi/id/product_family 2>/dev/null

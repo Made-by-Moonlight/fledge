@@ -62,7 +62,7 @@ Singleton {
         settingsOpen = true;
     }
 
-    // dmenu: `mbm dmenu` waits on resultFile (a FIFO) for "1\n<choice>\n" or "0\n\n".
+    // dmenu: `fledge dmenu` waits on resultFile (a FIFO) for "1\n<choice>\n" or "0\n\n".
     function dmenuOpen(req) {
         closePopups();
         dmenu = req;

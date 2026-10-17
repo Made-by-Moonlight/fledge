@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Add or remove an EFI boot entry for the Omarchy UKI, allowing the system to boot directly
-# slievr:requires-sudo=true
+# Add or remove an EFI boot entry for the Omarchy UKI, allowing the system to boot directly
 
 if [[ ! -d /sys/firmware/efi ]]; then
   echo "Error: System is not booted in UEFI mode" >&2

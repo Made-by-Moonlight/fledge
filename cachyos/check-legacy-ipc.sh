@@ -11,7 +11,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")/.."
 
 pattern='\bhyprctl\s+(?:-\S+\s+)*?(?:keyword(?:\s|$)|--batch(?:\s|$)|-b(?:\s|$)|dispatch\s+(?![\x27"]|hl\.)[a-z])|\bHyprland\.dispatch\('
 hits="$(git grep -nIP "$pattern" -- . ':!docs' ':!*.md' ':!**/test/**' ':!**/test-*.sh' \
-  ':!**/tst_*.qml' ':!dot-local/share/mbm/lib/migrate-dispatch.jq' ':!cachyos/check-legacy-ipc.sh' |
+  ':!**/tst_*.qml' ':!dot-local/share/fledge/lib/migrate-dispatch.jq' ':!cachyos/check-legacy-ipc.sh' |
   grep -vP '^[^:]+:\d+:\s*(#|//|--)' || true)"
 if [[ -n $hits ]]; then
   printf '%s\n' "$hits"

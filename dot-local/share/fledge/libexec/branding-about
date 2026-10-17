@@ -1,28 +1,25 @@
 #!/bin/bash
 
-# slievr:summary=Edit, set, or reset About branding
-# slievr:group=branding
-# slievr:name=about
-# slievr:args=<image|text|reset>
-# slievr:examples=omarchy branding about image | omarchy branding about text | omarchy branding about reset
+# Edit, set, or reset About branding
+# usage: fledge branding about <image|text|reset>
 
 set -euo pipefail
 
 case "${1:-}" in
 image)
-  image=$(slievr-menu-file "Logo image" "$HOME" "svg png")
-  if [[ -n $image ]] && slievr-transcode-ascii "$image" ~/.config/omarchy/branding/about.txt --width 54 --height 26 --mode block; then
-    slievr-launch-about >/dev/null 2>&1
+  image=$(fledge menu file "Logo image" "$HOME" "svg png")
+  if [[ -n $image ]] && fledge transcode ascii "$image" ~/.config/omarchy/branding/about.txt --width 54 --height 26 --mode block; then
+    fledge launch about >/dev/null 2>&1
   fi
   ;;
 text)
-  slievr-launch-editor ~/.config/omarchy/branding/about.txt >/dev/null 2>&1 && slievr-launch-about >/dev/null 2>&1
+  fledge launch editor ~/.config/omarchy/branding/about.txt >/dev/null 2>&1 && fledge launch about >/dev/null 2>&1
   ;;
 reset)
-  cp "$OMARCHY_PATH/icon.txt" ~/.config/omarchy/branding/about.txt && slievr-launch-about >/dev/null 2>&1
+  cp "$OMARCHY_PATH/icon.txt" ~/.config/omarchy/branding/about.txt && fledge launch about >/dev/null 2>&1
   ;;
 *)
-  echo "Usage: slievr-branding-about <image|text|reset>" >&2
+  echo "Usage: fledge branding about <image|text|reset>" >&2
   exit 1
   ;;
 esac

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Check if hibernation is supported
+# Check if hibernation is supported
 
 if [[ ! -f /sys/power/image_size ]]; then
   exit 1

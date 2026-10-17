@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Toggle nightlight screen temperature
-# slievr:examples=omarchy toggle nightlight
+# Toggle nightlight screen temperature
 
 ON_TEMP=4000
 OFF_TEMP=6000

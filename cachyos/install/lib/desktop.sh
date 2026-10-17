@@ -8,7 +8,7 @@
 MBM_TARGET="${MBM_TARGET:-/mnt}"
 
 # seed_user_settings <user> <xkb layout> <xkb variant> <uid> <gid>  ->  the
-# chosen layout as the user's mbm settings override, so Hyprland and the
+# chosen layout as the user's fledge settings override, so Hyprland and the
 # settings window start with it. Nothing for the default (us, no variant).
 # Values are validated (valid_xkb_layout/variant) before they get here.
 seed_user_settings() {

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Set up fingerprint authentication for sudo, polkit, and lock screen
-# slievr:requires-sudo=true
+# Set up fingerprint authentication for sudo, polkit, and lock screen
 
 set -e
 
@@ -58,11 +57,11 @@ echo "Installing required packages..."
 # with -Rdd so the install goes silent. -Rdd (not
 # -Rns) is required because fprintd requires libfprint; the dep is
 # re-satisfied immediately by libfprint-git's provides=libfprint.
-if slievr-pkg-present libfprint; then
+if fledge pkg present libfprint; then
   sudo pacman -Rdd --noconfirm libfprint
 fi
 
-slievr-pkg-add libfprint-git fprintd usbutils
+fledge pkg add libfprint-git fprintd usbutils
 
 if ! check_fingerprint_hardware; then
   exit 1

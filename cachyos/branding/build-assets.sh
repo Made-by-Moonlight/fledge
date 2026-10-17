@@ -13,7 +13,7 @@ ABOUT="$OUT/dot-config/omarchy/branding/about.txt"
 LOGO="$OUT/cachyos/plymouth-theme/slievr-cachy/logo.png"
 mkdir -p "$(dirname "$ABOUT")" "$(dirname "$LOGO")"
 
-# About screen (slievr-launch-about): plain block art, 54 columns wide.
+# About screen (fledge launch about): plain block art, 54 columns wide.
 python3 "$HERE/render-console.py" "$SVG" --cols 54 > "$ABOUT"
 
 # Plymouth logo: the mark in white on transparent, 320 px wide.
@@ -63,7 +63,7 @@ white_owl 260 "$SDDM_DIR/logo.png"
 cp "$THEME_DIR/glow.png" "$SDDM_DIR/background.png"
 # The mbm shell's own copies (wallpaper, lock background, owl), so the shell
 # doesn't depend on the Omarchy theme tree that project C retires.
-MBM_ASSETS="$OUT/dot-local/share/mbm/assets"
+MBM_ASSETS="$OUT/dot-local/share/fledge/assets"
 mkdir -p "$MBM_ASSETS"
 cp "$THEME_DIR/backgrounds/1-moonrise-3440x1440.png" "$MBM_ASSETS/moonrise-3440x1440.png"
 cp "$THEME_DIR/backgrounds/2-moonrise-2560x1440.png" "$MBM_ASSETS/moonrise-2560x1440.png"

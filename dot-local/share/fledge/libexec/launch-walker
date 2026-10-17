@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Compat shim: walker is gone. dmenu calls go to `mbm dmenu`, modes to the mbm launcher.
-# Deleted with the rest of the slievr-* scripts in project B.
+# Compat shim: walker is gone. dmenu calls go to `fledge dmenu`, modes to the shell's launcher.
+# Goes with the rest of the vendored scripts in project B.
 
 args=()
 mode=""
@@ -19,7 +19,7 @@ while (($#)); do
 done
 
 if [[ $dmenu == true ]]; then
-  exec mbm dmenu "${args[@]}"
+  exec fledge dmenu "${args[@]}"
 fi
 case "$mode" in
   clipboard) exec qs -c mbm ipc call launcher open clipboard ;;

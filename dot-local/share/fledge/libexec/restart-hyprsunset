@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# slievr:summary=Restart the hyprsunset service (used for blue light filtering/night light).
+# Restart the hyprsunset service (used for blue light filtering/night light).
 
-slievr-restart-app hyprsunset
+fledge restart app hyprsunset

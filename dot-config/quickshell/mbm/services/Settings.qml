@@ -3,14 +3,14 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Read side: the merged state file written by `mbm settings` (one merge, in the
+// Read side: the merged state file written by `fledge settings` (one merge, in the
 // CLI). Write side: always through the CLI, so validation lives in one place.
 // A file that can't be parsed is ignored and the last good value kept.
 Singleton {
     id: root
 
     readonly property string home: Quickshell.env("HOME")
-    readonly property string mbm: home + "/.local/share/mbm/bin/mbm"
+    readonly property string fledge: home + "/.local/share/fledge/bin/fledge"
     property var defaults: ({})
     property var merged: ({})
     property var user: ({})
@@ -24,12 +24,12 @@ Singleton {
             const v = JSON.parse(text);
             if (v && typeof v === "object" && !Array.isArray(v)) return v;
         } catch (e) {}
-        console.warn("mbm settings: ignoring unreadable " + what);
+        console.warn("fledge settings: ignoring unreadable " + what);
         return fallback;
     }
 
     FileView {
-        path: root.home + "/.local/share/mbm/defaults/settings.json"
+        path: root.home + "/.local/share/fledge/defaults/settings.json"
         watchChanges: true
         onFileChanged: reload()
         onLoaded: root.defaults = root.parse(text(), root.defaults, path)
@@ -91,16 +91,16 @@ Singleton {
     property int lastId: 0
 
     function set(pairs, apply) {
-        const args = [root.mbm, "settings", "set"];
+        const args = [root.fledge, "settings", "set"];
         for (const p of pairs) args.push(p[0], JSON.stringify(p[1]));
         return run(args, apply);
     }
-    function reset(paths, apply) { return run([root.mbm, "settings", "reset", ...paths], apply); }
+    function reset(paths, apply) { return run([root.fledge, "settings", "reset", ...paths], apply); }
     // FIFO: every call is one job, run one at a time, each ends in exactly one
     // writeFinished. A rapid second toggle must not be lost.
     function run(args, apply) {
         const id = ++root.lastId;
-        root.queue = [...root.queue, { id: id, command: apply ? ["sh", "-c", '"$@" && "$0" settings apply', root.mbm, ...args] : args }];
+        root.queue = [...root.queue, { id: id, command: apply ? ["sh", "-c", '"$@" && "$0" settings apply', root.fledge, ...args] : args }];
         next();
         return id;
     }

@@ -1,15 +1,12 @@
 #!/bin/bash
 
-# slievr:summary=Pick one option with Walker
-# slievr:group=menu
-# slievr:name=select
-# slievr:args=prompt option... [-- walker args...]
-# slievr:examples=omarchy menu select Format jpg png|slievr-menu-select Resolution 4k 1080p 720p -- --width 400
+# Pick one option with Walker
+# usage: fledge menu select prompt option... [-- walker args...]
 
 set -euo pipefail
 
 if (( $# < 2 )); then
-  echo "Usage: slievr-menu-select <prompt> <option>... [-- walker args...]" >&2
+  echo "Usage: fledge menu select <prompt> <option>... [-- walker args...]" >&2
   exit 1
 fi
 
@@ -31,8 +28,8 @@ while (( $# > 0 )); do
 done
 
 if (( ${#options[@]} == 0 )); then
-  echo "Usage: slievr-menu-select <prompt> <option>... [-- walker args...]" >&2
+  echo "Usage: fledge menu select <prompt> <option>... [-- walker args...]" >&2
   exit 1
 fi
 
-printf '%s\n' "${options[@]}" | slievr-launch-walker --dmenu --width 295 --minheight 1 --maxheight 300 -p "$prompt…" "${walker_args[@]}" 2>/dev/null
+printf '%s\n' "${options[@]}" | fledge launch walker --dmenu --width 295 --minheight 1 --maxheight 300 -p "$prompt…" "${walker_args[@]}" 2>/dev/null

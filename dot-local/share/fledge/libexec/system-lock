@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Lock the computer and turn off the display
-# slievr:group=system
-# slievr:name=lock
-# slievr:examples=omarchy system lock
+# Lock the computer and turn off the display
 
 # Compat shim (project B removes it): the mbm shell locks the session.
 exec qs -c mbm ipc call lock lock

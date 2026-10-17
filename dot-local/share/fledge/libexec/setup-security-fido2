@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Set up FIDO2 authentication for sudo and polkit
-# slievr:requires-sudo=true
+# Set up FIDO2 authentication for sudo and polkit
 
 set -e
 
@@ -43,7 +42,7 @@ echo -e "\e[32mSetting up FIDO2 device for authentication.\n\e[0m"
 
 # Install required packages
 echo "Installing required packages..."
-slievr-pkg-add libfido2 pam-u2f
+fledge pkg add libfido2 pam-u2f
 
 if ! check_fido2_hardware; then
   exit 1

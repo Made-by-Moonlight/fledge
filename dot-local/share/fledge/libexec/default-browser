@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Set the default browser for Omarchy and XDG handlers
-# slievr:args=[chromium|chrome|brave|brave-origin|edge|firefox|zen]
-# slievr:examples=omarchy default browser firefox | omarchy default browser brave
+# Set the default browser for Omarchy and XDG handlers
+# usage: fledge default browser [chromium|chrome|brave|brave-origin|edge|firefox|zen]
 
 if (($# == 0)); then
   case "$(xdg-settings get default-web-browser)" in
@@ -27,7 +26,7 @@ edge) desktop_id="microsoft-edge.desktop"; name="Edge"; glyph="󰇩" ;;
 firefox) desktop_id="firefox.desktop"; name="Firefox"; glyph="󰈹" ;;
 zen) desktop_id="zen.desktop"; name="Zen"; glyph="󰰷" ;;
 *)
-  echo "Usage: slievr-default-browser <chromium|chrome|brave|brave-origin|edge|firefox|zen>"
+  echo "Usage: fledge default browser <chromium|chrome|brave|brave-origin|edge|firefox|zen>"
   exit 1
   ;;
 esac

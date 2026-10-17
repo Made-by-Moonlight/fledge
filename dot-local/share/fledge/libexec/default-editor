@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Set the default editor for $EDITOR
-# slievr:args=[code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
-# slievr:examples=omarchy default editor | omarchy default editor code | omarchy default editor helix
+# Set the default editor for $EDITOR
+# usage: fledge default editor [code|cursor|zed|sublime_text|helix|vim|emacs|nvim]
 
 if (($# == 0)); then
   sed -n 's/^export EDITOR=//p' ~/.config/uwsm/default | head -n 1
@@ -19,7 +18,7 @@ vim) editor="vim"; name="Vim"; glyph="" ;;
 emacs) editor="emacs"; name="Emacs"; glyph="" ;;
 nvim) editor="nvim"; name="Neovim"; glyph="" ;;
 *)
-  echo "Usage: slievr-default-editor <code|cursor|zed|sublime_text|helix|vim|emacs|nvim>"
+  echo "Usage: fledge default editor <code|cursor|zed|sublime_text|helix|vim|emacs|nvim>"
   exit 1
   ;;
 esac

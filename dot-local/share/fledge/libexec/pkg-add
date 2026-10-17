@@ -1,11 +1,9 @@
 #!/bin/bash
 
-# slievr:summary=Install Arch packages if they are missing
-# slievr:args=<packages...>
-# slievr:examples=omarchy pkg add jq ripgrep
-# slievr:requires-sudo=true
+# Install Arch packages if they are missing
+# usage: fledge pkg add <packages...>
 
-if slievr-pkg-missing "$@"; then
+if fledge pkg missing "$@"; then
   sudo pacman -S --noconfirm --needed "$@" || exit 1
 fi
 

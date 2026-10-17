@@ -1,5 +1,5 @@
 -- Everything else. The input values here are only the baseline: the
--- generated ~/.local/state/mbm/hypr/input.lua (mbm settings) loads after this
+-- generated ~/.local/state/mbm/hypr/input.lua (fledge settings) loads after this
 -- and sets the keyboard, repeat, sensitivity and touchpad.
 hl.config({
   -- https://wiki.hypr.land/Configuring/Basics/Variables/#input
@@ -29,7 +29,7 @@ hl.config({
 
     -- No reload on file changes: a write caught half-way (a git pull, a
     -- restow) put Hyprland in emergency mode, and once it deadlocked drawing
-    -- the error bar. What writes config reloads explicitly (mbm settings
+    -- the error bar. What writes config reloads explicitly (fledge settings
     -- apply, the toggles, bootstrap, vm.sh sync); after a hand edit, run
     -- `hyprctl reload`.
     disable_autoreload = true,

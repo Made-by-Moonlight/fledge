@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# slievr:summary=Print drive information such as size, model, and mount details
-# slievr:args=<drive>
+# Print drive information such as size, model, and mount details
+# usage: fledge drive info <drive>
 
 if (($# == 0)); then
-  echo "Usage: slievr-drive-info [/dev/drive]"
+  echo "Usage: fledge drive info [/dev/drive]"
   exit 1
 else
   drive="$1"

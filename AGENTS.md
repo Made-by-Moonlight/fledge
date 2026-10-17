@@ -13,7 +13,7 @@ repo layout.
 
 1. **Never change the host machine.** The person working with you develops
    on their daily desktop. Do not `pacman -S`, `stow`, run `bootstrap.sh`,
-   start the shell, run `mbm settings apply`, or `systemctl`/`hyprctl`
+   start the shell, run `fledge settings apply`, or `systemctl`/`hyprctl`
    anything on the host. Read-only inspection (reading files, `pacman -Si`)
    is fine. **Everything that runs project code goes in the test VM**
    (`cachyos/vm/`, VM name `cachyos-test`, iterate with `dev-up.sh`), and
@@ -46,13 +46,13 @@ each with its own spec, plan and branch, and the desktop works after each one:
 | # | Project | Status |
 |---|---|---|
 | A | **mbm shell**: Quickshell bar, launcher, notifications, OSD, lock, wallpaper, quick settings, settings window; settings JSON → generated Hyprland config | done (merged, released in `v2026.10.12`): spec + plan in `docs/superpowers/` |
-| B | **`mbm` CLI**: replace the vendored `slievr-*` scripts (`dot-local/share/slievr-cachy/bin/`) | not started |
-| C | **mbm theme**: palette in mbm settings, our own app-theme renderer, retire `dot-config/omarchy/` | not started |
+| B | **`fledge` CLI**: one command, `fledge <group> <action>`, over the vendored scripts in `dot-local/share/fledge/libexec/`; rewriting their internals | command shape done (rename-fledge); internals not started |
+| C | **mbm theme**: palette in fledge settings, our own app-theme renderer, retire `dot-config/omarchy/` | not started |
 | D | **Graphical installer**: Quickshell installer on the ISO, reusing A + C | done (branch graphical-installer): spec + plan in `docs/superpowers/` |
 
-Until B lands, the `slievr-*` scripts are a vendored, renamed Omarchy fork
-(see `dot-local/share/slievr-cachy/README.md`). Treat them as legacy: call
-them if needed, don't extend them.
+Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
+(see `dot-local/share/fledge/README.md`). Treat it as legacy: call it as
+`fledge <group> <action>` if needed, don't extend it.
 
 ## Layout and conventions
 
@@ -60,10 +60,10 @@ them if needed, don't extend them.
   (`dot-config` → `~/.config`). `bootstrap.sh` stows the whole repo into `~`.
 - `cachyos/install/`: installer (bash). `cachyos/iso/`: ISO build/test.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
-- Settings: defaults in `dot-local/share/mbm/defaults/settings.json`,
+- Settings: defaults in `dot-local/share/fledge/defaults/settings.json`,
   user overrides in `~/.config/mbm/settings.json`, Hyprland fragments
   (`binds|monitors|workspaces|input.lua`) **generated** into
-  `~/.local/state/mbm/hypr/` by `mbm settings apply`. Don't hand-edit generated files;
+  `~/.local/state/mbm/hypr/` by `fledge settings apply`. Don't hand-edit generated files;
   change the defaults or the generator. Settings are `version` 2: a bind
   action is `{"exec"}`, `{"shell"}` or `{"dsp": "<hl.dsp name>", "args": …}`;
   a version-1 user file is migrated on apply (backup `settings.json.v1`).
@@ -94,7 +94,7 @@ them if needed, don't extend them.
 - Hyprland's autoreload is off (`misc.disable_autoreload`): it caught
   half-written files. Anything that writes Hyprland config runs
   `hyprctl reload` itself; after hand-editing `~/.config/hypr`, do the same
-  (or slievr-menu › Setup › Config › Reload Hyprland). After changing which
+  (or fledge menu › Setup › Config › Reload Hyprland). After changing which
   config Hyprland loads, test with `cachyos/vm/vm.sh relogin`: the config
   manager is picked at login, `reload` never switches it.
 - Upgrading a `.conf`-era install (README "Upgrade"): `git pull`, `bootstrap.sh`,

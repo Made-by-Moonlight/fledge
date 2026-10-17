@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# slievr:summary=Launch an app or focus an existing window matching a pattern
-# slievr:args=<window-pattern> <launch-command>
+# Launch an app or focus an existing window matching a pattern
+# usage: fledge launch or focus <window-pattern> <launch-command>
 
 if (($# == 0)); then
-  echo "Usage: slievr-launch-or-focus [window-pattern] [launch-command]"
+  echo "Usage: fledge launch or focus [window-pattern] [launch-command]"
   exit 1
 fi
 

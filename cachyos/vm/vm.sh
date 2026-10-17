@@ -34,13 +34,13 @@ ssh_vm() {
 }
 
 # Session env for commands run over SSH: the Wayland socket and Hyprland
-# instance of the user's graphical login, plus the project bin dirs.
+# instance of the user's graphical login, plus the fledge command.
 # shellcheck disable=SC2016  # expanded by the VM shell, on purpose
 SESSION_ENV='export XDG_RUNTIME_DIR=/run/user/$(id -u)
 w=$(ls -1 "$XDG_RUNTIME_DIR" 2>/dev/null | grep -E "^wayland-[0-9]+$" | head -n1); [ -n "$w" ] && export WAYLAND_DISPLAY=$w
 h=$(ls -1t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -n1); [ -n "$h" ] && export HYPRLAND_INSTANCE_SIGNATURE=$h
 export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
-export PATH=$HOME/.local/share/fledge/bin:$HOME/.local/share/mbm/bin:$HOME/.local/share/slievr-cachy/bin:$PATH'
+export PATH=$HOME/.local/share/fledge/bin:$PATH'
 
 cmd_sync() {
   cd "$REPO"

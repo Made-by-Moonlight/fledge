@@ -12,13 +12,13 @@ Item {
     property string filter: ""
     property string recording: ""          // id being re-recorded, or "new"
     property var draft: null               // bind being added or edited: {id?, label, kind, value}; id set = editing
-    property var dspNames: []              // every hl.dsp name, the list `mbm settings check` uses
+    property var dspNames: []              // every hl.dsp name, the list `fledge settings check` uses
 
     FileView {
-        path: Settings.home + "/.local/share/mbm/lib/dsp-names.json"
-        onLoaded: { try { page.dspNames = JSON.parse(text()).names ?? []; } catch (e) { console.warn("mbm settings: unreadable " + path); } }
+        path: Settings.home + "/.local/share/fledge/lib/dsp-names.json"
+        onLoaded: { try { page.dspNames = JSON.parse(text()).names ?? []; } catch (e) { console.warn("fledge settings: unreadable " + path); } }
         // Without the list only parse errors show; say why rather than quietly checking less.
-        onLoadFailed: error => console.warn("mbm settings: could not read " + path + " (" + FileViewError.toString(error) + "); dispatcher names go unchecked until mbm settings check")
+        onLoadFailed: error => console.warn("fledge settings: could not read " + path + " (" + FileViewError.toString(error) + "); dispatcher names go unchecked until fledge settings check")
     }
 
     // What the form edits: "exec", "shell", "dsp", or "" for an action it can't show (a list mixing kinds).
@@ -31,7 +31,7 @@ Item {
     function draftAction(d) { return d.kind === "dsp" ? DspShort.parse(d.value) : { [d.kind]: d.value }; }
     // Why the draft can't be saved ("" = it can): a command running legacy Hyprland IPC, or a
     // dispatcher that doesn't parse or isn't known. Names are checked once the list has loaded;
-    // `mbm settings check` checks all of it again either way.
+    // `fledge settings check` checks all of it again either way.
     readonly property string draftError: {
         const d = page.draft;
         if (!d || d.value === "") return "";
@@ -106,7 +106,7 @@ Item {
         }
         onCancelled: page.recording = ""
         onRefused: reason => { page.recording = ""; Settings.lastError = reason; }
-        onUnavailable: { page.recording = ""; Settings.lastError = "Key recording isn't available: Hyprland has no mbm-record submap (run mbm settings apply)."; }
+        onUnavailable: { page.recording = ""; Settings.lastError = "Key recording isn't available: Hyprland has no mbm-record submap (run fledge settings apply)."; }
     }
     // The request may arrive before this page exists (settings.record opens the window first).
     function takeRequest() { if (ShellState.recordRequest) { const id = ShellState.recordRequest; ShellState.recordRequest = ""; startRecording(id); } }

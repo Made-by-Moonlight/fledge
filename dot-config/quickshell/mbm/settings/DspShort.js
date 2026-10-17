@@ -5,7 +5,7 @@
 //   window.cycle_next; window.bring_to_top -> a list of actions
 // Unquoted numbers and true/false are typed; quote a value to keep it text ("3", "a b").
 // format() is the inverse, quoting whatever parse() would otherwise read differently, so a
-// bind shown in the editor saves back unchanged. `mbm settings check` validates again.
+// bind shown in the editor saves back unchanged. `fledge settings check` validates again.
 
 const NAME = /^[a-z_]+(\.[a-z_]+)?$/;
 const KEY = /^[A-Za-z_][A-Za-z0-9_]*$/;
@@ -126,7 +126,7 @@ function check(text, names) {
 // A command (Run command, Shell action) that runs hyprctl keyword, --batch/-b or
 // `dispatch <legacy string>`: the Lua config refuses them, mostly with exit 0, so
 // the bind would silently do nothing. "" when it doesn't. Same pattern and
-// message as `mbm settings check` (lib/check.jq).
+// message as `fledge settings check` (lib/check.jq).
 const LEGACY_IPC = /\bhyprctl\s+(?:-\S+\s+)*?(?:keyword(?:\s|$)|--batch(?:\s|$)|-b(?:\s|$)|dispatch\s+(?!hl\.)[a-z])/;
 function legacyIpc(command) {
     return LEGACY_IPC.test(command)

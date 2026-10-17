@@ -1,13 +1,12 @@
 #!/bin/bash
 
-# slievr:summary=Send a desktop notification with Omarchy glyph and body spacing
-# slievr:args=<glyph> <headline> [description] [notify-send options]
-# slievr:examples=omarchy notification send "󰔛" "Reminder" "5 minutes are up" -u critical
+# Send a desktop notification with Omarchy glyph and body spacing
+# usage: fledge notification send <glyph> <headline> [description] [notify-send options]
 
 set -euo pipefail
 
 if (($# < 2)); then
-  echo "Usage: slievr-notification-send <glyph> <headline> [description] [notify-send options]"
+  echo "Usage: fledge notification send <glyph> <headline> [description] [notify-send options]"
   exit 1
 fi
 

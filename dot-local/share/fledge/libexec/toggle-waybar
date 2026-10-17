@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Toggle Waybar visibility
-# slievr:examples=omarchy toggle waybar
+# Toggle Waybar visibility
 
 # Compat shim (project B removes it): the mbm bar replaced waybar.
 exec qs -c mbm ipc call bar toggle

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Wrapper for swayosd-client that targets the currently focused monitor.
-# slievr:args=<swayosd-client-args...>
+# Wrapper for swayosd-client that targets the currently focused monitor.
+# usage: fledge swayosd client <swayosd-client-args...>
 
 # Compat shim (project B removes it): swayosd is gone; messages and progress go to the mbm OSD.
 icon="" message="" progress=-1

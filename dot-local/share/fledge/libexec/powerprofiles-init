@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# slievr:summary=Set the correct power profile on boot based on current AC/battery state.
+# Set the correct power profile on boot based on current AC/battery state.
 
-if slievr-battery-present && ! slievr-ac-present; then
-  slievr-powerprofiles-set battery
+if fledge battery present && ! fledge ac present; then
+  fledge powerprofiles set battery
 else
-  slievr-powerprofiles-set ac
+  fledge powerprofiles set ac
 fi

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# slievr:summary=Toggle single-window square aspect ratio.
+# Toggle single-window square aspect ratio.
 
-slievr-hyprland-toggle \
+fledge hyprland toggle \
   --enabled-notification "      Enable single-window square aspect ratio" \
   --disabled-notification "      Disable single-window square aspect ratio" \
   single-window-aspect-ratio

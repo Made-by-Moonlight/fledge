@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Prompt for text input with Walker
-# slievr:group=menu
-# slievr:name=input
-# slievr:args=prompt [walker args...]
-# slievr:examples=omarchy menu input Reminder|slievr-menu-input "Reminder in minutes" --width 400
+# Prompt for text input with Walker
+# usage: fledge menu input prompt [walker args...]
 
 set -euo pipefail
 
@@ -13,4 +10,4 @@ if (( $# > 0 )); then
   shift
 fi
 
-slievr-launch-walker --dmenu --inputonly --width 295 --minheight 1 --maxheight 1 -p "$prompt…" "$@" 2>/dev/null
+fledge launch walker --dmenu --inputonly --width 295 --minheight 1 --maxheight 1 -p "$prompt…" "$@" 2>/dev/null

@@ -36,5 +36,5 @@ Singleton {
     readonly property int osdBottom: barHeight + 6 * gap   // the OSD floats clear of a bottom bar, with room to spare
     readonly property int anim: 140
 
-    readonly property string assets: Quickshell.env("HOME") + "/.local/share/mbm/assets"
+    readonly property string assets: Quickshell.env("HOME") + "/.local/share/fledge/assets"
 }

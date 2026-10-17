@@ -7,18 +7,18 @@
 #     device-select layer (vulkan-mesa-layers); other GPUs stay selectable.
 #   - The NVIDIA-only vars apply only when NVIDIA is driving the monitors.
 
-# fledge CLI on PATH. Here rather than in ~/.config/uwsm/env (written once by
-# bootstrap) so existing installs get it on restow. uwsm sources env first,
-# then this file, so fledge lands ahead of mbm and slievr-cachy.
+# The fledge command on PATH, for binds, the shell and the menu: the only
+# project dir on it (the scripts behind it live in libexec/, reached through
+# `fledge <group> <action>`). Stowed, so a restow is enough to get it.
 case ":$PATH:" in
   *":$HOME/.local/share/fledge/bin:"*) ;;
   *) export PATH="$HOME/.local/share/fledge/bin:$PATH" ;;
 esac
 
-_display_gpu="$HOME/.local/share/slievr-cachy/bin/slievr-hw-display-gpu"
-if [ -x "$_display_gpu" ] && _driver="$("$_display_gpu" --driver)"; then
-  AQ_DRM_DEVICES="$("$_display_gpu" --devices)"
-  MESA_VK_DEVICE_SELECT="$("$_display_gpu" --pci-id)"
+_fledge="$HOME/.local/share/fledge/bin/fledge"
+if [ -x "$_fledge" ] && _driver="$("$_fledge" hw display gpu --driver)"; then
+  AQ_DRM_DEVICES="$("$_fledge" hw display gpu --devices)"
+  MESA_VK_DEVICE_SELECT="$("$_fledge" hw display gpu --pci-id)"
   export AQ_DRM_DEVICES MESA_VK_DEVICE_SELECT
 
   if [ "$_driver" = nvidia ]; then
@@ -29,9 +29,9 @@ if [ -x "$_display_gpu" ] && _driver="$("$_display_gpu" --driver)"; then
     export WLR_NO_HARDWARE_CURSORS=1
   fi
 fi
-unset _display_gpu _driver
+unset _driver
 
-# hyprland.lua loads the binds, monitors, workspaces and input that `mbm
+# hyprland.lua loads the binds, monitors, workspaces and input that `fledge
 # settings apply` generates into ~/.local/state/mbm/hypr. Bootstrap generates
 # them, but if that state is ever lost (a wiped ~/.local/state, a new user),
 # Hyprland would start with no binds at all: regenerate before it reads its
@@ -42,16 +42,15 @@ unset _display_gpu _driver
 # last good files, and the merged state the shell reads, are never replaced
 # with defaults. Silent, never fails the login, and no reload: Hyprland isn't
 # running yet.
-_mbm="$HOME/.local/share/mbm/bin/mbm"
 _gen="$HOME/.local/state/mbm/hypr"
-_defaults="$HOME/.local/share/mbm/defaults/settings.json"
-if [ -x "$_mbm" ] && { ! { [ -e "$_gen/binds.lua" ] && [ -e "$_gen/monitors.lua" ] \
+_defaults="$HOME/.local/share/fledge/defaults/settings.json"
+if [ -x "$_fledge" ] && { ! { [ -e "$_gen/binds.lua" ] && [ -e "$_gen/monitors.lua" ] \
   && [ -e "$_gen/workspaces.lua" ] && [ -e "$_gen/input.lua" ]; } \
   || [ "$_defaults" -nt "$_gen/binds.lua" ]; }; then
-  if ! MBM_NO_RELOAD=1 "$_mbm" settings apply >/dev/null 2>&1; then
+  if ! MBM_NO_RELOAD=1 "$_fledge" settings apply >/dev/null 2>&1; then
     _tmp="$(mktemp -d 2>/dev/null)" && {
       if MBM_NO_RELOAD=1 MBM_CONFIG_DIR="$_tmp/config" MBM_STATE_DIR="$_tmp/state" \
-        MBM_HYPR_DIR="$_tmp/hypr" "$_mbm" settings apply >/dev/null 2>&1; then
+        MBM_HYPR_DIR="$_tmp/hypr" "$_fledge" settings apply >/dev/null 2>&1; then
         mkdir -p "$_gen" || :
         for _f in binds monitors workspaces input; do
           [ -e "$_gen/$_f.lua" ] || cp "$_tmp/hypr/$_f.lua" "$_gen/$_f.lua" || :
@@ -61,4 +60,4 @@ if [ -x "$_mbm" ] && { ! { [ -e "$_gen/binds.lua" ] && [ -e "$_gen/monitors.lua"
     }
   fi
 fi
-unset _mbm _gen _defaults _tmp _f
+unset _fledge _gen _defaults _tmp _f

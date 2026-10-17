@@ -1,10 +1,7 @@
 #!/bin/bash
 
-# slievr:group=transcode
-# slievr:name=
-# slievr:summary=Transcode pictures and videos for sharing
-# slievr:args=[--path path] [input] [format] [resolution]
-# slievr:examples=omarchy transcode|omarchy transcode --path ~/Downloads|omarchy transcode ~/Videos/demo.mov mp4 1080p|omarchy transcode ~/Pictures/wallpaper.heic jpg medium
+# Transcode pictures and videos for sharing
+# usage: fledge transcode [--path path] [input] [format] [resolution]
 
 set -euo pipefail
 
@@ -166,7 +163,7 @@ main() {
   search_path="${search_path:-$HOME/Pictures:$HOME/Videos}"
 
   if [[ -z $input ]]; then
-    input=$(slievr-menu-file "Transcode picture or video" "$search_path" "jpg jpeg png webp gif heic avif mp4 mov m4v mkv webm avi")
+    input=$(fledge menu file "Transcode picture or video" "$search_path" "jpg jpeg png webp gif heic avif mp4 mov m4v mkv webm avi")
   fi
 
   [[ -n $input ]] || return 1
@@ -176,31 +173,31 @@ main() {
 
   if [[ -z $format ]]; then
     if [[ $type == "picture" ]]; then
-      format=$(slievr-menu-select "Select format" jpg png)
+      format=$(fledge menu select "Select format" jpg png)
     else
-      format=$(slievr-menu-select "Select format" mp4 gif)
+      format=$(fledge menu select "Select format" mp4 gif)
     fi
   fi
 
   if [[ -z $resolution ]]; then
     if [[ $type == "picture" ]]; then
-      resolution=$(slievr-menu-select "Select resolution" high medium low)
+      resolution=$(fledge menu select "Select resolution" high medium low)
     else
-      resolution=$(slievr-menu-select "Select resolution" 4k 1080p 720p)
+      resolution=$(fledge menu select "Select resolution" 4k 1080p 720p)
     fi
   fi
 
   output=$(output_path "$input" "$format" "$resolution")
 
   if [[ $type == "video" ]]; then
-    slievr-notification-send "" "Transcoding video…" "$(basename -- "$input") to $format ($resolution)"
+    fledge notification send "" "Transcoding video…" "$(basename -- "$input") to $format ($resolution)"
     transcode_video "$input" "$format" "$resolution" "$output"
     copy_to_clipboard "$output"
-    slievr-notification-send "" "Transcoded to $resolution $format" "Saved and copied to clipboard."
+    fledge notification send "" "Transcoded to $resolution $format" "Saved and copied to clipboard."
   else
     transcode_picture "$input" "$format" "$resolution" "$output"
     copy_to_clipboard "$output"
-    slievr-notification-send "" "Transcoded to $resolution $format" "Saved and copied to clipboard."
+    fledge notification send "" "Transcoded to $resolution $format" "Saved and copied to clipboard."
   fi
 }
 

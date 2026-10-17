@@ -3,7 +3,7 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 
-// Idle timeouts from mbm settings (seconds, 0 = off; they apply live). Replaces hypridle.
+// Idle timeouts from fledge settings (seconds, 0 = off; they apply live). Replaces hypridle.
 // `enabled` is the session-only "idle lock" toggle (Super+Ctrl+I / System menu): off, no
 // timeout fires. Every monitor respects idle inhibitors (a playing video keeps the screen on).
 // The lock itself is shell.qml's call (lockRequested): it knows whether we already hold it.

@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# slievr:summary=Show current monospace font
-# slievr:examples=omarchy font current
+# Show current monospace font
 
 grep -oP 'font-family:\s*["'\'']?\K[^;"'\'']+' ~/.config/waybar/style.css | head -n1

@@ -74,7 +74,7 @@ TestCase {
     // Every shipped dispatcher bind shows in short form and saves back unchanged.
     function test_defaults_roundtrip() {
         const xhr = new XMLHttpRequest();   // file:// reads need QML_XHR_ALLOW_FILE_READ=1 (the runner sets it)
-        xhr.open("GET", Qt.resolvedUrl("../../../../dot-local/share/mbm/defaults/settings.json"), false);
+        xhr.open("GET", Qt.resolvedUrl("../../../../dot-local/share/fledge/defaults/settings.json"), false);
         xhr.send();
         const binds = JSON.parse(xhr.responseText).binds;
         let n = 0;
@@ -104,7 +104,7 @@ TestCase {
         compare(D.check("window.close; nope", names), "unknown dispatcher \"nope\"");
         verify(D.check("layout a b", names) !== "");
     }
-    // Run-command validation: the legacy IPC the Lua config refuses, as `mbm settings check` reports it.
+    // Run-command validation: the legacy IPC the Lua config refuses, as `fledge settings check` reports it.
     function test_legacy_ipc() {
         const msg = "runs Hyprland's legacy IPC (hyprctl keyword, --batch or a dispatch string), which the Lua config refuses: use fledge hypr set|dispatch|eval";
         compare(D.legacyIpc("hyprctl keyword cursor:zoom_factor 2"), msg);

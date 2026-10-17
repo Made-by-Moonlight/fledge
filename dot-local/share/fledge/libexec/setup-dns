@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Configure the system DNS provider
-# slievr:args=[Cloudflare|Google|DHCP|Custom]
-# slievr:requires-sudo=true
+# Configure the system DNS provider
+# usage: fledge setup dns [Cloudflare|Google|DHCP|Custom]
 
 lock_dns_to_resolved() {
   for file in /etc/systemd/network/*.network; do

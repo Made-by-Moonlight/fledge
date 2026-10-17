@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Check if a toggle is enabled (flag file exists)
-# slievr:args=<flag-name>
+# Check if a toggle is enabled (flag file exists)
+# usage: fledge toggle enabled <flag-name>
 
 [[ -f "$HOME/.local/state/omarchy/toggles/$1" ]]

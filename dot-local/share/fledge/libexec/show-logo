@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Display the Omarchy logo in the terminal using green color.
+# Display the Omarchy logo in the terminal using green color.
 
 clear
 echo -e "\033[32m"

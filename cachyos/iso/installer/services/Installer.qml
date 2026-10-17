@@ -12,7 +12,7 @@ Singleton {
     readonly property bool dev: Quickshell.env("MBM_INSTALLER_DEV") === "1"
     readonly property string repo: Quickshell.env("MBM_REPO") || "/usr/share/slievr-cachy"
     // The white render (build-assets.sh): owl.svg is fill="currentColor", which Qt draws black.
-    readonly property string owl: "file://" + repo + "/dot-local/share/mbm/assets/owl.png"
+    readonly property string owl: "file://" + repo + "/dot-local/share/fledge/assets/owl.png"
 
     readonly property var steps: [
         { id: "welcome", title: "Welcome", page: "Welcome" },

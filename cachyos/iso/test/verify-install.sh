@@ -26,7 +26,7 @@ is "mbm shell running"                 active "$(systemctl --user is-active mbm-
 is "no retired desktop daemons"        ""     "$(pgrep -x 'waybar|mako|swayosd-server|hypridle|hyprlock|walker|elephant' 2>/dev/null; pgrep -f '^/usr/lib/polkit-gnome/' 2>/dev/null)"
 # Holds the Hyprland instance only while locked; this runs in an unlocked session.
 is "relock flag clear"                 ""     "$(cat "$HOME/.local/state/mbm/locked" 2>/dev/null)"
-is "mbm settings valid"                ""     "$("$HOME/.local/share/mbm/bin/mbm" settings check 2>&1)"
+is "fledge settings valid"             ""     "$("$HOME/.local/share/fledge/bin/fledge" settings check 2>&1)"
 gen="$HOME/.local/state/mbm/hypr"
 is "generated Hyprland config"         yes    "$( [[ -s $gen/binds.lua && -s $gen/monitors.lua && -s $gen/workspaces.lua && -s $gen/input.lua ]] && echo yes || echo no )"
 # Hyprland reads ~/.config/hypr/hyprland.lua (stowed); a .conf beside it would be

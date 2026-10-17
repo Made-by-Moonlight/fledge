@@ -1,13 +1,10 @@
 #!/bin/bash
 
-# slievr:summary=Share clipboard, files, or folders with LocalSend
-# slievr:group=share
-# slievr:name=
-# slievr:args=<clipboard|file|folder> [path...]
-# slievr:examples=omarchy share clipboard | omarchy share file ~/Downloads/example.txt
+# Share clipboard, files, or folders with LocalSend
+# usage: fledge share <clipboard|file|folder> [path...]
 
 if (($# == 0)); then
-  echo "Usage: slievr-menu-share [clipboard|file|folder]"
+  echo "Usage: fledge share [clipboard|file|folder]"
   exit 1
 fi
 

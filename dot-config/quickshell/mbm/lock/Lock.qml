@@ -112,7 +112,7 @@ Scope {
         flag.setText(persist.locked ? instance + "\n" : "");
     }
 
-    // Like slievr-system-lock: screens off shortly after a manual lock (any key wakes them: misc:key_press_enables_dpms).
+    // Like fledge system lock: screens off shortly after a manual lock (any key wakes them: misc:key_press_enables_dpms).
     Timer { id: displayOff; interval: 3000; onTriggered: if (persist.locked) Hypr.dispatch('hl.dsp.dpms({ action = "off" })') }
     // A PAM module that never answers would otherwise block every retry.
     Timer { id: watchdog; interval: 30000; onTriggered: if (pam.active) { pam.abort(); root.fail("authentication timed out"); } }

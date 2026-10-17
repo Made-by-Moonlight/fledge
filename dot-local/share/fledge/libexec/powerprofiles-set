@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Set the power profile to the requested level, falling back to balanced
-# slievr:args=[autodetect|ac|battery]
+# Set the power profile to the requested level, falling back to balanced
+# usage: fledge powerprofiles set [autodetect|ac|battery]
 
 action="${1-}"
 

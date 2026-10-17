@@ -65,8 +65,7 @@ bootstrap from a TTY (Ctrl+Alt+F2) and log in afterwards.
 - `cachyos/branding/` — owl, palette and theme assets
 - `dot-config/quickshell/mbm/` — the desktop shell (bar, launcher, notifications, lock, settings)
 - `dot-config/hypr/` — the Hyprland config: `hyprland.lua` and its `fledge/*.lua` modules
-- `dot-local/share/mbm/` — the `mbm` CLI: settings (defaults + overrides → generated Hyprland Lua), dmenu
-- `dot-local/share/fledge/` — the `fledge` CLI: `fledge hypr dispatch|set|eval|quote`, the one way scripts talk to Hyprland
+- `dot-local/share/fledge/` — the `fledge` command: `fledge <group> <action>` over the scripts in `libexec/`, `fledge settings` (defaults + overrides → generated Hyprland Lua), `fledge hypr`, `fledge dmenu`
 - `dot-config/`, `dot-local/` — dotfiles, stowed into `~`
 
 Releases are built by GitHub Actions when a `v*` tag is pushed on `main`

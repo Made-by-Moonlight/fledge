@@ -86,7 +86,7 @@ The ISO's graphical installer (`mbm-install`, not the configurator) writes
 Keys: `DISK` (by-id path), `DISK_CONFIRMED=yes`, `HOSTNAME`, `TIMEZONE`,
 `USER_PASSWORD`, `LUKS_PASSPHRASE`, optional `ROOT_PASSWORD` (empty → root
 locked), `XKB_LAYOUT` / `XKB_VARIANT` (keyboard; default `us`, seeded into the
-user's mbm settings) and `DATA_MOUNTS` (`uuid:/abs/path,…`, `~` already
+user's fledge settings) and `DATA_MOUNTS` (`uuid:/abs/path,…`, `~` already
 expanded, may be empty). One `KEY=value` per line, unquoted; parsed by `lib/answers.sh`, never
 sourced; deleted once read. Without `--answers` everything prompts as before.
 Without `--answers`, data-disk fstab entries from `profile.sh` are only

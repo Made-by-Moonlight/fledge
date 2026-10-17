@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Toggle notification do-not-disturb mode
+# Toggle notification do-not-disturb mode
 
 # Compat shim (project B removes it): the mbm shell shows notifications.
 exec qs -c mbm ipc call notifications dndToggle

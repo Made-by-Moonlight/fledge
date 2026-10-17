@@ -40,7 +40,7 @@ echo "theme-provided kitty" > "$T/theme/kitty.conf"
 
 bash "$RENDER" "$T/theme" "$T/out" >/dev/null
 check "render: every template rendered or provided" "17" \
-  "$(cd "$REPO/dot-local/share/slievr-cachy/default/themed" && for f in *.tpl; do [[ -e "$T/out/${f%.tpl}" ]] && echo x; done | wc -l | tr -d ' ')"
+  "$(cd "$REPO/dot-local/share/fledge/default/themed" && for f in *.tpl; do [[ -e "$T/out/${f%.tpl}" ]] && echo x; done | wc -l | tr -d ' ')"
 check "render: no {{ placeholders left" "" "$(grep -rl '{{' "$T/out" || true)"
 check "render: theme file wins over template" "theme-provided kitty" "$(cat "$T/out/kitty.conf")"
 check "render: _strip form (hyprland.lua returns the accent)" "rgb(123456)" \
@@ -80,8 +80,8 @@ check "shipped themes" "made-by-moonlight" "$(ls "$REPO/dot-config/omarchy/theme
 # took: copy the theme, then render the vendored templates.
 h="$T/set"; next="$h/.config/omarchy/current/next-theme"
 mkdir -p "$next"; cp -r "$REPO/dot-config/omarchy/themes/made-by-moonlight/." "$next/"
-HOME="$h" PATH="$REPO/dot-local/share/slievr-cachy/bin:$PATH" env -u OMARCHY_PATH \
-  slievr-theme-set-templates >/dev/null 2>&1
+HOME="$h" PATH="$REPO/dot-local/share/fledge/bin:$PATH" env -u OMARCHY_PATH \
+  fledge theme set templates >/dev/null 2>&1
 check "theme-set: hyprland.lua rendered, amber border" "rgb(f4af03)" \
   "$(lua - "$next/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
 

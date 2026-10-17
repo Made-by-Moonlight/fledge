@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Launch the Slievr Menu or takes a parameter to jump straight to a submenu.
+# The fledge menu; a submenu name (capture, toggle, setup, ...) opens it directly.
 
 # Set to true when going directly to a submenu, so we can exit directly
 BACK_TO_EXIT=false
@@ -40,7 +40,7 @@ menu() {
     fi
   fi
 
-  echo -e "$options" | slievr-launch-walker --dmenu --width 295 --minheight 1 --maxheight 630 -p "$prompt…" "${args[@]}" 2>/dev/null
+  echo -e "$options" | fledge launch walker --dmenu --width 295 --minheight 1 --maxheight 630 -p "$prompt…" "${args[@]}" 2>/dev/null
 }
 
 terminal() {
@@ -48,12 +48,12 @@ terminal() {
 }
 
 present_terminal() {
-  slievr-launch-floating-terminal-with-presentation $1
+  fledge launch floating terminal with presentation $1
 }
 
 open_in_editor() {
   notify-send -u low "Editing config file" "$1"
-  slievr-launch-editor "$1"
+  fledge launch editor "$1"
 }
 
 # Hyprland doesn't reload on file changes (misc.disable_autoreload), and the
@@ -61,7 +61,7 @@ open_in_editor() {
 open_hypr_config() {
   notify-send -u low "Editing config file" "$1
 Save, then Setup › Config › Reload Hyprland (or hyprctl reload) to apply."
-  slievr-launch-editor "$1"
+  fledge launch editor "$1"
 }
 
 reload_hyprland() {
@@ -83,7 +83,7 @@ show_trigger_menu() {
   case $(menu "Trigger" "󰔛  Reminder\n  Capture\n󰧸  Transcode\n  Share\n󰔎  Toggle\n  Hardware") in
   *Reminder*) show_reminder_menu ;;
   *Capture*) show_capture_menu ;;
-  *Transcode*) slievr-transcode || back_to show_trigger_menu ;;
+  *Transcode*) fledge transcode || back_to show_trigger_menu ;;
   *Share*) show_share_menu ;;
   *Toggle*) show_toggle_menu ;;
   *Hardware*) show_hardware_menu ;;
@@ -94,20 +94,20 @@ show_trigger_menu() {
 show_reminder_menu() {
   case $(menu "Reminder" "󰔛  Set one\n󰔛  Show all\n󰔛  Clear all") in
   *Set*) show_custom_reminder_input ;;
-  *"Show all"*) slievr-reminder show ;;
-  *"Clear all"*) slievr-reminder clear ;;
+  *"Show all"*) fledge reminder show ;;
+  *"Clear all"*) fledge reminder clear ;;
   *) back_to show_trigger_menu ;;
   esac
 }
 
 show_custom_reminder_input() {
   local minutes
-  minutes=$(slievr-menu-input "Remind in minutes")
+  minutes=$(fledge menu input "Remind in minutes")
 
   if [[ $minutes =~ ^[0-9]+$ ]] && ((minutes > 0)); then
     show_reminder_message_input "$minutes"
   elif [[ -n $minutes ]]; then
-    slievr-notification-send "󰔛" "Invalid reminder" "Enter the number of minutes" -u critical
+    fledge notification send "󰔛" "Invalid reminder" "Enter the number of minutes" -u critical
     show_custom_reminder_input
   else
     back_to show_reminder_menu
@@ -117,20 +117,20 @@ show_custom_reminder_input() {
 show_reminder_message_input() {
   local minutes="$1"
   local message
-  message=$(slievr-menu-input "Reminder message")
+  message=$(fledge menu input "Reminder message")
 
   if [[ -n $message ]]; then
-    slievr-reminder "$minutes" "$message"
+    fledge reminder "$minutes" "$message"
   else
-    slievr-reminder "$minutes"
+    fledge reminder "$minutes"
   fi
 }
 
 show_capture_menu() {
   case $(menu "Capture" "  Screenshot\n  Screenrecord\n󰴑  Text Extraction\n󰃉  Color") in
-  *Screenshot*) slievr-capture-screenshot ;;
+  *Screenshot*) fledge capture screenshot ;;
   *Screenrecord*) show_screenrecord_menu ;;
-  *Text*) slievr-capture-text-extraction ;;
+  *Text*) fledge capture text extraction ;;
   *Color*) pkill hyprpicker || hyprpicker -a ;;
   *) back_to show_trigger_menu ;;
   esac
@@ -164,18 +164,18 @@ show_webcam_select_menu() {
 }
 
 show_screenrecord_menu() {
-  slievr-capture-screenrecording --stop-recording && exit 0
+  fledge capture screenrecording --stop-recording && exit 0
 
   case $(menu "Screenrecord" "  With no audio\n  With desktop audio\n  With desktop + microphone audio\n  With desktop + microphone audio + webcam") in
-  *"With no audio") slievr-capture-screenrecording ;;
-  *"With desktop audio") slievr-capture-screenrecording --with-desktop-audio ;;
-  *"With desktop + microphone audio") slievr-capture-screenrecording --with-desktop-audio --with-microphone-audio ;;
+  *"With no audio") fledge capture screenrecording ;;
+  *"With desktop audio") fledge capture screenrecording --with-desktop-audio ;;
+  *"With desktop + microphone audio") fledge capture screenrecording --with-desktop-audio --with-microphone-audio ;;
   *"With desktop + microphone audio + webcam")
     local device=$(show_webcam_select_menu) || {
       back_to show_capture_menu
       return
     }
-    slievr-capture-screenrecording --with-desktop-audio --with-microphone-audio --with-webcam --webcam-device="$device"
+    fledge capture screenrecording --with-desktop-audio --with-microphone-audio --with-webcam --webcam-device="$device"
     ;;
   *) back_to show_capture_menu ;;
   esac
@@ -183,9 +183,9 @@ show_screenrecord_menu() {
 
 show_share_menu() {
   case $(menu "Share" "  Clipboard\n  File \n  Folder") in
-  *Clipboard*) slievr-menu-share clipboard ;;
-  *File*) terminal bash -c "slievr-menu-share file" ;;
-  *Folder*) terminal bash -c "slievr-menu-share folder" ;;
+  *Clipboard*) fledge share clipboard ;;
+  *File*) terminal bash -c "fledge share file" ;;
+  *Folder*) terminal bash -c "fledge share folder" ;;
   *) back_to show_trigger_menu ;;
   esac
 }
@@ -194,17 +194,17 @@ show_toggle_menu() {
   local options="󱄄  Screensaver\n󰔎  Nightlight\n󱫖  Idle Lock\n󰂛  Notifications\n󰍜  Top Bar\n󱂬  Workspace Layout\n  Window Gaps\n  1-Window Ratio\n󰍹  Monitor Scaling\n  Direct Boot\n󰟵  Passwordless Sudo"
 
   case $(menu "Toggle" "$options") in
-  *Screensaver*) slievr-toggle-screensaver ;;
-  *Nightlight*) slievr-toggle-nightlight ;;
-  *Idle*) slievr-toggle-idle ;;
-  *Notifications*) slievr-toggle-notification-silencing ;;
-  *Bar*) slievr-toggle-waybar ;;
-  *Layout*) slievr-hyprland-workspace-layout-toggle ;;
-  *Ratio*) slievr-hyprland-window-single-square-aspect-toggle ;;
-  *Gaps*) slievr-hyprland-window-gaps-toggle ;;
-  *Scaling*) slievr-hyprland-monitor-scaling-cycle ;;
-  *"Direct Boot"*) present_terminal slievr-config-direct-boot ;;
-  *"Passwordless Sudo"*) present_terminal slievr-sudo-passwordless ;;
+  *Screensaver*) fledge toggle screensaver ;;
+  *Nightlight*) fledge toggle nightlight ;;
+  *Idle*) fledge toggle idle ;;
+  *Notifications*) fledge toggle notification silencing ;;
+  *Bar*) fledge toggle waybar ;;
+  *Layout*) fledge hyprland workspace layout toggle ;;
+  *Ratio*) fledge hyprland window single square aspect toggle ;;
+  *Gaps*) fledge hyprland window gaps toggle ;;
+  *Scaling*) fledge hyprland monitor scaling cycle ;;
+  *"Direct Boot"*) present_terminal fledge config direct boot ;;
+  *"Passwordless Sudo"*) present_terminal fledge sudo passwordless ;;
   *) back_to show_trigger_menu ;;
   esac
 }
@@ -212,29 +212,29 @@ show_toggle_menu() {
 show_hardware_menu() {
   local options="󰛧  Laptop Display\n 󰍹  Mirror Display"
 
-  if slievr-hw-hybrid-gpu; then
+  if fledge hw hybrid gpu; then
     options="$options\n  Hybrid GPU"
   fi
 
-  if slievr-hw-touchpad; then
+  if fledge hw touchpad; then
     options="$options\n󰟸  Touchpad"
   fi
 
-  if slievr-hw-dell-xps-haptic-touchpad && slievr-cmd-present dell-xps-touchpad-haptics; then
+  if fledge hw dell xps haptic touchpad && fledge cmd present dell-xps-touchpad-haptics; then
     options="$options\n󰌌  Touchpad Haptics"
   fi
 
-  if slievr-hw-touchscreen; then
+  if fledge hw touchscreen; then
     options="$options\n󰆽  Touchscreen"
   fi
 
   case $(menu "Toggle" "$options") in
-  *Laptop*) slievr-hyprland-monitor-internal toggle ;;
-  *Mirror*) slievr-hyprland-monitor-internal-mirror toggle ;;
+  *Laptop*) fledge hyprland monitor internal toggle ;;
+  *Mirror*) fledge hyprland monitor internal mirror toggle ;;
   *Haptics*) show_hardware_touchpad_haptics_menu ;;
-  *Touchpad*) slievr-toggle-touchpad ;;
-  *Touchscreen*) slievr-toggle-touchscreen ;;
-  *"Hybrid GPU"*) present_terminal slievr-toggle-hybrid-gpu ;;
+  *Touchpad*) fledge toggle touchpad ;;
+  *Touchscreen*) fledge toggle touchscreen ;;
+  *"Hybrid GPU"*) present_terminal fledge toggle hybrid gpu ;;
   *) back_to show_trigger_menu ;;
   esac
 }
@@ -253,7 +253,7 @@ show_hardware_touchpad_haptics_menu() {
 show_style_menu() {
   case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n  Hyprland\n󱄄  Screensaver\n  About") in
   *Theme*) show_theme_menu ;;
-  *Unlock*) slievr-launch-walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
+  *Unlock*) fledge launch walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
   *Hyprland*) open_hypr_config ~/.config/hypr/fledge/looknfeel.lua ;;
@@ -265,36 +265,36 @@ show_style_menu() {
 
 show_about_menu() {
   case $(menu "About" "  Edit Text\n  Set From Image\n  Restore Default") in
-  *Text*) slievr-branding-about text ;;
-  *Image*) slievr-branding-about image ;;
-  *Default*) slievr-branding-about reset ;;
+  *Text*) fledge branding about text ;;
+  *Image*) fledge branding about image ;;
+  *Default*) fledge branding about reset ;;
   *) show_style_menu ;;
   esac
 }
 
 show_screensaver_menu() {
   case $(menu "Screensaver" "  Edit Text\n  Set From Image\n  Restore Default") in
-  *Text*) slievr-branding-screensaver text ;;
-  *Image*) slievr-branding-screensaver image ;;
-  *Default*) slievr-branding-screensaver reset ;;
+  *Text*) fledge branding screensaver text ;;
+  *Image*) fledge branding screensaver image ;;
+  *Default*) fledge branding screensaver reset ;;
   *) show_style_menu ;;
   esac
 }
 
 show_theme_menu() {
-  slievr-launch-walker -m menus:omarchythemes --width 800 --minheight 400
+  fledge launch walker -m menus:omarchythemes --width 800 --minheight 400
 }
 
 show_background_menu() {
-  slievr-launch-walker -m menus:omarchyBackgroundSelector --width 800 --minheight 400
+  fledge launch walker -m menus:omarchyBackgroundSelector --width 800 --minheight 400
 }
 
 show_font_menu() {
-  theme=$(menu "Font" "$(slievr-font-list)" "--width 350" "$(slievr-font-current)")
+  theme=$(menu "Font" "$(fledge font list)" "--width 350" "$(fledge font current)")
   if [[ $theme == "CNCLD" || -z $theme ]]; then
     back_to show_style_menu
   else
-    slievr-font-set "$theme"
+    fledge font set "$theme"
   fi
 }
 
@@ -314,10 +314,10 @@ show_setup_menu() {
   *Keybindings*) qs -c mbm ipc call settings open keybinds ;;
   *Input*) qs -c mbm ipc call settings open input ;;
   *Defaults*) show_setup_default_menu ;;
-  *DNS*) present_terminal slievr-setup-dns ;;
+  *DNS*) present_terminal fledge setup dns ;;
   *Security*) show_setup_security_menu ;;
   *Time*) show_setup_time_menu ;;
-  *Firmware*) present_terminal slievr-update-firmware ;;
+  *Firmware*) present_terminal fledge update firmware ;;
   *Restart*) show_setup_restart_menu ;;
   *Config*) show_setup_config_menu ;;
   *) show_main_menu ;;
@@ -325,7 +325,7 @@ show_setup_menu() {
 }
 
 show_setup_power_menu() {
-  profile=$(menu "Power Profile" "$(slievr-powerprofiles-list)" "" "$(powerprofilesctl get)")
+  profile=$(menu "Power Profile" "$(fledge powerprofiles list)" "" "$(powerprofilesctl get)")
 
   if [[ $profile == "CNCLD" || -z $profile ]]; then
     back_to show_setup_menu
@@ -336,9 +336,9 @@ show_setup_power_menu() {
 
 show_setup_security_menu() {
   case $(menu "Security" "󰈷  Fingerprint\n  Fido2\n  Drive Encryption Password\n  User Password") in
-  *Fingerprint*) present_terminal slievr-setup-security-fingerprint ;;
-  *Fido2*) present_terminal slievr-setup-security-fido2 ;;
-  *Drive*) present_terminal slievr-drive-password ;;
+  *Fingerprint*) present_terminal fledge setup security fingerprint ;;
+  *Fido2*) present_terminal fledge setup security fido2 ;;
+  *Drive*) present_terminal fledge drive password ;;
   *User*) present_terminal passwd ;;
   *) show_setup_menu ;;
   esac
@@ -346,8 +346,8 @@ show_setup_security_menu() {
 
 show_setup_time_menu() {
   case $(menu "Time" "  Timezone\n  Sync Clock") in
-  *Timezone*) present_terminal slievr-tz-select ;;
-  *Sync*) present_terminal slievr-update-time ;;
+  *Timezone*) present_terminal fledge tz select ;;
+  *Sync*) present_terminal fledge update time ;;
   *) show_setup_menu ;;
   esac
 }
@@ -355,10 +355,10 @@ show_setup_time_menu() {
 # For a device that stopped responding.
 show_setup_restart_menu() {
   case $(menu "Restart" "  Audio\n󱚾  Wi-Fi\n󰂯  Bluetooth\n󰟸  Trackpad") in
-  *Audio*) present_terminal slievr-restart-pipewire ;;
-  *Wi-Fi*) present_terminal slievr-restart-wifi ;;
-  *Bluetooth*) present_terminal slievr-restart-bluetooth ;;
-  *Trackpad*) present_terminal slievr-restart-trackpad ;;
+  *Audio*) present_terminal fledge restart pipewire ;;
+  *Wi-Fi*) present_terminal fledge restart wifi ;;
+  *Bluetooth*) present_terminal fledge restart bluetooth ;;
+  *Trackpad*) present_terminal fledge restart trackpad ;;
   *) show_setup_menu ;;
   esac
 }
@@ -387,7 +387,7 @@ show_setup_default_browser_menu() {
   browser_desktop_exists zen.desktop && options="${options:+$options\n}󰖟  Zen"
 
   local current=""
-  case "$(slievr-default-browser)" in
+  case "$(fledge default browser)" in
   chromium) current="  Chromium" ;;
   chrome) current="󰊯  Chrome" ;;
   brave) current="󰖟  Brave" ;;
@@ -398,26 +398,26 @@ show_setup_default_browser_menu() {
   esac
 
   case $(menu "Default Browser" "$options" "" "$current") in
-  *Chromium*) slievr-default-browser chromium ;;
-  *Chrome*) slievr-default-browser chrome ;;
-  *"Brave Origin"*) slievr-default-browser brave-origin ;;
-  *Brave*) slievr-default-browser brave ;;
-  *Edge*) slievr-default-browser edge ;;
-  *Firefox*) slievr-default-browser firefox ;;
-  *Zen*) slievr-default-browser zen ;;
+  *Chromium*) fledge default browser chromium ;;
+  *Chrome*) fledge default browser chrome ;;
+  *"Brave Origin"*) fledge default browser brave-origin ;;
+  *Brave*) fledge default browser brave ;;
+  *Edge*) fledge default browser edge ;;
+  *Firefox*) fledge default browser firefox ;;
+  *Zen*) fledge default browser zen ;;
   *) show_setup_default_menu ;;
   esac
 }
 
 show_setup_default_terminal_menu() {
   local options=""
-  slievr-cmd-present alacritty && options="$options  Alacritty"
-  slievr-cmd-present foot && options="${options:+$options\n}  Foot"
-  slievr-cmd-present ghostty && options="${options:+$options\n}  Ghostty"
-  slievr-cmd-present kitty && options="${options:+$options\n}  Kitty"
+  fledge cmd present alacritty && options="$options  Alacritty"
+  fledge cmd present foot && options="${options:+$options\n}  Foot"
+  fledge cmd present ghostty && options="${options:+$options\n}  Ghostty"
+  fledge cmd present kitty && options="${options:+$options\n}  Kitty"
 
   local current=""
-  case "$(slievr-default-terminal)" in
+  case "$(fledge default terminal)" in
   alacritty) current="  Alacritty" ;;
   foot) current="  Foot" ;;
   ghostty) current="  Ghostty" ;;
@@ -425,27 +425,27 @@ show_setup_default_terminal_menu() {
   esac
 
   case $(menu "Default Terminal" "$options" "" "$current") in
-  *Alacritty*) slievr-default-terminal alacritty ;;
-  *Foot*) slievr-default-terminal foot ;;
-  *Ghostty*) slievr-default-terminal ghostty ;;
-  *Kitty*) slievr-default-terminal kitty ;;
+  *Alacritty*) fledge default terminal alacritty ;;
+  *Foot*) fledge default terminal foot ;;
+  *Ghostty*) fledge default terminal ghostty ;;
+  *Kitty*) fledge default terminal kitty ;;
   *) show_setup_default_menu ;;
   esac
 }
 
 show_setup_default_editor_menu() {
   local options=""
-  slievr-cmd-present nvim && options="$options  Neovim"
-  slievr-cmd-present code && options="${options:+$options\n}  VSCode"
-  slievr-cmd-present cursor && options="${options:+$options\n}  Cursor"
-  slievr-cmd-present zeditor && options="${options:+$options\n}  Zed"
-  slievr-cmd-present sublime_text && options="${options:+$options\n}  Sublime Text"
-  slievr-cmd-present helix && options="${options:+$options\n}  Helix"
-  slievr-cmd-present vim && options="${options:+$options\n}  Vim"
-  slievr-cmd-present emacs && options="${options:+$options\n}  Emacs"
+  fledge cmd present nvim && options="$options  Neovim"
+  fledge cmd present code && options="${options:+$options\n}  VSCode"
+  fledge cmd present cursor && options="${options:+$options\n}  Cursor"
+  fledge cmd present zeditor && options="${options:+$options\n}  Zed"
+  fledge cmd present sublime_text && options="${options:+$options\n}  Sublime Text"
+  fledge cmd present helix && options="${options:+$options\n}  Helix"
+  fledge cmd present vim && options="${options:+$options\n}  Vim"
+  fledge cmd present emacs && options="${options:+$options\n}  Emacs"
 
   local current=""
-  case "$(slievr-default-editor)" in
+  case "$(fledge default editor)" in
   nvim) current="  Neovim" ;;
   code) current="  VSCode" ;;
   cursor) current="  Cursor" ;;
@@ -457,14 +457,14 @@ show_setup_default_editor_menu() {
   esac
 
   case $(menu "Default Editor" "$options" "" "$current") in
-  *Neovim*) slievr-default-editor nvim ;;
-  *VSCode*) slievr-default-editor code ;;
-  *Cursor*) slievr-default-editor cursor ;;
-  *Zed*) slievr-default-editor zed ;;
-  *Sublime*) slievr-default-editor sublime_text ;;
-  *Helix*) slievr-default-editor helix ;;
-  *Vim*) slievr-default-editor vim ;;
-  *Emacs*) slievr-default-editor emacs ;;
+  *Neovim*) fledge default editor nvim ;;
+  *VSCode*) fledge default editor code ;;
+  *Cursor*) fledge default editor cursor ;;
+  *Zed*) fledge default editor zed ;;
+  *Sublime*) fledge default editor sublime_text ;;
+  *Helix*) fledge default editor helix ;;
+  *Vim*) fledge default editor vim ;;
+  *Emacs*) fledge default editor emacs ;;
   *) show_setup_default_menu ;;
   esac
 }
@@ -473,9 +473,9 @@ show_setup_config_menu() {
   case $(menu "Setup" "  Hyprland\n  Reload Hyprland\n  Hyprsunset\n󰒓  Settings\n󰞅  XCompose") in
   *Reload*) reload_hyprland ;;
   *Hyprland*) open_hypr_config ~/.config/hypr/hyprland.lua ;;
-  *Hyprsunset*) open_in_editor ~/.config/hypr/hyprsunset.conf && slievr-restart-hyprsunset ;;
+  *Hyprsunset*) open_in_editor ~/.config/hypr/hyprsunset.conf && fledge restart hyprsunset ;;
   *Settings*) qs -c mbm ipc call settings open "" ;;
-  *XCompose*) open_in_editor ~/.XCompose && slievr-restart-xcompose ;;
+  *XCompose*) open_in_editor ~/.XCompose && fledge restart xcompose ;;
   *) show_setup_menu ;;
   esac
 }
@@ -483,44 +483,44 @@ show_setup_config_menu() {
 show_setup_system_menu() {
   local options=""
 
-  if slievr-toggle-enabled suspend-off; then
+  if fledge toggle enabled suspend-off; then
     options="$options󰒲  Enable Suspend"
   else
     options="$options󰒲  Disable Suspend"
   fi
 
-  if slievr-hibernation-available; then
+  if fledge hibernation available; then
     options="$options\n󰤁  Disable Hibernate"
   else
     options="$options\n󰤁  Enable Hibernate"
   fi
 
   case $(menu "System" "$options") in
-  *Suspend*) slievr-toggle-suspend ;;
-  *"Enable Hibernate"*) present_terminal slievr-hibernation-setup ;;
-  *"Disable Hibernate"*) present_terminal slievr-hibernation-remove ;;
+  *Suspend*) fledge toggle suspend ;;
+  *"Enable Hibernate"*) present_terminal fledge hibernation setup ;;
+  *"Disable Hibernate"*) present_terminal fledge hibernation remove ;;
   *) show_setup_menu ;;
   esac
 }
 
 show_about() {
-  slievr-launch-about
+  fledge launch about
 }
 
 show_system_menu() {
   local options="󱄄  Screensaver\n  Lock"
-  ! slievr-toggle-enabled suspend-off && options="$options\n󰒲  Suspend"
-  slievr-hibernation-available && options="$options\n󰤁  Hibernate"
+  ! fledge toggle enabled suspend-off && options="$options\n󰒲  Suspend"
+  fledge hibernation available && options="$options\n󰤁  Hibernate"
   options="$options\n󰍃  Logout\n󰜉  Restart\n󰐥  Shutdown"
 
   case $(menu "System" "$options") in
-  *Screensaver*) slievr-launch-screensaver force ;;
-  *Lock*) slievr-system-lock ;;
+  *Screensaver*) fledge launch screensaver force ;;
+  *Lock*) fledge system lock ;;
   *Suspend*) systemctl suspend ;;
   *Hibernate*) systemctl hibernate ;;
-  *Logout*) slievr-system-logout ;;
-  *Restart*) slievr-system-reboot ;;
-  *Shutdown*) slievr-system-shutdown ;;
+  *Logout*) fledge system logout ;;
+  *Restart*) fledge system reboot ;;
+  *Shutdown*) fledge system shutdown ;;
   *) back_to show_main_menu ;;
   esac
 }

@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Set the mic-mute indicator LED on laptops that expose a platform::micmute LED node.
-# slievr:args=<on|off>
+# Set the mic-mute indicator LED on laptops that expose a platform::micmute LED node.
+# usage: fledge brightness keyboard mute <on|off>
 
 if [[ -e /sys/class/leds/platform::micmute/brightness ]]; then
   case "$1" in

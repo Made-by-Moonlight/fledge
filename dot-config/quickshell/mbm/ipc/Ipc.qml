@@ -44,8 +44,8 @@ Scope {
         function mic(arg: string): void {
             const m = Audio.toggleMicMute();
             if (m === null) { osd.show("󰍭", "No microphone", -1); return; }
-            // keyboard mic-mute LED on laptops; script is vendored until project B
-            Quickshell.execDetached(["sh", "-c", 'command -v slievr-brightness-keyboard-mute >/dev/null && slievr-brightness-keyboard-mute "$1"', "sh", m ? "on" : "off"]);
+            // keyboard mic-mute LED on laptops (a no-op where there is none)
+            Quickshell.execDetached(["fledge", "brightness", "keyboard", "mute", m ? "on" : "off"]);
             osd.show(m ? "󰍭" : "󰍬", m ? "Microphone muted" : "Microphone on", -1);
         }
         function brightness(arg: string): void {
@@ -74,7 +74,7 @@ Scope {
     IpcHandler {
         target: "launcher"
         function toggle(): void { ShellState.toggleLauncher(""); }
-        // Unknown modes (and "dmenu", which only `mbm dmenu` may open) fall back to Apps.
+        // Unknown modes (and "dmenu", which only `fledge dmenu` may open) fall back to Apps.
         function open(mode: string): void { ShellState.openLauncher(["apps", "clipboard", "emoji", "system"].includes(mode) ? mode : ""); }
         function close(): void { ShellState.closePopups(); }
     }

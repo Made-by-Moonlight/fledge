@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Check if a Hyprland toggle is currently enabled.
-# slievr:args=<flag-name>
+# Check if a Hyprland toggle is currently enabled.
+# usage: fledge hyprland toggle enabled <flag-name>
 
 [[ -f "$HOME/.local/state/hypr-toggles/$1.lua" ]]

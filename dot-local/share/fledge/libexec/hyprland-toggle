@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# slievr:summary=Toggle permanent Hyprland flags (Lua files) by copying them into a directory that's loaded entirely.
-# slievr:args=[--enabled-notification <text>] [--disabled-notification <text>] <flag-name>
+# Toggle permanent Hyprland flags (Lua files) by copying them into a directory that's loaded entirely.
+# usage: fledge hyprland toggle [--enabled-notification <text>] [--disabled-notification <text>] <flag-name>
 
 ENABLED_NOTIFICATION=""
 DISABLED_NOTIFICATION=""

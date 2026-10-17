@@ -202,7 +202,7 @@
       "label": "Keyboard brightness up",
       "group": "Media",
       "action": {
-        "exec": "slievr-brightness-keyboard up"
+        "exec": "fledge brightness keyboard up"
       },
       "flags": "el"
     },
@@ -212,7 +212,7 @@
       "label": "Keyboard brightness down",
       "group": "Media",
       "action": {
-        "exec": "slievr-brightness-keyboard down"
+        "exec": "fledge brightness keyboard down"
       },
       "flags": "el"
     },
@@ -222,7 +222,7 @@
       "label": "Keyboard backlight cycle",
       "group": "Media",
       "action": {
-        "exec": "slievr-brightness-keyboard cycle"
+        "exec": "fledge brightness keyboard cycle"
       },
       "flags": "l"
     },
@@ -232,7 +232,7 @@
       "label": "Toggle touchpad",
       "group": "Media",
       "action": {
-        "exec": "slievr-toggle-touchpad"
+        "exec": "fledge toggle touchpad"
       },
       "flags": "l"
     },
@@ -242,7 +242,7 @@
       "label": "Enable touchpad",
       "group": "Media",
       "action": {
-        "exec": "slievr-toggle-touchpad on"
+        "exec": "fledge toggle touchpad on"
       },
       "flags": "l"
     },
@@ -252,7 +252,7 @@
       "label": "Disable touchpad",
       "group": "Media",
       "action": {
-        "exec": "slievr-toggle-touchpad off"
+        "exec": "fledge toggle touchpad off"
       },
       "flags": "l"
     },
@@ -342,7 +342,7 @@
       "label": "Switch audio output",
       "group": "Media",
       "action": {
-        "exec": "slievr-audio-output-switch"
+        "exec": "fledge audio output switch"
       },
       "flags": "l"
     },
@@ -412,7 +412,7 @@
       "label": "Close all windows",
       "group": "Windows",
       "action": {
-        "exec": "slievr-hyprland-window-close-all"
+        "exec": "fledge hyprland window close all"
       }
     },
     "windows.toggle-window-split": {
@@ -486,7 +486,7 @@
       "label": "Pop window out (float & pin)",
       "group": "Windows",
       "action": {
-        "exec": "slievr-hyprland-window-pop"
+        "exec": "fledge hyprland window pop"
       }
     },
     "windows.toggle-workspace-layout": {
@@ -495,7 +495,7 @@
       "label": "Toggle workspace layout",
       "group": "Windows",
       "action": {
-        "exec": "slievr-hyprland-workspace-layout-toggle"
+        "exec": "fledge hyprland workspace layout toggle"
       }
     },
     "windows.focus-on-left-window": {
@@ -1413,7 +1413,7 @@
       "label": "Cycle monitor scaling",
       "group": "Windows",
       "action": {
-        "exec": "slievr-hyprland-monitor-scaling-cycle"
+        "exec": "fledge hyprland monitor scaling cycle"
       }
     },
     "windows.cycle-monitor-scaling-backwards": {
@@ -1422,7 +1422,7 @@
       "label": "Cycle monitor scaling backwards",
       "group": "Windows",
       "action": {
-        "exec": "slievr-hyprland-monitor-scaling-cycle --reverse"
+        "exec": "fledge hyprland monitor scaling cycle --reverse"
       }
     },
     "utilities.launch-apps": {
@@ -1449,7 +1449,7 @@
       "label": "Capture menu",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu capture"
+        "exec": "fledge menu capture"
       }
     },
     "utilities.toggle-menu": {
@@ -1458,7 +1458,7 @@
       "label": "Toggle menu",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu toggle"
+        "exec": "fledge menu toggle"
       }
     },
     "utilities.hardware-menu": {
@@ -1467,10 +1467,10 @@
       "label": "Hardware menu",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu hardware"
+        "exec": "fledge menu hardware"
       }
     },
-    "utilities.slievr-menu": {
+    "utilities.system-menu-2": {
       "mods": "SUPER ALT",
       "key": "SPACE",
       "label": "System menu",
@@ -1479,7 +1479,7 @@
         "shell": "launcher.open system"
       }
     },
-    "utilities.slievr-menu-2": {
+    "utilities.system-menu-3": {
       "mods": "SUPER SHIFT",
       "key": "code:201",
       "label": "System menu",
@@ -1540,7 +1540,7 @@
       "label": "Theme background menu",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu background"
+        "exec": "fledge menu background"
       }
     },
     "utilities.theme-menu": {
@@ -1549,7 +1549,7 @@
       "label": "Theme menu",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu theme"
+        "exec": "fledge menu theme"
       }
     },
     "utilities.toggle-window-transparency": {
@@ -1558,7 +1558,7 @@
       "label": "Toggle window transparency",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hyprland-window-transparency-toggle"
+        "exec": "fledge hyprland window transparency toggle"
       }
     },
     "utilities.toggle-window-gaps": {
@@ -1567,7 +1567,7 @@
       "label": "Toggle window gaps",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hyprland-window-gaps-toggle"
+        "exec": "fledge hyprland window gaps toggle"
       }
     },
     "utilities.toggle-single-window-square-aspect": {
@@ -1576,7 +1576,7 @@
       "label": "Toggle single-window square aspect",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hyprland-window-single-square-aspect-toggle"
+        "exec": "fledge hyprland window single square aspect toggle"
       }
     },
     "utilities.dismiss-last-notification": {
@@ -1639,7 +1639,7 @@
       "label": "Toggle nightlight",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-toggle-nightlight"
+        "exec": "fledge toggle nightlight"
       }
     },
     "utilities.toggle-laptop-display": {
@@ -1648,7 +1648,7 @@
       "label": "Toggle laptop display",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hyprland-monitor-internal toggle"
+        "exec": "fledge hyprland monitor internal toggle"
       }
     },
     "utilities.toggle-laptop-display-mirroring": {
@@ -1657,26 +1657,26 @@
       "label": "Toggle laptop display mirroring",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hyprland-monitor-internal-mirror toggle"
+        "exec": "fledge hyprland monitor internal mirror toggle"
       }
     },
-    "utilities.exec-slievr-hw-external-monitors-slievr-hyprland-monitor-internal-off": {
+    "utilities.lid-closed": {
       "mods": "",
       "key": "switch:on:Lid Switch",
       "label": "Lid closed",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hw-external-monitors && slievr-hyprland-monitor-internal off"
+        "exec": "fledge hw external monitors && fledge hyprland monitor internal off"
       },
       "flags": "l"
     },
-    "utilities.exec-slievr-hyprland-monitor-internal-on": {
+    "utilities.lid-opened": {
       "mods": "",
       "key": "switch:off:Lid Switch",
       "label": "Lid opened",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-hyprland-monitor-internal on"
+        "exec": "fledge hyprland monitor internal on"
       },
       "flags": "l"
     },
@@ -1686,7 +1686,7 @@
       "label": "Extract text (OCR) from screenshot",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-capture-text-extraction"
+        "exec": "fledge capture text extraction"
       }
     },
     "utilities.share": {
@@ -1695,7 +1695,7 @@
       "label": "Share",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu share"
+        "exec": "fledge menu share"
       }
     },
     "utilities.transcode": {
@@ -1704,7 +1704,7 @@
       "label": "Transcode",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-transcode"
+        "exec": "fledge transcode"
       }
     },
     "utilities.set-reminder": {
@@ -1713,7 +1713,7 @@
       "label": "Set reminder",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-menu reminder-set"
+        "exec": "fledge menu reminder-set"
       }
     },
     "utilities.show-reminders": {
@@ -1722,7 +1722,7 @@
       "label": "Show reminders",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-reminder show"
+        "exec": "fledge reminder show"
       }
     },
     "utilities.clear-reminders": {
@@ -1731,7 +1731,7 @@
       "label": "Clear reminders",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-reminder clear"
+        "exec": "fledge reminder clear"
       }
     },
     "utilities.show-time": {
@@ -1749,7 +1749,7 @@
       "label": "Show battery remaining",
       "group": "Utilities",
       "action": {
-        "exec": "notify-send -u low \"$(slievr-battery-status)\""
+        "exec": "notify-send -u low \"$(fledge battery status)\""
       }
     },
     "utilities.show-weather": {
@@ -1758,7 +1758,7 @@
       "label": "Show weather",
       "group": "Utilities",
       "action": {
-        "exec": "notify-send -u low \"$(slievr-weather-status)\""
+        "exec": "notify-send -u low \"$(fledge weather status)\""
       }
     },
     "utilities.audio-controls": {
@@ -1794,7 +1794,7 @@
       "label": "Activity",
       "group": "Utilities",
       "action": {
-        "exec": "slievr-launch-tui btop"
+        "exec": "fledge launch tui btop"
       }
     },
     "utilities.zoom-in": {
@@ -1830,7 +1830,7 @@
       "label": "Tmux",
       "group": "Apps",
       "action": {
-        "exec": "uwsm-app -- xdg-terminal-exec --dir=\"$(slievr-cmd-terminal-cwd)\" tmux new"
+        "exec": "uwsm-app -- xdg-terminal-exec --dir=\"$(fledge cmd terminal cwd)\" tmux new"
       }
     },
     "apps.terminal": {
@@ -1839,7 +1839,7 @@
       "label": "Terminal",
       "group": "Apps",
       "action": {
-        "exec": "uwsm app -- $TERMINAL --dir=\"$(slievr-cmd-terminal-cwd)\""
+        "exec": "uwsm app -- $TERMINAL --dir=\"$(fledge cmd terminal cwd)\""
       }
     },
     "apps.browser": {
@@ -1848,7 +1848,7 @@
       "label": "Browser",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-browser"
+        "exec": "fledge launch browser"
       }
     },
     "apps.file-manager": {
@@ -1857,7 +1857,7 @@
       "label": "File manager",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-or-focus thunar thunar"
+        "exec": "fledge launch or focus thunar thunar"
       }
     },
     "apps.browser-2": {
@@ -1866,7 +1866,7 @@
       "label": "Browser",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-browser"
+        "exec": "fledge launch browser"
       }
     },
     "apps.browser-private": {
@@ -1875,7 +1875,7 @@
       "label": "Browser (private)",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-browser --private"
+        "exec": "fledge launch browser --private"
       }
     },
     "apps.youtube-music": {
@@ -1884,7 +1884,7 @@
       "label": "YouTube Music",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-or-focus limusic-app"
+        "exec": "fledge launch or focus limusic-app"
       }
     },
     "apps.music-tui": {
@@ -1893,7 +1893,7 @@
       "label": "Music TUI",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-or-focus-tui cliamp"
+        "exec": "fledge launch or focus tui cliamp"
       }
     },
     "apps.editor": {
@@ -1902,7 +1902,7 @@
       "label": "Editor",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-editor"
+        "exec": "fledge launch editor"
       }
     },
     "apps.activity": {
@@ -1911,7 +1911,7 @@
       "label": "Activity",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-tui btop"
+        "exec": "fledge launch tui btop"
       }
     },
     "apps.docker": {
@@ -1920,7 +1920,7 @@
       "label": "Docker",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-tui lazydocker"
+        "exec": "fledge launch tui lazydocker"
       }
     },
     "apps.obsidian": {
@@ -1929,7 +1929,7 @@
       "label": "Obsidian",
       "group": "Apps",
       "action": {
-        "exec": "slievr-launch-or-focus obsidian \"uwsm-app -- obsidian\""
+        "exec": "fledge launch or focus obsidian \"uwsm-app -- obsidian\""
       }
     },
     "apps.passwords": {
@@ -1957,7 +1957,7 @@
       "label": "Screenshot of region",
       "group": "Apps",
       "action": {
-        "exec": "slievr capture screenshot region copy"
+        "exec": "fledge capture screenshot region copy"
       }
     },
     "shell.quick-settings": {

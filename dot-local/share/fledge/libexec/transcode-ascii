@@ -1,16 +1,13 @@
 #!/bin/bash
 
-# slievr:summary=Transcode an image into ASCII/Unicode art text
-# slievr:group=transcode
-# slievr:name=ascii
-# slievr:args=<input-image.svg|png> <output-path> [--width <columns>] [--height <rows>] [--mode <braille|block>] [--threshold <percent>] [--invert]
-# slievr:examples=omarchy transcode ascii ~/logo.svg /tmp/logo.txt | omarchy transcode ascii ~/logo.png ~/.config/omarchy/branding/screensaver.txt --width 80
+# Transcode an image into ASCII/Unicode art text
+# usage: fledge transcode ascii <input-image.svg|png> <output-path> [--width <columns>] [--height <rows>] [--mode <braille|block>] [--threshold <percent>] [--invert]
 
 set -o pipefail
 
 usage() {
   cat <<'EOF'
-Usage: slievr-transcode-ascii <input-image.svg|png> <output-path> [options]
+Usage: fledge transcode ascii <input-image.svg|png> <output-path> [options]
 
 Transcodes an image into ASCII/Unicode art text.
 
@@ -165,7 +162,7 @@ if [[ ! -f $image_path ]]; then
   exit 1
 fi
 
-if slievr-cmd-missing magick; then
+if fledge cmd missing magick; then
   echo "ImageMagick is required to convert logo images" >&2
   exit 1
 fi

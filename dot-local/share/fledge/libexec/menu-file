@@ -1,15 +1,12 @@
 #!/bin/bash
 
-# slievr:summary=Pick a file with Walker
-# slievr:group=menu
-# slievr:name=file
-# slievr:args=label paths formats [walker args...]
-# slievr:examples=omarchy menu file "Select image" "$HOME/Pictures" "jpg png webp"|slievr-menu-file "Select media" "$HOME/Pictures:$HOME/Videos" "jpg png mp4 mov" --width 800
+# Pick a file with Walker
+# usage: fledge menu file label paths formats [walker args...]
 
 set -euo pipefail
 
 if (( $# < 3 )); then
-  echo "Usage: slievr-menu-file <label> <paths> <formats> [walker args...]" >&2
+  echo "Usage: fledge menu file <label> <paths> <formats> [walker args...]" >&2
   exit 1
 fi
 
@@ -22,7 +19,7 @@ IFS=: read -r -a paths <<<"$paths_arg"
 read -r -a formats <<<"$formats_arg"
 
 if (( ${#paths[@]} == 0 || ${#formats[@]} == 0 )); then
-  echo "Usage: slievr-menu-file <label> <paths> <formats> [walker args...]" >&2
+  echo "Usage: fledge menu file <label> <paths> <formats> [walker args...]" >&2
   exit 1
 fi
 
@@ -45,4 +42,4 @@ done
 find_args+=(")" -printf '%T@\t%p\n')
 
 find "${find_args[@]}" 2>/dev/null | sort -rn | cut -f2- |
-  slievr-launch-walker --dmenu --width 800 --minheight 1 --maxheight 500 -p "$label…" "$@" 2>/dev/null
+  fledge launch walker --dmenu --width 800 --minheight 1 --maxheight 500 -p "$label…" "$@" 2>/dev/null

@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# slievr:summary=Match Dell XPS systems with the Synaptics haptic touchpad.
+# Match Dell XPS systems with the Synaptics haptic touchpad.
 
-slievr-hw-match "XPS" && [[ -e /sys/bus/i2c/devices/i2c-VEN_06CB:00 ]]
+fledge hw match "XPS" && [[ -e /sys/bus/i2c/devices/i2c-VEN_06CB:00 ]]
