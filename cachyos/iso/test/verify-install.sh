@@ -7,6 +7,9 @@
 #   ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
 # (needs a tty for sudo, so not `vm.sh run` and don't pipe it into ssh)
 set -uo pipefail
+# Its sudo calls need a password from a tty: without one each fails, and three
+# failures trip pam_faillock, which locks sudo for 10 minutes.
+[[ -t 0 ]] || { echo "verify-install.sh: needs a tty for sudo (ssh -t, see above)" >&2; exit 2; }
 
 bad=0
 ok()  { printf 'PASS  %s\n' "$1"; }
@@ -51,6 +54,9 @@ is "repo origin is GitHub"             yes    "$(git -C ~/proj/fledge remote get
 is "bootstrap.sh is executable"        yes    "$([[ -x ~/proj/fledge/cachyos/bootstrap.sh ]] && echo yes || echo no)"
 is "$HOME/.config is a real directory"     yes    "$( [[ -d $HOME/.config && ! -L $HOME/.config ]] && echo yes || echo no )"
 is "repo has no local changes"         ""     "$(git -C ~/proj/fledge status --porcelain)"
+# Only the dot-* trees are dotfiles; .stow-local-ignore keeps the project's own
+# top level out of ~ (check-stow-ignore.sh guards the list in CI).
+is "project files not stowed into ~"   ""     "$(for p in AGENTS.md README.md cachyos docs .github; do [[ -e ~/$p || -L ~/$p ]] && echo "$p"; done)"
 
 # VERIFY_LAYOUT=gb: the installer's keyboard choice reached the user's settings.
 if [[ -n "${VERIFY_LAYOUT:-}" ]]; then
