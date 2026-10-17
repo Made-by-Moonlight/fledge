@@ -1,7 +1,0 @@
-#!/bin/bash
-WINDOW=$(hyprctl clients -j | jq -r '.[] | select(.title == "YouTube Music") | .address' | head -1)
-if [[ -n $WINDOW ]]; then
-  fledge hypr dispatch "hl.dsp.focus({ window = $(fledge hypr quote "address:$WINDOW") })"
-else
-  slievr-launch-webapp "https://music.youtube.com/"
-fi

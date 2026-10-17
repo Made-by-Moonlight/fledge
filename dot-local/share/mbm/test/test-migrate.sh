@@ -95,10 +95,13 @@ check "migrate: a version-less file holding a v1 zoom command needs migrating" "
   "$(jq -L "$LIB" --arg c "$zoom_reset" -n 'include "migrate-dispatch"; {binds: {z: {action: {exec: $c}}}} | needs_migration')"
 
 # Every legacy dispatcher in the old defaults has a translation, and the result
-# is exactly the shipped v2 defaults.
+# is exactly the shipped v2 defaults, give or take the binds changed since on
+# purpose: the YouTube web app bind went (no web apps) and YouTube Music runs limusic.
 check "migrate: old v1 defaults == v2 defaults (binds)" "true" \
   "$(jq -L "$LIB" --slurpfile v2 "$HERE/../defaults/settings.json" \
-     'include "migrate-dispatch"; migrate_user.settings.binds == $v2[0].binds' "$FIX/defaults-v1.json" 2>&1)"
+     'include "migrate-dispatch"; migrate_user.settings.binds
+      | del(.["apps.youtube"]) | .["apps.youtube-music"].action.exec = "slievr-launch-or-focus limusic-app"
+      | . == $v2[0].binds' "$FIX/defaults-v1.json" 2>&1)"
 check "migrate: v2 defaults have no dispatch left" "0" \
   "$(jq '[.. | objects | select(has("dispatch"))] | length' "$HERE/../defaults/settings.json")"
 check "migrate: v2 defaults are version 2" "2" "$(jq .version "$HERE/../defaults/settings.json")"

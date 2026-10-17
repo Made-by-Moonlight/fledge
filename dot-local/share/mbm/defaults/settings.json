@@ -1884,7 +1884,7 @@
       "label": "YouTube Music",
       "group": "Apps",
       "action": {
-        "exec": "~/.local/bin/yt-music"
+        "exec": "slievr-launch-or-focus limusic-app"
       }
     },
     "apps.music-tui": {
@@ -1949,15 +1949,6 @@
       "action": {
         "dsp": "workspace.toggle_special",
         "args": "game"
-      }
-    },
-    "apps.youtube": {
-      "mods": "SUPER SHIFT",
-      "key": "Y",
-      "label": "YouTube",
-      "group": "Apps",
-      "action": {
-        "exec": "slievr-launch-or-focus-webapp YouTube \"https://youtube.com/\""
       }
     },
     "apps.screenshot-of-region": {

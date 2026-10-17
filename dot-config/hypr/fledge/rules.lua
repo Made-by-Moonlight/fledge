@@ -50,9 +50,6 @@ rule({
 rule({ match = { class = "([fF]irefox|zen|librewolf)" }, tag = "+firefox-based-browser" })
 rule({ match = { tag = "chromium-based-browser" }, tag = "-default-opacity" })
 rule({ match = { tag = "firefox-based-browser" }, tag = "-default-opacity" })
--- Video apps: remove chromium browser tag so they don't get opacity applied
-rule({ match = { class = "(chrome-youtube.com__-Default|chrome-app.zoom.us__wc_home-Default)" }, tag = "-chromium-based-browser" })
-rule({ match = { class = "(chrome-youtube.com__-Default|chrome-app.zoom.us__wc_home-Default)" }, tag = "-default-opacity" })
 -- Force chromium-based browsers into a tile to deal with --app bug
 rule({ match = { tag = "chromium-based-browser" }, tile = true })
 -- Only a subtle opacity change, but not for video sites
@@ -170,10 +167,9 @@ rule({ match = { tag = "default-opacity" }, opacity = "0.97 0.9" })
 rule({ match = { class = "discord" }, workspace = "9" })
 rule({ match = { class = "discord" }, opacity = "1.0 override 1.0 override 1.0 override" })
 rule({ match = { class = "spotify" }, workspace = "9" })
--- YouTube Music opens via Zen's --new-window: no Chromium-style --app= class
--- to match, so match the title (its own existing-window check keys off it too)
-rule({ match = { title = "^YouTube Music" }, workspace = "9" })
-rule({ match = { title = "^YouTube Music" }, opacity = "1.0 override 1.0 override 1.0 override" })
+-- YouTube Music is limusic (a native client, not a web app)
+rule({ match = { class = "limusic-app" }, workspace = "9" })
+rule({ match = { class = "limusic-app" }, opacity = "1.0 override 1.0 override 1.0 override" })
 
 -- Zen
 rule({ match = { class = "zen" }, no_blur = true })
