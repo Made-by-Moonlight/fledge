@@ -42,7 +42,7 @@ jobs:
                    dot-local/share/fledge/test/test-dmenu.sh dot-local/share/fledge/test/test-lua-syntax.sh \
                    dot-local/share/fledge/test/test-migrate.sh dot-local/share/fledge/test/test-dispatch.sh \
                    dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh \
-                   cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh; do
+                   cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh cachyos/test-check-names.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
@@ -53,6 +53,12 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           bash cachyos/check-legacy-ipc.sh
+
+      - name: No old names
+        # The names the fledge rename retired must not come back; the allowlist is in the script.
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          bash cachyos/check-names.sh
 
       - name: shellcheck
         run: |
