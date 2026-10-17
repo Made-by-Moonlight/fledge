@@ -45,6 +45,7 @@ print("ret=" .. r)
 print("trace=" .. table.concat(trace, " "))
 print("notes=" .. #notes)
 for i, n in ipairs(notes) do print("note" .. i .. "=" .. tostring(n.text) .. "|timeout=" .. tostring(n.timeout)) end
+for i, n in ipairs(notes) do print("style" .. i .. "=" .. tostring(n.icon) .. "," .. tostring(n.color)) end
 EOL
 
 run() { out="$(lua "$T/driver.lua" "$LOAD" "$1" "$T" 2>&1)"; rc=$?; }
@@ -69,6 +70,7 @@ contains "syntax error: notification names the file" "fledge: $T/syntax.lua: " "
 contains "syntax error: notification has Lua's message" "syntax.lua:2:" "$(field note1)"
 contains "syntax error: notification has a timeout" "|timeout=" "$(field note1)"
 check "syntax error: timeout is a number" "" "$(field note1 | grep -o 'timeout=nil')"
+check "syntax error: shown as an error, not info" "error,rgb(ff5555)" "$(field style1)"
 
 run runtime
 check "runtime error: no error escapes" 0 "$rc"

@@ -13,7 +13,10 @@ function M.notify(path, err)
   local text = "fledge: " .. path .. ": " .. tostring(err)
   io.stderr:write(text, "\n")
   -- Not being able to tell the user must not stop the rest of the config.
-  pcall(function() hl.notification.create({ text = text, timeout = 15000 }) end)
+  -- The error icon and colour, so a failure doesn't pass for an info toast.
+  pcall(function()
+    hl.notification.create({ text = text, timeout = 15000, icon = "error", color = "rgb(ff5555)" })
+  end)
 end
 
 function M.file(path)
