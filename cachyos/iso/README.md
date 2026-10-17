@@ -67,10 +67,12 @@ tool the installed system doesn't ship: install it in the VM first.
     cachyos/vm/vm.sh relogin
     cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh after-relogin'
 
-And that every command the desktop runs by name resolves (each `fledge …` in
-the merged settings, libexec, the stowed config, the shell's QML and
-bootstrap is a built-in or a `fledge help` action; each `qs -c fledge ipc
-call T F` and `{shell: "T.F"}` names an `Ipc.qml` function):
+And that every command the desktop runs by name resolves (each `fledge …`,
+`"$fledge" …` or `…/bin/fledge …` in the merged settings, libexec, the stowed
+config, the shell's QML, bootstrap and the installer is a built-in or a
+`fledge help` action, and each word argument left after the action is one the
+script's `WORD_ARGS` list knows; each `qs -c fledge ipc call T F` and
+`{shell: "T.F"}` names an `Ipc.qml` function):
 
     cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-commands.sh'
 
