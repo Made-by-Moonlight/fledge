@@ -86,10 +86,13 @@ migrate_user_file() {
 # lock_settings: hold the settings lock until the command exits, so concurrent
 # writers (the settings window, a script, a migration) serialise their
 # read-modify-write of the user file instead of losing each other's changes.
+# The wait is bounded: env-hyprland runs apply at login, and a hung holder must
+# not stall the session start.
 lock_settings() {
+  local lock="$MBM_CONFIG_DIR/.lock" wait="${MBM_LOCK_TIMEOUT:-10}"
   mkdir -p "$MBM_CONFIG_DIR" || die "cannot create $MBM_CONFIG_DIR"
-  exec 9>"$MBM_CONFIG_DIR/.lock" || die "cannot open $MBM_CONFIG_DIR/.lock"
-  flock 9 || die "cannot lock $MBM_CONFIG_DIR/.lock"
+  exec 9>"$lock" || die "cannot open $lock"
+  flock -w "$wait" 9 || die "settings are busy: another mbm command holds $lock (waited ${wait}s)"
   MBM_WRITE_MIGRATION=1
 }
 
@@ -182,18 +185,23 @@ settings_check() {
 }
 
 settings_apply() {
-  local merged binds monitors input workspaces
+  local merged binds monitors input workspaces f lib="$MBM_ROOT/lib"
   merged="$(merged_json)" || exit 1
   check_json "$merged" || die "settings are invalid; nothing applied"
   # Render everything before writing anything, so a jq failure can't leave a mix.
-  binds="$(jq -r -f "$MBM_ROOT/lib/gen-binds.jq" <<<"$merged")" || die "could not generate binds"
-  monitors="$(jq -r -f "$MBM_ROOT/lib/gen-monitors.jq" <<<"$merged")" || die "could not generate monitors"
-  input="$(jq -r -f "$MBM_ROOT/lib/gen-input.jq" <<<"$merged")" || die "could not generate input"
-  workspaces="$(jq -r -f "$MBM_ROOT/lib/gen-workspaces.jq" <<<"$merged")" || die "could not generate workspaces"
-  printf '%s\n' "$binds" | atomic_write "$MBM_HYPR_DIR/binds.conf"
-  printf '%s\n' "$monitors" | atomic_write "$MBM_HYPR_DIR/monitors.conf"
-  printf '%s\n' "$workspaces" | atomic_write "$MBM_HYPR_DIR/workspaces.conf"
-  printf '%s\n' "$input" | atomic_write "$MBM_HYPR_DIR/input.conf"
+  binds="$(jq -r -L "$lib" -f "$lib/gen-binds.jq" <<<"$merged")" || die "could not generate binds"
+  monitors="$(jq -r -L "$lib" -f "$lib/gen-monitors.jq" <<<"$merged")" || die "could not generate monitors"
+  input="$(jq -r -L "$lib" -f "$lib/gen-input.jq" <<<"$merged")" || die "could not generate input"
+  workspaces="$(jq -r -L "$lib" -f "$lib/gen-workspaces.jq" <<<"$merged")" || die "could not generate workspaces"
+  printf '%s\n' "$binds" | atomic_write "$MBM_HYPR_DIR/binds.lua"
+  printf '%s\n' "$monitors" | atomic_write "$MBM_HYPR_DIR/monitors.lua"
+  printf '%s\n' "$workspaces" | atomic_write "$MBM_HYPR_DIR/workspaces.lua"
+  printf '%s\n' "$input" | atomic_write "$MBM_HYPR_DIR/input.lua"
+  # The .conf fragments from before the Lua config: nothing loads them now, and a
+  # stale one would only mislead. Only the names apply ever wrote are removed.
+  for f in binds monitors workspaces input; do
+    rm -f "$MBM_HYPR_DIR/$f.conf"
+  done
   printf '%s\n' "$merged" | atomic_write "$MBM_MERGED"
   if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -z ${MBM_NO_RELOAD:-} ]]; then
     hyprctl reload >/dev/null

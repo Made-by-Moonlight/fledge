@@ -208,59 +208,152 @@ good "workspace: desc monitor with spaces" '{"workspaces":{"3":{"monitor":"desc:
 good "workspace: connector name"  '{"workspaces":{"3":{"monitor":"HDMI-A-1"}}}'
 
 # --- apply -------------------------------------------------------------------
+# shellcheck source=SCRIPTDIR/../../../../cachyos/install/test/luacheck.sh
+source "$REPO/cachyos/install/test/luacheck.sh"
+LUA="$(command -v lua || command -v lua5.5 || command -v lua5.4)"
+stub() { "$LUA" "$HERE/hl-stub.lua" "$@" 2>&1; } # what the generated Lua calls (see hl-stub.lua)
+bindline() { grep -F "\"$1\"" "$MBM_HYPR_DIR/binds.lua"; } # the line binding <keys>
+
 fresh
 "$MBM" settings apply
-check "apply: binds.conf"             "$(cat "$FIX/expected-binds.conf")"    "$(cat "$MBM_HYPR_DIR/binds.conf")"
-check "apply: monitors.conf"          "$(cat "$FIX/expected-monitors.conf")" "$(cat "$MBM_HYPR_DIR/monitors.conf")"
-check "apply: input.conf"             "$(cat "$FIX/expected-input.conf")"    "$(cat "$MBM_HYPR_DIR/input.conf")"
+check "apply: binds.lua"              "$(cat "$FIX/expected-binds.lua")"    "$(cat "$MBM_HYPR_DIR/binds.lua")"
+check "apply: monitors.lua"           "$(cat "$FIX/expected-monitors.lua")" "$(cat "$MBM_HYPR_DIR/monitors.lua")"
+check "apply: input.lua"              "$(cat "$FIX/expected-input.lua")"    "$(cat "$MBM_HYPR_DIR/input.lua")"
 check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$MBM_STATE_DIR/settings.json")"
-check "apply: workspaces.conf"        "$(cat "$FIX/expected-workspaces.conf")" "$(cat "$MBM_HYPR_DIR/workspaces.conf")"
+check "apply: workspaces.lua"         "$(cat "$FIX/expected-workspaces.lua")" "$(cat "$MBM_HYPR_DIR/workspaces.lua")"
+check "apply: no .conf written"       ""         "$(find "$MBM_HYPR_DIR" -name '*.conf')"
+for f in binds monitors workspaces input; do
+  lua_syntax_ok "$MBM_HYPR_DIR/$f.lua"; check "apply: $f.lua parses (luac -p)" 0 "$?"
+done
+for f in binds monitors workspaces input; do
+  stub "$MBM_HYPR_DIR/$f.lua" >/dev/null; check "apply: $f.lua runs against the hl stub" 0 "$?"
+done
+check "apply: one hl.bind per settings bind, plus the submap's" \
+  "$(($(jq '.binds | length' "$FIX/defaults.json") + 1))" "$(stub "$MBM_HYPR_DIR/binds.lua" | grep -c '^bind')"
+check "apply: submap bind" "bind@mbm-record	SUPER + CTRL + ALT + Escape	dsp.submap(reset)	nil" \
+  "$(stub "$MBM_HYPR_DIR/binds.lua" | grep '^bind@')"
+check "apply: action list is one function bind" \
+  "bind	ALT + TAB	fn[dsp.window.cycle_next(); dsp.window.bring_to_top()]	{description=Focus on next window}" \
+  "$(stub "$MBM_HYPR_DIR/binds.lua" | grep 'ALT + TAB')"
+check "apply: mouse bind"   'hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { description = "Resize window" })' "$(bindline "SUPER + mouse:273")"
+check "apply: empty mods -> just the key" \
+  'hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("qs -c mbm ipc call osd volume +5"), { description = "Volume up", locked = true, repeating = true })' \
+  "$(bindline XF86AudioRaiseVolume)"
+
+# Stale .conf fragments (from before the Lua config) go; anything else stays.
+fresh
+mkdir -p "$MBM_HYPR_DIR"
+for f in binds monitors workspaces input; do echo old >"$MBM_HYPR_DIR/$f.conf"; done
+echo mine >"$MBM_HYPR_DIR/notes.txt"
+"$MBM" settings apply
+check "apply: old .conf fragments removed" "" "$(find "$MBM_HYPR_DIR" -name '*.conf')"
+check "apply: other files kept"        "mine" "$(cat "$MBM_HYPR_DIR/notes.txt")"
+
+# Each flag letter maps to one hl.bind option ('m' and 's' have none: see gen-binds.jq).
+fresh
+u='{"binds":{}}'; n=0
+for l in e l r n t i p m; do
+  n=$((n + 1))
+  u="$(jq --arg l "$l" --arg k "F$n" '.binds["custom.\($l)"] = {mods:"SUPER CTRL ALT", key:$k, flags:$l, label:"Flag \($l)", group:"Apps", action:{exec:"true"}}' <<<"$u")"
+done
+mkdir -p "$MBM_CONFIG_DIR"; printf '%s\n' "$u" >"$MBM_CONFIG_DIR/settings.json"
+"$MBM" settings apply
+n=0
+for l in e:repeating l:locked r:release n:non_consuming t:transparent i:ignore_mods p:dont_inhibit m:; do
+  n=$((n + 1)); opt="${l#*:}"; l="${l%%:*}"
+  check "flag $l -> ${opt:-no option}" \
+    "hl.bind(\"SUPER + CTRL + ALT + F$n\", hl.dsp.exec_cmd(\"true\"), { description = \"Flag $l\"${opt:+, $opt = true} })" \
+    "$(bindline "SUPER + CTRL + ALT + F$n")"
+done
+lua_syntax_ok "$MBM_HYPR_DIR/binds.lua"; check "flags: binds.lua parses" 0 "$?"
+
+# Strings are Lua literals: \ " and newlines are escaped, '#' and '$' are plain
+# characters (the .conf '##' escaping is gone). Running the file must give back
+# exactly the command that was set.
+fresh
+cmd=$'printf "%s\\n" \'a\\b\' "#x" "$HOME"\nnotify-send done\ttab'
+"$MBM" settings set '.binds["custom.1"]' "$(jq -n --arg c "$cmd" '{mods:"SUPER ALT", key:"F9", label:"Docs #1 \"q\"", group:"Apps", action:{exec:$c}}')"
+"$MBM" settings apply
+lua_syntax_ok "$MBM_HYPR_DIR/binds.lua"; check "escaping: binds.lua parses" 0 "$?"
+check "escaping: rendered literal" \
+  'hl.bind("SUPER + ALT + F9", hl.dsp.exec_cmd("printf \"%s\\n\" '"'"'a\\b'"'"' \"#x\" \"$HOME\"\nnotify-send done\009tab"), { description = "Docs #1 \"q\"" })' \
+  "$(bindline "SUPER + ALT + F9")"
+check "escaping: the command survives a round trip through Lua" \
+  "bind	SUPER + ALT + F9	dsp.exec_cmd($cmd)	{description=Docs #1 \"q\"}" \
+  "$(stub "$MBM_HYPR_DIR/binds.lua" | awk '/^bind\tSUPER \+ ALT \+ F9\t/{p=1} p && /^bind/ && !/F9/{p=0} p')"
+
+# dsp args: an object becomes a table (sorted keys; keys that aren't Lua names,
+# reserved words included, are bracketed); a plain value is one positional argument.
+fresh
+"$MBM" settings set \
+  '.binds["custom.1"]' '{"mods":"SUPER ALT","key":"F1","label":"A","group":"Apps","action":{"dsp":"layout","args":"togglesplit"}}' \
+  '.binds["custom.2"]' '{"mods":"SUPER ALT","key":"F2","label":"B","group":"Apps","action":{"dsp":"window.cycle_next","args":false}}' \
+  '.binds["custom.3"]' '{"mods":"SUPER ALT","key":"F3","label":"C","group":"Apps","action":{"dsp":"window.resize","args":{"x":-10,"y":0.5,"relative":true}}}' \
+  '.binds["custom.4"]' '{"mods":"SUPER ALT","key":"F4","label":"D","group":"Apps","action":{"dsp":"focus","args":{"end":1,"a-b":"x","_ok":"\"y\""}}}'
+"$MBM" settings apply
+check "dsp: positional text"  'hl.bind("SUPER + ALT + F1", hl.dsp.layout("togglesplit"), { description = "A" })' "$(bindline "SUPER + ALT + F1")"
+check "dsp: positional bool"  'hl.bind("SUPER + ALT + F2", hl.dsp.window.cycle_next(false), { description = "B" })' "$(bindline "SUPER + ALT + F2")"
+check "dsp: table args"       'hl.bind("SUPER + ALT + F3", hl.dsp.window.resize({ relative = true, x = -10, y = 0.5 }), { description = "C" })' "$(bindline "SUPER + ALT + F3")"
+check "dsp: odd table keys"   'hl.bind("SUPER + ALT + F4", hl.dsp.focus({ _ok = "\"y\"", ["a-b"] = "x", ["end"] = 1 }), { description = "D" })' "$(bindline "SUPER + ALT + F4")"
+lua_syntax_ok "$MBM_HYPR_DIR/binds.lua"; check "dsp: binds.lua parses" 0 "$?"
+check "dsp: args reach the dispatcher" "dsp.focus({_ok=\"y\" a-b=x end=1})" \
+  "$(stub "$MBM_HYPR_DIR/binds.lua" | grep 'SUPER + ALT + F4' | cut -f3)"
 
 fresh
 mkdir -p "$MBM_CONFIG_DIR"; printf '{"input":{"kbLayout":"gb","kbVariant":"extd"}}\n' >"$MBM_CONFIG_DIR/settings.json"
 MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null
-contains "input: variant rendered" "kb_variant = extd" "$(cat "$MBM_HYPR_DIR/input.conf")"
-contains "input: layout rendered"  "kb_layout = gb"    "$(cat "$MBM_HYPR_DIR/input.conf")"
+contains "input: variant rendered" 'kb_variant = "extd"' "$(cat "$MBM_HYPR_DIR/input.lua")"
+contains "input: layout rendered"  'kb_layout = "gb"'    "$(cat "$MBM_HYPR_DIR/input.lua")"
 
 fresh
 "$MBM" settings set '.workspaces["2"]' null
 "$MBM" settings apply
 check "workspaces: null removes it from merged" "false" "$("$MBM" settings get '.workspaces | has("2")')"
-check "workspaces: null removes it from the file" "" "$(grep -c 'workspace = 2,' "$MBM_HYPR_DIR/workspaces.conf" | grep -v '^0$')"
+check "workspaces: null removes it from the file" "0" "$(grep -c 'workspace = "2"' "$MBM_HYPR_DIR/workspaces.lua")"
 
 fresh
 "$MBM" settings set '.workspaces["2"]' '{"monitor":"DP-3","persistent":false}'
 "$MBM" settings apply
-contains "workspaces: moved (merge is deep, so persistent:false is explicit), its monitor's default" "workspace = 2, monitor:DP-3, default:true" "$(cat "$MBM_HYPR_DIR/workspaces.conf")"
-check "workspaces: moved line is exact" "1" "$(grep -cx 'workspace = 2, monitor:DP-3, default:true' "$MBM_HYPR_DIR/workspaces.conf")"
+check "workspaces: moved (merge is deep, so persistent:false is explicit), its monitor's default" "1" \
+  "$(grep -cxF 'hl.workspace_rule({ default = true, monitor = "DP-3", workspace = "2" })' "$MBM_HYPR_DIR/workspaces.lua")"
 
 fresh
 jq 'del(.workspaces)' "$FIX/defaults.json" >"$T/no-ws.json"
 MBM_DEFAULTS="$T/no-ws.json" "$MBM" settings apply 2>"$T/err"; rc=$?
 check "workspaces: missing section applies" "0" "$rc"
-check "workspaces: missing section -> header only" "# Generated by \`mbm settings apply\`. Do not edit." "$(cat "$MBM_HYPR_DIR/workspaces.conf")"
+check "workspaces: missing section -> header only" "-- Generated by \`mbm settings apply\`. Do not edit." "$(cat "$MBM_HYPR_DIR/workspaces.lua")"
+lua_syntax_ok "$MBM_HYPR_DIR/workspaces.lua"; check "workspaces: header-only file parses" 0 "$?"
 
 fresh
 "$MBM" settings set '.displays["DP-2"].enabled' false
 "$MBM" settings apply
-contains "apply: disabled display"    "monitor = DP-2, disable" "$(cat "$MBM_HYPR_DIR/monitors.conf")"
+check "apply: disabled display" 'hl.monitor({ disabled = true, output = "DP-2" })' "$(grep -F '"DP-2"' "$MBM_HYPR_DIR/monitors.lua")"
+check "apply: disabled display reaches hl.monitor" "monitor	{disabled=true output=DP-2}" "$(stub "$MBM_HYPR_DIR/monitors.lua" | grep DP-2)"
 
 fresh
 "$MBM" settings apply
-good="$(cat "$MBM_HYPR_DIR/binds.conf")"
+good="$(cat "$MBM_HYPR_DIR/binds.lua")"
 mkdir -p "$MBM_CONFIG_DIR"
 printf '{"binds":{"x":{"mods":"SUPER","key":"RETURN","label":"Dup","group":"A","action":{"exec":"y"}}}}\n' >"$MBM_CONFIG_DIR/settings.json"
 "$MBM" settings apply 2>"$T/err"; rc=$?
 check "apply: invalid -> exit 1"      "1"        "$rc"
-check "apply: invalid -> old binds kept" "$good" "$(cat "$MBM_HYPR_DIR/binds.conf")"
+check "apply: invalid -> old binds kept" "$good" "$(cat "$MBM_HYPR_DIR/binds.lua")"
 check "apply: no temp files left"     ""         "$(find "$MBM_HYPR_DIR" "$MBM_STATE_DIR" -name '*.??????' 2>/dev/null)"
 
-# '#' starts a comment in Hyprland config: generated values double it, so a label or
-# command keeps its '#' (e.g. a URL fragment) instead of losing the rest of the line.
+# A writer waits for the settings lock, but not for ever: a hung holder must not
+# stall login (env-hyprland runs apply).
 fresh
-"$MBM" settings set '.binds["custom.1"]' '{"mods":"SUPER ALT","key":"F9","label":"Docs #1","group":"Apps","action":{"exec":"xdg-open https://example.com/#x"}}'
-"$MBM" settings apply
-check "apply: '#' escaped in label and command" "bindd = SUPER ALT, F9, Docs ##1, exec, xdg-open https://example.com/##x" "$(grep ', F9,' "$MBM_HYPR_DIR/binds.conf")"
+mkdir -p "$MBM_CONFIG_DIR"
+flock "$MBM_CONFIG_DIR/.lock" -c "touch '$T/held'; sleep 5" &
+holder=$!
+for _ in $(seq 50); do [[ -e $T/held ]] && break; sleep 0.1; done
+start=$SECONDS
+MBM_LOCK_TIMEOUT=1 "$MBM" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
+check "lock: busy -> exit 1"          "1"        "$rc"
+contains "lock: busy message"         "another mbm command holds" "$(cat "$T/err")"
+check "lock: gave up within the timeout" "yes"   "$( ((SECONDS - start <= 3)) && echo yes || echo no)"
+check "lock: busy -> nothing written" ""         "$(user_file)"
+pkill -P "$holder" 2>/dev/null; kill "$holder" 2>/dev/null; wait "$holder" 2>/dev/null; rm -f "$T/held"
 
 # hyprctl is only called inside a Hyprland session
 fresh
