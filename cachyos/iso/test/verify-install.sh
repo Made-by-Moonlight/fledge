@@ -21,13 +21,13 @@ is "console layout in vconsole.conf"   yes    "$(grep -q '^XKBLAYOUT=' /etc/vcon
 # with "Could not extend NvPCR" on swtpm; nothing here uses measured boot.
 is "no failed units (TPM measurement excluded)" 0 "$(systemctl --failed --no-legend --plain | grep -vE '^(systemd-pcr|systemd-tpm2-setup)' | grep -c .)"
 is "quickshell installed"              yes    "$(command -v qs >/dev/null && echo yes || echo no)"
-is "mbm shell enabled"                 enabled "$(systemctl --user is-enabled mbm-shell 2>/dev/null)"
-is "mbm shell running"                 active "$(systemctl --user is-active mbm-shell 2>/dev/null)"
+is "fledge shell enabled"                 enabled "$(systemctl --user is-enabled fledge-shell 2>/dev/null)"
+is "fledge shell running"                 active "$(systemctl --user is-active fledge-shell 2>/dev/null)"
 is "no retired desktop daemons"        ""     "$(pgrep -x 'waybar|mako|swayosd-server|hypridle|hyprlock|walker|elephant' 2>/dev/null; pgrep -f '^/usr/lib/polkit-gnome/' 2>/dev/null)"
 # Holds the Hyprland instance only while locked; this runs in an unlocked session.
-is "relock flag clear"                 ""     "$(cat "$HOME/.local/state/mbm/locked" 2>/dev/null)"
+is "relock flag clear"                 ""     "$(cat "$HOME/.local/state/fledge/locked" 2>/dev/null)"
 is "fledge settings valid"             ""     "$("$HOME/.local/share/fledge/bin/fledge" settings check 2>&1)"
-gen="$HOME/.local/state/mbm/hypr"
+gen="$HOME/.local/state/fledge/hypr"
 is "generated Hyprland config"         yes    "$( [[ -s $gen/binds.lua && -s $gen/monitors.lua && -s $gen/workspaces.lua && -s $gen/input.lua ]] && echo yes || echo no )"
 # Hyprland reads ~/.config/hypr/hyprland.lua (stowed); a .conf beside it would be
 # the stub a .conf session writes, which lands in the repo through the stow fold.
@@ -54,7 +54,7 @@ is "repo has no local changes"         ""     "$(git -C ~/proj/slievr-cachy stat
 
 # VERIFY_LAYOUT=gb: the installer's keyboard choice reached the user's settings.
 if [[ -n "${VERIFY_LAYOUT:-}" ]]; then
-  is "settings kbLayout"               "$VERIFY_LAYOUT" "$(jq -r '.input.kbLayout' "$HOME/.config/mbm/settings.json" 2>/dev/null)"
+  is "settings kbLayout"               "$VERIFY_LAYOUT" "$(jq -r '.input.kbLayout' "$HOME/.config/fledge/settings.json" 2>/dev/null)"
   is "vconsole XKBLAYOUT"              "XKBLAYOUT=$VERIFY_LAYOUT" "$(grep '^XKBLAYOUT=' /etc/vconsole.conf)"
 fi
 # VERIFY_DATA_MOUNT=~/testdata: the data disk is in fstab and mounts on access.

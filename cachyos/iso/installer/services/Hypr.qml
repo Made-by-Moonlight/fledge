@@ -1,1 +1,1 @@
-../../../../dot-config/quickshell/mbm/services/Hypr.qml
+../../../../dot-config/quickshell/fledge/services/Hypr.qml

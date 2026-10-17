@@ -5,7 +5,7 @@ boot the ISO (fledge), answer a few questions in its graphical installer, and
 it installs unattended onto an encrypted btrfs disk, desktop included, then
 reboots to the login screen.
 
-The desktop is its own Quickshell shell (`mbm`): an attached bar with three
+The desktop is its own Quickshell shell (`fledge`): an attached bar with three
 hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
 emoji, system), notifications, OSD, lock screen, quick settings and a
 settings window. Settings are one JSON file that generates the Hyprland
@@ -63,7 +63,7 @@ bootstrap from a TTY (Ctrl+Alt+F2) and log in afterwards.
 - `cachyos/install/` — the installer itself and first-boot setup
 - `cachyos/bootstrap.sh` — the desktop layer, run by the installer (or on first boot if that failed)
 - `cachyos/branding/` — owl, palette and theme assets
-- `dot-config/quickshell/mbm/` — the desktop shell (bar, launcher, notifications, lock, settings)
+- `dot-config/quickshell/fledge/` — the desktop shell (bar, launcher, notifications, lock, settings)
 - `dot-config/hypr/` — the Hyprland config: `hyprland.lua` and its `fledge/*.lua` modules
 - `dot-local/share/fledge/` — the `fledge` command: `fledge <group> <action>` over the scripts in `libexec/`, `fledge settings` (defaults + overrides → generated Hyprland Lua), `fledge hypr`, `fledge dmenu`
 - `dot-config/`, `dot-local/` — dotfiles, stowed into `~`

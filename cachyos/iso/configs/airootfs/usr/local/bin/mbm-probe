@@ -6,13 +6,13 @@
 # for every device as root, and the /mnt and LUKS mapper checks look at root's view.
 set -euo pipefail
 
-MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
+FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/slievr-cachy}"
 # shellcheck source=SCRIPTDIR/../../../../../../install/profile.sh
-source "$MBM_REPO/cachyos/install/profile.sh"
+source "$FLEDGE_REPO/cachyos/install/profile.sh"
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
-source "$MBM_REPO/cachyos/install/lib/detect.sh"
+source "$FLEDGE_REPO/cachyos/install/lib/detect.sh"
 # shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
-source "$MBM_REPO/cachyos/iso/lib/mbm.sh"
+source "$FLEDGE_REPO/cachyos/iso/lib/mbm.sh"
 
 case "${1:-}" in
   online) mbm_online ;;
@@ -26,7 +26,7 @@ case "${1:-}" in
     defaults="$(for e in "${DATA_DISKS[@]}"; do printf '%s\t%s\n' "${e%%:*}" "${e#*:}"; done \
       | jq -Rn '[inputs | split("\t") | {(.[0]): .[1]}] | add // {}')"
     lsblk -J -b -o PATH,SIZE,MODEL,TRAN,TYPE,FSTYPE,UUID,LABEL,PARTTYPE \
-      | jq --arg live "$(live_disk)" --argjson defaults "$defaults" -f "$MBM_REPO/cachyos/iso/lib/probe.jq" \
+      | jq --arg live "$(live_disk)" --argjson defaults "$defaults" -f "$FLEDGE_REPO/cachyos/iso/lib/probe.jq" \
       | jq --arg ucode "$(detect_ucode /proc/cpuinfo || true)" \
            --arg gpu "$(detect_gpu_pkgs "$(lspci -nn 2>/dev/null || true)")" \
            --argjson mem "$(( memkb / 1024 ))" --argjson zram "$(zram_size "$memkb")" --argjson swap "$swap" \

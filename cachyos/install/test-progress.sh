@@ -9,8 +9,8 @@ source "$DIR/test/lib.sh"
 # shellcheck source=SCRIPTDIR/lib/progress.sh
 source "$DIR/lib/progress.sh"
 
-check "silent without MBM_PROGRESS" "" "$(unset MBM_PROGRESS; progress_stage base 'Base system'; progress_fail; progress_done)"
-export MBM_PROGRESS=1
+check "silent without FLEDGE_PROGRESS" "" "$(unset FLEDGE_PROGRESS; progress_stage base 'Base system'; progress_fail; progress_done)"
+export FLEDGE_PROGRESS=1
 check "stage marker"   "@@mbm stage base Base system" "$(progress_stage base 'Base system')"
 check "fail uses current stage" "@@mbm fail disk" "$(progress_stage disk Disk >/dev/null; progress_fail)"
 check "fail explicit"  "@@mbm fail desktop" "$(progress_fail desktop)"

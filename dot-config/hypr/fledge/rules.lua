@@ -188,7 +188,7 @@ rule({ match = { class = "com.mitchellh.ghostty" }, scroll_touchpad = 0.2 })
 
 -- The settings window (Super+K): a dialog, not a tiled app. Quickshell windows
 -- all share the class org.quickshell, so match the title too
--- (dot-config/quickshell/mbm/settings/SettingsWindow.qml).
+-- (dot-config/quickshell/fledge/settings/SettingsWindow.qml).
 local settings = { class = "^org\\.quickshell$", title = "^fledge . settings$" }
 rule({ match = settings, float = true })
 rule({ match = settings, size = "960 680" })

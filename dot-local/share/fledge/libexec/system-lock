@@ -2,5 +2,5 @@
 
 # Lock the computer and turn off the display
 
-# Compat shim (project B removes it): the mbm shell locks the session.
-exec qs -c mbm ipc call lock lock
+# Compat shim (project B removes it): the fledge shell locks the session.
+exec qs -c fledge ipc call lock lock

@@ -22,8 +22,8 @@ if [[ $dmenu == true ]]; then
   exec fledge dmenu "${args[@]}"
 fi
 case "$mode" in
-  clipboard) exec qs -c mbm ipc call launcher open clipboard ;;
-  symbols) exec qs -c mbm ipc call launcher open emoji ;;
+  clipboard) exec qs -c fledge ipc call launcher open clipboard ;;
+  symbols) exec qs -c fledge ipc call launcher open emoji ;;
   menus:*)
     # elephant's Lua menus (themes, backgrounds, unlocks) were deleted with it;
     # say so instead of opening an unrelated launcher.
@@ -33,7 +33,7 @@ case "$mode" in
       menus:omarchyunlocks) what="The unlock menu" ;;
       *) what="This menu" ;;
     esac
-    notify-send -u low "$what isn't available in the mbm shell yet"
+    notify-send -u low "$what isn't available in the fledge shell yet"
     exit 1 ;;
-  *) exec qs -c mbm ipc call launcher open apps ;;
+  *) exec qs -c fledge ipc call launcher open apps ;;
 esac

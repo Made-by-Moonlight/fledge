@@ -21,7 +21,7 @@ repo layout.
 2. **Brand is "made by moonlight"** (lowercase wordmark, owl mark, palette in
    `cachyos/branding/palette.sh`). `slievr` is the user's handle, not the
    brand: never use it as a logo or wordmark. New components use the
-   **`mbm`** name (`mbm` CLI, `~/.config/mbm/`, `qs -c mbm`).
+   **`fledge`** name (`fledge` CLI, `~/.config/fledge/`, `qs -c fledge`).
 3. **No webapps.** Don't add or port webapp support.
 4. **Branch from an up-to-date `main`.** `git fetch` then
    `git merge --ff-only origin/main` (`pull.rebase=true` here refuses to
@@ -61,14 +61,14 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
 - `cachyos/install/`: installer (bash). `cachyos/iso/`: ISO build/test.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
 - Settings: defaults in `dot-local/share/fledge/defaults/settings.json`,
-  user overrides in `~/.config/mbm/settings.json`, Hyprland fragments
+  user overrides in `~/.config/fledge/settings.json`, Hyprland fragments
   (`binds|monitors|workspaces|input.lua`) **generated** into
-  `~/.local/state/mbm/hypr/` by `fledge settings apply`. Don't hand-edit generated files;
+  `~/.local/state/fledge/hypr/` by `fledge settings apply`. Don't hand-edit generated files;
   change the defaults or the generator. Settings are `version` 2: a bind
   action is `{"exec"}`, `{"shell"}` or `{"dsp": "<hl.dsp name>", "args": …}`;
   a version-1 user file is migrated on apply (backup `settings.json.v1`).
-- The shell runs as `mbm-shell.service`; IPC: `qs -c mbm ipc call <target> <fn>`
-  (targets in `dot-config/quickshell/mbm/ipc/Ipc.qml`). Dev loop:
+- The shell runs as `fledge-shell.service`; IPC: `qs -c fledge ipc call <target> <fn>`
+  (targets in `dot-config/quickshell/fledge/ipc/Ipc.qml`). Dev loop:
   `cachyos/vm/vm.sh restow && cachyos/vm/vm.sh shell`. End-to-end check:
   `cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'`.
 - Shell scripts: bash, `set -euo pipefail`, shellcheck-clean (CI runs it).
@@ -80,7 +80,7 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
   (`iso:`, `install:`, `hypr:`, `gpu:`, `docs:`, `shell:`, `mbm:` …).
 - Hyprland (0.56) runs a **Lua** config, desktop and live ISO alike:
   `dot-config/hypr/hyprland.lua` loads `fledge/*.lua`, the theme, the
-  generated `~/.local/state/mbm/hypr/*.lua` and the toggles through a guarded
+  generated `~/.local/state/fledge/hypr/*.lua` and the toggles through a guarded
   loader (`fledge/load.lua`), so a broken file costs only its own settings and
   raises a red `fledge: <file>: <error>` notification (not a `configerrors`
   entry: Hyprland has no API for that). Keep `hyprland.lua` tiny; an error in it

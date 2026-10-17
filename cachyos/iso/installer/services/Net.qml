@@ -1,1 +1,1 @@
-../../../../dot-config/quickshell/mbm/services/Net.qml
+../../../../dot-config/quickshell/fledge/services/Net.qml

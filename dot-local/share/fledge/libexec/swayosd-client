@@ -3,7 +3,7 @@
 # Wrapper for swayosd-client that targets the currently focused monitor.
 # usage: fledge swayosd client <swayosd-client-args...>
 
-# Compat shim (project B removes it): swayosd is gone; messages and progress go to the mbm OSD.
+# Compat shim (project B removes it): swayosd is gone; messages and progress go to the fledge OSD.
 icon="" message="" progress=-1
 while (($#)); do
   case "$1" in
@@ -15,4 +15,4 @@ while (($#)); do
   esac
   shift
 done
-exec qs -c mbm ipc call osd popup "$icon" "$message" "$progress"
+exec qs -c fledge ipc call osd popup "$icon" "$message" "$progress"

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Dev stand-in for mbm-install (MBM_INSTALLER_DEV=1): reads the answers the way
+# Dev stand-in for mbm-install (FLEDGE_INSTALLER_DEV=1): reads the answers the way
 # mbm-install does, then replays a short fake install with progress markers.
 # Username "fail" fails the Base system stage; "faildesktop" fails the Desktop
 # stage with exit 3 (as install-cachyos.sh does), and --desktop-only then works.

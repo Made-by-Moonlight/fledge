@@ -10,18 +10,18 @@ DEF="$HERE/../defaults/settings.json"
 T="$(mktemp -d)"
 trap 'rm -rf "$T"' EXIT
 
-out="$(HOME="$T" XDG_CONFIG_HOME="$T/.config" MBM_DEFAULTS="$DEF" "$HERE/../bin/fledge" settings check 2>&1)"
+out="$(HOME="$T" XDG_CONFIG_HOME="$T/.config" FLEDGE_DEFAULTS="$DEF" "$HERE/../bin/fledge" settings check 2>&1)"
 check "defaults: settings check rc 0" 0 "$?"
 check "defaults: settings check prints nothing" "" "$out"
 
 # What apply generates from the shipped defaults must be Lua Hyprland can load:
 # it parses, it runs against the hl stub (only known hl.* calls), and every bind
-# becomes one hl.bind (plus the mbm-record submap's).
+# becomes one hl.bind (plus the fledge-record submap's).
 # shellcheck source=SCRIPTDIR/../../../../cachyos/install/test/luacheck.sh
 source "$REPO/cachyos/install/test/luacheck.sh"
 LUA="$(command -v lua || command -v lua5.5 || command -v lua5.4)"
-gen="$T/.local/state/mbm/hypr"
-env -u HYPRLAND_INSTANCE_SIGNATURE HOME="$T" XDG_CONFIG_HOME="$T/.config" MBM_DEFAULTS="$DEF" \
+gen="$T/.local/state/fledge/hypr"
+env -u HYPRLAND_INSTANCE_SIGNATURE HOME="$T" XDG_CONFIG_HOME="$T/.config" FLEDGE_DEFAULTS="$DEF" \
   "$HERE/../bin/fledge" settings apply
 check "defaults: apply rc 0" 0 "$?"
 for f in binds monitors workspaces input; do

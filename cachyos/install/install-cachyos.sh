@@ -29,7 +29,7 @@ warn() { printf '\e[33mWARN:\e[0m  %s\n' "$*" >&2; }
 rule() { printf '\n\e[1m== %s ==\e[0m\n' "$*"; }
 
 # Any non-zero exit marks the running stage as failed for the graphical
-# installer (no-op without MBM_PROGRESS). die() lands here too.
+# installer (no-op without FLEDGE_PROGRESS). die() lands here too.
 # It also removes the temporary NOPASSWD sudoers drop-in of the Desktop stage;
 # INT/TERM become exits so Ctrl-C or a GUI cancel run this trap too.
 trap 'rc=$?; remove_install_sudoers; if (( rc != 0 )); then progress_fail; fi' EXIT
@@ -65,7 +65,7 @@ while (( $# )); do
   shift
 done
 if [[ -n "$DESKTOP_ONLY" ]]; then
-  MBM_STAGE=desktop   # a guard failure below is a Desktop failure, not Prepare
+  FLEDGE_STAGE=desktop   # a guard failure below is a Desktop failure, not Prepare
   valid_username "$DESKTOP_ONLY" || die "--desktop-only: not a valid user name: $DESKTOP_ONLY"
   [[ $EUID -eq 0 ]] || die "must run as root"
   mountpoint -q /mnt || die "--desktop-only: the target isn't mounted at /mnt"
@@ -305,7 +305,7 @@ cp -r "$HERE/../plymouth-theme/slievr-cachy" /mnt/usr/share/plymouth/themes/slie
 arch-chroot /mnt env \
   TIMEZONE="$TIMEZONE" LOCALE="$LOCALE" \
   KEYMAP="$(console_keymap "$XKB_LAYOUT" "$XKB_VARIANT")" XKB_LAYOUT="$XKB_LAYOUT" XKB_VARIANT="$XKB_VARIANT" \
-  MBM_PROGRESS="${MBM_PROGRESS:-}" \
+  FLEDGE_PROGRESS="${FLEDGE_PROGRESS:-}" \
   USERNAME="$USERNAME" HOSTNAME="$HOSTNAME" KERNEL="$KERNEL" SWAP="$SWAP" \
   LUKS_NAME="$LUKS_NAME" LUKS_PARTUUID="$LUKS_PARTUUID" \
   EXTRA_CMDLINE="$EXTRA_CMDLINE" GPU_CMDLINE="$GPU_CMDLINE" GPU_MODULES="$GPU_MODULES" \
@@ -315,7 +315,7 @@ arch-chroot /mnt env \
 # The Bootloader marker is printed inside the chroot, so this script's own
 # stage must follow it, or a failure in the rest of that stage reports `fail config`.
 # shellcheck disable=SC2034  # read by progress_fail in the EXIT trap
-MBM_STAGE=boot
+FLEDGE_STAGE=boot
 
 rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh /mnt/root/cachyos-repos.sh
 add_data_mounts

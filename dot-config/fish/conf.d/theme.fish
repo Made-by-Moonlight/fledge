@@ -1,5 +1,5 @@
 # Syntax and pager colours from the made by moonlight palette
-# (cachyos/branding/palette.sh, quickshell/mbm/theme/Theme.qml). Our own file
+# (cachyos/branding/palette.sh, quickshell/fledge/theme/Theme.qml). Our own file
 # rather than omarchy/current/theme/colors.fish, which project C retires.
 # Plain (global) variables, set every start, so palette edits need no
 # `set -U` and nothing lands in fish_variables.

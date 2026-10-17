@@ -4,7 +4,7 @@
      "children": [
        {"path": "/dev/sda1", "size": 480102916096, "model": null, "tran": null, "type": "part", "fstype": "ext4", "uuid": "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7", "label": null, "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"}
      ]},
-    {"path": "/dev/sdc", "size": 32010928128, "model": "Ultra USB 3.0", "tran": "usb", "type": "disk", "fstype": "iso9660", "uuid": "2026-10-16-00-00-00-00", "label": "MBM_202610", "parttype": null,
+    {"path": "/dev/sdc", "size": 32010928128, "model": "Ultra USB 3.0", "tran": "usb", "type": "disk", "fstype": "iso9660", "uuid": "2026-10-16-00-00-00-00", "label": "FLEDGE_202610", "parttype": null,
      "children": [
        {"path": "/dev/sdc2", "size": 1048576, "model": null, "tran": null, "type": "part", "fstype": "vfat", "uuid": "AAAA-BBBB", "label": "ARCHISO_EFI", "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b"}
      ]},

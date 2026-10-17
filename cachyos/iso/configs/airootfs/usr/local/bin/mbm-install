@@ -7,15 +7,15 @@
 # 0 installed, 3 only the Desktop stage failed (target left mounted), else failed.
 set -uo pipefail
 
-MBM_REPO="${MBM_REPO:-/usr/share/slievr-cachy}"
+FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/slievr-cachy}"
 LOG=/var/log/mbm-install.log
 ANSWERS=/run/mbm-answers.env
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
-source "$MBM_REPO/cachyos/install/lib/detect.sh"
+source "$FLEDGE_REPO/cachyos/install/lib/detect.sh"
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/progress.sh
-source "$MBM_REPO/cachyos/install/lib/progress.sh"
+source "$FLEDGE_REPO/cachyos/install/lib/progress.sh"
 # shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
-source "$MBM_REPO/cachyos/iso/lib/mbm.sh"
+source "$FLEDGE_REPO/cachyos/iso/lib/mbm.sh"
 
 if [[ "${1:-}" == --desktop-only ]]; then
   args=(--desktop-only "${2:?--desktop-only needs a user}")
@@ -36,7 +36,7 @@ else
   args=(--answers "$ANSWERS")
 fi
 
-MBM_PROGRESS=1 bash "$MBM_REPO/cachyos/install/install-cachyos.sh" "${args[@]}" </dev/null 2>&1 \
+FLEDGE_PROGRESS=1 bash "$FLEDGE_REPO/cachyos/install/install-cachyos.sh" "${args[@]}" </dev/null 2>&1 \
   | progress_filter | tee -a "$LOG"
 status="${PIPESTATUS[0]}"
 rm -f -- "$ANSWERS"        # normally already deleted by load_answers

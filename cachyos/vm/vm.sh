@@ -75,7 +75,7 @@ case "${1:-}" in
   run) shift; ssh_vm "$SESSION_ENV"$'\n'"$*" ;;
   sudo) shift; printf '%s\n' "$VM_PASSWORD" | ssh_vm "$SESSION_ENV"$'\n'"sudo -S -p '' sh -c $(printf '%q' "$*")" ;;
   shell)
-    # Dev loop: restart the shell, through mbm-shell.service once the cutover has
+    # Dev loop: restart the shell, through fledge-shell.service once the cutover has
     # installed it. On an older install, first stop the old UI daemons (mako owns
     # the notification bus name, waybar overlaps the bar), then restart qs.
     # Every running instance is stopped first, not just one: a stale duplicate
@@ -86,19 +86,19 @@ case "${1:-}" in
     ssh_vm "$SESSION_ENV"$'\n''pkill -x waybar; pkill -x mako; pkill -x swayosd-server; pkill -x hypridle
       pk="^/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
       pkill -f "$pk"; for _ in $(seq 20); do pgrep -f "$pk" >/dev/null || break; sleep 0.25; done
-      if systemctl --user is-active -q mbm-shell 2>/dev/null; then systemctl --user restart mbm-shell; sleep 3; journalctl --user -u mbm-shell -b --no-pager | grep -E "WARN|ERROR" | tail -n 40
+      if systemctl --user is-active -q fledge-shell 2>/dev/null; then systemctl --user restart fledge-shell; sleep 3; journalctl --user -u fledge-shell -b --no-pager | grep -E "WARN|ERROR" | tail -n 40
       else
         # After a crash, the Quickshell crash guard restarts the shell as a bare /usr/bin/quickshell.
-        inst="^((qs|quickshell) -c mbm( |\$)|/usr/bin/quickshell\$)"
+        inst="^((qs|quickshell) -c fledge( |\$)|/usr/bin/quickshell\$)"
         pkill -f "$inst"
         for _ in $(seq 20); do pgrep -f "$inst" >/dev/null || break; sleep 0.25; done
         pkill -9 -f "$inst" && sleep 0.5
-        if pgrep -f "$inst" >/dev/null; then echo "vm.sh: qs -c mbm still running" >&2; exit 1; fi
+        if pgrep -f "$inst" >/dev/null; then echo "vm.sh: qs -c fledge still running" >&2; exit 1; fi
         # Started by Hyprland, not from this SSH login: polkit binds an agent to the logind
         # session of its process, and one started here would serve the SSH session, not the desktop.
-        : >/tmp/mbm.log   # so the grep below shows only this run
-        fledge hypr dispatch "hl.dsp.exec_cmd(\"qs -c mbm >/tmp/mbm.log 2>&1 </dev/null\")"
-        sleep 3; grep -E "WARN|ERROR" /tmp/mbm.log | tail -n 40
+        : >/tmp/fledge.log   # so the grep below shows only this run
+        fledge hypr dispatch "hl.dsp.exec_cmd(\"qs -c fledge >/tmp/fledge.log 2>&1 </dev/null\")"
+        sleep 3; grep -E "WARN|ERROR" /tmp/fledge.log | tail -n 40
       fi; true' ;;
   shot)
     name="${2:?vm.sh shot NAME}"; mkdir -p "$REPO/.superpowers/shots"

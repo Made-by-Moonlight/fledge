@@ -2,7 +2,7 @@
 # fledge dmenu: options on stdin -> the shell's launcher in dmenu mode -> the
 # choice on stdout. Exit 1 on cancel, timeout, or when the shell isn't running;
 # 2 on bad usage. The shell answers through a FIFO: "1\n<choice>\n" or "0\n\n".
-# MBM_DMENU_TIMEOUT (seconds, default 600) bounds the wait.
+# FLEDGE_DMENU_TIMEOUT (seconds, default 600) bounds the wait.
 
 dmenu_usage() { echo "usage: fledge dmenu [--prompt P] [--select N] [--input-only]" >&2; }
 
@@ -26,7 +26,7 @@ dmenu_main() {
   dmenu_dir="$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/fledge-dmenu.XXXXXX")"
   dmenu_cleanup() {
     if ((dmenu_reader)); then kill "$dmenu_reader" 2>/dev/null || true; fi
-    if [[ $dmenu_open == true ]]; then qs -c mbm ipc call dmenu close >/dev/null 2>&1 || true; fi
+    if [[ $dmenu_open == true ]]; then qs -c fledge ipc call dmenu close >/dev/null 2>&1 || true; fi
     rm -rf "$dmenu_dir"
     return 0
   }
@@ -39,14 +39,14 @@ dmenu_main() {
   mkfifo "$dmenu_dir/result"
 
   # Tell "not running" apart from a real qs error.
-  [[ "$(qs -c mbm ipc call shell ping 2>&1 | tail -n1)" == pong ]] \
+  [[ "$(qs -c fledge ipc call shell ping 2>&1 | tail -n1)" == pong ]] \
     || { echo "fledge dmenu: the shell isn't running" >&2; return 1; }
   # "--" so a prompt starting with "-" isn't parsed as a qs option.
-  out="$(qs -c mbm ipc call dmenu open -- "$prompt" "$dmenu_dir/options" "$dmenu_dir/result" "$select" "$input_only" 2>&1)" \
+  out="$(qs -c fledge ipc call dmenu open -- "$prompt" "$dmenu_dir/options" "$dmenu_dir/result" "$select" "$input_only" 2>&1)" \
     || { echo "fledge dmenu: could not open the dialog: $(printf '%s\n' "$out" | tail -n1)" >&2; return 1; }
   dmenu_open=true
 
-  exec {fd}< <(timeout "${MBM_DMENU_TIMEOUT:-600}" cat "$dmenu_dir/result")
+  exec {fd}< <(timeout "${FLEDGE_DMENU_TIMEOUT:-600}" cat "$dmenu_dir/result")
   dmenu_reader=$!
   # Timeout (or a dead reader) leaves dmenu_open=true so the exit trap closes the stale dialog.
   { IFS= read -r status && IFS= read -r choice; } <&"$fd" || return 1

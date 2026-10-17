@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Progress markers for the graphical installer. With MBM_PROGRESS=1 the
+# Progress markers for the graphical installer. With FLEDGE_PROGRESS=1 the
 # installer prints, on stdout, lines of exactly:
 #   @@mbm stage <id> <title>   a stage starts (prepare disk base config boot desktop finish)
 #   @@mbm count <n> <m>        package n of m in the current pacman transaction
@@ -7,17 +7,17 @@
 #   @@mbm done                 everything succeeded
 # Without it, output is exactly as before. The UI (Run.qml) parses these.
 
-MBM_STAGE="${MBM_STAGE:-prepare}"
+FLEDGE_STAGE="${FLEDGE_STAGE:-prepare}"
 
-progress_on() { [[ "${MBM_PROGRESS:-}" == 1 ]]; }
+progress_on() { [[ "${FLEDGE_PROGRESS:-}" == 1 ]]; }
 
 progress_stage() { # <id> <title>
-  MBM_STAGE="$1"
+  FLEDGE_STAGE="$1"
   if progress_on; then printf '@@mbm stage %s %s\n' "$1" "$2"; fi
 }
 
 progress_fail() { # [id]  (default: the stage that was running)
-  if progress_on; then printf '@@mbm fail %s\n' "${1:-$MBM_STAGE}"; fi
+  if progress_on; then printf '@@mbm fail %s\n' "${1:-$FLEDGE_STAGE}"; fi
 }
 
 progress_done() {

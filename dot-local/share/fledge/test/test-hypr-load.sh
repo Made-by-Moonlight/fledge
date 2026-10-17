@@ -115,12 +115,12 @@ check "notification failure: caller still continues" "0|false continued" "$rc|$o
 HYPR_LUA="$REPO/dot-config/hypr/hyprland.lua"
 mkhome() { # mkhome <dir>: the config tree hyprland.lua expects, with tracing stubs
   local h="$1" f
-  mkdir -p "$h/.config/hypr/fledge" "$h/.local/state/mbm/hypr" "$h/.local/state/hypr-toggles"
+  mkdir -p "$h/.config/hypr/fledge" "$h/.local/state/fledge/hypr" "$h/.local/state/hypr-toggles"
   cp "$HYPR_LUA" "$h/.config/hypr/hyprland.lua"
   for f in envs looknfeel misc rules autostart; do
     printf 'trace[#trace + 1] = "%s"\n' "$f" >"$h/.config/hypr/fledge/$f.lua"
   done
-  printf 'trace[#trace + 1] = "binds"\n' >"$h/.local/state/mbm/hypr/binds.lua"
+  printf 'trace[#trace + 1] = "binds"\n' >"$h/.local/state/fledge/hypr/binds.lua"
   printf 'trace[#trace + 1] = "toggle"\n' >"$h/.local/state/hypr-toggles/t.lua"
 }
 cat > "$T/driver3.lua" <<'EOL'
@@ -148,20 +148,20 @@ check "hyprland.lua: binds.lua loaded, no safety-net binds" "" "$(field binds)"
 
 # binds.lua missing (never generated) or broken: a few binds to get help or get
 # out, never none at all.
-safety="SUPER + RETURN=exec(uwsm app -- \$TERMINAL)|Terminal;SUPER + SPACE=exec(qs -c mbm ipc call launcher toggle)|Launch apps;SUPER + K=exec(qs -c mbm ipc call settings open keybinds)|Keybinds;SUPER + ESCAPE=exec(qs -c mbm ipc call launcher open system)|System menu;SUPER + M=exit|Exit Hyprland"
-mkhome "$T/hb1"; cp "$LOAD" "$T/hb1/.config/hypr/fledge/load.lua"; rm "$T/hb1/.local/state/mbm/hypr/binds.lua"
+safety="SUPER + RETURN=exec(uwsm app -- \$TERMINAL)|Terminal;SUPER + SPACE=exec(qs -c fledge ipc call launcher toggle)|Launch apps;SUPER + K=exec(qs -c fledge ipc call settings open keybinds)|Keybinds;SUPER + ESCAPE=exec(qs -c fledge ipc call launcher open system)|System menu;SUPER + M=exit|Exit Hyprland"
+mkhome "$T/hb1"; cp "$LOAD" "$T/hb1/.config/hypr/fledge/load.lua"; rm "$T/hb1/.local/state/fledge/hypr/binds.lua"
 run_hypr "$T/hb1"
 check "binds.lua missing: the safety-net binds" "$safety" "$(field binds)"
 check "binds.lua missing: the rest loads" "envs looknfeel misc rules toggle autostart" "$(field trace)"
 check "binds.lua missing: no notification (a fresh account)" "0" "$(field notes)"
 mkhome "$T/hb2"; cp "$LOAD" "$T/hb2/.config/hypr/fledge/load.lua"
-printf 'this is not lua\n' >"$T/hb2/.local/state/mbm/hypr/binds.lua"
+printf 'this is not lua\n' >"$T/hb2/.local/state/fledge/hypr/binds.lua"
 run_hypr "$T/hb2"
 check "binds.lua broken: the safety-net binds" "$safety" "$(field binds)"
 check "binds.lua broken: the rest loads" "envs looknfeel misc rules toggle autostart" "$(field trace)"
-contains "binds.lua broken: a notification names it" "/.local/state/mbm/hypr/binds.lua:" "$(field note1)"
+contains "binds.lua broken: a notification names it" "/.local/state/fledge/hypr/binds.lua:" "$(field note1)"
 # hl.dsp gone (an API change): the safety net mustn't take hyprland.lua down.
-mkhome "$T/hb3"; cp "$LOAD" "$T/hb3/.config/hypr/fledge/load.lua"; rm "$T/hb3/.local/state/mbm/hypr/binds.lua"
+mkhome "$T/hb3"; cp "$LOAD" "$T/hb3/.config/hypr/fledge/load.lua"; rm "$T/hb3/.local/state/fledge/hypr/binds.lua"
 printf 'hl.dsp = nil\n' >"$T/hb3/.config/hypr/fledge/envs.lua"
 run_hypr "$T/hb3"
 check "no hl.dsp: hyprland.lua still runs to the end" "0|toggle autostart" "$rc|$(field trace | sed 's/^.*rules //')"

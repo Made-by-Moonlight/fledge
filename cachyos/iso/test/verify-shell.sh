@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# End-to-end checks for the mbm shell, run inside the logged-in Hyprland
+# End-to-end checks for the fledge shell, run inside the logged-in Hyprland
 # session (needs wtype; types the account password for the lock checks):
 #   cachyos/vm/vm.sh run 'bash ~/proj/slievr-cachy/cachyos/iso/test/verify-shell.sh'
 # Never suspends: lock-before-sleep can't be exercised in the VM.
@@ -18,7 +18,7 @@ ok() { printf 'PASS  %s\n' "$1"; }
 no() { printf 'FAIL  %s\n' "$1"; bad=1; }
 is() { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 
-gen=~/.local/state/mbm/hypr
+gen=~/.local/state/fledge/hypr
 # Hyprland's own notifications (the ".conf format" notice, fledge's loader
 # errors), one per line. hyprctl has no query for them; Lua does. The prefix
 # keeps the reply non-empty: repl answers an empty string with "unknown request".
@@ -93,7 +93,7 @@ case "${1:-}" in
   "") ;;
   *) sed -n '2,10p' "$0" >&2; exit 2 ;;
 esac
-ipc() { qs -c mbm ipc call "$@" 2>/dev/null; }
+ipc() { qs -c fledge ipc call "$@" 2>/dev/null; }
 state() { ipc shell state | jq -r ".$1"; }
 DMENU_OUT=/tmp/verify-dmenu
 unlock() {
@@ -103,7 +103,7 @@ unlock() {
 # The crash-relock flag holds the Hyprland instance signature while locked and
 # is emptied (not removed) when unlocked; a fresh account has none until the
 # first lock. stderr is redirected first, so a missing file stays quiet.
-lockflag() { tr -d '[:space:]' 2>/dev/null < ~/.local/state/mbm/locked; }
+lockflag() { tr -d '[:space:]' 2>/dev/null < ~/.local/state/fledge/locked; }
 
 nl_temp() { hyprctl hyprsunset temperature 2>/dev/null | grep -xE '[0-9]+'; }
 
@@ -126,7 +126,7 @@ cleanup() {
 trap cleanup EXIT INT TERM
 trap 'exit 130' INT TERM
 
-is "mbm-shell active"            active "$(systemctl --user is-active mbm-shell)"
+is "fledge-shell active"            active "$(systemctl --user is-active fledge-shell)"
 for d in waybar mako swayosd-server hypridle hyprlock walker elephant; do
   is "$d not running"            no     "$(pgrep -x "$d" >/dev/null && echo yes || echo no)"
 done
@@ -143,12 +143,12 @@ is "Hyprland uses the Lua config" yes  "$(grep -q 'Using lua config' "$XDG_RUNTI
 is "no Hyprland config errors"   ""     "$(hyprctl configerrors)"
 is "no .conf notification"       no     "$(note_has '\.conf')"
 is "no fledge loader notification" no   "$(note_has '^fledge: ')"
-# Every settings bind is one Hyprland bind, plus the mbm-record submap's way out.
+# Every settings bind is one Hyprland bind, plus the fledge-record submap's way out.
 is "every settings bind loaded"  "$(( $(fledge settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
 is "bind descriptions are the settings labels" "$(fledge settings get .binds | jq -c '[.[].label] | sort')" "$(hyprctl binds -j | jq -c '[.[] | select(.submap == "") | .description] | sort')"
-is "mbm-record submap has its reset bind" 1 "$(hyprctl binds -j | jq '[.[] | select(.submap == "mbm-record" and .key == "Escape")] | length')"
-fledge hypr dispatch 'hl.dsp.submap("mbm-record")' >/dev/null
-is "fledge hypr enters the mbm-record submap" mbm-record "$(hyprctl submap)"
+is "fledge-record submap has its reset bind" 1 "$(hyprctl binds -j | jq '[.[] | select(.submap == "fledge-record" and .key == "Escape")] | length')"
+fledge hypr dispatch 'hl.dsp.submap("fledge-record")' >/dev/null
+is "fledge hypr enters the fledge-record submap" fledge-record "$(hyprctl submap)"
 fledge hypr dispatch 'hl.dsp.submap("reset")' >/dev/null
 is "fledge hypr leaves the submap" default "$(hyprctl submap)"
 ws0="$(hyprctl activeworkspace -j | jq .id)"
@@ -223,11 +223,11 @@ ipc notifications dismissAll
 
 fledge settings set '.binds["custom.verify"]' '{"mods":"SUPER CTRL ALT","key":"F12","label":"verify","group":"Custom","action":{"exec":"true"}}' && fledge settings apply
 is "custom bind reaches Hyprland" 1     "$(hyprctl binds -j | jq '[.[] | select(.description == "verify")] | length')"
-# Key recording: the settings window puts Hyprland in the mbm-record submap, takes
+# Key recording: the settings window puts Hyprland in the fledge-record submap, takes
 # one key (a bare F-key: wtype's -M modifiers don't reach Qt as modifiers) and
 # saves it to the bind.
 ipc settings record custom.verify; sleep 1.5
-is "recording enters the mbm-record submap" mbm-record "$(hyprctl submap)"
+is "recording enters the fledge-record submap" fledge-record "$(hyprctl submap)"
 wtype -k F9; sleep 2
 is "recording leaves the submap"  default "$(hyprctl submap)"
 is "the recorded key is saved"    "+F9"  "$(fledge settings get '.binds["custom.verify"] | .mods + "+" + .key' | jq -r .)"
@@ -258,8 +258,8 @@ is "screens off while locked (dpms)" false "$(hyprctl monitors -j | jq '.[0].dpm
 # resets the count. Only typed when actually locked.
 if [[ "$(ipc lock status)" == locked ]]; then wtype not-the-password; wtype -k Return; sleep 3; fi
 is "wrong password stays locked" locked "$(ipc lock status)"
-systemctl --user kill --signal=SIGKILL mbm-shell; sleep 4
-is "shell restarted after crash" active "$(systemctl --user is-active mbm-shell)"
+systemctl --user kill --signal=SIGKILL fledge-shell; sleep 4
+is "shell restarted after crash" active "$(systemctl --user is-active fledge-shell)"
 is "still locked after crash"    locked "$(ipc lock status)"
 unlock
 is "right password unlocks"      unlocked "$(ipc lock status)"
@@ -270,7 +270,7 @@ is "screens on after unlock (dpms)" true "$(hyprctl monitors -j | jq 'all(.dpmsS
 # user's light choice alone. Runs the function exactly as bootstrap.sh defines it.
 GTK_KEY="gsettings get org.gnome.desktop.interface color-scheme"
 gtk_prev="$($GTK_KEY)"
-[[ -e ~/.local/state/mbm/gtk-dark-seeded ]] || { mkdir -p ~/.local/state/mbm; : > ~/.local/state/mbm/gtk-dark-seeded; }
+[[ -e ~/.local/state/fledge/gtk-dark-seeded ]] || { mkdir -p ~/.local/state/fledge; : > ~/.local/state/fledge/gtk-dark-seeded; }
 gsettings set org.gnome.desktop.interface color-scheme default
 bash -c "$(sed -n '/^seed_gtk_dark() {/,/^}/p' "$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../../bootstrap.sh"); seed_gtk_dark"
 is "gtk dark not re-applied once seeded" "'default'" "$($GTK_KEY)"

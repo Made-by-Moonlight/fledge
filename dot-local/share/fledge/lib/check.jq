@@ -1,6 +1,6 @@
 # Input: merged settings (and --slurpfile dsp dsp-names.json). Output: one string
 # per problem; nothing = valid.
-# Kept in step with the schema in docs/superpowers/specs/2026-10-10-mbm-shell-design.md.
+# Kept in step with the schema in docs/superpowers/specs/2026-10-10-fledge-shell-design.md.
 
 def isint: type == "number" and . == floor;
 def str_matches($re): type == "string" and test($re);

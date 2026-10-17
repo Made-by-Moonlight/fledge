@@ -50,6 +50,6 @@ fi
 # Set the new brightness.
 brightnessctl -d "$device" set "$new_brightness" >/dev/null
 
-# Show the new brightness in the mbm OSD.
+# Show the new brightness in the fledge OSD.
 percent=$((new_brightness * 100 / max_brightness))
-qs -c mbm ipc call osd popup keyboard-brightness-symbolic "" "$(awk -v p="$percent" 'BEGIN{printf "%.2f", p/100}')"
+qs -c fledge ipc call osd popup keyboard-brightness-symbolic "" "$(awk -v p="$percent" 'BEGIN{printf "%.2f", p/100}')"

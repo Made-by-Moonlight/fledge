@@ -1,5 +1,5 @@
 -- Everything else. The input values here are only the baseline: the
--- generated ~/.local/state/mbm/hypr/input.lua (fledge settings) loads after this
+-- generated ~/.local/state/fledge/hypr/input.lua (fledge settings) loads after this
 -- and sets the keyboard, repeat, sensitivity and touchpad.
 hl.config({
   -- https://wiki.hypr.land/Configuring/Basics/Variables/#input
@@ -23,7 +23,7 @@ hl.config({
     key_press_enables_dpms = true, -- key press will trigger wake
     mouse_move_enables_dpms = true, -- mouse move will trigger wake
 
-    -- A restarted mbm shell may take over the existing session lock (otherwise
+    -- A restarted fledge shell may take over the existing session lock (otherwise
     -- Hyprland stays locked with "lockscreen died" and no way back in).
     allow_session_lock_restore = true,
 

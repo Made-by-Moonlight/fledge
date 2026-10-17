@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Runs INSIDE `arch-chroot /mnt`. Invoked as: bash /root/chroot-setup.sh
 # All inputs arrive as exported env vars (see install-cachyos.sh Task 7 step 4):
-#   TIMEZONE LOCALE KEYMAP XKB_LAYOUT XKB_VARIANT MBM_PROGRESS USERNAME HOSTNAME KERNEL SWAP
+#   TIMEZONE LOCALE KEYMAP XKB_LAYOUT XKB_VARIANT FLEDGE_PROGRESS USERNAME HOSTNAME KERNEL SWAP
 #   LUKS_NAME LUKS_PARTUUID EXTRA_CMDLINE
 #   GPU_MODULES GPU_CMDLINE ZRAM_SIZE RESUME_OFFSET
 #   USER_PASSWORD ROOT_PASSWORD
@@ -95,7 +95,7 @@ done
 echo ">>> services" >&2
 systemctl enable NetworkManager sshd
 
-if [[ "${MBM_PROGRESS:-}" == 1 ]]; then echo "@@mbm stage boot Bootloader"; fi
+if [[ "${FLEDGE_PROGRESS:-}" == 1 ]]; then echo "@@mbm stage boot Bootloader"; fi
 echo ">>> bootloader" >&2
 # shellcheck source=bootloader.sh
 source "${HERE}/bootloader.sh"

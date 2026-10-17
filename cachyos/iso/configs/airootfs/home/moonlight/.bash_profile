@@ -3,7 +3,7 @@
 # exits with an error), say so and leave this shell; Ctrl+Alt+F2 is a root
 # console. Leaving the installer normally also lands here.
 if [[ "$(tty)" == /dev/tty1 && -z "${WAYLAND_DISPLAY:-}" ]]; then
-  export MBM_REPO=/usr/share/slievr-cachy
+  export FLEDGE_REPO=/usr/share/slievr-cachy
   if ! Hyprland --config /etc/mbm-installer/hyprland.lua >/tmp/hyprland-installer.log 2>&1; then
     echo
     echo "The graphical installer couldn't start."

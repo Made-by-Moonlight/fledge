@@ -6,9 +6,9 @@ DOTFILES_DIR="$HOME/proj/slievr-cachy"
 
 # The lock screen's own PAM service, separate from the real login stack so a
 # mistake here can't break logging in. Written first, before anything that can
-# fail: without it the mbm lock falls back to PAM's `other` service, which
+# fail: without it the fledge lock falls back to PAM's `other` service, which
 # denies everything, and a locked session could never be unlocked.
-printf 'auth include login\n' | sudo tee /etc/pam.d/mbm-lock >/dev/null
+printf 'auth include login\n' | sudo tee /etc/pam.d/fledge-lock >/dev/null
 
 # Vulkan driver per GPU vendor present (PCI display class 0x03xxxx), read from
 # sysfs so it needs no pciutils. Mixed vendors (e.g. RTX 3080 + RX 9070 XT) get
@@ -45,9 +45,9 @@ PACMAN_PACKAGES=(
   # The quick-settings night light tile (fledge toggle nightlight); it used to
   # arrive transitively and nothing pulls it in any more.
   hyprsunset
-  # kitty.conf font_family names a specific nerd font, and the mbm shell's
+  # kitty.conf font_family names a specific nerd font, and the fledge shell's
   # glyphs come from nerd fonts too (missing ones render as boxes).
-  # JetBrainsMono Nerd Font: the mbm shell's text and the vendored sddm
+  # JetBrainsMono Nerd Font: the fledge shell's text and the vendored sddm
   # greeter theme's password field.
   ttf-cascadia-mono-nerd ttf-firacode-nerd ttf-jetbrains-mono-nerd
   # pamixer (fledge audio …), brightnessctl (fledge brightness keyboard,
@@ -65,9 +65,9 @@ PACMAN_PACKAGES=(
   # fledge/autostart.lua's startup commands — all missing on a fresh install:
   # input method framework, power-profile D-Bus service
   # (fledge powerprofiles init needs powerprofilesctl). No idle daemon or
-  # polkit agent: the mbm shell does both.
+  # polkit agent: the fledge shell does both.
   fcitx5 power-profiles-daemon
-  # The mbm shell (dot-config/quickshell/mbm, run by mbm-shell.service): bar,
+  # The fledge shell (dot-config/quickshell/fledge, run by fledge-shell.service): bar,
   # launcher, notifications, OSD, lock, idle, polkit agent. cliphist backs its
   # clipboard history, unicode-emoji its emoji picker (noto-fonts-emoji draws them).
   # Needs Quickshell >= 0.3.2 (the version it was built and tested against;
@@ -86,7 +86,7 @@ PACMAN_PACKAGES=(
   imagemagick
   # Activity monitor (Super+Ctrl+T); calculator key.
   btop gnome-calculator
-  # Wi-Fi, Bluetooth and audio are the mbm quick settings now (Super+A,
+  # Wi-Fi, Bluetooth and audio are the fledge quick settings now (Super+A,
   # Super+Ctrl+W/B/A); nmtui (ships with networkmanager) stays for the
   # Setup menu (fledge menu setup).
   # Official ProtonVPN GTK client.
@@ -184,7 +184,7 @@ fi
 # ~/.config (and ~/.config/systemd/user) too: without it stow folds the whole directory into one symlink to dot-config/, and every app then writes its settings into the repo.
 # graphical-session.target.wants too: systemd does not follow a .wants
 # directory that is itself a symlink, so stow must link the unit files inside
-# a real directory (otherwise mbm-shell.service never starts: no desktop shell).
+# a real directory (otherwise fledge-shell.service never starts: no desktop shell).
 # ~/.config/uwsm too: the repo ships dot-config/uwsm/env-hyprland, but env
 # (written below) must stay a real, untracked file rather than land in the repo.
 # ~/.config/fish too: fish writes fish_variables beside the stowed config.
@@ -244,7 +244,7 @@ fi
 # bus: firstboot has none, so a private one is used (dconf writes
 # ~/.config/dconf/user, which persists).
 seed_gtk_dark() {
-  local marker="$HOME/.local/state/mbm/gtk-dark-seeded" run=() out
+  local marker="$HOME/.local/state/fledge/gtk-dark-seeded" run=() out
   [[ -e $marker ]] && return 0
   command -v gsettings >/dev/null 2>&1 && command -v dconf >/dev/null 2>&1 || return 1
   [[ -S ${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/bus || -n ${DBUS_SESSION_BUS_ADDRESS:-} ]] || run=(dbus-run-session --)
@@ -307,13 +307,13 @@ printf '[Theme]\nCurrent=slievr-cachy\n' \
 
 sudo systemctl enable sddm.service
 
-# mbm-shell.service (the desktop shell) is a user unit started with the
+# fledge-shell.service (the desktop shell) is a user unit started with the
 # graphical session: the stowed graphical-session.target.wants/ link enables it,
 # so no `systemctl --user enable` here (it would hang from slievr-firstboot).
 # Run from inside a session, the end of this script starts it (see there).
 
 # Generate the Hyprland binds/monitors/input from fledge settings; hyprland.lua
-# loads ~/.local/state/mbm/hypr/*.lua (a missing one just loses its settings).
+# loads ~/.local/state/fledge/hypr/*.lua (a missing one just loses its settings).
 # Invalid user settings must not stop the rest of bootstrap: warn, and the
 # uwsm env hook (dot-config/uwsm/env-hyprland) falls back to the defaults.
 # Run from inside a Hyprland session (an upgrade: git pull, then bootstrap),
@@ -347,8 +347,8 @@ if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl version >/dev/null 2>&1;
     unknown*) echo "WARN: could not tell which config Hyprland is running (${manager#unknown: }); if your binds are gone, log out and back in" >&2 ;;
   esac
 fi
-if ! MBM_NO_RELOAD=1 "$fledge" settings apply; then
-  echo "WARN: fledge settings apply failed; fix ~/.config/mbm/settings.json (fledge settings check)" >&2
+if ! FLEDGE_NO_RELOAD=1 "$fledge" settings apply; then
+  echo "WARN: fledge settings apply failed; fix ~/.config/fledge/settings.json (fledge settings check)" >&2
 fi
 if [[ -n $in_session ]]; then
   hyprctl reload >/dev/null 2>&1 || echo "WARN: hyprctl reload failed" >&2
@@ -434,8 +434,8 @@ fi
 # cachyos-hyprland-settings (an earlier version of this script installed
 # it) pulls in a lot we don't want or already have our own equivalent
 # for: kvantum/qt5ct/cachyos-nord-gtk-theme-git (GTK/QT theming we don't
-# use), wofi/bemenu (the mbm launcher replaces these), grimblast-git (our own
-# grim+slurp+satty), polkit-kde-agent (the mbm shell is the agent),
+# use), wofi/bemenu (the fledge launcher replaces these), grimblast-git (our own
+# grim+slurp+satty), polkit-kde-agent (the fledge shell is the agent),
 # swaylock-effects-git/swaylock-fancy-git/wlogout/wob, cachyos-wallpapers
 # (the theme's own vendored backgrounds are used instead),
 # cachyos-alacritty-config (kitty only, no alacritty). Removing it here
@@ -446,7 +446,7 @@ if pacman -Qi cachyos-hyprland-settings &>/dev/null; then
   sudo pacman -Rns --noconfirm cachyos-hyprland-settings || echo "WARN: could not remove cachyos-hyprland-settings" >&2
 fi
 
-# Tools the mbm shell replaced (earlier versions of this script installed
+# Tools the fledge shell replaced (earlier versions of this script installed
 # them). Their configs left the repo with the cutover, so nothing uses them.
 RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapplications-bin elephant-calc-bin
   elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
@@ -487,10 +487,10 @@ if [[ -n $in_session ]]; then
   polkit_gnome="^/usr/lib/polkit-gnome/polkit-gnome-authentication-agent-1"
   pkill -f "$polkit_gnome" || true
   for _ in $(seq 20); do pgrep -f "$polkit_gnome" >/dev/null || break; sleep 0.25; done
-  if systemctl --user daemon-reload && systemctl --user start mbm-shell; then
+  if systemctl --user daemon-reload && systemctl --user start fledge-shell; then
     echo "The made by moonlight desktop is live: Super+Space opens the launcher."
   else
-    echo "WARN: could not start mbm-shell; it starts at the next login" >&2
+    echo "WARN: could not start fledge-shell; it starts at the next login" >&2
   fi
 fi
 

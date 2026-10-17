@@ -9,7 +9,7 @@ FLEDGE="$HERE/../bin/fledge"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 export XDG_RUNTIME_DIR="$T" FAKE_LOG="$T/calls"
 mkdir -p "$T/bin"
-# fake qs: `qs -c mbm ipc call dmenu open PROMPT OPTS RESULT SELECT INPUTONLY`
+# fake qs: `qs -c fledge ipc call dmenu open PROMPT OPTS RESULT SELECT INPUTONLY`
 # with a "--" before the positionals, which is dropped here (args $1..$11; PROMPT is $7). Answers per $FAKE: pick (2nd option), cancel,
 # typed, args, dead (shell not running).
 cat >"$T/bin/qs" <<'EOS'
@@ -49,7 +49,7 @@ for bad in "--prompt" "--select" "--select abc"; do
 done
 # Timeout: no answer; the stale dialog must be closed and rc is 1.
 : >"$T/calls"
-printf 'a\n' | FAKE=hang MBM_DMENU_TIMEOUT=1 "$FLEDGE" dmenu >/dev/null 2>&1; rc=$?
+printf 'a\n' | FAKE=hang FLEDGE_DMENU_TIMEOUT=1 "$FLEDGE" dmenu >/dev/null 2>&1; rc=$?
 check "dmenu: timeout exits 1" "1" "$rc"
 contains "dmenu: timeout closes the dialog" "dmenu close" "$(cat "$T/calls")"
 # A signalled caller cleans up and closes the dialog too.

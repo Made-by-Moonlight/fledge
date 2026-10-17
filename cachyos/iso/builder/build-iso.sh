@@ -58,7 +58,7 @@ mkdir -p "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants"
 ln -sf /usr/lib/systemd/system/NetworkManager.service \
   "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service"
 
-# The installer UI, symlinks into dot-config/quickshell/mbm resolved (-L).
+# The installer UI, symlinks into dot-config/quickshell/fledge resolved (-L).
 mkdir -p "$PROFILE/airootfs/etc/xdg/quickshell"
 cp -rL "$ISO/installer" "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer"
 

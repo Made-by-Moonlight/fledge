@@ -31,7 +31,7 @@ the first reboot.
 | `lib/cachyos-repos.sh` | the target's CachyOS repo sections (v3 / v4 / znver4 by CPU), used by chroot-setup |
 | `lib/answers.sh` | parse unattended answers file; user name, host name and data-mount checks |
 | `lib/desktop.sh` | the Desktop stage (bootstrap.sh in the target before reboot) and Finish |
-| `lib/progress.sh` | `@@mbm` progress markers for the graphical installer (`MBM_PROGRESS=1`) |
+| `lib/progress.sh` | `@@mbm` progress markers for the graphical installer (`FLEDGE_PROGRESS=1`) |
 | `lib/network.sh` | carry the live session's NetworkManager profiles into the target |
 | `test-detect.sh` | runs `lib/detect.sh` against fixtures; `bash test-detect.sh` |
 | `test-answers.sh` | runs `lib/answers.sh` against fixtures; `bash test-answers.sh` |

@@ -61,13 +61,13 @@ white_owl 520 "$TMP/owl-520.png"
 magick -size 520x520 xc:none "$TMP/owl-520.png" -gravity center -composite "PNG32:$THEME_DIR/owl.png"
 white_owl 260 "$SDDM_DIR/logo.png"
 cp "$THEME_DIR/glow.png" "$SDDM_DIR/background.png"
-# The mbm shell's own copies (wallpaper, lock background, owl), so the shell
+# The fledge shell's own copies (wallpaper, lock background, owl), so the shell
 # doesn't depend on the Omarchy theme tree that project C retires.
-MBM_ASSETS="$OUT/dot-local/share/fledge/assets"
-mkdir -p "$MBM_ASSETS"
-cp "$THEME_DIR/backgrounds/1-moonrise-3440x1440.png" "$MBM_ASSETS/moonrise-3440x1440.png"
-cp "$THEME_DIR/backgrounds/2-moonrise-2560x1440.png" "$MBM_ASSETS/moonrise-2560x1440.png"
-cp "$THEME_DIR/backgrounds/3-moonrise-1920x1080.png" "$MBM_ASSETS/moonrise-1920x1080.png"
-cp "$THEME_DIR/glow.png" "$THEME_DIR/owl.png" "$MBM_ASSETS/"
+FLEDGE_ASSETS="$OUT/dot-local/share/fledge/assets"
+mkdir -p "$FLEDGE_ASSETS"
+cp "$THEME_DIR/backgrounds/1-moonrise-3440x1440.png" "$FLEDGE_ASSETS/moonrise-3440x1440.png"
+cp "$THEME_DIR/backgrounds/2-moonrise-2560x1440.png" "$FLEDGE_ASSETS/moonrise-2560x1440.png"
+cp "$THEME_DIR/backgrounds/3-moonrise-1920x1080.png" "$FLEDGE_ASSETS/moonrise-1920x1080.png"
+cp "$THEME_DIR/glow.png" "$THEME_DIR/owl.png" "$FLEDGE_ASSETS/"
 
 echo "updated about.txt, the Plymouth logo, the theme images and the SDDM images under $OUT"

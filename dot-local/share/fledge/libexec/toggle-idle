@@ -2,5 +2,5 @@
 
 # Toggle hypridle idle locking
 
-# Compat shim (project B removes it): the mbm shell does idle locking.
-exec qs -c mbm ipc call idle toggle
+# Compat shim (project B removes it): the fledge shell does idle locking.
+exec qs -c fledge ipc call idle toggle

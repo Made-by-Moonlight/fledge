@@ -2,5 +2,5 @@
 
 # Toggle Waybar visibility
 
-# Compat shim (project B removes it): the mbm bar replaced waybar.
-exec qs -c mbm ipc call bar toggle
+# Compat shim (project B removes it): the fledge bar replaced waybar.
+exec qs -c fledge ipc call bar toggle

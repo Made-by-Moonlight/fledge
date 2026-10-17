@@ -303,17 +303,17 @@ show_setup_menu() {
   local options="  Audio\n  Wifi\n󰂯  Bluetooth\n󱐋  Power Profile\n  System Sleep\n󰍹  Monitors\n  Keybindings\n  Input"
   options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Time\n  Firmware\n  Restart\n  Config"
 
-  # Audio, Wi-Fi, Bluetooth, monitors, binds and input belong to the mbm shell since the
+  # Audio, Wi-Fi, Bluetooth, monitors, binds and input belong to the fledge shell since the
   # cutover (wiremix and bluetui are gone; the hypr .conf files are generated).
   case $(menu "Setup" "$options") in
-  *Audio*) qs -c mbm ipc call quicksettings open audio ;;
-  *Wifi*) qs -c mbm ipc call quicksettings open wifi ;;
-  *Bluetooth*) qs -c mbm ipc call quicksettings open bluetooth ;;
+  *Audio*) qs -c fledge ipc call quicksettings open audio ;;
+  *Wifi*) qs -c fledge ipc call quicksettings open wifi ;;
+  *Bluetooth*) qs -c fledge ipc call quicksettings open bluetooth ;;
   *Power*) show_setup_power_menu ;;
   *System*) show_setup_system_menu ;;
-  *Monitors*) qs -c mbm ipc call settings open displays ;;
-  *Keybindings*) qs -c mbm ipc call settings open keybinds ;;
-  *Input*) qs -c mbm ipc call settings open input ;;
+  *Monitors*) qs -c fledge ipc call settings open displays ;;
+  *Keybindings*) qs -c fledge ipc call settings open keybinds ;;
+  *Input*) qs -c fledge ipc call settings open input ;;
   *Defaults*) show_setup_default_menu ;;
   *DNS*) present_terminal fledge setup dns ;;
   *Security*) show_setup_security_menu ;;
@@ -361,7 +361,7 @@ show_setup_restart_menu() {
   *Wi-Fi*) present_terminal fledge restart wifi ;;
   *Bluetooth*) present_terminal fledge restart bluetooth ;;
   *Trackpad*) present_terminal fledge restart trackpad ;;
-  *Shell*) systemctl --user restart mbm-shell.service ;;
+  *Shell*) systemctl --user restart fledge-shell.service ;;
   *) show_setup_menu ;;
   esac
 }
@@ -477,7 +477,7 @@ show_setup_config_menu() {
   *Reload*) reload_hyprland ;;
   *Hyprland*) open_hypr_config ~/.config/hypr/hyprland.lua ;;
   *Hyprsunset*) open_in_editor ~/.config/hypr/hyprsunset.conf && fledge restart hyprsunset ;;
-  *Settings*) qs -c mbm ipc call settings open "" ;;
+  *Settings*) qs -c fledge ipc call settings open "" ;;
   *XCompose*) open_in_editor ~/.XCompose && fledge restart xcompose ;;
   *) show_setup_menu ;;
   esac
@@ -534,7 +534,7 @@ show_main_menu() {
 
 go_to_menu() {
   case "${1,,}" in
-  *apps*) qs -c mbm ipc call launcher open apps ;;
+  *apps*) qs -c fledge ipc call launcher open apps ;;
   *trigger*) show_trigger_menu ;;
   *toggle*) show_toggle_menu ;;
   *hardware*) show_hardware_menu ;;

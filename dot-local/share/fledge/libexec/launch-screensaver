@@ -15,7 +15,7 @@ if fledge toggle enabled screensaver-off && [[ $1 != "force" ]]; then
 fi
 
 # Silently quit Walker on overlay
-qs -c mbm ipc call launcher close >/dev/null 2>&1
+qs -c fledge ipc call launcher close >/dev/null 2>&1
 
 focused=$(fledge hyprland monitor focused)
 terminal=$(xdg-terminal-exec --print-id)

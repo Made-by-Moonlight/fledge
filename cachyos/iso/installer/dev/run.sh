@@ -14,7 +14,7 @@ cp -rL "$REPO/cachyos/iso/installer" /tmp/mbm-installer
 : > /tmp/mbm-installer.log
 # Started by Hyprland, not this SSH login, so it lands in the graphical session.
 fledge="$REPO/dot-local/share/fledge/bin/fledge"
-cmd="env MBM_INSTALLER_DEV=1 MBM_REPO=$REPO qs -p /tmp/mbm-installer >/tmp/mbm-installer.log 2>&1"
+cmd="env FLEDGE_INSTALLER_DEV=1 FLEDGE_REPO=$REPO qs -p /tmp/mbm-installer >/tmp/mbm-installer.log 2>&1"
 "$fledge" hypr dispatch "hl.dsp.exec_cmd($("$fledge" hypr quote "$cmd"))"
 sleep 3
 # Qt's text-input-v3 logs disableSurface once whenever a layer surface takes the

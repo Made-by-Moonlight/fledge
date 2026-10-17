@@ -4,12 +4,12 @@
 # validation live only here, so the shell and bootstrap can't disagree.
 # Every path can be overridden from the environment (the tests use a temp HOME).
 
-MBM_DEFAULTS="${MBM_DEFAULTS:-$FLEDGE_ROOT/defaults/settings.json}"
-MBM_CONFIG_DIR="${MBM_CONFIG_DIR:-$HOME/.config/mbm}"
-MBM_STATE_DIR="${MBM_STATE_DIR:-$HOME/.local/state/mbm}"
-MBM_HYPR_DIR="${MBM_HYPR_DIR:-$HOME/.local/state/mbm/hypr}"
-MBM_USER="$MBM_CONFIG_DIR/settings.json"
-MBM_MERGED="$MBM_STATE_DIR/settings.json"
+FLEDGE_DEFAULTS="${FLEDGE_DEFAULTS:-$FLEDGE_ROOT/defaults/settings.json}"
+FLEDGE_CONFIG_DIR="${FLEDGE_CONFIG_DIR:-$HOME/.config/fledge}"
+FLEDGE_STATE_DIR="${FLEDGE_STATE_DIR:-$HOME/.local/state/fledge}"
+FLEDGE_HYPR_DIR="${FLEDGE_HYPR_DIR:-$HOME/.local/state/fledge/hypr}"
+FLEDGE_USER="$FLEDGE_CONFIG_DIR/settings.json"
+FLEDGE_MERGED="$FLEDGE_STATE_DIR/settings.json"
 
 die() { printf 'fledge settings: %s\n' "$*" >&2; exit 1; }
 
@@ -37,18 +37,18 @@ valid_path() {
 
 # Set by the commands that write the user file (set, reset, apply): only they
 # write a migrated file back, and they hold the settings lock while doing it.
-MBM_WRITE_MIGRATION=""
+FLEDGE_WRITE_MIGRATION=""
 
 user_json() { # the overrides as settings v2, or {} when there are none
   # A missing, empty or whitespace-only file means no overrides (a user who empties
   # the file must not break every later write).
   local raw="" content
-  if [[ -f $MBM_USER ]]; then
-    raw="$(<"$MBM_USER")" || die "cannot read $MBM_USER"
+  if [[ -f $FLEDGE_USER ]]; then
+    raw="$(<"$FLEDGE_USER")" || die "cannot read $FLEDGE_USER"
   fi
   if [[ -n ${raw//[[:space:]]/} ]]; then
     content="$(jq -e 'if type == "object" then . else error("not an object") end' <<<"$raw" 2>/dev/null)" \
-      || die "$MBM_USER is not a valid JSON object"
+      || die "$FLEDGE_USER is not a valid JSON object"
     migrate_user_file "$content" "$raw"
   else
     echo '{}'
@@ -63,20 +63,20 @@ user_json() { # the overrides as settings v2, or {} when there are none
 # replaced: the first one holds the user's real original. Whatever the table
 # can't convert stays as {dispatch}; `check` names it.
 migrate_user_file() {
-  local lib="$FLEDGE_ROOT/lib" out backup="$MBM_USER.v1" kept="backup"
+  local lib="$FLEDGE_ROOT/lib" out backup="$FLEDGE_USER.v1" kept="backup"
   if [[ $(jq -L "$lib" 'include "migrate-dispatch"; needs_migration' <<<"$1") != true ]]; then
     printf '%s\n' "$1"
     return
   fi
-  out="$(jq -L "$lib" 'include "migrate-dispatch"; migrate_user' <<<"$1")" || die "could not migrate $MBM_USER"
-  if [[ -n $MBM_WRITE_MIGRATION ]]; then
+  out="$(jq -L "$lib" 'include "migrate-dispatch"; migrate_user' <<<"$1")" || die "could not migrate $FLEDGE_USER"
+  if [[ -n $FLEDGE_WRITE_MIGRATION ]]; then
     if [[ -e $backup ]]; then
       kept="earlier backup kept"
     else
-      printf '%s\n' "$2" | atomic_write "$backup" && chmod --reference="$MBM_USER" "$backup" \
-        || die "could not back up $MBM_USER"
+      printf '%s\n' "$2" | atomic_write "$backup" && chmod --reference="$FLEDGE_USER" "$backup" \
+        || die "could not back up $FLEDGE_USER"
     fi
-    jq '.settings' <<<"$out" | atomic_write "$MBM_USER" || die "could not write $MBM_USER"
+    jq '.settings' <<<"$out" | atomic_write "$FLEDGE_USER" || die "could not write $FLEDGE_USER"
     printf 'fledge settings: migrated %s binds to settings v2, %s could not be converted (%s: %s)\n' \
       "$(jq .count <<<"$out")" "$(jq .unconverted <<<"$out")" "$kept" "$backup" >&2
   fi
@@ -89,19 +89,19 @@ migrate_user_file() {
 # The wait is bounded: env-hyprland runs apply at login, and a hung holder must
 # not stall the session start.
 lock_settings() {
-  local lock="$MBM_CONFIG_DIR/.lock" wait="${MBM_LOCK_TIMEOUT:-10}"
+  local lock="$FLEDGE_CONFIG_DIR/.lock" wait="${FLEDGE_LOCK_TIMEOUT:-10}"
   # flock reads a bad -w as "wait for ever" or fails with its own puzzling message.
-  [[ $wait =~ ^[0-9]+$ ]] || die "MBM_LOCK_TIMEOUT must be a whole number of seconds (got \"$wait\")"
-  mkdir -p "$MBM_CONFIG_DIR" || die "cannot create $MBM_CONFIG_DIR"
+  [[ $wait =~ ^[0-9]+$ ]] || die "FLEDGE_LOCK_TIMEOUT must be a whole number of seconds (got \"$wait\")"
+  mkdir -p "$FLEDGE_CONFIG_DIR" || die "cannot create $FLEDGE_CONFIG_DIR"
   exec 9>"$lock" || die "cannot open $lock"
   flock -w "$wait" 9 || die "settings are busy: another fledge settings command holds $lock (waited ${wait}s)"
-  MBM_WRITE_MIGRATION=1
+  FLEDGE_WRITE_MIGRATION=1
 }
 
 # merge <user-json>: defaults * overrides; a bind or workspace overridden with null
 # is removed, and a bind's action is replaced, not merged.
 merge() {
-  jq -n --slurpfile d "$MBM_DEFAULTS" --argjson u "$1" \
+  jq -n --slurpfile d "$FLEDGE_DEFAULTS" --argjson u "$1" \
     '($d[0] * $u)
      # An overridden action replaces the default one whole: a deep merge would mix
      # the args of two dispatchers (e.g. {direction, workspace} on one focus).
@@ -129,7 +129,7 @@ check_json() {
 refresh_state() {
   local out
   out="$(merged_json)" || exit 1
-  printf '%s\n' "$out" | atomic_write "$MBM_MERGED"
+  printf '%s\n' "$out" | atomic_write "$FLEDGE_MERGED"
 }
 
 # write_user <new-user-json>: validate the merged result first; write nothing if it fails.
@@ -137,8 +137,8 @@ write_user() {
   local merged
   merged="$(merge "$1")" || die "could not merge settings"
   check_json "$merged" || die "change refused: the settings would be invalid"
-  printf '%s\n' "$1" | atomic_write "$MBM_USER"
-  printf '%s\n' "$merged" | atomic_write "$MBM_MERGED"
+  printf '%s\n' "$1" | atomic_write "$FLEDGE_USER"
+  printf '%s\n' "$merged" | atomic_write "$FLEDGE_MERGED"
 }
 
 # get takes any jq filter, not just a path: it only reads, and callers (and
@@ -195,17 +195,17 @@ settings_apply() {
   monitors="$(jq -r -L "$lib" -f "$lib/gen-monitors.jq" <<<"$merged")" || die "could not generate monitors"
   input="$(jq -r -L "$lib" -f "$lib/gen-input.jq" <<<"$merged")" || die "could not generate input"
   workspaces="$(jq -r -L "$lib" -f "$lib/gen-workspaces.jq" <<<"$merged")" || die "could not generate workspaces"
-  printf '%s\n' "$binds" | atomic_write "$MBM_HYPR_DIR/binds.lua"
-  printf '%s\n' "$monitors" | atomic_write "$MBM_HYPR_DIR/monitors.lua"
-  printf '%s\n' "$workspaces" | atomic_write "$MBM_HYPR_DIR/workspaces.lua"
-  printf '%s\n' "$input" | atomic_write "$MBM_HYPR_DIR/input.lua"
+  printf '%s\n' "$binds" | atomic_write "$FLEDGE_HYPR_DIR/binds.lua"
+  printf '%s\n' "$monitors" | atomic_write "$FLEDGE_HYPR_DIR/monitors.lua"
+  printf '%s\n' "$workspaces" | atomic_write "$FLEDGE_HYPR_DIR/workspaces.lua"
+  printf '%s\n' "$input" | atomic_write "$FLEDGE_HYPR_DIR/input.lua"
   # The .conf fragments from before the Lua config: nothing loads them now, and a
   # stale one would only mislead. Only the names apply ever wrote are removed.
   for f in binds monitors workspaces input; do
-    rm -f "$MBM_HYPR_DIR/$f.conf"
+    rm -f "$FLEDGE_HYPR_DIR/$f.conf"
   done
-  printf '%s\n' "$merged" | atomic_write "$MBM_MERGED"
-  if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -z ${MBM_NO_RELOAD:-} ]]; then
+  printf '%s\n' "$merged" | atomic_write "$FLEDGE_MERGED"
+  if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} && -z ${FLEDGE_NO_RELOAD:-} ]]; then
     hyprctl reload >/dev/null
   fi
 }

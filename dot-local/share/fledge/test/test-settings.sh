@@ -15,17 +15,17 @@ trap 'rm -rf "$T"' EXIT
 fresh() { # fresh [defaults.json]: empty temp HOME with all settings paths inside it
   rm -rf "${T:?}/home"
   export HOME="$T/home"
-  export MBM_DEFAULTS="${1:-$FIX/defaults.json}"
-  export MBM_CONFIG_DIR="$HOME/.config/mbm" MBM_STATE_DIR="$HOME/.local/state/mbm" MBM_HYPR_DIR="$HOME/.local/state/mbm/hypr"
-  unset HYPRLAND_INSTANCE_SIGNATURE MBM_NO_RELOAD
+  export FLEDGE_DEFAULTS="${1:-$FIX/defaults.json}"
+  export FLEDGE_CONFIG_DIR="$HOME/.config/fledge" FLEDGE_STATE_DIR="$HOME/.local/state/fledge" FLEDGE_HYPR_DIR="$HOME/.local/state/fledge/hypr"
+  unset HYPRLAND_INSTANCE_SIGNATURE FLEDGE_NO_RELOAD
   mkdir -p "$HOME"
 }
-user_file() { cat "$MBM_CONFIG_DIR/settings.json" 2>/dev/null; }
+user_file() { cat "$FLEDGE_CONFIG_DIR/settings.json" 2>/dev/null; }
 
 # --- get -------------------------------------------------------------------
 fresh
 check "get: default value"            '"centre"' "$("$FLEDGE" settings get .launcher.position)"
-check "get: no user file is created"  "no"       "$([[ -e $MBM_CONFIG_DIR/settings.json ]] && echo yes || echo no)"
+check "get: no user file is created"  "no"       "$([[ -e $FLEDGE_CONFIG_DIR/settings.json ]] && echo yes || echo no)"
 check "get: bind by id"               '"SPACE"'  "$("$FLEDGE" settings get '.binds["shell.launcher"].key')"
 
 # --- set -------------------------------------------------------------------
@@ -33,7 +33,7 @@ fresh
 "$FLEDGE" settings set .launcher.position '"anchored"'
 check "set: merged value"             '"anchored"' "$("$FLEDGE" settings get .launcher.position)"
 check "set: user file has only the override" '{"launcher":{"position":"anchored"}}' "$(jq -c . <<<"$(user_file)")"
-check "set: merged state refreshed"   '"anchored"' "$(jq .launcher.position "$MBM_STATE_DIR/settings.json")"
+check "set: merged state refreshed"   '"anchored"' "$(jq .launcher.position "$FLEDGE_STATE_DIR/settings.json")"
 
 fresh
 "$FLEDGE" settings set '.binds["shell.launcher"].key' '"D"' .notifications.timeoutMs 8000
@@ -75,24 +75,24 @@ check "null bind: reset restores it"  "true"     "$("$FLEDGE" settings get '.bin
 # --- broken user file (Review Focus 1) --------------------------------------
 fresh
 "$FLEDGE" settings set .launcher.position '"anchored"'
-good_state="$(cat "$MBM_STATE_DIR/settings.json")"
-printf '{ "launcher": ' >"$MBM_CONFIG_DIR/settings.json"
+good_state="$(cat "$FLEDGE_STATE_DIR/settings.json")"
+printf '{ "launcher": ' >"$FLEDGE_CONFIG_DIR/settings.json"
 "$FLEDGE" settings get . >/dev/null 2>"$T/err"; rc=$?
 check "broken user file: get fails"   "1"        "$rc"
 contains "broken user file: message names the file" "settings.json is not a valid JSON object" "$(cat "$T/err")"
-check "broken user file: merged state untouched" "$good_state" "$(cat "$MBM_STATE_DIR/settings.json")"
+check "broken user file: merged state untouched" "$good_state" "$(cat "$FLEDGE_STATE_DIR/settings.json")"
 
 # --- empty user file: no overrides, not a broken file ---------------------------
 fresh
-mkdir -p "$MBM_CONFIG_DIR"
-: >"$MBM_CONFIG_DIR/settings.json"
+mkdir -p "$FLEDGE_CONFIG_DIR"
+: >"$FLEDGE_CONFIG_DIR/settings.json"
 check "empty user file: get reads defaults" '"centre"' "$("$FLEDGE" settings get .launcher.position 2>&1)"
 "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
 check "empty user file: set works"    "0"        "$rc"
 check "empty user file: set writes only the override" '{"launcher":{"position":"anchored"}}' "$(jq -c . <<<"$(user_file)" 2>&1)"
 fresh
-mkdir -p "$MBM_CONFIG_DIR"
-printf ' \n' >"$MBM_CONFIG_DIR/settings.json"
+mkdir -p "$FLEDGE_CONFIG_DIR"
+printf ' \n' >"$FLEDGE_CONFIG_DIR/settings.json"
 "$FLEDGE" settings check 2>"$T/err"; rc=$?
 check "whitespace-only user file: check passes" "0" "$rc"
 "$FLEDGE" settings reset .launcher.position 2>"$T/err"; rc=$?
@@ -101,7 +101,7 @@ check "whitespace-only user file: reset works" "0" "$rc"
 # --- check -------------------------------------------------------------------
 bad() { # bad <description> <expected message part> <user-json>
   fresh
-  mkdir -p "$MBM_CONFIG_DIR"; printf '%s\n' "$3" >"$MBM_CONFIG_DIR/settings.json"
+  mkdir -p "$FLEDGE_CONFIG_DIR"; printf '%s\n' "$3" >"$FLEDGE_CONFIG_DIR/settings.json"
   local out rc
   out="$("$FLEDGE" settings check 2>&1)"; rc=$?
   check "check: $1 -> exit 1" "1" "$rc"
@@ -189,7 +189,7 @@ bad "wallpaper monitor not text" "wallpaper.monitors.DP-1: must be a non-empty p
 
 good() { # good <description> <user-json>
   fresh
-  mkdir -p "$MBM_CONFIG_DIR"; printf '%s\n' "$2" >"$MBM_CONFIG_DIR/settings.json"
+  mkdir -p "$FLEDGE_CONFIG_DIR"; printf '%s\n' "$2" >"$FLEDGE_CONFIG_DIR/settings.json"
   local out rc
   out="$("$FLEDGE" settings check 2>&1)"; rc=$?
   check "check: $1 -> exit 0" "0" "$rc"
@@ -214,54 +214,54 @@ source "$REPO/cachyos/install/test/luacheck.sh"
 LUA="$(command -v lua || command -v lua5.5 || command -v lua5.4)"
 stub() { "$LUA" "$HERE/hl-stub.lua" "$@" 2>&1; } # what the generated Lua calls (see hl-stub.lua)
 # The hl.bind call binding <keys>, out of its try("<keys>", function() … end) guard.
-bindline() { grep -F "try(\"$1\"," "$MBM_HYPR_DIR/binds.lua" | sed -E 's/^try\("[^"]*", function\(\) (.*) end\)$/\1/'; }
+bindline() { grep -F "try(\"$1\"," "$FLEDGE_HYPR_DIR/binds.lua" | sed -E 's/^try\("[^"]*", function\(\) (.*) end\)$/\1/'; }
 
 fresh
 "$FLEDGE" settings apply
-check "apply: binds.lua"              "$(cat "$FIX/expected-binds.lua")"    "$(cat "$MBM_HYPR_DIR/binds.lua")"
-check "apply: monitors.lua"           "$(cat "$FIX/expected-monitors.lua")" "$(cat "$MBM_HYPR_DIR/monitors.lua")"
-check "apply: input.lua"              "$(cat "$FIX/expected-input.lua")"    "$(cat "$MBM_HYPR_DIR/input.lua")"
-check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$MBM_STATE_DIR/settings.json")"
-check "apply: workspaces.lua"         "$(cat "$FIX/expected-workspaces.lua")" "$(cat "$MBM_HYPR_DIR/workspaces.lua")"
-check "apply: no .conf written"       ""         "$(find "$MBM_HYPR_DIR" -name '*.conf')"
+check "apply: binds.lua"              "$(cat "$FIX/expected-binds.lua")"    "$(cat "$FLEDGE_HYPR_DIR/binds.lua")"
+check "apply: monitors.lua"           "$(cat "$FIX/expected-monitors.lua")" "$(cat "$FLEDGE_HYPR_DIR/monitors.lua")"
+check "apply: input.lua"              "$(cat "$FIX/expected-input.lua")"    "$(cat "$FLEDGE_HYPR_DIR/input.lua")"
+check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$FLEDGE_STATE_DIR/settings.json")"
+check "apply: workspaces.lua"         "$(cat "$FIX/expected-workspaces.lua")" "$(cat "$FLEDGE_HYPR_DIR/workspaces.lua")"
+check "apply: no .conf written"       ""         "$(find "$FLEDGE_HYPR_DIR" -name '*.conf')"
 for f in binds monitors workspaces input; do
-  lua_syntax_ok "$MBM_HYPR_DIR/$f.lua"; check "apply: $f.lua parses (luac -p)" 0 "$?"
+  lua_syntax_ok "$FLEDGE_HYPR_DIR/$f.lua"; check "apply: $f.lua parses (luac -p)" 0 "$?"
 done
 for f in binds monitors workspaces input; do
-  stub "$MBM_HYPR_DIR/$f.lua" >/dev/null; check "apply: $f.lua runs against the hl stub" 0 "$?"
+  stub "$FLEDGE_HYPR_DIR/$f.lua" >/dev/null; check "apply: $f.lua runs against the hl stub" 0 "$?"
 done
 check "apply: one hl.bind per settings bind, plus the submap's" \
-  "$(($(jq '.binds | length' "$FIX/defaults.json") + 1))" "$(stub "$MBM_HYPR_DIR/binds.lua" | grep -c '^bind')"
-check "apply: submap bind" "bind@mbm-record	SUPER + CTRL + ALT + Escape	dsp.submap(reset)	nil" \
-  "$(stub "$MBM_HYPR_DIR/binds.lua" | grep '^bind@')"
+  "$(($(jq '.binds | length' "$FIX/defaults.json") + 1))" "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | grep -c '^bind')"
+check "apply: submap bind" "bind@fledge-record	SUPER + CTRL + ALT + Escape	dsp.submap(reset)	nil" \
+  "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | grep '^bind@')"
 check "apply: action list is one function bind" \
   "bind	ALT + TAB	fn[dsp.window.cycle_next(); dsp.window.bring_to_top()]	{description=Focus on next window}" \
-  "$(stub "$MBM_HYPR_DIR/binds.lua" | grep 'ALT + TAB')"
-check "apply: no notification when every bind loads" "" "$(stub "$MBM_HYPR_DIR/binds.lua" | grep '^notify')"
+  "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | grep 'ALT + TAB')"
+check "apply: no notification when every bind loads" "" "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | grep '^notify')"
 # A dispatcher Hyprland doesn't have (renamed in a release, say) costs only its
 # own bind: the rest still load, and one notification names what didn't.
-out="$(HL_STUB_MISSING=window.resize stub "$MBM_HYPR_DIR/binds.lua")"; rc=$?
+out="$(HL_STUB_MISSING=window.resize stub "$FLEDGE_HYPR_DIR/binds.lua")"; rc=$?
 check "missing dispatcher: binds.lua still runs to the end" 0 "$rc"
 check "missing dispatcher: every other bind registered (all but one, plus the submap's)" \
   "$(jq '.binds | length' "$FIX/defaults.json")" "$(grep -c '^bind' <<<"$out")"
-check "missing dispatcher: the submap still defined" 1 "$(grep -c '^bind@mbm-record' <<<"$out")"
+check "missing dispatcher: the submap still defined" 1 "$(grep -c '^bind@fledge-record' <<<"$out")"
 check "missing dispatcher: one notification" 1 "$(grep -c '^notify' <<<"$out")"
 contains "missing dispatcher: it names the bind" "fledge: binds.lua: these binds didn't load: SUPER + mouse:273 (" "$(grep '^notify' <<<"$out")"
 contains "missing dispatcher: shown as an error" "color=rgb(ff5555) icon=error" "$(grep '^notify' <<<"$out")"
 check "missing dispatcher: said on stderr too" 1 "$(grep -c "^fledge: binds.lua: these binds didn't load: SUPER + mouse:273 (" <<<"$out")"
 check "apply: mouse bind"   'hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { description = "Resize window" })' "$(bindline "SUPER + mouse:273")"
 check "apply: empty mods -> just the key" \
-  'hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("qs -c mbm ipc call osd volume +5"), { description = "Volume up", locked = true, repeating = true })' \
+  'hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("qs -c fledge ipc call osd volume +5"), { description = "Volume up", locked = true, repeating = true })' \
   "$(bindline XF86AudioRaiseVolume)"
 
 # Stale .conf fragments (from before the Lua config) go; anything else stays.
 fresh
-mkdir -p "$MBM_HYPR_DIR"
-for f in binds monitors workspaces input; do echo old >"$MBM_HYPR_DIR/$f.conf"; done
-echo mine >"$MBM_HYPR_DIR/notes.txt"
+mkdir -p "$FLEDGE_HYPR_DIR"
+for f in binds monitors workspaces input; do echo old >"$FLEDGE_HYPR_DIR/$f.conf"; done
+echo mine >"$FLEDGE_HYPR_DIR/notes.txt"
 "$FLEDGE" settings apply
-check "apply: old .conf fragments removed" "" "$(find "$MBM_HYPR_DIR" -name '*.conf')"
-check "apply: other files kept"        "mine" "$(cat "$MBM_HYPR_DIR/notes.txt")"
+check "apply: old .conf fragments removed" "" "$(find "$FLEDGE_HYPR_DIR" -name '*.conf')"
+check "apply: other files kept"        "mine" "$(cat "$FLEDGE_HYPR_DIR/notes.txt")"
 
 # Each flag letter maps to one hl.bind option ('m' has none: see gen-binds.jq; 's' is refused, above).
 fresh
@@ -270,7 +270,7 @@ for l in e l r n t i p m; do
   n=$((n + 1))
   u="$(jq --arg l "$l" --arg k "F$n" '.binds["custom.\($l)"] = {mods:"SUPER CTRL ALT", key:$k, flags:$l, label:"Flag \($l)", group:"Apps", action:{exec:"true"}}' <<<"$u")"
 done
-mkdir -p "$MBM_CONFIG_DIR"; printf '%s\n' "$u" >"$MBM_CONFIG_DIR/settings.json"
+mkdir -p "$FLEDGE_CONFIG_DIR"; printf '%s\n' "$u" >"$FLEDGE_CONFIG_DIR/settings.json"
 "$FLEDGE" settings apply
 n=0
 for l in e:repeating l:locked r:release n:non_consuming t:transparent i:ignore_mods p:dont_inhibit m:; do
@@ -279,7 +279,7 @@ for l in e:repeating l:locked r:release n:non_consuming t:transparent i:ignore_m
     "hl.bind(\"SUPER + CTRL + ALT + F$n\", hl.dsp.exec_cmd(\"true\"), { description = \"Flag $l\"${opt:+, $opt = true} })" \
     "$(bindline "SUPER + CTRL + ALT + F$n")"
 done
-lua_syntax_ok "$MBM_HYPR_DIR/binds.lua"; check "flags: binds.lua parses" 0 "$?"
+lua_syntax_ok "$FLEDGE_HYPR_DIR/binds.lua"; check "flags: binds.lua parses" 0 "$?"
 
 # Strings are Lua literals: \ " and newlines are escaped, '#' and '$' are plain
 # characters (the .conf '##' escaping is gone). Running the file must give back
@@ -288,13 +288,13 @@ fresh
 cmd=$'printf "%s\\n" \'a\\b\' "#x" "$HOME"\nnotify-send done\ttab'
 "$FLEDGE" settings set '.binds["custom.1"]' "$(jq -n --arg c "$cmd" '{mods:"SUPER ALT", key:"F9", label:"Docs #1 \"q\"", group:"Apps", action:{exec:$c}}')"
 "$FLEDGE" settings apply
-lua_syntax_ok "$MBM_HYPR_DIR/binds.lua"; check "escaping: binds.lua parses" 0 "$?"
+lua_syntax_ok "$FLEDGE_HYPR_DIR/binds.lua"; check "escaping: binds.lua parses" 0 "$?"
 check "escaping: rendered literal" \
   'hl.bind("SUPER + ALT + F9", hl.dsp.exec_cmd("printf \"%s\\n\" '"'"'a\\b'"'"' \"#x\" \"$HOME\"\nnotify-send done\009tab"), { description = "Docs #1 \"q\"" })' \
   "$(bindline "SUPER + ALT + F9")"
 check "escaping: the command survives a round trip through Lua" \
   "bind	SUPER + ALT + F9	dsp.exec_cmd($cmd)	{description=Docs #1 \"q\"}" \
-  "$(stub "$MBM_HYPR_DIR/binds.lua" | awk '/^bind\tSUPER \+ ALT \+ F9\t/{p=1} p && /^bind/ && !/F9/{p=0} p')"
+  "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | awk '/^bind\tSUPER \+ ALT \+ F9\t/{p=1} p && /^bind/ && !/F9/{p=0} p')"
 
 # dsp args: an object becomes a table (sorted keys; keys that aren't Lua names,
 # reserved words included, are bracketed); a plain value is one positional argument.
@@ -309,60 +309,60 @@ check "dsp: positional text"  'hl.bind("SUPER + ALT + F1", hl.dsp.layout("toggle
 check "dsp: positional bool"  'hl.bind("SUPER + ALT + F2", hl.dsp.window.cycle_next(false), { description = "B" })' "$(bindline "SUPER + ALT + F2")"
 check "dsp: table args"       'hl.bind("SUPER + ALT + F3", hl.dsp.window.resize({ relative = true, x = -10, y = 0.5 }), { description = "C" })' "$(bindline "SUPER + ALT + F3")"
 check "dsp: odd table keys"   'hl.bind("SUPER + ALT + F4", hl.dsp.focus({ _ok = "\"y\"", ["a-b"] = "x", ["end"] = 1 }), { description = "D" })' "$(bindline "SUPER + ALT + F4")"
-lua_syntax_ok "$MBM_HYPR_DIR/binds.lua"; check "dsp: binds.lua parses" 0 "$?"
+lua_syntax_ok "$FLEDGE_HYPR_DIR/binds.lua"; check "dsp: binds.lua parses" 0 "$?"
 check "dsp: args reach the dispatcher" "dsp.focus({_ok=\"y\" a-b=x end=1})" \
-  "$(stub "$MBM_HYPR_DIR/binds.lua" | grep 'SUPER + ALT + F4' | cut -f3)"
+  "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | grep 'SUPER + ALT + F4' | cut -f3)"
 
 fresh
-mkdir -p "$MBM_CONFIG_DIR"; printf '{"input":{"kbLayout":"gb","kbVariant":"extd"}}\n' >"$MBM_CONFIG_DIR/settings.json"
-MBM_NO_RELOAD=1 "$FLEDGE" settings apply >/dev/null
-contains "input: variant rendered" 'kb_variant = "extd"' "$(cat "$MBM_HYPR_DIR/input.lua")"
-contains "input: layout rendered"  'kb_layout = "gb"'    "$(cat "$MBM_HYPR_DIR/input.lua")"
+mkdir -p "$FLEDGE_CONFIG_DIR"; printf '{"input":{"kbLayout":"gb","kbVariant":"extd"}}\n' >"$FLEDGE_CONFIG_DIR/settings.json"
+FLEDGE_NO_RELOAD=1 "$FLEDGE" settings apply >/dev/null
+contains "input: variant rendered" 'kb_variant = "extd"' "$(cat "$FLEDGE_HYPR_DIR/input.lua")"
+contains "input: layout rendered"  'kb_layout = "gb"'    "$(cat "$FLEDGE_HYPR_DIR/input.lua")"
 
 fresh
 "$FLEDGE" settings set '.workspaces["2"]' null
 "$FLEDGE" settings apply
 check "workspaces: null removes it from merged" "false" "$("$FLEDGE" settings get '.workspaces | has("2")')"
-check "workspaces: null removes it from the file" "0" "$(grep -c 'workspace = "2"' "$MBM_HYPR_DIR/workspaces.lua")"
+check "workspaces: null removes it from the file" "0" "$(grep -c 'workspace = "2"' "$FLEDGE_HYPR_DIR/workspaces.lua")"
 
 fresh
 "$FLEDGE" settings set '.workspaces["2"]' '{"monitor":"DP-3","persistent":false}'
 "$FLEDGE" settings apply
 check "workspaces: moved (merge is deep, so persistent:false is explicit), its monitor's default" "1" \
-  "$(grep -cxF 'hl.workspace_rule({ default = true, monitor = "DP-3", workspace = "2" })' "$MBM_HYPR_DIR/workspaces.lua")"
+  "$(grep -cxF 'hl.workspace_rule({ default = true, monitor = "DP-3", workspace = "2" })' "$FLEDGE_HYPR_DIR/workspaces.lua")"
 
 fresh
 jq 'del(.workspaces)' "$FIX/defaults.json" >"$T/no-ws.json"
-MBM_DEFAULTS="$T/no-ws.json" "$FLEDGE" settings apply 2>"$T/err"; rc=$?
+FLEDGE_DEFAULTS="$T/no-ws.json" "$FLEDGE" settings apply 2>"$T/err"; rc=$?
 check "workspaces: missing section applies" "0" "$rc"
-check "workspaces: missing section -> header only" "-- Generated by \`fledge settings apply\`. Do not edit." "$(cat "$MBM_HYPR_DIR/workspaces.lua")"
-lua_syntax_ok "$MBM_HYPR_DIR/workspaces.lua"; check "workspaces: header-only file parses" 0 "$?"
+check "workspaces: missing section -> header only" "-- Generated by \`fledge settings apply\`. Do not edit." "$(cat "$FLEDGE_HYPR_DIR/workspaces.lua")"
+lua_syntax_ok "$FLEDGE_HYPR_DIR/workspaces.lua"; check "workspaces: header-only file parses" 0 "$?"
 
 fresh
 "$FLEDGE" settings set '.displays["DP-2"].enabled' false
 "$FLEDGE" settings apply
-check "apply: disabled display" 'hl.monitor({ disabled = true, output = "DP-2" })' "$(grep -F '"DP-2"' "$MBM_HYPR_DIR/monitors.lua")"
-check "apply: disabled display reaches hl.monitor" "monitor	{disabled=true output=DP-2}" "$(stub "$MBM_HYPR_DIR/monitors.lua" | grep DP-2)"
+check "apply: disabled display" 'hl.monitor({ disabled = true, output = "DP-2" })' "$(grep -F '"DP-2"' "$FLEDGE_HYPR_DIR/monitors.lua")"
+check "apply: disabled display reaches hl.monitor" "monitor	{disabled=true output=DP-2}" "$(stub "$FLEDGE_HYPR_DIR/monitors.lua" | grep DP-2)"
 
 fresh
 "$FLEDGE" settings apply
-good="$(cat "$MBM_HYPR_DIR/binds.lua")"
-mkdir -p "$MBM_CONFIG_DIR"
-printf '{"binds":{"x":{"mods":"SUPER","key":"RETURN","label":"Dup","group":"A","action":{"exec":"y"}}}}\n' >"$MBM_CONFIG_DIR/settings.json"
+good="$(cat "$FLEDGE_HYPR_DIR/binds.lua")"
+mkdir -p "$FLEDGE_CONFIG_DIR"
+printf '{"binds":{"x":{"mods":"SUPER","key":"RETURN","label":"Dup","group":"A","action":{"exec":"y"}}}}\n' >"$FLEDGE_CONFIG_DIR/settings.json"
 "$FLEDGE" settings apply 2>"$T/err"; rc=$?
 check "apply: invalid -> exit 1"      "1"        "$rc"
-check "apply: invalid -> old binds kept" "$good" "$(cat "$MBM_HYPR_DIR/binds.lua")"
-check "apply: no temp files left"     ""         "$(find "$MBM_HYPR_DIR" "$MBM_STATE_DIR" -name '*.??????' 2>/dev/null)"
+check "apply: invalid -> old binds kept" "$good" "$(cat "$FLEDGE_HYPR_DIR/binds.lua")"
+check "apply: no temp files left"     ""         "$(find "$FLEDGE_HYPR_DIR" "$FLEDGE_STATE_DIR" -name '*.??????' 2>/dev/null)"
 
 # A writer waits for the settings lock, but not for ever: a hung holder must not
 # stall login (env-hyprland runs apply).
 fresh
-mkdir -p "$MBM_CONFIG_DIR"
-flock "$MBM_CONFIG_DIR/.lock" -c "touch '$T/held'; sleep 5" &
+mkdir -p "$FLEDGE_CONFIG_DIR"
+flock "$FLEDGE_CONFIG_DIR/.lock" -c "touch '$T/held'; sleep 5" &
 holder=$!
 for _ in $(seq 50); do [[ -e $T/held ]] && break; sleep 0.1; done
 start=$SECONDS
-MBM_LOCK_TIMEOUT=1 "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
+FLEDGE_LOCK_TIMEOUT=1 "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
 check "lock: busy -> exit 1"          "1"        "$rc"
 contains "lock: busy message"         "another fledge settings command holds" "$(cat "$T/err")"
 check "lock: gave up within the timeout" "yes"   "$( ((SECONDS - start <= 3)) && echo yes || echo no)"
@@ -371,17 +371,17 @@ pkill -P "$holder" 2>/dev/null; kill "$holder" 2>/dev/null; wait "$holder" 2>/de
 
 for bad_wait in abc -1 1.5 ""; do
   fresh
-  MBM_LOCK_TIMEOUT="$bad_wait" "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
+  FLEDGE_LOCK_TIMEOUT="$bad_wait" "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"; rc=$?
   if [[ -z $bad_wait ]]; then
-    check "lock: empty MBM_LOCK_TIMEOUT -> default wait" "0" "$rc"
+    check "lock: empty FLEDGE_LOCK_TIMEOUT -> default wait" "0" "$rc"
   else
-    check "lock: MBM_LOCK_TIMEOUT=$bad_wait -> exit 1" "1" "$rc"
-    contains "lock: MBM_LOCK_TIMEOUT=$bad_wait -> message" "MBM_LOCK_TIMEOUT must be a whole number of seconds" "$(cat "$T/err")"
-    check "lock: MBM_LOCK_TIMEOUT=$bad_wait -> nothing written" "" "$(user_file)"
+    check "lock: FLEDGE_LOCK_TIMEOUT=$bad_wait -> exit 1" "1" "$rc"
+    contains "lock: FLEDGE_LOCK_TIMEOUT=$bad_wait -> message" "FLEDGE_LOCK_TIMEOUT must be a whole number of seconds" "$(cat "$T/err")"
+    check "lock: FLEDGE_LOCK_TIMEOUT=$bad_wait -> nothing written" "" "$(user_file)"
   fi
 done
-MBM_LOCK_TIMEOUT=0 "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"
-check "lock: MBM_LOCK_TIMEOUT=0 accepted" "0" "$?"
+FLEDGE_LOCK_TIMEOUT=0 "$FLEDGE" settings set .launcher.position '"anchored"' 2>"$T/err"
+check "lock: FLEDGE_LOCK_TIMEOUT=0 accepted" "0" "$?"
 
 # hyprctl is only called inside a Hyprland session
 fresh
@@ -392,7 +392,7 @@ check "apply: no reload outside Hyprland" "no" "$([[ -e $T/hyprctl.log ]] && ech
 HYPRLAND_INSTANCE_SIGNATURE=test PATH="$T/bin:$PATH" "$FLEDGE" settings apply
 check "apply: reload inside Hyprland" "reload"   "$(cat "$T/hyprctl.log" 2>/dev/null)"
 rm -f "$T/hyprctl.log"
-HYPRLAND_INSTANCE_SIGNATURE=test MBM_NO_RELOAD=1 PATH="$T/bin:$PATH" "$FLEDGE" settings apply
-check "apply: MBM_NO_RELOAD skips reload" "no" "$([[ -e $T/hyprctl.log ]] && echo yes || echo no)"
+HYPRLAND_INSTANCE_SIGNATURE=test FLEDGE_NO_RELOAD=1 PATH="$T/bin:$PATH" "$FLEDGE" settings apply
+check "apply: FLEDGE_NO_RELOAD skips reload" "no" "$([[ -e $T/hyprctl.log ]] && echo yes || echo no)"
 
 exit $fail

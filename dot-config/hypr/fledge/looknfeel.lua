@@ -107,7 +107,7 @@ hl.config({
     disable_hyprland_logo = true,
     disable_splash_rendering = true,
     -- fledge: until the shell draws the wallpaper, the first frames show
-    -- Hyprland's own background: make it fledge's (palette.sh MBM_BG), not
+    -- Hyprland's own background: make it fledge's (palette.sh FLEDGE_BG), not
     -- its grey, and never one of its default wallpapers.
     force_default_wallpaper = 0,
     background_color = "rgb(171e28)",

@@ -12,7 +12,7 @@ T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 R=(python3 "$DIR/render-console.py")
 
 # palette
-check "palette has 16 VT slots" "16" "${#MBM_VT_PALETTE[@]}"
+check "palette has 16 VT slots" "16" "${#FLEDGE_VT_PALETTE[@]}"
 esc="$(mbm_vt_palette)"
 contains "VT slot 0 is the background" $'\e]P0171e28' "$esc"
 contains "VT slot 3 is the accent"     $'\e]P3f4af03' "$esc"

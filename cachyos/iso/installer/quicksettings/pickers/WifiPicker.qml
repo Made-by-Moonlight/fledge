@@ -1,1 +1,1 @@
-../../../../../dot-config/quickshell/mbm/quicksettings/pickers/WifiPicker.qml
+../../../../../dot-config/quickshell/fledge/quicksettings/pickers/WifiPicker.qml
