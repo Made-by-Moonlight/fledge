@@ -209,7 +209,8 @@ resolve() {
   local -a words=("$@") ; local n name
   for ((n = ${#words[@]}; n >= 1; n--)); do
     name="$(IFS=-; echo "${words[*]:0:n}")"
-    [[ -x "$LIBEXEC/$name" ]] && { printf '%s\n%d\n' "$name" "$n"; return 0; }
+    # -f too: a directory is executable (searchable) but isn't a command.
+    [[ -f "$LIBEXEC/$name" && -x "$LIBEXEC/$name" ]] && { printf '%s\n%d\n' "$name" "$n"; return 0; }
   done
   return 1
 }

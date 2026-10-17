@@ -113,6 +113,9 @@ contains "known group: suggests its actions" "fledge capture screenrecording" "$
 run zzz
 check "nothing near -> exit 2" 2 "$rc"
 check "nothing near -> no suggestion" 0 "$(grep -c 'did you mean' <<<"$err")"
+run c
+check "a directory in libexec isn't a command -> exit 2" 2 "$rc"
+contains "a directory: unknown command" "fledge: unknown command: c" "$err"
 run
 check "no args -> exit 2" 2 "$rc"
 check "the stray outside libexec never ran" 0 "$(grep -c ESCAPED <<<"$out$err")"
