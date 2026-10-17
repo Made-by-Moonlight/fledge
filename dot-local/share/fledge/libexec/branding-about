@@ -5,6 +5,9 @@
 
 set -euo pipefail
 
+# fledge's vendored copy of Omarchy's default/ (Omarchy's $OMARCHY_PATH doesn't exist here).
+DEFAULT="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../default"
+
 case "${1:-}" in
 image)
   image=$(fledge menu file "Logo image" "$HOME" "svg png")
@@ -16,7 +19,7 @@ text)
   fledge launch editor ~/.config/omarchy/branding/about.txt >/dev/null 2>&1 && fledge launch about >/dev/null 2>&1
   ;;
 reset)
-  cp "$OMARCHY_PATH/icon.txt" ~/.config/omarchy/branding/about.txt && fledge launch about >/dev/null 2>&1
+  cp "$DEFAULT/branding/about.txt" ~/.config/omarchy/branding/about.txt && fledge launch about >/dev/null 2>&1
   ;;
 *)
   echo "Usage: fledge branding about <image|text|reset>" >&2

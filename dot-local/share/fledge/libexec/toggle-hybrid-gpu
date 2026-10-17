@@ -2,6 +2,9 @@
 
 # Toggle dedicated vs integrated GPU mode via supergfxd (for hybrid gpu laptops, like Asus G14).
 
+# fledge's vendored copy of Omarchy's default/ (Omarchy's $OMARCHY_PATH doesn't exist here).
+DEFAULT="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/../default"
+
 if fledge cmd missing supergfxctl; then
   fledge pkg add supergfxctl
 
@@ -45,13 +48,12 @@ case "$gpu_mode" in
     sudo sed -i 's/"vfio_enable": false/"vfio_enable": true/' /etc/supergfxd.conf
 
     # Force igpu mode after system sleep (or dgpu could get activated)
-    sudo mkdir -p /usr/lib/systemd/system-sleep
-    sudo cp -p $OMARCHY_PATH/default/systemd/system-sleep/force-igpu /usr/lib/systemd/system-sleep/
+    # (install, not cp -p: a root-run hook must be root-owned and executable)
+    sudo install -Dm755 "$DEFAULT/systemd/system-sleep/force-igpu" /usr/lib/systemd/system-sleep/force-igpu
 
     # Delay supergfxd startup to avoid race condition with display manager
     # that can cause system freeze when booting in Integrated mode
-    sudo mkdir -p /etc/systemd/system/supergfxd.service.d
-    sudo cp -p $OMARCHY_PATH/default/systemd/system/supergfxd.service.d/delay-start.conf /etc/systemd/system/supergfxd.service.d/
+    sudo install -Dm644 "$DEFAULT/systemd/system/supergfxd.service.d/delay-start.conf" /etc/systemd/system/supergfxd.service.d/delay-start.conf
 
     fledge system reboot
   fi

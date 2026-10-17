@@ -8,7 +8,7 @@ The desktop's command line, one tree stowed to `~/.local/share/fledge/`:
 | `libexec/` | the actions: `fledge <group> <action> [args]` runs `libexec/<group>-<action>` |
 | `lib/` | `fledge settings` (`settings.sh`, the Hyprland generators `gen-*.jq`), `fledge dmenu` (`dmenu.sh`) |
 | `defaults/settings.json` | the shipped settings (binds, bar, idle, …); user overrides go in `~/.config/fledge/settings.json` |
-| `default/themed/` | app theme templates (`fledge theme set templates`) |
+| `default/` | vendored Omarchy defaults: `themed/` app theme templates (`fledge theme set templates`), the system-sleep hooks and supergfxd drop-in that `fledge hibernation setup` and `fledge toggle hybrid gpu` install, and the About text `fledge branding about reset` restores |
 | `assets/` | the shell's wallpapers and owl |
 | `test/` | unit suites (run them in the test VM, never on the host) |
 
