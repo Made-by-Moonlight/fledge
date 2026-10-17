@@ -80,8 +80,9 @@ unlock() {
   wtype "$PASSWORD"; wtype -k Return; sleep 3
 }
 # The crash-relock flag holds the Hyprland instance signature while locked and
-# is emptied (not removed) when unlocked.
-lockflag() { tr -d '[:space:]' < ~/.local/state/mbm/locked 2>/dev/null; }
+# is emptied (not removed) when unlocked; a fresh account has none until the
+# first lock. stderr is redirected first, so a missing file stays quiet.
+lockflag() { tr -d '[:space:]' 2>/dev/null < ~/.local/state/mbm/locked; }
 
 nl_temp() { hyprctl hyprsunset temperature 2>/dev/null | grep -xE '[0-9]+'; }
 
