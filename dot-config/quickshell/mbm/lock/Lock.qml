@@ -91,7 +91,7 @@ Scope {
         held = false; lost = false;
         persist.locked = false;                 // wl.locked follows: the lock is released here and only here
         status = ""; note = ""; attempts = 0;
-        Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "on"]);
+        Hypr.dispatch('hl.dsp.dpms({ action = "on" })');
         // Cleared only after unlocking: a crash in between re-locks, which is the safe side.
         writeFlag();
         unlockedNow();
@@ -113,7 +113,7 @@ Scope {
     }
 
     // Like slievr-system-lock: screens off shortly after a manual lock (any key wakes them: misc:key_press_enables_dpms).
-    Timer { id: displayOff; interval: 3000; onTriggered: if (persist.locked) Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "off"]) }
+    Timer { id: displayOff; interval: 3000; onTriggered: if (persist.locked) Hypr.dispatch('hl.dsp.dpms({ action = "off" })') }
     // A PAM module that never answers would otherwise block every retry.
     Timer { id: watchdog; interval: 30000; onTriggered: if (pam.active) { pam.abort(); root.fail("authentication timed out"); } }
 

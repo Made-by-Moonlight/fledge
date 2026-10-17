@@ -1,5 +1,6 @@
 //@ pragma UseQApplication
 import Quickshell
+import Quickshell.Io
 import QtQuick
 import "wallpaper"
 import "ipc"
@@ -23,7 +24,12 @@ ShellRoot {
     // where no bind fires: leave it.
     Component.onCompleted: {
         Settings.home; DisplayConfirm.active;
-        Quickshell.execDetached(["sh", "-c", '[ "$(hyprctl submap 2>/dev/null)" = mbm-record ] && exec hyprctl dispatch submap reset']);
+        staleSubmap.running = true;
+    }
+    Process {
+        id: staleSubmap
+        command: ["hyprctl", "submap"]
+        stdout: StdioCollector { onStreamFinished: if (text.trim() === "mbm-record") Hypr.dispatch('hl.dsp.submap("reset")') }
     }
 
     Variants {
@@ -59,7 +65,7 @@ ShellRoot {
             if (Settings.lockOnSleep && !lockScreen.secure) lockScreen.lock(true);
             else Sleep.release();
         }
-        function onResumed() { Quickshell.execDetached(["hyprctl", "dispatch", "dpms", "on"]); Brightness.refresh(); }
+        function onResumed() { Hypr.dispatch('hl.dsp.dpms({ action = "on" })'); Brightness.refresh(); }
     }
     Connections { target: lockScreen; function onSecureChanged() { if (lockScreen.secure && Sleep.pending) Sleep.release(); } }
     Ipc { osd: osd; lockScreen: lockScreen }

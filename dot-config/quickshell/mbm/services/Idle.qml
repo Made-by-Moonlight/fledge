@@ -48,7 +48,7 @@ Singleton {
     // Screens off; any input wakes them (and the lock, resume and unlock turn them on too).
     Timeout {
         seconds: Settings.idleScreenOff; allowed: root.enabled
-        onIsIdleChanged: Quickshell.execDetached(["hyprctl", "dispatch", "dpms", isIdle ? "off" : "on"])
+        onIsIdleChanged: Hypr.dispatch('hl.dsp.dpms({ action = "' + (isIdle ? "off" : "on") + '" })')
     }
     // Lock-before-sleep is Sleep's job (logind PrepareForSleep), not this one's.
     Timeout {

@@ -2,9 +2,10 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 import QtQuick
+import "../services"
 
 // Captures one key combo. While recording, Hyprland sits in the empty
-// `mbm-record` submap (generated with binds.conf), so its binds don't fire and
+// `mbm-record` submap (generated with binds.lua), so its binds don't fire and
 // every key reaches this window. A 10 s guard and SUPER+CTRL+ALT+Escape (in the
 // submap) make sure nobody is left stuck there.
 FocusScope {
@@ -12,7 +13,7 @@ FocusScope {
     property bool active: false
     signal recorded(string mods, string key)
     signal cancelled()
-    // The submap isn't loaded (e.g. binds.conf not sourced): dispatching to a missing submap
+    // The submap isn't loaded (e.g. binds.lua not loaded): dispatching to a missing submap
     // would leave every key dead, so nothing is dispatched and recording never starts.
     signal unavailable()
     // A combo that would bind a printable key system-wide (no modifier, or only Shift).
@@ -31,7 +32,7 @@ FocusScope {
         active = false;
         entered = false;
         guard.stop();
-        Hyprland.dispatch("submap reset");
+        Hypr.dispatch('hl.dsp.submap("reset")');
     }
     Component.onDestruction: stop()
 
@@ -44,7 +45,7 @@ FocusScope {
             if (code !== 0) { rec.unavailable(); return; }
             rec.entered = false;
             rec.active = true;
-            Hyprland.dispatch("submap mbm-record");
+            Hypr.dispatch('hl.dsp.submap("mbm-record")');
             catcher.forceActiveFocus();
             guard.restart();
         }
