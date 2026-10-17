@@ -128,5 +128,23 @@ check "real libexec: every name is a run of command words" "" "$bad_names"
 check "real libexec: no script shadows a built-in" "" "$(cd "$real" && ls -d hypr settings dmenu help hypr-* settings-* dmenu-* help-* 2>/dev/null)"
 check "real libexec: every script is executable" "" "$(find "$real" -type f ! -perm -u+x)"
 
+
+# Longest-prefix collisions: `fledge menu <name>` must reach menu's own
+# go_to_menu, so no submenu name may also be a menu-<name> script.
+menus="$(sed -n '/^go_to_menu() {/,/^}/p' "$real/menu" | grep -oE '^ *\*[a-z0-9_.-]+\*\)' | tr -d ' *)')"
+check "menu: go_to_menu has its submenus" yes "$(grep -qx setup <<<"$menus" && grep -qx trigger <<<"$menus" && echo yes || echo no)"
+check "menu: no submenu name is a menu-* script" "" "$(for m in $menus; do [[ -e $real/menu-$m ]] && echo "menu-$m"; done)"
+
+# `fledge toggle <flag>` must reach the generic toggle, so its flags carry a
+# '-' (not a command word) and none is the name of a toggle-* script. Flags:
+# toggle-enabled's argument, and the last word of a `fledge toggle \` call.
+flags="$( { grep -rhoE 'fledge toggle enabled [a-z0-9_.-]+' "$real" | awk '{print $4}'
+           for f in "$real"/*; do awk '/fledge toggle \\$/{c=1;next} c&&/\\$/{next} c{print $NF;c=0}' "$f"; done; } | sort -u)"
+check "toggle: flags found" yes "$(grep -qx screensaver-off <<<"$flags" && grep -qx suspend-off <<<"$flags" && echo yes || echo no)"
+check "toggle: every flag has a '-'" "" "$(grep -v -- - <<<"$flags")"
+check "toggle: no flag is a toggle-* script name" "" "$(for f in $flags; do [[ -e $real/toggle-$f ]] && echo "toggle-$f"; done)"
+check "toggle: no toggle-* name is a dash-free flag" "" "$(cd "$real" && for t in toggle-*; do grep -qx -- "${t#toggle-}" <<<"$flags" && echo "$t"; done)"
+contains "toggle: the header says why flags carry a '-'" "must contain a '-'" "$(sed -n '1,12p' "$real/toggle")"
+
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail
