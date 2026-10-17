@@ -97,3 +97,7 @@ them if needed, don't extend them.
   (or slievr-menu › Setup › Config › Reload Hyprland). After changing which
   config Hyprland loads, test with `cachyos/vm/vm.sh relogin`: the config
   manager is picked at login, `reload` never switches it.
+- Upgrading a `.conf`-era install (README "Upgrade"): `git pull`, `bootstrap.sh`,
+  then log out and back in at once (or do it from a TTY). The stow fold makes
+  the pull delete `hyprland.conf` under the running session, which then loads
+  Hyprland's stock stub config; bootstrap detects that session and says so.

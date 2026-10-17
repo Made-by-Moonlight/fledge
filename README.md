@@ -9,10 +9,11 @@ The desktop is its own Quickshell shell (`mbm`): an attached bar with three
 hanging tabs inside a rounded screen frame, a launcher (apps, clipboard,
 emoji, system), notifications, OSD, lock screen, quick settings and a
 settings window. Settings are one JSON file that generates the Hyprland
-config (Hyprland runs a Lua config; after hand-editing `~/.config/hypr`,
-run `hyprctl reload`, as Hyprland doesn't reload on its own); pinning workspaces to monitors is edited on the Displays page of the
-settings window. Wallpapers live in `~/Pictures/Wallpapers` and are chosen
-(per monitor if you like) on the Displays page. Audio is PipeWire (wireplumber, pipewire-pulse), and the
+config. Hyprland runs a Lua config and doesn't reload on its own: after
+hand-editing `~/.config/hypr`, run `hyprctl reload`. Pinning workspaces to
+monitors is edited on the Displays page of the settings window. Wallpapers
+live in `~/Pictures/Wallpapers` and are chosen (per monitor if you like) on
+the Displays page. Audio is PipeWire (wireplumber, pipewire-pulse), and the
 desktop ships an emoji font for the emoji picker.
 
 ![Desktop with btop and a terminal](docs/screenshots/06-desktop-apps.png)
@@ -28,6 +29,18 @@ check it, and write it to a USB stick (or copy it onto a Ventoy stick):
 
 Secure Boot must be off. The install needs an internet connection; the
 installer can join Wi-Fi, and the network carries over to the installed system.
+
+## Upgrade
+
+An installed system keeps the repo in `~/proj/slievr-cachy`, stowed into `~`:
+
+    git -C ~/proj/slievr-cachy pull && bash ~/proj/slievr-cachy/cachyos/bootstrap.sh
+
+From a system still on Hyprland's old `.conf` config, log out and back in
+straight after: the pull removes `~/.config/hypr/hyprland.conf` at once, the
+running session falls back to Hyprland's stock config within seconds, and only
+a new login starts the Lua config (bootstrap says so too). Or pull and run
+bootstrap from a TTY (Ctrl+Alt+F2) and log in afterwards.
 
 ## Screenshots
 
