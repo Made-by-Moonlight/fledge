@@ -12,7 +12,7 @@ def action:
   else dsp(.) end;
 # Flag letters -> hl.bind options. 'm' has none: a mouse bind is just
 # window.drag()/window.resize() bound to mouse:272/273. 's' (Hyprland's
-# separate-keysyms flag) has no Lua option either, so it is dropped.
+# separate-keysyms flag) has no Lua option; check refuses it before this runs.
 def flag_opts: {e: "repeating", l: "locked", r: "release", n: "non_consuming",
                 t: "transparent", i: "ignore_mods", p: "dont_inhibit"};
 def opts($b):

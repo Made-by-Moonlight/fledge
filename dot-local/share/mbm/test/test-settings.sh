@@ -119,6 +119,7 @@ bad "comma in label"        "without commas"                  '{"binds":{"shell.
 bad "two action kinds"      "action must be one of"           '{"binds":{"shell.launcher":{"action":{"shell":"launcher.toggle","exec":"x"}}}}'
 bad "empty action list"     "action must be one of"           '{"binds":{"windows.next":{"action":[]}}}'
 bad "bad flags"             "bad flags"                       '{"binds":{"media.volume-up":{"flags":"xd"}}}'
+bad "s flag refused"        "flag s (separate keysyms) has no Lua equivalent" '{"binds":{"media.volume-up":{"flags":"els"}}}'
 bad "unknown bind field"    "unknown field colour"            '{"binds":{"shell.launcher":{"colour":"red"}}}'
 bad "bad display mode"      "bad mode"                        '{"displays":{"DP-1":{"mode":"huge"}}}'
 bad "bad display transform" "bad transform"                   '{"displays":{"DP-1":{"transform":9}}}'
@@ -249,7 +250,7 @@ echo mine >"$MBM_HYPR_DIR/notes.txt"
 check "apply: old .conf fragments removed" "" "$(find "$MBM_HYPR_DIR" -name '*.conf')"
 check "apply: other files kept"        "mine" "$(cat "$MBM_HYPR_DIR/notes.txt")"
 
-# Each flag letter maps to one hl.bind option ('m' and 's' have none: see gen-binds.jq).
+# Each flag letter maps to one hl.bind option ('m' has none: see gen-binds.jq; 's' is refused, above).
 fresh
 u='{"binds":{}}'; n=0
 for l in e l r n t i p m; do

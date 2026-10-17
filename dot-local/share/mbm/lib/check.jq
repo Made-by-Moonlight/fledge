@@ -36,7 +36,11 @@ def check_bind($id):
       unknown(["mods", "key", "flags", "label", "group", "action"]; "binds.\($id)"),
       (if ($b.mods | mods_ok) then empty else "binds.\($id): bad modifiers \($b.mods | tojson)" end),
       (if ($b.key | type == "string" and length > 0) then empty else "binds.\($id): key is required" end),
-      (if ($b.flags // "" | str_matches("^[elrnmtisp]*$")) then empty else "binds.\($id): bad flags \($b.flags | tojson)" end),
+      # 's' (separate keysyms) is a .conf bind flag with no hl.bind option: refused
+      # rather than dropped, so the bind can't quietly behave differently.
+      (if ($b.flags // "" | str_matches("^[elrnmtip]*$")) then empty
+       elif ($b.flags | str_matches("^[elrnmtisp]*$")) then "binds.\($id): flag s (separate keysyms) has no Lua equivalent; remove it"
+       else "binds.\($id): bad flags \($b.flags | tojson)" end),
       (if ($b.label | type == "string" and (test(",") | not)) then empty else "binds.\($id): label must be a string without commas" end),
       (if ($b.group | type == "string") then empty else "binds.\($id): group is required" end),
       ($b.action | if type == "array" and length > 0 then .[] | action_problems($id)

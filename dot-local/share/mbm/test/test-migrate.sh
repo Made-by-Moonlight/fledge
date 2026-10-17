@@ -177,6 +177,15 @@ contains "migrate: one bind counted" "migrated 1 binds to settings v2, 0 could n
 MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"
 check "migrate: second run is silent" "" "$(cat "$T/err")"
 
+# A v1 bind with the 's' flag has no Lua equivalent: counted as unconverted,
+# kept as it was, and check names it.
+fresh; U '{"version":1,"binds":{"windows.workspace-1":{"flags":"s","action":{"dispatch":"workspace 2"}}}}'
+MBM_NO_RELOAD=1 "$MBM" settings apply 2>"$T/err"; rc=$?
+check "migrate: s flag -> apply refused" "1" "$rc"
+contains "migrate: s flag counted as unconverted" "migrated 1 binds to settings v2, 1 could not be converted" "$(cat "$T/err")"
+check "migrate: s flag kept" '"s"' "$(jq '.binds["windows.workspace-1"].flags' "$MBM_CONFIG_DIR/settings.json")"
+contains "migrate: check names the s flag" "binds.windows.workspace-1: flag s (separate keysyms)" "$("$MBM" settings check 2>&1)"
+
 # A user file without a version (what `settings set` writes) still migrates.
 fresh; U '{"binds":{"windows.workspace-1":{"action":{"dispatch":"workspace 2"}}}}'
 MBM_NO_RELOAD=1 "$MBM" settings apply >/dev/null 2>"$T/err"

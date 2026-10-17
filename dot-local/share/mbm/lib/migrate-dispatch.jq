@@ -3,7 +3,7 @@
 #   migrate_dispatch  legacy string -> {dsp, args?} (or {exec}), or null when unknown
 #   needs_migration   user settings -> true when the file is version 1 or holds {dispatch}
 #   migrate_user      user settings -> {settings: <version 2>, count: <binds converted>,
-#                                       unconverted: <binds still holding {dispatch}>}
+#                                       unconverted: <binds still holding {dispatch}, or the s flag>}
 # Hyprland 0.57 drops the .conf format, and under a Lua config the legacy strings
 # stop working. Only forms in this table are converted; anything else (other
 # dispatchers, or arguments we can't map exactly) is left as {dispatch} for the
@@ -82,4 +82,6 @@ def migrate_user:
      else . end) as $new
   | {settings: ($new | if has("version") then .version = 2 else {version: 2} + . end),
      count: [($u.binds | objects | keys[]) as $k | select($u.binds[$k] != $new.binds[$k])] | length,
-     unconverted: [$new.binds | objects | .[] | objects | select(has("action")) | select(any(_actions; _is_legacy))] | length};
+     # A bind with the 's' flag can't be converted either (check refuses it).
+     unconverted: [$new.binds | objects | .[] | objects
+                   | select((has("action") and any(_actions; _is_legacy)) or (.flags | type == "string" and test("s")))] | length};
