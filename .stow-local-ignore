@@ -1,0 +1,32 @@
+# Perl regexes stow skips when it links this repo into ~ (bootstrap.sh,
+# vm.sh restow). This file replaces stow's built-in ignore list, so the
+# defaults are repeated first.
+RCS
+.+,v
+CVS
+\.\#.+
+\.cvsignore
+\.svn
+_darcs
+\.hg
+\.git
+\.gitignore
+\.gitmodules
+.+~
+\#.*\#
+^/README.*
+^/LICENSE.*
+^/COPYING
+
+# Only the dot-* trees (dot-config, dot-local, dot-mise.toml) are dotfiles.
+# The rest of the top level is the project and must not land in ~: a new
+# top-level entry that isn't dot-* belongs here too. Named one by one, not
+# "everything but dot-*": stow matches nested paths by their translated
+# names (.config/...), so a negative pattern would hide all of dot-config.
+^/AGENTS\.md
+^/cachyos
+^/docs
+^/\.github
+^/\.stow-local-ignore
+^/\.superpowers
+^/release
