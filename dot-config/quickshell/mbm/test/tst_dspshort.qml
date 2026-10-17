@@ -104,4 +104,18 @@ TestCase {
         compare(D.check("window.close; nope", names), "unknown dispatcher \"nope\"");
         verify(D.check("layout a b", names) !== "");
     }
+    // Run-command validation: the legacy IPC the Lua config refuses, as `mbm settings check` reports it.
+    function test_legacy_ipc() {
+        const msg = "runs Hyprland's legacy IPC (hyprctl keyword, --batch or a dispatch string), which the Lua config refuses: use fledge hypr set|dispatch|eval";
+        compare(D.legacyIpc("hyprctl keyword cursor:zoom_factor 2"), msg);
+        compare(D.legacyIpc("x && hyprctl -j keyword general:gaps_in 0"), msg);
+        compare(D.legacyIpc("hyprctl --batch \"dispatch exec a\""), msg);
+        compare(D.legacyIpc("hyprctl -b \"keyword a b\""), msg);
+        compare(D.legacyIpc("hyprctl dispatch workspace 2"), msg);
+        compare(D.legacyIpc("hyprctl dispatch 'hl.dsp.focus({ workspace = 2 })'"), "");
+        compare(D.legacyIpc("hyprctl dispatch hl.dsp.exit()"), "");
+        compare(D.legacyIpc("hyprctl -j getoption cursor:zoom_factor; hyprctl reload"), "");
+        compare(D.legacyIpc("fledge hypr set 'cursor = { zoom_factor = 1 }'"), "");
+        compare(D.legacyIpc("notify-send keyword"), "");
+    }
 }

@@ -29,11 +29,13 @@ Item {
     }
     function textOf(a) { const k = kindOf(a); return k === "dsp" ? DspShort.format(a) : k ? a[k] : ""; }
     function draftAction(d) { return d.kind === "dsp" ? DspShort.parse(d.value) : { [d.kind]: d.value }; }
-    // Why the draft's dispatcher can't be saved ("" = it can). Names are checked once the list has
-    // loaded; `mbm settings check` checks them again either way.
+    // Why the draft can't be saved ("" = it can): a command running legacy Hyprland IPC, or a
+    // dispatcher that doesn't parse or isn't known. Names are checked once the list has loaded;
+    // `mbm settings check` checks all of it again either way.
     readonly property string draftError: {
         const d = page.draft;
-        if (!d || d.kind !== "dsp" || d.value === "") return "";
+        if (!d || d.value === "") return "";
+        if (d.kind !== "dsp") return DspShort.legacyIpc(d.value);
         return page.dspNames.length ? DspShort.check(d.value, page.dspNames) : (DspShort.parse(d.value).error ?? "");
     }
     function openDraft(d) {

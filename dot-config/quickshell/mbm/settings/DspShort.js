@@ -122,3 +122,14 @@ function check(text, names) {
         if (!valid(a.dsp, names)) return "unknown dispatcher \"" + a.dsp + "\"";
     return "";
 }
+
+// A command (Run command, Shell action) that runs hyprctl keyword, --batch/-b or
+// `dispatch <legacy string>`: the Lua config refuses them, mostly with exit 0, so
+// the bind would silently do nothing. "" when it doesn't. Same pattern and
+// message as `mbm settings check` (lib/check.jq).
+const LEGACY_IPC = /\bhyprctl\s+(?:-\S+\s+)*?(?:keyword(?:\s|$)|--batch(?:\s|$)|-b(?:\s|$)|dispatch\s+(?!hl\.)[a-z])/;
+function legacyIpc(command) {
+    return LEGACY_IPC.test(command)
+        ? "runs Hyprland's legacy IPC (hyprctl keyword, --batch or a dispatch string), which the Lua config refuses: use fledge hypr set|dispatch|eval"
+        : "";
+}

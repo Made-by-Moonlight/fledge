@@ -64,14 +64,27 @@ def migrate_dispatch:
     else null end;
 
 def _is_legacy: type == "object" and keys == ["dispatch"] and (.dispatch | type == "string");
-def _migrate_action: if _is_legacy then ((.dispatch | migrate_dispatch) // .) else . end;
+# The v1 defaults' zoom binds ran `hyprctl keyword`, which the Lua config refuses
+# (exit 0, nothing happens). A user file that copied them gets fledge's forms;
+# only these exact strings: any other legacy IPC in a command is left for
+# `mbm settings check` to name.
+def _legacy_exec: {
+  "hyprctl keyword cursor:zoom_factor $(hyprctl getoption cursor:zoom_factor -j | jq '.float + 1')":
+    "fledge hypr eval 'hl.config({ cursor = { zoom_factor = hl.get_config(\"cursor.zoom_factor\") + 1 } })'",
+  "hyprctl keyword cursor:zoom_factor 1": "fledge hypr set 'cursor = { zoom_factor = 1 }'"
+};
+def _is_legacy_exec: type == "object" and keys == ["exec"] and (.exec | type == "string") and _legacy_exec[.exec] != null;
+def _migrate_action:
+  (if _is_legacy then ((.dispatch | migrate_dispatch) // .) else . end)
+  | if _is_legacy_exec then .exec = _legacy_exec[.exec] else . end;
 def _actions: .action | if type == "array" then .[] else . end;
 
-# A file `settings set` wrote has no version; it is v1 only if it holds legacy actions.
+# A file `settings set` wrote has no version; it is v1 only if it holds legacy actions
+# (a {dispatch}, or one of the v1 zoom commands).
 def needs_migration:
   .version == 1
   or ((has("version") | not)
-      and any(.binds | objects | .[] | objects | select(has("action")) | _actions; _is_legacy));
+      and any(.binds | objects | .[] | objects | select(has("action")) | _actions; _is_legacy or _is_legacy_exec));
 
 def migrate_user:
   . as $u

@@ -8,6 +8,12 @@ def unknown($allowed; $where): (keys - $allowed)[] | "\($where): unknown field \
 def mods_list: split(" ") | map(select(. != ""));
 def mods_ok: type == "string" and (mods_list | all(IN("SUPER", "SHIFT", "CTRL", "ALT", "MOD2", "MOD3", "MOD5")));
 def scalar: type | IN("string", "number", "boolean");
+# hyprctl keyword, --batch/-b and `dispatch <legacy string>` are refused by
+# Hyprland's Lua config, mostly with exit status 0, so a bind running them
+# would do nothing without a word. A dispatch of a Lua expression is fine.
+# Same pattern and message as the keybind editor (settings/DspShort.js).
+def legacy_ipc: test("\\bhyprctl\\s+(?:-\\S+\\s+)*?(?:keyword(?:\\s|$)|--batch(?:\\s|$)|-b(?:\\s|$)|dispatch\\s+(?!hl\\.)[a-z])");
+def legacy_ipc_problem: "runs Hyprland's legacy IPC (hyprctl keyword, --batch or a dispatch string), which the Lua config refuses: use fledge hypr set|dispatch|eval";
 # One action: {exec}, {shell} or {dsp[, args]}. Problems as text, nothing = valid.
 # args is a positional value (layout("togglesplit")) or a one-level table of
 # scalars, the shapes the generator can render as a Lua argument.
@@ -23,7 +29,8 @@ def action_problems($id):
     elif has("args") and (.args | scalar or (type == "object" and all(.[]; scalar)) | not) then
       "binds.\($id): args for \(.dsp) must be text, a number, true/false or an object of those"
     else empty end
-  elif (.exec // .shell | type == "string" and length > 0) then empty
+  elif (.exec // .shell | type == "string" and length > 0) then
+    if (.exec // .shell | legacy_ipc) then "binds.\($id): \(legacy_ipc_problem)" else empty end
   else "binds.\($id): action must be one of {exec}, {shell}, {dsp[, args]} (or a list of them)" end;
 # What Hyprland treats as "the same keys": modifiers in any order, key case-insensitively, same flags.
 def combo: (.mods | mods_list | sort | join("+")) + "+" + (.key | ascii_downcase)

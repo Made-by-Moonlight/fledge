@@ -72,6 +72,26 @@ row "movetoworkspacesilent 2 x"  'null'
 row "sendshortcut CTRL, X,"      'null'
 row "sendshortcut , F5"          '{"dsp":"send_shortcut","args":{"mods":"","key":"F5"}}'
 
+# The fixture is the v1 defaults exactly as they shipped (git show
+# b970944:dot-local/share/mbm/defaults/settings.json): never edit it to make a
+# test pass, or it stops standing for what users really have.
+check "fixture: defaults-v1.json is the shipped v1 defaults, byte for byte" \
+  "e95bda97ebe56b3281332119d485685377346ecb6afb1bf075afe971d06f3f95" "$(sha256sum <"$FIX/defaults-v1.json" | cut -d' ' -f1)"
+
+# The v1 zoom binds' `hyprctl keyword` commands (refused by the Lua config) get
+# fledge's forms; only those exact strings.
+zoom_in="$(jq -r '.binds["utilities.zoom-in"].action.exec' "$FIX/defaults-v1.json")"
+zoom_reset="$(jq -r '.binds["utilities.reset-zoom"].action.exec' "$FIX/defaults-v1.json")"
+mig_exec() { jq -c -L "$LIB" --arg c "$1" -n 'include "migrate-dispatch"; {binds: {z: {action: {exec: $c}}}} | migrate_user | [.settings.binds.z.action, .count]'; }
+check "migrate: v1 zoom-in command -> fledge hypr eval" \
+  "[$(jq -c '.binds["utilities.zoom-in"].action' "$HERE/../defaults/settings.json"),1]" "$(mig_exec "$zoom_in")"
+check "migrate: v1 reset-zoom command -> fledge hypr set" \
+  '[{"exec":"fledge hypr set '"'"'cursor = { zoom_factor = 1 }'"'"'"},1]' "$(mig_exec "$zoom_reset")"
+check "migrate: other legacy IPC in a command is left alone (check names it)" \
+  '[{"exec":"hyprctl keyword cursor:zoom_factor 2"},0]' "$(mig_exec "hyprctl keyword cursor:zoom_factor 2")"
+check "migrate: a version-less file holding a v1 zoom command needs migrating" "true" \
+  "$(jq -L "$LIB" --arg c "$zoom_reset" -n 'include "migrate-dispatch"; {binds: {z: {action: {exec: $c}}}} | needs_migration')"
+
 # Every legacy dispatcher in the old defaults has a translation, and the result
 # is exactly the shipped v2 defaults.
 check "migrate: old v1 defaults == v2 defaults (binds)" "true" \
@@ -242,6 +262,21 @@ bad "args without dsp"       "binds.custom.a: action must be one of"           '
 bad "leftover dispatch"      "binds.custom.a: can't convert dispatcher \"focuswindow class:x\"; rewrite it as {dsp, args}" '{"dispatch":"focuswindow class:x"}'
 bad "leftover dispatch in a list" "binds.custom.a: can't convert dispatcher \"foo\"" '[{"exec":"x"},{"dispatch":"foo"}]'
 bad "dsp not a string"       "binds.custom.a: unknown dispatcher 3"            '{"dsp":3}'
+# Legacy IPC inside a command: refused by the Lua config (mostly with exit 0),
+# so the bind would silently do nothing.
+legacy="binds.custom.a: runs Hyprland's legacy IPC (hyprctl keyword, --batch or a dispatch string), which the Lua config refuses: use fledge hypr set|dispatch|eval"
+bad "exec: hyprctl keyword"   "$legacy" '{"exec":"hyprctl keyword cursor:zoom_factor 2"}'
+bad "exec: hyprctl -j keyword" "$legacy" '{"exec":"x && hyprctl -j keyword general:gaps_in 0"}'
+bad "exec: hyprctl --batch"   "$legacy" '{"exec":"hyprctl --batch \"dispatch exec a ; dispatch exec b\""}'
+bad "exec: hyprctl -b"        "$legacy" '{"exec":"hyprctl -b \"keyword a b\""}'
+bad "exec: legacy dispatch"   "$legacy" '{"exec":"hyprctl dispatch workspace 2"}'
+bad "shell: legacy dispatch"  "$legacy" '{"shell":"x.y $(hyprctl dispatch exec kitty)"}'
+bad "legacy IPC in a list"    "$legacy" '[{"exec":"x"},{"exec":"hyprctl keyword a b"}]'
+good "exec: Lua dispatch"     '{"exec":"hyprctl dispatch '"'"'hl.dsp.focus({ workspace = 2 })'"'"'"}'
+good "exec: unquoted Lua dispatch" '{"exec":"hyprctl dispatch hl.dsp.exit()"}'
+good "exec: hyprctl queries"  '{"exec":"hyprctl -j getoption cursor:zoom_factor; hyprctl reload"}'
+good "exec: fledge hypr"      '{"exec":"fledge hypr set '"'"'cursor = { zoom_factor = 1 }'"'"'"}'
+good "exec: the word keyword" '{"exec":"notify-send keyword"}'
 good "dsp without args"      '{"dsp":"window.close"}'
 good "dsp with object args"  '{"dsp":"window.move","args":{"workspace":3,"follow":false}}'
 good "dsp with string args"  '{"dsp":"layout","args":"togglesplit"}'
