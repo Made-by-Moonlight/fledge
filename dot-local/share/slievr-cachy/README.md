@@ -5,8 +5,9 @@
 recorded in `VENDORED_VERSION`), MIT-licensed (see `LICENSE`), then had
 every `omarchy-*` command renamed to `slievr-*` (and the `omarchy`
 dispatcher to `slievr`) throughout this directory and every config that
-calls them (then `dot-config/hypr/bindings.conf`, `hypr-defaults/`, waybar,
-mako, walker, elephant; the mbm shell replaced the last four). These are no longer updated from upstream
+calls them (then `dot-config/hypr/bindings.conf`, the vendored Hyprland
+defaults, waybar, mako, walker, elephant; mbm settings and the Lua Hyprland
+config replaced the Hyprland files, the mbm shell the last four). These are no longer updated from upstream
 Omarchy — they're a permanent, independent fork under this project's own
 naming, not a live sync.
 
