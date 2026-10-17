@@ -3,7 +3,21 @@
 -- the tag rules come before the rules that match on those tags, and the
 -- default opacity comes after every app has had the chance to opt out.
 
-local function rule(spec) hl.window_rule(spec) end
+-- Each rule runs on its own: one Hyprland refuses (a field renamed in a new
+-- release, say) is listed in one notification at the end, instead of every
+-- rule after it being lost.
+local failed = {}
+local function try(add, spec)
+  local ok, err = pcall(add, spec)
+  if not ok then
+    local what = {} -- the rule's match, to say which one
+    for k, v in pairs(spec.match or {}) do what[#what + 1] = k .. "=" .. tostring(v) end
+    table.sort(what)
+    failed[#failed + 1] = table.concat(what, " ") .. " (" .. tostring(err) .. ")"
+  end
+end
+local function rule(spec) try(hl.window_rule, spec) end
+local function layer_rule(spec) try(hl.layer_rule, spec) end
 
 rule({ match = { class = ".*" }, suppress_event = "maximize" })
 
@@ -48,7 +62,7 @@ rule({ match = { tag = "firefox-based-browser" }, opacity = "1.0 0.97" })
 rule({ match = { title = ".*is sharing.*" }, workspace = "special silent" })
 
 -- Hyprshot: remove the 1px border around screenshots
-hl.layer_rule({ match = { namespace = "selection" }, no_anim = true })
+layer_rule({ match = { namespace = "selection" }, no_anim = true })
 
 -- JetBrains: disable mouse focus (see https://github.com/basecamp/omarchy/pull/5183#issuecomment-4189299971)
 rule({ name = "jetbrains-focus", match = { class = "^(jetbrains-.*)$" }, no_follow_mouse = true })
@@ -183,3 +197,11 @@ local settings = { class = "^org\\.quickshell$", title = "^fledge . settings$" }
 rule({ match = settings, float = true })
 rule({ match = settings, size = "960 680" })
 rule({ match = settings, center = true })
+
+if #failed > 0 then
+  local text = "fledge: rules.lua: these rules didn't load: " .. table.concat(failed, "; ")
+  io.stderr:write(text, "\n")
+  pcall(function()
+    hl.notification.create({ text = text, timeout = 15000, icon = "error", color = "rgb(ff5555)" })
+  end)
+end

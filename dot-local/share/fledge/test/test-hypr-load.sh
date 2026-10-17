@@ -124,14 +124,17 @@ mkhome() { # mkhome <dir>: the config tree hyprland.lua expects, with tracing st
   printf 'trace[#trace + 1] = "toggle"\n' >"$h/.local/state/hypr-toggles/t.lua"
 }
 cat > "$T/driver3.lua" <<'EOL'
-trace, notes = {}, {}
+trace, notes, binds = {}, {}, {}
 hl = { notification = { create = function(opts) notes[#notes + 1] = opts end },
-       config = function() end }
+       config = function() end,
+       bind = function(keys, d, opts) binds[#binds + 1] = keys .. "=" .. d .. "|" .. opts.description end,
+       dsp = { exec_cmd = function(cmd) return "exec(" .. cmd .. ")" end, exit = function() return "exit" end } }
 if os.getenv("NO_NOTIFY") then hl.notification = nil end
 package.path = os.getenv("HOME") .. "/.config/hypr/?.lua;" .. package.path
 dofile(os.getenv("HOME") .. "/.config/hypr/hyprland.lua")
 print("trace=" .. table.concat(trace, " "))
 print("notes=" .. #notes)
+print("binds=" .. table.concat(binds, ";"))
 for i, n in ipairs(notes) do print("icon" .. i .. "=" .. tostring(n.icon)) end
 for i, n in ipairs(notes) do print("note" .. i .. "=" .. tostring(n.text)) end
 EOL
@@ -141,11 +144,32 @@ mkhome "$T/h1"; cp "$LOAD" "$T/h1/.config/hypr/fledge/load.lua"
 run_hypr "$T/h1"
 check "hyprland.lua: everything loads, in order" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
 check "hyprland.lua: no notification" "0" "$(field notes)"
+check "hyprland.lua: binds.lua loaded, no safety-net binds" "" "$(field binds)"
+
+# binds.lua missing (never generated) or broken: a few binds to get help or get
+# out, never none at all.
+safety="SUPER + RETURN=exec(uwsm app -- \$TERMINAL)|Terminal;SUPER + SPACE=exec(qs -c mbm ipc call launcher toggle)|Launch apps;SUPER + K=exec(qs -c mbm ipc call settings open keybinds)|Keybinds;SUPER + ESCAPE=exec(qs -c mbm ipc call launcher open system)|System menu;SUPER + M=exit|Exit Hyprland"
+mkhome "$T/hb1"; cp "$LOAD" "$T/hb1/.config/hypr/fledge/load.lua"; rm "$T/hb1/.local/state/mbm/hypr/binds.lua"
+run_hypr "$T/hb1"
+check "binds.lua missing: the safety-net binds" "$safety" "$(field binds)"
+check "binds.lua missing: the rest loads" "envs looknfeel misc rules toggle autostart" "$(field trace)"
+check "binds.lua missing: no notification (a fresh account)" "0" "$(field notes)"
+mkhome "$T/hb2"; cp "$LOAD" "$T/hb2/.config/hypr/fledge/load.lua"
+printf 'this is not lua\n' >"$T/hb2/.local/state/mbm/hypr/binds.lua"
+run_hypr "$T/hb2"
+check "binds.lua broken: the safety-net binds" "$safety" "$(field binds)"
+check "binds.lua broken: the rest loads" "envs looknfeel misc rules toggle autostart" "$(field trace)"
+contains "binds.lua broken: a notification names it" "/.local/state/mbm/hypr/binds.lua:" "$(field note1)"
+# hl.dsp gone (an API change): the safety net mustn't take hyprland.lua down.
+mkhome "$T/hb3"; cp "$LOAD" "$T/hb3/.config/hypr/fledge/load.lua"; rm "$T/hb3/.local/state/mbm/hypr/binds.lua"
+printf 'hl.dsp = nil\n' >"$T/hb3/.config/hypr/fledge/envs.lua"
+run_hypr "$T/hb3"
+check "no hl.dsp: hyprland.lua still runs to the end" "0|toggle autostart" "$rc|$(field trace | sed 's/^.*rules //')"
 
 mkhome "$T/h2"
 run_hypr "$T/h2"
 check "load.lua missing: no error escapes" 0 "$rc"
-check "load.lua missing: the rest still loads (no toggles)" "envs looknfeel misc rules binds autostart" "$(field trace)"
+check "load.lua missing: the rest still loads, toggles too" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
 check "load.lua missing: one notification" "1" "$(field notes)"
 contains "load.lua missing: notification names it" "fledge: fledge/load.lua: " "$(field note1)"
 check "load.lua missing: shown as an error" "error" "$(field icon1)"
@@ -153,14 +177,14 @@ check "load.lua missing: shown as an error" "error" "$(field icon1)"
 # Without hl.notification (an API change, say) the stand-in still only reports.
 out="$(NO_NOTIFY=1 HOME="$T/h2" lua "$T/driver3.lua" 2>&1)"; rc=$?
 check "load.lua missing, no hl.notification: no error escapes" 0 "$rc"
-check "load.lua missing, no hl.notification: the rest still loads" "envs looknfeel misc rules binds autostart" "$(field trace)"
+check "load.lua missing, no hl.notification: the rest still loads" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
 contains "load.lua missing, no hl.notification: said on stderr" "fledge: fledge/load.lua: " "$out"
 
 mkhome "$T/h3"; printf 'local M = = {}\n' >"$T/h3/.config/hypr/fledge/load.lua"
 printf 'trace[#trace + 1] = "rules"\nerror("rules broke")\n' >"$T/h3/.config/hypr/fledge/rules.lua"
 run_hypr "$T/h3"
 check "load.lua broken: no error escapes" 0 "$rc"
-check "load.lua broken: the rest still loads" "envs looknfeel misc rules binds autostart" "$(field trace)"
+check "load.lua broken: the rest still loads" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
 check "load.lua broken: it and the broken file notify" "2" "$(field notes)"
 contains "load.lua broken: names load.lua" "fledge: fledge/load.lua: " "$(field note1)"
 contains "load.lua broken: names the broken file" "rules.lua: " "$(field note2)"
@@ -215,6 +239,34 @@ check "autostart: keeps a hyprland.conf of the user's" $'rc=0\nhyprland.conf' "$
 check "autostart: no hyprland.conf is fine" "rc=0" "$(autostart none)"
 check "autostart: the marker past the first 200 bytes isn't the stub" $'rc=0\nhyprland.conf' \
   "$(autostart "$(printf '#%.0s' {1..250})"$'\n# This config is a STUB!')"
+
+# rules.lua: a rule Hyprland refuses (a field renamed, say) costs only that rule.
+cat > "$T/driver6.lua" <<'EOL'
+local window, layer, notes = 0, 0, {}
+hl = {
+  window_rule = function(spec)
+    if spec.size then error("unknown field size") end
+    window = window + 1
+  end,
+  layer_rule = function() layer = layer + 1 end,
+  notification = { create = function(opts) notes[#notes + 1] = opts.text end },
+}
+dofile(arg[1])
+print("window=" .. window .. " layer=" .. layer .. " notes=" .. #notes)
+print(notes[1] or "")
+EOL
+rules="$REPO/dot-config/hypr/fledge/rules.lua"
+total="$(grep -c '^rule(' "$rules")"; sized="$(grep -c '^rule(.*size = "' "$rules")"
+out="$(lua "$T/driver6.lua" "$rules" 2>/dev/null)"; rc=$?
+check "rules: a refused rule doesn't stop the file" 0 "$rc"
+check "rules: every other rule still added, one notification" \
+  "window=$((total - sized)) layer=1 notes=1" "$(head -n1 <<<"$out")"
+contains "rules: the notification names a refused rule" \
+  "fledge: rules.lua: these rules didn't load: class=localsend (" "$(tail -n1 <<<"$out")"
+contains "rules: and says why" "unknown field size" "$(tail -n1 <<<"$out")"
+out="$(lua -e 'hl = { window_rule = function() end, layer_rule = function() end,
+  notification = { create = function() print("notified") end } }' "$rules" 2>&1)"
+check "rules: all good, no notification" "" "$out"
 
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail
