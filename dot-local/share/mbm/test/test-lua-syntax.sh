@@ -17,11 +17,15 @@ lua_syntax_ok "$T/good.lua" 2>/dev/null; check "accepts valid Lua" 0 "$?"
 lua_syntax_ok "$T/bad.lua" 2>/dev/null; check "rejects broken Lua" 1 "$?"
 lua_syntax_ok "$T/good.lua" "$T/bad.lua" 2>/dev/null; check "rejects when any file is broken" 1 "$?"
 
-# Dirs may not exist yet (the Lua config lands in a later change).
+# The installer dir may not have Lua yet (it lands in a later change).
 files=()
 for d in "$REPO/dot-config/hypr" "$REPO/cachyos/iso/configs/airootfs/etc/mbm-installer"; do
   [[ -d "$d" ]] && while IFS= read -r f; do files+=("$f"); done < <(find "$d" -name '*.lua' | sort)
 done
+# The desktop config is Lua: finding none there means the search is wrong, not
+# that everything parsed.
+check "found the desktop's hyprland.lua" "yes" \
+  "$(printf '%s\n' "${files[@]}" | grep -qx "$REPO/dot-config/hypr/hyprland.lua" && echo yes || echo no)"
 for f in "${files[@]}"; do
   lua_syntax_ok "$f"; check "parses ${f#"$REPO"/}" 0 "$?"
 done

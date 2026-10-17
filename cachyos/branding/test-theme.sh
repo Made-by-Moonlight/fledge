@@ -43,7 +43,8 @@ check "render: every template rendered or provided" "17" \
   "$(cd "$REPO/dot-local/share/slievr-cachy/default/themed" && for f in *.tpl; do [[ -e "$T/out/${f%.tpl}" ]] && echo x; done | wc -l | tr -d ' ')"
 check "render: no {{ placeholders left" "" "$(grep -rl '{{' "$T/out" || true)"
 check "render: theme file wins over template" "theme-provided kitty" "$(cat "$T/out/kitty.conf")"
-contains "render: _strip form (hyprland accent)" "rgb(123456)" "$(cat "$T/out/hyprland.conf")"
+check "render: _strip form (hyprland.lua returns the accent)" "rgb(123456)" \
+  "$(lua - "$T/out/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
 contains "render: _rgb form (hyprlock background)" "rgba(171,205,239" "$(tr -d ' ' < "$T/out/hyprlock.conf")"
 contains "render: plain form (waybar background)" "#abcdef" "$(cat "$T/out/waybar.css")"
 check "render: colors.toml copied" "yes" "$([[ -f "$T/out/colors.toml" ]] && echo yes || echo no)"
@@ -69,6 +70,7 @@ check "background link points at Moonrise 3440" \
   "/home/slievr/.config/omarchy/current/theme/backgrounds/1-moonrise-3440x1440.png" \
   "$(readlink "$REPO/dot-config/omarchy/current/background")"
 contains "kitty uses the brand background" "171e28" "$(cat "$T/real/kitty.conf")"
-contains "hyprland focus border is amber" "rgb(f4af03)" "$(cat "$T/real/hyprland.conf")"
+check "hyprland focus border is amber" "rgb(f4af03)" \
+  "$(lua - "$T/real/hyprland.lua" <<<'io.write(dofile(arg[1]).activeBorderColor)' 2>&1)"
 
 exit $fail

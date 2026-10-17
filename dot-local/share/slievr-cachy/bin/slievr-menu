@@ -269,7 +269,7 @@ show_style_menu() {
   *Unlock*) slievr-launch-walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
-  *Hyprland*) open_in_editor ~/.config/hypr/looknfeel.conf ;;
+  *Hyprland*) open_in_editor ~/.config/hypr/fledge/looknfeel.lua ;;
   *Screensaver*) show_screensaver_menu ;;
   *About*) show_about_menu ;;
   *) show_main_menu ;;
@@ -460,7 +460,7 @@ show_setup_default_editor_menu() {
 
 show_setup_config_menu() {
   case $(menu "Setup" "  Hyprland\n  Hyprsunset\n󰒓  Settings\n󰞅  XCompose") in
-  *Hyprland*) open_in_editor ~/.config/hypr/hyprland.conf ;;
+  *Hyprland*) open_in_editor ~/.config/hypr/hyprland.lua ;;
   *Hyprsunset*) open_in_editor ~/.config/hypr/hyprsunset.conf && slievr-restart-hyprsunset ;;
   *Settings*) qs -c mbm ipc call settings open "" ;;
   *XCompose*) open_in_editor ~/.XCompose && slievr-restart-xcompose ;;

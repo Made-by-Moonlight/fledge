@@ -40,7 +40,7 @@ jobs:
                    dot-local/share/mbm/test/test-settings.sh dot-local/share/mbm/test/test-defaults.sh \
                    dot-local/share/mbm/test/test-dmenu.sh dot-local/share/mbm/test/test-lua-syntax.sh \
                    dot-local/share/mbm/test/test-migrate.sh \
-                   dot-local/share/fledge/test/test-fledge.sh; do
+                   dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"

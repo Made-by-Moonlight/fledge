@@ -1,5 +1,5 @@
 # Sourced (POSIX sh) by uwsm before it starts Hyprland; exports reach the
-# whole session. GPU-specific env lives here rather than in hyprland.conf so
+# whole session. GPU-specific env lives here rather than in hyprland.lua so
 # it follows whichever GPU the monitors are plugged into, decided at login:
 #   - Hyprland only opens the GPU(s) with a monitor attached, primary first,
 #     so a headless compute card (e.g. a 3080 next to a 9070 XT) stays free.
@@ -31,30 +31,30 @@ if [ -x "$_display_gpu" ] && _driver="$("$_display_gpu" --driver)"; then
 fi
 unset _display_gpu _driver
 
-# hyprland.conf sources the binds, monitors, workspaces and input that `mbm
+# hyprland.lua loads the binds, monitors, workspaces and input that `mbm
 # settings apply` generates into ~/.local/state/mbm/hypr. Bootstrap generates
 # them, but if that state is ever lost (a wiped ~/.local/state, a new user),
 # Hyprland would start with no binds at all: regenerate before it reads its
 # config. Also when the shipped defaults are newer than the generated binds (a
 # git pull without bootstrap), so new default binds arrive at the next login.
 # If the user's settings are invalid, render the shipped defaults alone
-# into a scratch dir and copy in only the confs that are missing: the user's
-# last good confs, and the merged state the shell reads, are never replaced
+# into a scratch dir and copy in only the files that are missing: the user's
+# last good files, and the merged state the shell reads, are never replaced
 # with defaults. Silent, never fails the login, and no reload: Hyprland isn't
 # running yet.
 _mbm="$HOME/.local/share/mbm/bin/mbm"
 _gen="$HOME/.local/state/mbm/hypr"
 _defaults="$HOME/.local/share/mbm/defaults/settings.json"
-if [ -x "$_mbm" ] && { ! { [ -e "$_gen/binds.conf" ] && [ -e "$_gen/monitors.conf" ] \
-  && [ -e "$_gen/workspaces.conf" ] && [ -e "$_gen/input.conf" ]; } \
-  || [ "$_defaults" -nt "$_gen/binds.conf" ]; }; then
+if [ -x "$_mbm" ] && { ! { [ -e "$_gen/binds.lua" ] && [ -e "$_gen/monitors.lua" ] \
+  && [ -e "$_gen/workspaces.lua" ] && [ -e "$_gen/input.lua" ]; } \
+  || [ "$_defaults" -nt "$_gen/binds.lua" ]; }; then
   if ! MBM_NO_RELOAD=1 "$_mbm" settings apply >/dev/null 2>&1; then
     _tmp="$(mktemp -d 2>/dev/null)" && {
       if MBM_NO_RELOAD=1 MBM_CONFIG_DIR="$_tmp/config" MBM_STATE_DIR="$_tmp/state" \
         MBM_HYPR_DIR="$_tmp/hypr" "$_mbm" settings apply >/dev/null 2>&1; then
         mkdir -p "$_gen" || :
         for _f in binds monitors workspaces input; do
-          [ -e "$_gen/$_f.conf" ] || cp "$_tmp/hypr/$_f.conf" "$_gen/$_f.conf" || :
+          [ -e "$_gen/$_f.lua" ] || cp "$_tmp/hypr/$_f.lua" "$_gen/$_f.lua" || :
         done
       fi
       rm -rf "$_tmp" || :

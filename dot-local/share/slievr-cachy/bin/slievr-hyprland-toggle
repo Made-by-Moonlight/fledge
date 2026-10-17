@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# slievr:summary=Toggle permanent Hyprland flags by copying them into a directory that's sourced entirely.
+# slievr:summary=Toggle permanent Hyprland flags (Lua files) by copying them into a directory that's loaded entirely.
 # slievr:args=[--enabled-notification <text>] [--disabled-notification <text>] <flag-name>
 
 ENABLED_NOTIFICATION=""
@@ -15,8 +15,8 @@ while [[ $# -gt 1 ]]; do
 done
 
 FLAG_NAME="$1"
-FLAG="$HOME/.local/state/omarchy/toggles/hypr/$FLAG_NAME.conf"
-FLAG_SOURCE="$OMARCHY_PATH/default/hypr/toggles/$FLAG_NAME.conf"
+FLAG="$HOME/.local/state/omarchy/toggles/hypr/$FLAG_NAME.lua"
+FLAG_SOURCE="$OMARCHY_PATH/default/hypr/toggles/$FLAG_NAME.lua"
 
 if [[ -f $FLAG ]]; then
   rm $FLAG
