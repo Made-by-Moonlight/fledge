@@ -3,4 +3,4 @@
 # slievr:summary=Check if a Hyprland toggle is currently disabled (missing).
 # slievr:args=<flag-name>
 
-[[ ! -f "$HOME/.local/state/omarchy/toggles/hypr/$1.lua" ]]
+[[ ! -f "$HOME/.local/state/hypr-toggles/$1.lua" ]]

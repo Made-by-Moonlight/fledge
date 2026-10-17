@@ -4,7 +4,7 @@
 # slievr:args=<on|off|toggle|recover>
 
 TOGGLE="internal-monitor-disable"
-TOGGLE_FLAG="$HOME/.local/state/omarchy/toggles/hypr/$TOGGLE.conf"
+TOGGLE_FLAG="$HOME/.local/state/hypr-toggles/$TOGGLE.lua"
 MIRROR_TOGGLE="internal-monitor-mirror"
 
 # Get internal monitor name dynamically
@@ -22,7 +22,8 @@ disable() {
     exit 1
   fi
   if slievr-hyprland-toggle-disabled "$TOGGLE" && slievr-hyprland-toggle-disabled "$MIRROR_TOGGLE"; then
-    echo "monitor=$INTERNAL,disable" >"$TOGGLE_FLAG"
+    mkdir -p "${TOGGLE_FLAG%/*}"
+    printf 'hl.monitor({ output = %s, disabled = true })\n' "$(fledge hypr quote "$INTERNAL")" >"$TOGGLE_FLAG"
     notify-send -u low "󰍹    Laptop display disabled"
     hyprctl reload
   fi

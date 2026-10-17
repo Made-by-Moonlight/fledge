@@ -15,14 +15,18 @@ while [[ $# -gt 1 ]]; do
 done
 
 FLAG_NAME="$1"
-FLAG="$HOME/.local/state/omarchy/toggles/hypr/$FLAG_NAME.lua"
-FLAG_SOURCE="$OMARCHY_PATH/default/hypr/toggles/$FLAG_NAME.lua"
+# hyprland.lua loads every *.lua in ~/.local/state/hypr-toggles; the shipped
+# toggles are snippets in ~/.config/hypr/fledge/toggles. Some toggles
+# (internal-monitor-*) are written by their own scripts instead of copied.
+FLAG="$HOME/.local/state/hypr-toggles/$FLAG_NAME.lua"
+FLAG_SOURCE="$HOME/.config/hypr/fledge/toggles/$FLAG_NAME.lua"
 
 if [[ -f $FLAG ]]; then
-  rm $FLAG
+  rm "$FLAG"
   [[ -n $DISABLED_NOTIFICATION ]] && notify-send -u low "$DISABLED_NOTIFICATION"
 elif [[ -f $FLAG_SOURCE ]]; then
-  cp $FLAG_SOURCE $FLAG
+  mkdir -p "${FLAG%/*}"
+  cp "$FLAG_SOURCE" "$FLAG"
   [[ -n $ENABLED_NOTIFICATION ]] && notify-send -u low "$ENABLED_NOTIFICATION"
 else
   echo "Flag not found: $FLAG_NAME"

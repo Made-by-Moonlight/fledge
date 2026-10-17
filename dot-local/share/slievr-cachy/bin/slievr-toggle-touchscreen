@@ -3,7 +3,8 @@
 # slievr:summary=Enable, disable, or toggle the touch functionality of the screen
 # slievr:args=[on|off|toggle]
 
-STATE_CONF="$HOME/.local/state/omarchy/toggles/hypr/touchscreen-disabled.conf"
+# A toggle snippet hyprland.lua loads, so the device stays off across reloads and logins.
+STATE_CONF="$HOME/.local/state/hypr-toggles/touchscreen-disabled.lua"
 
 device="$(slievr-hw-touchscreen)"
 
@@ -13,15 +14,15 @@ if [[ -z $device ]]; then
 fi
 
 enable() {
-  hyprctl keyword "device[$device]:enabled" true >/dev/null
+  fledge hypr eval "hl.device({ name = $(fledge hypr quote "$device"), enabled = true })"
   rm -f "$STATE_CONF"
   slievr-swayosd-client --custom-icon device-support-touch-symbolic --custom-message "Touchscreen enabled"
 }
 
 disable() {
-  hyprctl keyword "device[$device]:enabled" false >/dev/null
+  fledge hypr eval "hl.device({ name = $(fledge hypr quote "$device"), enabled = false })"
   mkdir -p "$(dirname "$STATE_CONF")"
-  printf 'device {\n    name = %s\n    enabled = false\n}\n' "$device" > "$STATE_CONF"
+  printf 'hl.device({ name = %s, enabled = false })\n' "$(fledge hypr quote "$device")" >"$STATE_CONF"
   slievr-swayosd-client --custom-icon touch-disabled-symbolic --custom-message "Touchscreen disabled"
 }
 
