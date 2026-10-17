@@ -80,8 +80,11 @@ TestCase {
         let n = 0;
         for (const id of Object.keys(binds)) {
             const a = binds[id].action, s = D.format(a);
-            if (s === "") continue;
+            const acts = Array.isArray(a) ? a : [a];
+            // exec/shell binds (and lists mixing them in) have no short form, by design.
+            if (!acts.every(x => "dsp" in x)) continue;
             n++;
+            verify(s !== "", id + ": a dispatcher action with no short form");
             compare(D.parse(s), a, id + ": " + s);
         }
         verify(n > 50, n + " dispatcher binds");
