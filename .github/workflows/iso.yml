@@ -48,6 +48,12 @@ jobs:
             echo "::endgroup::"
           done
 
+      - name: No legacy Hyprland IPC
+        # Refused by Hyprland's Lua config, mostly with exit 0: nothing else would catch it.
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          bash cachyos/check-legacy-ipc.sh
+
       - name: shellcheck
         run: |
           set -euo pipefail
