@@ -10,6 +10,8 @@ import QtQuick
 //   Hypr.set('input = { kb_layout = "gb" }')   the body of an hl.config({ … }) table
 //   Hypr.evalLua('hl.env("X", "1")')          any Lua, in the config's Lua state (`eval` is
 //                                              not a legal QML method name)
+//   Hypr.lit(v)                                v as a Lua literal, for building the above from
+//                                              values: Hypr.set("input = { kb_layout = " + Hypr.lit(l) + " }")
 // hyprctl, not Hyprland.dispatch: that one reports nothing back to QML (a refused dispatch is only
 // Quickshell's own "Dispatch request … failed" log line). hyprctl exits 0 on many refusals, so its
 // output is checked too. Calls run one at a time, in order (a submap reset can't overtake an enter).
@@ -28,6 +30,28 @@ Singleton {
     function dispatch(expr) { run(["dispatch", expr]); }
     function set(body) { run(["eval", "hl.config({ " + body + " })"]); }
     function evalLua(code) { run(["eval", code]); }
+
+    // A Lua string, number or boolean literal, escaped like mbm's lib/lua.jq (and `fledge hypr
+    // quote`): \ " and newline escaped, other control characters as \ddd (three digits, so a
+    // following digit can't join the escape). Anything else is a caller's bug: thrown.
+    function lit(v) {
+        if (typeof v === "boolean") return v ? "true" : "false";
+        if (typeof v === "number") {
+            if (!isFinite(v)) throw new Error("Hypr.lit: not a finite number: " + v);
+            return String(v);
+        }
+        if (typeof v !== "string") throw new Error("Hypr.lit: needs text, a number or true/false, not " + typeof v);
+        let s = '"';
+        for (const ch of v) {
+            const c = ch.codePointAt(0);
+            if (ch === "\\") s += "\\\\";
+            else if (ch === '"') s += '\\"';
+            else if (c === 10) s += "\\n";
+            else if (c < 32 || c === 127) s += "\\" + String(c).padStart(3, "0");
+            else s += ch;
+        }
+        return s + '"';
+    }
 
     function failed(code, out) { return code !== 0 || refusals.some(r => out.includes(r)); }
     function label() { return current ? current.slice(1).join(" ") : ""; }
