@@ -48,6 +48,14 @@ if [[ -f $MKINITCPIO_CONF ]] && grep -q "^HOOKS+=(resume)$" "$MKINITCPIO_CONF"; 
   exit 0
 fi
 
+# The fledge installer sets hibernation up itself (swapfile, resume hook,
+# resume= in /etc/default/limine); adding this script's on top would put a
+# second resume= on the kernel command line.
+if grep -q '\bresume=' /etc/default/limine 2>/dev/null; then
+  echo "Hibernation is already set up (by the installer)"
+  exit 0
+fi
+
 if ! $FORCE; then
   MEM_TOTAL_HUMAN=$(free --human | awk '/Mem/ {print $2}')
   if ! gum confirm "Use $MEM_TOTAL_HUMAN on boot drive to make hibernation available?"; then
