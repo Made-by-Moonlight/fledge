@@ -1,7 +1,7 @@
 # shellcheck shell=bash
 # made by moonlight brand palette. Hex values for graphics; FLEDGE_VT_PALETTE maps
 # ANSI colour numbers (what gum and \e[3Xm use on the Linux console) to brand
-# colours. The live ISO loads it with mbm_vt_palette.
+# colours. The live ISO loads it with fledge_vt_palette.
 # shellcheck disable=SC2034  # consumed by scripts that source this file
 FLEDGE_BG="#171e28"
 FLEDGE_SURFACE="#212a33"
@@ -31,8 +31,8 @@ FLEDGE_VT_PALETTE=(
   "$FLEDGE_FG"      # 15 the mark
 )
 
-# mbm_vt_palette  ->  escapes that load FLEDGE_VT_PALETTE into the Linux console
-mbm_vt_palette() {
+# fledge_vt_palette  ->  escapes that load FLEDGE_VT_PALETTE into the Linux console
+fledge_vt_palette() {
   local i
   for i in "${!FLEDGE_VT_PALETTE[@]}"; do
     printf '\e]P%X%s' "$i" "${FLEDGE_VT_PALETTE[$i]#\#}"

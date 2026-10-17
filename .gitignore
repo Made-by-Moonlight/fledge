@@ -7,7 +7,7 @@ dot-config/zen/chrome/*
 
 # Python bytecode
 __pycache__/
-# ISO build output (cachyos/iso/bin/slievr-iso-make)
+# ISO build output (cachyos/iso/bin/fledge-iso-make)
 release/
 # superpowers brainstorming scratch
 .superpowers/

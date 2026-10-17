@@ -13,7 +13,7 @@ R=(python3 "$DIR/render-console.py")
 
 # palette
 check "palette has 16 VT slots" "16" "${#FLEDGE_VT_PALETTE[@]}"
-esc="$(mbm_vt_palette)"
+esc="$(fledge_vt_palette)"
 contains "VT slot 0 is the background" $'\e]P0171e28' "$esc"
 contains "VT slot 3 is the accent"     $'\e]P3f4af03' "$esc"
 contains "VT slot 15 is the mark"      $'\e]PFffffff' "$esc"

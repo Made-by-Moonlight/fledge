@@ -37,7 +37,7 @@ jobs:
           for t in cachyos/install/test-detect.sh cachyos/install/test-answers.sh cachyos/install/test-network.sh \
                    cachyos/install/test-progress.sh cachyos/install/test-desktop.sh cachyos/install/test-cachyos-repos.sh \
                    cachyos/iso/test-probe.sh cachyos/iso/test-live-hypr.sh cachyos/test-bootstrap.sh \
-                   cachyos/iso/test-mbm.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
+                   cachyos/iso/test-fledge.sh cachyos/branding/test-branding.sh cachyos/branding/test-theme.sh \
                    dot-local/share/fledge/test/test-settings.sh dot-local/share/fledge/test/test-defaults.sh \
                    dot-local/share/fledge/test/test-dmenu.sh dot-local/share/fledge/test/test-lua-syntax.sh \
                    dot-local/share/fledge/test/test-migrate.sh dot-local/share/fledge/test/test-dispatch.sh \
@@ -60,7 +60,7 @@ jobs:
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           mapfile -t files < <(git ls-files 'cachyos/*.sh' 'cachyos/iso/bin/*' \
             'cachyos/iso/configs/airootfs/usr/local/bin/*' \
-            'cachyos/iso/configs/airootfs/home/moonlight/.bash_profile' \
+            'cachyos/iso/configs/airootfs/home/fledge/.bash_profile' \
             'dot-local/share/fledge/bin/*' 'dot-local/share/fledge/**/*.sh')
           shellcheck -x -S warning "${files[@]}"
 
@@ -80,7 +80,7 @@ jobs:
 
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # slievr-iso-make clones the checkout; give it full history
+          fetch-depth: 0   # fledge-iso-make clones the checkout; give it full history
           persist-credentials: false
 
       - name: Build ISO
@@ -98,11 +98,11 @@ jobs:
             fi
             git switch -C main
           fi
-          # The repo is private: let slievr-iso-make's ls-remote see the branch.
+          # The repo is private: let fledge-iso-make's ls-remote see the branch.
           # Global config on the runner only — the ISO's clone doesn't copy it.
           git config --global http.https://github.com/.extraheader \
             "AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
-          cachyos/iso/bin/slievr-iso-make
+          cachyos/iso/bin/fledge-iso-make
 
       - name: Verify
         id: iso

@@ -31,7 +31,7 @@ the first reboot.
 | `lib/cachyos-repos.sh` | the target's CachyOS repo sections (v3 / v4 / znver4 by CPU), used by chroot-setup |
 | `lib/answers.sh` | parse unattended answers file; user name, host name and data-mount checks |
 | `lib/desktop.sh` | the Desktop stage (bootstrap.sh in the target before reboot) and Finish |
-| `lib/progress.sh` | `@@mbm` progress markers for the graphical installer (`FLEDGE_PROGRESS=1`) |
+| `lib/progress.sh` | `@@fledge` progress markers for the graphical installer (`FLEDGE_PROGRESS=1`) |
 | `lib/network.sh` | carry the live session's NetworkManager profiles into the target |
 | `test-detect.sh` | runs `lib/detect.sh` against fixtures; `bash test-detect.sh` |
 | `test-answers.sh` | runs `lib/answers.sh` against fixtures; `bash test-answers.sh` |
@@ -74,14 +74,14 @@ sudo install-cachyos.sh --desktop-only USER   # needs /mnt still mounted
 
 `--desktop-only USER` runs just the Desktop and Finish stages (exit 0 done,
 3 desktop failed again). The install log is kept in the new system at
-`/var/log/mbm-install.log`.
+`/var/log/fledge-install.log`.
 
 ## Unattended (`--answers`)
 
-The ISO's graphical installer (`mbm-install`, not the configurator) writes
-`/run/mbm-answers.env` (mode 600) and runs
+The ISO's graphical installer (`fledge-install`, not the configurator) writes
+`/run/fledge-answers.env` (mode 600) and runs
 
-    install-cachyos.sh --answers /run/mbm-answers.env
+    install-cachyos.sh --answers /run/fledge-answers.env
 
 Keys: `DISK` (by-id path), `DISK_CONFIRMED=yes`, `HOSTNAME`, `TIMEZONE`,
 `USER_PASSWORD`, `LUKS_PASSPHRASE`, optional `ROOT_PASSWORD` (empty → root

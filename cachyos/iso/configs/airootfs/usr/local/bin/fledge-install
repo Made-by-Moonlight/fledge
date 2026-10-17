@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # Runs the install for the graphical installer and streams its progress.
-#   mbm-install                       answers on stdin: KEY=value lines, then END
-#   mbm-install --desktop-only USER   retry the Desktop stage on the mounted target
-# stdout: the install log plus @@mbm marker lines (cachyos/install/lib/progress.sh),
-# also appended to /var/log/mbm-install.log. Exit code is install-cachyos.sh's:
+#   fledge-install                       answers on stdin: KEY=value lines, then END
+#   fledge-install --desktop-only USER   retry the Desktop stage on the mounted target
+# stdout: the install log plus @@fledge marker lines (cachyos/install/lib/progress.sh),
+# also appended to /var/log/fledge-install.log. Exit code is install-cachyos.sh's:
 # 0 installed, 3 only the Desktop stage failed (target left mounted), else failed.
 set -uo pipefail
 
-FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/slievr-cachy}"
-LOG=/var/log/mbm-install.log
-ANSWERS=/run/mbm-answers.env
+FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/fledge}"
+LOG=/var/log/fledge-install.log
+ANSWERS=/run/fledge-answers.env
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
 source "$FLEDGE_REPO/cachyos/install/lib/detect.sh"
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/progress.sh
 source "$FLEDGE_REPO/cachyos/install/lib/progress.sh"
-# shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
-source "$FLEDGE_REPO/cachyos/iso/lib/mbm.sh"
+# shellcheck source=SCRIPTDIR/../../../../../lib/fledge.sh
+source "$FLEDGE_REPO/cachyos/iso/lib/fledge.sh"
 
 if [[ "${1:-}" == --desktop-only ]]; then
   args=(--desktop-only "${2:?--desktop-only needs a user}")
@@ -29,7 +29,7 @@ else
     lines+=("$line")
   done
   if (( ! got_end )); then
-    echo "mbm-install: stdin closed before END; refusing to install on partial answers" >&2
+    echo "fledge-install: stdin closed before END; refusing to install on partial answers" >&2
     exit 1
   fi
   write_answers "$ANSWERS" "${lines[@]}" || exit 1

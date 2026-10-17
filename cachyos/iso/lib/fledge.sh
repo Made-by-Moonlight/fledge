@@ -1,6 +1,6 @@
 # shellcheck shell=bash
-# Helpers for the live ISO's installer scripts (mbm-probe, mbm-install). Pure where
-# possible so test-mbm.sh can cover them without an ISO. (valid_hostname lives in
+# Helpers for the live ISO's installer scripts (fledge-probe, fledge-install). Pure where
+# possible so test-fledge.sh can cover them without an ISO. (valid_hostname lives in
 # cachyos/install/lib/answers.sh, where install-cachyos.sh checks the answers.)
 
 # write_answers <file> KEY=value...  ->  mode-600 answers file for
@@ -19,7 +19,7 @@ write_answers() {
   done
 }
 
-# mbm_online  ->  0 if the CachyOS mirror answers (pacstrap needs it)
-mbm_online() {
+# fledge_online  ->  0 if the CachyOS mirror answers (pacstrap needs it)
+fledge_online() {
   curl -fsI --max-time 5 https://mirror.cachyos.org >/dev/null 2>&1
 }

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Unit tests for cachyos/iso/lib/mbm.sh. No ISO, no network.
-#   bash cachyos/iso/test-mbm.sh
+# Unit tests for cachyos/iso/lib/fledge.sh. No ISO, no network.
+#   bash cachyos/iso/test-fledge.sh
 set -uo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=SCRIPTDIR/../install/test/lib.sh
 source "$DIR/../install/test/lib.sh"
-# shellcheck source=SCRIPTDIR/lib/mbm.sh
-source "$DIR/lib/mbm.sh"
+# shellcheck source=SCRIPTDIR/lib/fledge.sh
+source "$DIR/lib/fledge.sh"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 
 write_answers "$T/a.env" "DISK=/dev/disk/by-id/nvme-X" "USER_PASSWORD=s3cret pass" "LUKS_PASSPHRASE=luks=pw"

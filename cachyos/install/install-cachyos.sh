@@ -351,7 +351,7 @@ desktop_and_finish
 cat <<EOF
 
 Install complete. On reboot, unlock the disk, then log in.
-If anything in the desktop layer is missing, its log is /var/log/mbm-install.log.
+If anything in the desktop layer is missing, its log is /var/log/fledge-install.log.
 
 EOF
 if [[ -z "$ANSWERS" ]]; then

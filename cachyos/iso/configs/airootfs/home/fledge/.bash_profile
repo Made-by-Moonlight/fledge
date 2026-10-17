@@ -3,12 +3,12 @@
 # exits with an error), say so and leave this shell; Ctrl+Alt+F2 is a root
 # console. Leaving the installer normally also lands here.
 if [[ "$(tty)" == /dev/tty1 && -z "${WAYLAND_DISPLAY:-}" ]]; then
-  export FLEDGE_REPO=/usr/share/slievr-cachy
-  if ! Hyprland --config /etc/mbm-installer/hyprland.lua >/tmp/hyprland-installer.log 2>&1; then
+  export FLEDGE_REPO=/usr/share/fledge
+  if ! Hyprland --config /etc/fledge-installer/hyprland.lua >/tmp/hyprland-installer.log 2>&1; then
     echo
     echo "The graphical installer couldn't start."
     echo "  log: /tmp/hyprland-installer.log"
     echo "  a root console is on Ctrl+Alt+F2 (log in as root, no password)"
-    echo "  to try again: Hyprland --config /etc/mbm-installer/hyprland.lua"
+    echo "  to try again: Hyprland --config /etc/fledge-installer/hyprland.lua"
   fi
 fi

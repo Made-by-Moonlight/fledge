@@ -24,7 +24,7 @@ seed_user_settings() {
 # install-cachyos.sh's EXIT trap too, so a cancelled or killed install never
 # leaves the installed system with NOPASSWD:ALL.
 remove_install_sudoers() {
-  rm -f "$FLEDGE_TARGET/etc/sudoers.d/99-mbm-install"
+  rm -f "$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install"
 }
 
 # run_desktop_stage <user>  ->  0 once bootstrap.sh completed in the target.
@@ -32,7 +32,7 @@ remove_install_sudoers() {
 # runuser -l starts from a clean login environment, so bootstrap sees no
 # Hyprland session and skips its live-session steps (hyprctl, systemctl --user).
 run_desktop_stage() {
-  local user="$1" sudoers="$FLEDGE_TARGET/etc/sudoers.d/99-mbm-install" attempt ok=0
+  local user="$1" sudoers="$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install" attempt ok=0
   printf '%s ALL=(ALL) NOPASSWD:ALL\n' "$user" > "$sudoers"
   chmod 440 "$sudoers"
   for attempt in 1 2 3; do
@@ -59,8 +59,8 @@ run_desktop_stage() {
 # mapping is torn down by the reboot anyway. Failing here would make the
 # graphical installer offer to erase and start over.
 finish_install() {
-  if [[ -f /var/log/mbm-install.log ]]; then
-    install -Dm600 /var/log/mbm-install.log "$FLEDGE_TARGET/var/log/mbm-install.log" \
+  if [[ -f /var/log/fledge-install.log ]]; then
+    install -Dm600 /var/log/fledge-install.log "$FLEDGE_TARGET/var/log/fledge-install.log" \
       || echo "WARN: couldn't copy the install log into the new system" >&2
   fi
   umount -R "$FLEDGE_TARGET" \

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 # Closes a previous install attempt so the installer can start over: a failed
 # install leaves the target mounted at /mnt (for inspection) and LUKS open.
-#   mbm-cleanup     exit 0 when nothing is left open; the error on stderr if not
+#   fledge-cleanup     exit 0 when nothing is left open; the error on stderr if not
 set -euo pipefail
 
-FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/slievr-cachy}"
+FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/fledge}"
 # shellcheck source=SCRIPTDIR/../../../../../../install/profile.sh
 source "$FLEDGE_REPO/cachyos/install/profile.sh"
 

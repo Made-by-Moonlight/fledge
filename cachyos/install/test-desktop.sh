@@ -19,22 +19,22 @@ seed_user_settings ethan gb extd "$(id -u)" "$(id -g)"
 check "layout seeded" '{"input":{"kbLayout":"gb","kbVariant":"extd"}}' "$(tr -d ' \n' < "$FLEDGE_TARGET/home/ethan/.config/fledge/settings.json")"
 
 mkdir -p "$FLEDGE_TARGET/etc/sudoers.d"
-echo x > "$FLEDGE_TARGET/etc/sudoers.d/99-mbm-install"
+echo x > "$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install"
 remove_install_sudoers
-check "sudoers drop-in removed" "no" "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-mbm-install ]] && echo yes || echo no)"
+check "sudoers drop-in removed" "no" "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-fledge-install ]] && echo yes || echo no)"
 remove_install_sudoers
 check "removal is idempotent" 0 "$?"
 
 # The trap must fire on SIGTERM/SIGINT, even while a child is running.
 for sig in TERM INT; do
-  echo x > "$FLEDGE_TARGET/etc/sudoers.d/99-mbm-install"
+  echo x > "$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install"
   bash -c '
     source "$1/lib/desktop.sh"
     trap "remove_install_sudoers" EXIT
     trap "exit 143" TERM; trap "exit 130" INT
     sleep 30 & wait' _ "$DIR" &
   pid=$!; sleep 1; kill -"$sig" "$pid"; wait "$pid" 2>/dev/null
-  check "sudoers drop-in removed on SIG$sig" "no" "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-mbm-install ]] && echo yes || echo no)"
+  check "sudoers drop-in removed on SIG$sig" "no" "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-fledge-install ]] && echo yes || echo no)"
 done
 
 # A failed unmount or LUKS close after a good install must not fail the

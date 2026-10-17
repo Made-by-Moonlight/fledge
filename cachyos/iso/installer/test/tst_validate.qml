@@ -48,11 +48,11 @@ TestCase {
     }
     function test_progress() {
         compare(P.parse("hello"), null);
-        compare(P.parse("@@mbm stage base Base system").id, "base");
-        compare(P.parse("@@mbm count 3 40").n, 3);
-        compare(P.parse("@@mbm count 3 40").m, 40);
-        compare(P.parse("@@mbm fail desktop").kind, "fail");
-        compare(P.parse("@@mbm done").kind, "done");
+        compare(P.parse("@@fledge stage base Base system").id, "base");
+        compare(P.parse("@@fledge count 3 40").n, 3);
+        compare(P.parse("@@fledge count 3 40").m, 40);
+        compare(P.parse("@@fledge fail desktop").kind, "fail");
+        compare(P.parse("@@fledge done").kind, "done");
         const ids = ["prepare", "disk", "base", "config", "boot", "desktop", "finish"];
         compare(P.fraction(ids, {}, "", 0, 0), 0);
         compare(P.fraction(ids, { prepare: true, disk: true, base: true, config: true, boot: true, desktop: true, finish: true }, "", 0, 0), 1);

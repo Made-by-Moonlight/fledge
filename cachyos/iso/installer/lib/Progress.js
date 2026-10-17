@@ -1,7 +1,7 @@
 .pragma library
-// The installer's @@mbm marker lines (cachyos/install/lib/progress.sh).
+// The installer's @@fledge marker lines (cachyos/install/lib/progress.sh).
 function parse(line) {
-    const m = /^@@mbm (stage|count|fail|done)(?: (\S+))?(?: (.*))?$/.exec(line);
+    const m = /^@@fledge (stage|count|fail|done)(?: (\S+))?(?: (.*))?$/.exec(line);
     if (!m) return null;
     if (m[1] === "count") return { kind: "count", n: parseInt(m[2]), m: parseInt(m[3]) };
     return { kind: m[1], id: m[2] ?? "" };

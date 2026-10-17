@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Runs INSIDE the archlinux container started by bin/slievr-iso-make.
+# Runs INSIDE the archlinux container started by bin/fledge-iso-make.
 #   /src      read-only clone of the repo at HEAD (origin = DOTFILES_REPO)
 #   /release  output dir (the host's release/)
 #   HOST_UID / HOST_GID  owner for the outputs
@@ -60,7 +60,7 @@ ln -sf /usr/lib/systemd/system/NetworkManager.service \
 
 # The installer UI, symlinks into dot-config/quickshell/fledge resolved (-L).
 mkdir -p "$PROFILE/airootfs/etc/xdg/quickshell"
-cp -rL "$ISO/installer" "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer"
+cp -rL "$ISO/installer" "$PROFILE/airootfs/etc/xdg/quickshell/fledge-installer"
 
 # packages: releng's + ours, de-duplicated
 grep -v '^#' "$ISO/configs/packages.extra" | sed '/^$/d' >> "$PROFILE/packages.x86_64"
@@ -83,12 +83,12 @@ sed -i \
   "$PROFILE/profiledef.sh"
 cat >> "$PROFILE/profiledef.sh" <<'EOF'
 file_permissions+=(
-  ["/usr/local/bin/mbm-install"]="0:0:755"
-  ["/usr/local/bin/mbm-probe"]="0:0:755"
-  ["/usr/local/bin/mbm-cleanup"]="0:0:755"
-  ["/etc/sudoers.d/mbm-installer"]="0:0:440"
-  ["/home/moonlight"]="1000:1000:750"
-  ["/home/moonlight/.bash_profile"]="1000:1000:644"
+  ["/usr/local/bin/fledge-install"]="0:0:755"
+  ["/usr/local/bin/fledge-probe"]="0:0:755"
+  ["/usr/local/bin/fledge-cleanup"]="0:0:755"
+  ["/etc/sudoers.d/fledge-installer"]="0:0:440"
+  ["/home/fledge"]="1000:1000:750"
+  ["/home/fledge/.bash_profile"]="1000:1000:644"
 )
 EOF
 
@@ -109,36 +109,37 @@ compgen -G "$PROFILE/efiboot/loader/entries/*nomodeset.conf" >/dev/null || die "
 
 step "bake repo + branding"
 mkdir -p "$PROFILE/airootfs/usr/share"
-cp -a /src "$PROFILE/airootfs/usr/share/slievr-cachy"
+cp -a /src "$PROFILE/airootfs/usr/share/fledge"
 # mkarchiso copies airootfs with --no-preserve=mode: only file_permissions keep
 # modes, so list every git-executable file explicitly.
 {
   echo 'file_permissions+=('
   git -C /src ls-files -z -s | while IFS= read -r -d '' rec; do
     [[ "${rec%% *}" == 100755 ]] || continue
-    printf '  [%q]="0:0:755"\n' "/usr/share/slievr-cachy/${rec#*$'\t'}"
+    printf '  [%q]="0:0:755"\n' "/usr/share/fledge/${rec#*$'\t'}"
   done
   echo ')'
 } >> "$PROFILE/profiledef.sh"
 
 step "sanity checks"
-for f in usr/share/slievr-cachy/cachyos/install/install-cachyos.sh usr/share/slievr-cachy/.git/HEAD \
-         usr/share/slievr-cachy/dot-local/share/fledge/assets/owl.png \
-         usr/local/bin/mbm-install usr/local/bin/mbm-probe usr/local/bin/mbm-cleanup \
-         etc/sudoers.d/mbm-installer etc/sysusers.d/mbm-installer.conf etc/mbm-installer/hyprland.lua home/moonlight/.bash_profile \
-         etc/systemd/system/getty@tty1.service.d/autologin.conf etc/polkit-1/rules.d/50-mbm-installer.rules \
-         etc/xdg/quickshell/mbm-installer/shell.qml etc/xdg/quickshell/mbm-installer/theme/Theme.qml \
-         etc/xdg/quickshell/mbm-installer/components/Button.qml etc/xdg/quickshell/mbm-installer/services/Net.qml \
-         etc/xdg/quickshell/mbm-installer/quicksettings/pickers/WifiPicker.qml etc/pacman.conf; do
+for f in usr/share/fledge/cachyos/install/install-cachyos.sh usr/share/fledge/.git/HEAD \
+         usr/share/fledge/dot-local/share/fledge/assets/owl.png \
+         usr/local/bin/fledge-install usr/local/bin/fledge-probe usr/local/bin/fledge-cleanup \
+         etc/sudoers.d/fledge-installer etc/sysusers.d/fledge-installer.conf etc/fledge-installer/hyprland.lua home/fledge/.bash_profile \
+         etc/systemd/system/getty@tty1.service.d/autologin.conf etc/polkit-1/rules.d/50-fledge-installer.rules \
+         etc/xdg/quickshell/fledge-installer/shell.qml etc/xdg/quickshell/fledge-installer/theme/Theme.qml \
+         etc/xdg/quickshell/fledge-installer/components/Button.qml etc/xdg/quickshell/fledge-installer/services/Net.qml \
+         etc/xdg/quickshell/fledge-installer/services/Hypr.qml \
+         etc/xdg/quickshell/fledge-installer/quicksettings/pickers/WifiPicker.qml etc/pacman.conf; do
   [[ -s "$PROFILE/airootfs/$f" ]] || die "missing or empty airootfs/$f"
 done
-if find "$PROFILE/airootfs/etc/xdg/quickshell/mbm-installer" -type l | grep -q .; then
+if find "$PROFILE/airootfs/etc/xdg/quickshell/fledge-installer" -type l | grep -q .; then
   die "installer config still has symlinks (cp -rL should have resolved them)"
 fi
-grep -q '^u moonlight 1000 ' "$PROFILE/airootfs/etc/sysusers.d/mbm-installer.conf" || die "no moonlight user"
+grep -q '^u fledge 1000 ' "$PROFILE/airootfs/etc/sysusers.d/fledge-installer.conf" || die "no fledge user"
 [[ -L "$PROFILE/airootfs/etc/systemd/system/multi-user.target.wants/NetworkManager.service" ]] || die "NetworkManager not enabled"
 grep -q '^\[cachyos\]' "$PROFILE/airootfs/etc/pacman.conf" || die "live pacman.conf lacks [cachyos]"
-[[ "$(git -C "$PROFILE/airootfs/usr/share/slievr-cachy" remote get-url origin)" == https://* ]] \
+[[ "$(git -C "$PROFILE/airootfs/usr/share/fledge" remote get-url origin)" == https://* ]] \
   || die "baked repo's origin is not the GitHub URL"
 
 step "mkarchiso"
@@ -150,7 +151,7 @@ command -v unsquashfs >/dev/null || pacman --noconfirm -S squashfs-tools
 sfs="$(find /tmp/work -name airootfs.sfs | head -n1)"
 [[ -n "$sfs" ]] || die "no airootfs.sfs found in the work dir"
 for f in cachyos/install/install-cachyos.sh cachyos/bootstrap.sh; do
-  line="$(unsquashfs -ll "$sfs" "usr/share/slievr-cachy/$f" | grep "slievr-cachy/$f\$" || true)"
+  line="$(unsquashfs -ll "$sfs" "usr/share/fledge/$f" | grep "fledge/$f\$" || true)"
   [[ "$line" == -rwxr-xr-x* ]] || die "$f is not mode 755 in the image: ${line:-not found}"
 done
 echo "modes ok"

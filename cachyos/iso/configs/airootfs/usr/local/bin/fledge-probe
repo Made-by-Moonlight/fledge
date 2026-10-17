@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 # What the graphical installer needs to know about this machine.
-#   mbm-probe facts    JSON: disks, data filesystems, hardware, defaults
-#   mbm-probe online   exit 0 when the CachyOS mirror answers
+#   fledge-probe facts    JSON: disks, data filesystems, hardware, defaults
+#   fledge-probe online   exit 0 when the CachyOS mirror answers
 # Root (via the live user's sudoers rule): lsblk only reports UUIDs and labels
 # for every device as root, and the /mnt and LUKS mapper checks look at root's view.
 set -euo pipefail
 
-FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/slievr-cachy}"
+FLEDGE_REPO="${FLEDGE_REPO:-/usr/share/fledge}"
 # shellcheck source=SCRIPTDIR/../../../../../../install/profile.sh
 source "$FLEDGE_REPO/cachyos/install/profile.sh"
 # shellcheck source=SCRIPTDIR/../../../../../../install/lib/detect.sh
 source "$FLEDGE_REPO/cachyos/install/lib/detect.sh"
-# shellcheck source=SCRIPTDIR/../../../../../lib/mbm.sh
-source "$FLEDGE_REPO/cachyos/iso/lib/mbm.sh"
+# shellcheck source=SCRIPTDIR/../../../../../lib/fledge.sh
+source "$FLEDGE_REPO/cachyos/iso/lib/fledge.sh"
 
 case "${1:-}" in
-  online) mbm_online ;;
+  online) fledge_online ;;
   facts)
     memkb="$(awk '/^MemTotal:/{print $2}' /proc/meminfo)"
     swap=0
     if [[ "$SWAP" == hibernate ]]; then swap="$(hibernate_swap_size "$memkb")"; fi
-    online=false; if mbm_online; then online=true; fi
+    online=false; if fledge_online; then online=true; fi
     leftover=false
     if mountpoint -q /mnt || [[ -e "/dev/mapper/$LUKS_NAME" ]]; then leftover=true; fi
     defaults="$(for e in "${DATA_DISKS[@]}"; do printf '%s\t%s\n' "${e%%:*}" "${e#*:}"; done \
@@ -33,5 +33,5 @@ case "${1:-}" in
            --arg tz "$TIMEZONE" --argjson online "$online" --argjson leftover "$leftover" \
            '. + {ucode: $ucode, gpu: $gpu, memMiB: $mem, zramMiB: $zram, swapMiB: $swap,
                  timezone: $tz, online: $online, leftover: $leftover}' ;;
-  *) echo "usage: mbm-probe facts|online" >&2; exit 2 ;;
+  *) echo "usage: fledge-probe facts|online" >&2; exit 2 ;;
 esac

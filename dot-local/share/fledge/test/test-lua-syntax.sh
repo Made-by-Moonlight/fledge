@@ -18,12 +18,12 @@ lua_syntax_ok "$T/bad.lua" 2>/dev/null; check "rejects broken Lua" 1 "$?"
 lua_syntax_ok "$T/good.lua" "$T/bad.lua" 2>/dev/null; check "rejects when any file is broken" 1 "$?"
 
 files=()
-for d in "$REPO/dot-config/hypr" "$REPO/cachyos/iso/configs/airootfs/etc/mbm-installer"; do
+for d in "$REPO/dot-config/hypr" "$REPO/cachyos/iso/configs/airootfs/etc/fledge-installer"; do
   while IFS= read -r f; do files+=("$f"); done < <(find "$d" -name '*.lua' | sort)
 done
 # Both sessions are Lua: not finding either config means the search is wrong,
 # not that everything parsed.
-for want in dot-config/hypr/hyprland.lua cachyos/iso/configs/airootfs/etc/mbm-installer/hyprland.lua; do
+for want in dot-config/hypr/hyprland.lua cachyos/iso/configs/airootfs/etc/fledge-installer/hyprland.lua; do
   check "found $want" "yes" \
     "$(printf '%s\n' "${files[@]}" | grep -qx "$REPO/$want" && echo yes || echo no)"
 done

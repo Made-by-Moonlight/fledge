@@ -95,7 +95,7 @@ done
 echo ">>> services" >&2
 systemctl enable NetworkManager sshd
 
-if [[ "${FLEDGE_PROGRESS:-}" == 1 ]]; then echo "@@mbm stage boot Bootloader"; fi
+if [[ "${FLEDGE_PROGRESS:-}" == 1 ]]; then echo "@@fledge stage boot Bootloader"; fi
 echo ">>> bootloader" >&2
 # shellcheck source=bootloader.sh
 source "${HERE}/bootloader.sh"

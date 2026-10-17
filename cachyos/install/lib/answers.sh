@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-# Unattended-install answers. The ISO's mbm-install writes a root-only file
+# Unattended-install answers. The ISO's fledge-install writes a root-only file
 # under /run with one KEY=value per line (value = everything after the first
 # '=', unquoted). It is parsed, never sourced, so a value can never run as code.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Unit tests for lib/probe.jq (mbm-probe's disk logic) against a fixture.
+# Unit tests for lib/probe.jq (fledge-probe's disk logic) against a fixture.
 #   bash cachyos/iso/test-probe.sh
 set -uo pipefail
 

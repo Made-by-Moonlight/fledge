@@ -14,7 +14,7 @@ no()  { printf 'FAIL  %s\n' "$1"; bad=1; }
 is()  { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 
 is "exactly one boot (no hang/retry)"  1      "$(journalctl --list-boots --no-pager | tail -n +2 | grep -c .)"
-is "desktop installed before reboot"   1      "$(sudo grep -c 'Bootstrap complete.' /var/log/mbm-install.log 2>/dev/null)"
+is "desktop installed before reboot"   1      "$(sudo grep -c 'Bootstrap complete.' /var/log/fledge-install.log 2>/dev/null)"
 is "firstboot done-guard present"      yes    "$([[ -e /var/lib/slievr-firstboot-done ]] && echo yes || echo no)"
 is "console layout in vconsole.conf"   yes    "$(grep -q '^XKBLAYOUT=' /etc/vconsole.conf && echo yes || echo no)"
 # systemd 262's TPM measurement units (systemd-pcr*, systemd-tpm2-setup*) fail

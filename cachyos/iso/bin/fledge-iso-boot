@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Boot a made by moonlight ISO in the disposable libvirt test VM.
-#   cachyos/iso/bin/slievr-iso-boot [path/to.iso]   (default: newest release/*.iso)
+#   cachyos/iso/bin/fledge-iso-boot [path/to.iso]   (default: newest release/*.iso)
 # Run cachyos/vm/destroy-vm.sh first if the VM already exists.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 iso="${1:-$(find "$REPO/release" -maxdepth 1 -name '*.iso' -type f -printf '%T@ %p\n' 2>/dev/null | sort -rn | head -n1 | cut -d' ' -f2-)}"
-[[ -f "$iso" ]] || { echo "no ISO; build one with cachyos/iso/bin/slievr-iso-make" >&2; exit 1; }
+[[ -f "$iso" ]] || { echo "no ISO; build one with cachyos/iso/bin/fledge-iso-make" >&2; exit 1; }
 
 # host-deps.sh grants libvirt-qemu traverse rights on this cache dir only.
 cache="${ISO_CACHE_DIR:-$HOME/.cache/cachyos-iso}"

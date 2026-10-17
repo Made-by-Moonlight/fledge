@@ -1,3 +1,0 @@
-# The graphical installer runs as moonlight. These are the only root commands
-# it needs (cachyos/iso/configs/airootfs/usr/local/bin/).
-moonlight ALL=(root) NOPASSWD: /usr/local/bin/mbm-probe, /usr/local/bin/mbm-install, /usr/local/bin/mbm-cleanup, /usr/bin/reboot

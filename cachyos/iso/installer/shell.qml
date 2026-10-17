@@ -10,7 +10,7 @@ import "ui"
 
 // The fledge installer (made by moonlight): one full-screen layer per monitor; the
 // monitor Hyprland has focused at startup gets the installer, the others the
-// owl. Run by the live ISO's Hyprland (/etc/mbm-installer/hyprland.lua); dev:
+// owl. Run by the live ISO's Hyprland (/etc/fledge-installer/hyprland.lua); dev:
 // dev/run.sh.
 ShellRoot {
     id: shell
@@ -39,7 +39,7 @@ ShellRoot {
             // Below windows while the terminal is open, so it shows and takes the keyboard.
             WlrLayershell.layer: Installer.terminal ? WlrLayer.Bottom : WlrLayer.Overlay
             WlrLayershell.keyboardFocus: main && !Installer.terminal && !refocus.running ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-            WlrLayershell.namespace: "mbm-installer"
+            WlrLayershell.namespace: "fledge-installer"
             color: Theme.bg
             Loader { id: content; anchors.fill: parent; active: win.main; focus: true; sourceComponent: Component { Frame {} } }
             // The owl's visual centre (between the eyes) is 61.7% across: shift it onto the axis (as the lock does).

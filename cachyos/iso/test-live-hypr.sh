@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The live session's Hyprland config (configs/airootfs/etc/mbm-installer/hyprland.lua),
+# The live session's Hyprland config (configs/airootfs/etc/fledge-installer/hyprland.lua),
 # run with plain `lua` and a stand-in `hl`: whatever its settings do, the hook that
 # starts the installer and ends the session must be registered.
 #   bash cachyos/iso/test-live-hypr.sh
@@ -8,7 +8,7 @@ set -uo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=SCRIPTDIR/../install/test/lib.sh
 source "$DIR/../install/test/lib.sh"
-LIVE="$DIR/configs/airootfs/etc/mbm-installer/hyprland.lua"
+LIVE="$DIR/configs/airootfs/etc/fledge-installer/hyprland.lua"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
 
 # driver <what throws: none|config|monitor|all>: prints what the config did
@@ -33,7 +33,7 @@ print("notes=" .. notes)
 EOL
 run() { out="$(lua "$T/driver.lua" "$LIVE" "$1" 2>"$T/err")"; rc=$?; }
 field() { sed -n "s/^$1=//p" <<<"$out"; }
-want_cmd="qs -c mbm-installer; hyprctl dispatch 'hl.dsp.exit()'"
+want_cmd="qs -c fledge-installer; hyprctl dispatch 'hl.dsp.exit()'"
 
 run none
 check "settings accepted: runs" 0 "$rc"
@@ -46,7 +46,7 @@ for t in config monitor all; do
   check "$t throws: no error escapes" 0 "$rc"
   check "$t throws: start hook still registered" "true" "$(field hook)"
   check "$t throws: the installer still starts" "$want_cmd" "$(field cmd)"
-  contains "$t throws: said on stderr (the log)" "mbm-installer: " "$(cat "$T/err")"
+  contains "$t throws: said on stderr (the log)" "fledge-installer: " "$(cat "$T/err")"
 done
 check "both throw: one notification each" 2 "$(run all; field notes)"
 

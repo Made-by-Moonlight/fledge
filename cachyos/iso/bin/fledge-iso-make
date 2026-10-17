@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 # Build the made by moonlight installer ISO from this repo's committed HEAD.
-#   cachyos/iso/bin/slievr-iso-make   ->  release/fledge-*.iso (+ .sha256)
+#   cachyos/iso/bin/fledge-iso-make   ->  release/fledge-*.iso (+ .sha256)
 # Needs docker (running; sudo is used if you're not in the docker group).
 set -euo pipefail
 
 HERE="$(cd "$(dirname "$(realpath "${BASH_SOURCE[0]}")")" && pwd)"
 REPO="$(git -C "$HERE" rev-parse --show-toplevel)"
 RELEASE="$REPO/release"
-die() { echo "slievr-iso-make: $*" >&2; exit 1; }
+die() { echo "fledge-iso-make: $*" >&2; exit 1; }
 
 # One source of truth for the GitHub URL (also used by bootstrap.sh).
 DOTFILES_REPO="$(sed -n 's/^DOTFILES_REPO="\(.*\)"$/\1/p' "$REPO/cachyos/bootstrap.sh")"

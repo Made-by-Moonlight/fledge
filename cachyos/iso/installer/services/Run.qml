@@ -4,7 +4,7 @@ import Quickshell.Io
 import QtQuick
 import "../lib/Progress.js" as P
 
-// Runs mbm-install (or dev/replay.sh), reads its @@mbm markers into stage
+// Runs fledge-install (or dev/replay.sh), reads its @@fledge markers into stage
 // state, keeps the log. Exit 3 = only the Desktop stage failed.
 // state: idle, running, done, desktopFailed, failed, rebooting.
 Singleton {
@@ -44,7 +44,7 @@ Singleton {
         state = "running"; current = ""; doneStages = ({}); failedStage = ""; n = 0; m = 0; log = [];
         pending = text;
         proc.command = Installer.dev ? ["bash", Installer.repo + "/cachyos/iso/installer/dev/replay.sh"]
-                                     : ["sudo", "-n", "/usr/local/bin/mbm-install"];
+                                     : ["sudo", "-n", "/usr/local/bin/fledge-install"];
         proc.running = true;
     }
     function retryDesktop() {
@@ -52,11 +52,11 @@ Singleton {
         // stage marker doesn't mark it done before it has run.
         state = "running"; failedStage = ""; current = ""; n = 0; m = 0; pending = "";
         proc.command = Installer.dev ? ["bash", Installer.repo + "/cachyos/iso/installer/dev/replay.sh", "--desktop-only"]
-                                     : ["sudo", "-n", "/usr/local/bin/mbm-install", "--desktop-only", Installer.username];
+                                     : ["sudo", "-n", "/usr/local/bin/fledge-install", "--desktop-only", Installer.username];
         proc.running = true;
     }
     property var afterCleanup: null
-    property bool cleanupForce: false   // run afterCleanup even if mbm-cleanup fails
+    property bool cleanupForce: false   // run afterCleanup even if fledge-cleanup fails
     property string cleanupError: ""    // shown by Welcome and Installing
     function cleanup(after, force) {
         afterCleanup = after ?? null;
@@ -96,14 +96,14 @@ Singleton {
     }
     Process {
         id: cleanProc
-        command: Installer.dev ? ["true"] : ["sudo", "-n", "/usr/local/bin/mbm-cleanup"]
+        command: Installer.dev ? ["true"] : ["sudo", "-n", "/usr/local/bin/fledge-cleanup"]
         stderr: SplitParser { onRead: line => r.push(line) }
         onExited: code => {
             const f = r.afterCleanup, force = r.cleanupForce;
             r.afterCleanup = null; r.cleanupForce = false;
             if (code !== 0) {
-                r.cleanupError = "Cleaning up failed (mbm-cleanup exit " + code + "). Open a terminal to see what is still mounted or unlocked.";
-                r.push("mbm-cleanup failed (exit " + code + ")");
+                r.cleanupError = "Cleaning up failed (fledge-cleanup exit " + code + "). Open a terminal to see what is still mounted or unlocked.";
+                r.push("fledge-cleanup failed (exit " + code + ")");
                 if (force && f) f();
                 return;
             }

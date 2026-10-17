@@ -14,7 +14,7 @@ mk() { # <name> <mode> <content>
   printf '%s' "$3" > "$T/$1"; chmod "$2" "$T/$1"; echo "$T/$1"
 }
 
-f="$(mk ok 600 $'# written by mbm-configurator\nDISK=/dev/disk/by-id/nvme-X\nDISK_CONFIRMED=yes\n\nHOSTNAME=glaux\nUSER_PASSWORD=pa=ss word\nLUKS_PASSPHRASE=luks\n')"
+f="$(mk ok 600 $'# written by fledge-install\nDISK=/dev/disk/by-id/nvme-X\nDISK_CONFIRMED=yes\n\nHOSTNAME=glaux\nUSER_PASSWORD=pa=ss word\nLUKS_PASSPHRASE=luks\n')"
 out="$( load_answers "$f" && printf '%s|%s|%s|%s|%s' "$DISK" "$DISK_CONFIRMED" "$HOSTNAME" "$USER_PASSWORD" "$LUKS_PASSPHRASE" )"
 check "answers: loads keys, keeps '=' and spaces in values" \
   "/dev/disk/by-id/nvme-X|yes|glaux|pa=ss word|luks" "$out"

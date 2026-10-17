@@ -6,11 +6,11 @@ import "../lib/Validate.js" as V
 import "../lib/Answers.js" as A
 
 // Every answer and the step machine. Steps only read and set these; nothing
-// leaves the UI until Review's "Erase and install" hands answers() to mbm-install.
+// leaves the UI until Review's "Erase and install" hands answers() to fledge-install.
 Singleton {
     id: root
     readonly property bool dev: Quickshell.env("FLEDGE_INSTALLER_DEV") === "1"
-    readonly property string repo: Quickshell.env("FLEDGE_REPO") || "/usr/share/slievr-cachy"
+    readonly property string repo: Quickshell.env("FLEDGE_REPO") || "/usr/share/fledge"
     // The white render (build-assets.sh): owl.svg is fill="currentColor", which Qt draws black.
     readonly property string owl: "file://" + repo + "/dot-local/share/fledge/assets/owl.png"
 
@@ -166,7 +166,7 @@ Singleton {
         else if (Run.state === "failed") Run.cleanup(() => { Probe.refresh(); step = indexOf("review"); });
     }
 
-    // The answers file mbm-install reads (lib/Answers.js).
+    // The answers file fledge-install reads (lib/Answers.js).
     function answers() {
         return A.text({ disk: disk, hostname: hostname, timezone: timezone, username: username,
                         password: password, sameLuks: sameLuks, luks: luks, layout: layout, variant: variant,

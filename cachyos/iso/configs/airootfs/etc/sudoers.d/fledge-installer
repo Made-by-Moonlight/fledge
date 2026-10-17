@@ -1,0 +1,3 @@
+# The graphical installer runs as fledge. These are the only root commands
+# it needs (cachyos/iso/configs/airootfs/usr/local/bin/).
+fledge ALL=(root) NOPASSWD: /usr/local/bin/fledge-probe, /usr/local/bin/fledge-install, /usr/local/bin/fledge-cleanup, /usr/bin/reboot

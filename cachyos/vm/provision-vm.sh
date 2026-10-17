@@ -23,7 +23,7 @@ if $VIRSH dominfo "$VM_NAME" &>/dev/null; then
   exit 1
 fi
 
-# ISO_PATH: boot a specific ISO (e.g. our own, via cachyos/iso/bin/slievr-iso-boot);
+# ISO_PATH: boot a specific ISO (e.g. our own, via cachyos/iso/bin/fledge-iso-boot);
 # default is the latest stock CachyOS ISO.
 iso_path="${ISO_PATH:-$("$SCRIPT_DIR/download-iso.sh")}"
 

@@ -1,5 +1,5 @@
 -- fledge live installer session. Hand-written on purpose: one client, no
--- binds, nothing a user configures. Started by ~moonlight/.bash_profile with
+-- binds, nothing a user configures. Started by ~fledge/.bash_profile with
 -- --config; keep it free of errors (an error here is Hyprland's emergency mode).
 
 -- The session ends when the installer does. Registered first, so a setting
@@ -7,7 +7,7 @@
 -- rebuild pulled in) can't stop the installer starting, or the session ending
 -- (back to .bash_profile's message on tty1).
 hl.on("hyprland.start", function()
-  hl.exec_cmd("qs -c mbm-installer; hyprctl dispatch 'hl.dsp.exit()'")
+  hl.exec_cmd("qs -c fledge-installer; hyprctl dispatch 'hl.dsp.exit()'")
 end)
 
 -- Hyprland reports most refused settings itself (the error bar) and keeps the
@@ -16,7 +16,7 @@ end)
 local function try(what, fn, arg)
   local ok, err = pcall(fn, arg)
   if ok then return end
-  local text = "mbm-installer: " .. what .. ": " .. tostring(err)
+  local text = "fledge-installer: " .. what .. ": " .. tostring(err)
   io.stderr:write(text, "\n")
   pcall(function() hl.notification.create({ text = text, timeout = 15000, icon = "error" }) end)
 end
