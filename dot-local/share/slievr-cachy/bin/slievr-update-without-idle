@@ -1,4 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=No-op now that slievr-update-perform is responsible for idle management.
-# slievr:hidden=true

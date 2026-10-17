@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Overwrite the user tmux config with the Omarchy default and reload tmux.
-
-slievr-refresh-config tmux/tmux.conf
-slievr-restart-tmux

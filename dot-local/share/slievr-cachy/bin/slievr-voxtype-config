@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Open the Voxtype configuration file
-
-set -e
-
-# Used by Voxtype waybar module to open config on right click
-
-exec slievr-launch-editor ~/.config/voxtype/config.toml

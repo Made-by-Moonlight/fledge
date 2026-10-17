@@ -91,9 +91,8 @@ PACMAN_PACKAGES=(
   proton-vpn-gtk-app
   # Login manager. uwsm ships hyprland-uwsm.desktop specifically for this
   # (see /usr/share/wayland-sessions/hyprland-uwsm.desktop) — sddm is
-  # what Omarchy itself defaults to (dot-local/share/slievr-cachy/bin/
-  # slievr-refresh-sddm and the vendored system app rules both reference
-  # it), so matching that rather than picking a different DM.
+  # what Omarchy itself defaults to (the vendored system app rules
+  # reference it), so matching that rather than picking a different DM.
   # sddm lists this as merely "optional" (for using Qt5 themes), but it's
   # actually required for the vendored QML theme below — without it
   # sddm-greeter fails at the dynamic-link stage ("error while loading
@@ -244,7 +243,7 @@ if [ ! -f "$HOME/.config/xdg-terminals.list" ]; then
 fi
 
 # GTK apps (Thunar...) follow the dark desktop. Nothing else sets this: the
-# theme switcher that did (slievr-theme-set-gnome) is unused. GTK4/libadwaita
+# Omarchy theme switcher that did is gone. GTK4/libadwaita
 # follow color-scheme. GTK3 ignores it and wants gtk-application-prefer-dark-theme
 # in gtk-3.0/settings.ini (below) on the built-in Adwaita theme. Don't set
 # gtk-theme to Adwaita-dark: gtk3 no longer ships that theme (gnome-themes-extra

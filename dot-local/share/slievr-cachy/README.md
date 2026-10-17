@@ -20,13 +20,9 @@ bash scripts are vendored here, giving the keybindings their expected
 commands without installing Omarchy itself or touching CachyOS's repo
 config.
 
-Most scripts work standalone. A subset of Omarchy's own self-management
-commands (`slievr-update*`, `slievr-reinstall*`, `slievr-migrate`,
-`slievr-refresh-pacman/sddm/plymouth`, `slievr-theme-set` and other
-theme-catalog browsing, `slievr-install-*`) still reference
-`$OMARCHY_PATH`, which assumed a live git checkout of the upstream
-Omarchy repo (`install/`, `config/`, `migrations/`, `themes/` trees) that
-isn't vendored here. Nothing in the active desktop config calls these —
-they're inert unless manually invoked, in which case they'll error. Not
-worth reimplementing since there's no upstream to sync from or reinstall
-against anymore.
+Only the scripts something in the desktop reaches are kept (a bind, the
+shell, Hyprland autostart, the menu's reachable submenus, or another kept
+script). Omarchy's self-management commands (update, reinstall, migrate,
+refresh, channels), its install/remove menus, theme switching and all web
+app scripts were pruned: the inventory is in
+`docs/superpowers/notes/2026-10-18-script-inventory.md`.

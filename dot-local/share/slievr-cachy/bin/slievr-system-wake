@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Wake displays and restore brightness after idle
-# slievr:group=system
-# slievr:name=wake
-# slievr:examples=omarchy system wake
-
-slievr-brightness-display on
-slievr-brightness-keyboard restore

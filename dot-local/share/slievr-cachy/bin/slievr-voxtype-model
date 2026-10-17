@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Open Voxtype AI model setup
-
-set -e
-
-slievr-launch-floating-terminal-with-presentation "voxtype setup model"

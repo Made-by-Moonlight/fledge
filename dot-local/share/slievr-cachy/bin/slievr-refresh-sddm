@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Refresh the SDDM theme from default
-# slievr:requires-sudo=true
-
-sudo rm -rf /usr/share/sddm/themes/omarchy
-sudo cp -r $OMARCHY_PATH/default/sddm/omarchy /usr/share/sddm/themes/omarchy

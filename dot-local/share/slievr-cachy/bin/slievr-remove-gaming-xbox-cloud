@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Remove the Xbox Cloud Gaming web app.
-
-set -e
-
-slievr-webapp-remove "Xbox Cloud Gaming"

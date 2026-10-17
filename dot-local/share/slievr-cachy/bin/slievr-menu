@@ -79,42 +79,6 @@ reload_hyprland() {
   fi
 }
 
-install() {
-  present_terminal "echo 'Installing $1...'; slievr-pkg-add $2"
-}
-
-install_and_launch() {
-  present_terminal "echo 'Installing $1...'; slievr-pkg-add $2 && setsid gtk-launch $3"
-}
-
-install_font() {
-  present_terminal "echo 'Installing $1...'; slievr-pkg-add $2 && sleep 2 && slievr-font-set '$3'"
-}
-
-install_terminal() {
-  present_terminal "slievr-install-terminal $1"
-}
-
-aur_install() {
-  present_terminal "echo 'Installing $1 from AUR...'; slievr-pkg-aur-add $2"
-}
-
-aur_install_and_launch() {
-  present_terminal "echo 'Installing $1 from AUR...'; slievr-pkg-aur-add $2 && setsid gtk-launch $3"
-}
-
-show_learn_menu() {
-  case $(menu "Learn" "  Keybindings\n  Omarchy\n  Hyprland\n󰣇  Arch\n  Neovim\n󱆃  Bash") in
-  *Keybindings*) qs -c mbm ipc call settings open keybinds ;;
-  *Omarchy*) slievr-launch-webapp "https://learn.omacom.io/2/the-omarchy-manual" ;;
-  *Hyprland*) slievr-launch-webapp "https://wiki.hypr.land/" ;;
-  *Arch*) slievr-launch-webapp "https://wiki.archlinux.org/title/Main_page" ;;
-  *Bash*) slievr-launch-webapp "https://devhints.io/bash" ;;
-  *Neovim*) slievr-launch-webapp "https://www.lazyvim.org/keymaps" ;;
-  *) show_main_menu ;;
-  esac
-}
-
 show_trigger_menu() {
   case $(menu "Trigger" "󰔛  Reminder\n  Capture\n󰧸  Transcode\n  Share\n󰔎  Toggle\n  Hardware") in
   *Reminder*) show_reminder_menu ;;
@@ -336,7 +300,7 @@ show_font_menu() {
 
 show_setup_menu() {
   local options="  Audio\n  Wifi\n󰂯  Bluetooth\n󱐋  Power Profile\n  System Sleep\n󰍹  Monitors\n  Keybindings\n  Input"
-  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Config"
+  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Time\n  Firmware\n  Restart\n  Config"
 
   # Audio, Wi-Fi, Bluetooth, monitors, binds and input belong to the mbm shell since the
   # cutover (wiremix and bluetui are gone; the hypr .conf files are generated).
@@ -352,6 +316,9 @@ show_setup_menu() {
   *Defaults*) show_setup_default_menu ;;
   *DNS*) present_terminal slievr-setup-dns ;;
   *Security*) show_setup_security_menu ;;
+  *Time*) show_setup_time_menu ;;
+  *Firmware*) present_terminal slievr-update-firmware ;;
+  *Restart*) show_setup_restart_menu ;;
   *Config*) show_setup_config_menu ;;
   *) show_main_menu ;;
   esac
@@ -368,9 +335,30 @@ show_setup_power_menu() {
 }
 
 show_setup_security_menu() {
-  case $(menu "Setup" "󰈷  Fingerprint\n  Fido2") in
+  case $(menu "Security" "󰈷  Fingerprint\n  Fido2\n  Drive Encryption Password\n  User Password") in
   *Fingerprint*) present_terminal slievr-setup-security-fingerprint ;;
   *Fido2*) present_terminal slievr-setup-security-fido2 ;;
+  *Drive*) present_terminal slievr-drive-password ;;
+  *User*) present_terminal passwd ;;
+  *) show_setup_menu ;;
+  esac
+}
+
+show_setup_time_menu() {
+  case $(menu "Time" "  Timezone\n  Sync Clock") in
+  *Timezone*) present_terminal slievr-tz-select ;;
+  *Sync*) present_terminal slievr-update-time ;;
+  *) show_setup_menu ;;
+  esac
+}
+
+# For a device that stopped responding.
+show_setup_restart_menu() {
+  case $(menu "Restart" "  Audio\n󱚾  Wi-Fi\n󰂯  Bluetooth\n󰟸  Trackpad") in
+  *Audio*) present_terminal slievr-restart-pipewire ;;
+  *Wi-Fi*) present_terminal slievr-restart-wifi ;;
+  *Bluetooth*) present_terminal slievr-restart-bluetooth ;;
+  *Trackpad*) present_terminal slievr-restart-trackpad ;;
   *) show_setup_menu ;;
   esac
 }
@@ -515,328 +503,6 @@ show_setup_system_menu() {
   esac
 }
 
-show_install_menu() {
-  case $(menu "Install" "󰣇  Package\n󰣇  AUR\n  Web App\n  TUI\n  Service\n  Style\n󰵮  Development\n  Editor\n  Terminal\n  Browser\n󱚤  AI\n  Gaming\n󰍲  Windows") in
-  *Package*) terminal slievr-pkg-install ;;
-  *AUR*) terminal slievr-pkg-aur-install ;;
-  *Web*) present_terminal slievr-webapp-install ;;
-  *TUI*) present_terminal slievr-tui-install ;;
-  *Service*) show_install_service_menu ;;
-  *Style*) show_install_style_menu ;;
-  *Development*) show_install_development_menu ;;
-  *Editor*) show_install_editor_menu ;;
-  *Terminal*) show_install_terminal_menu ;;
-  *Browser*) show_install_browser_menu ;;
-  *Gaming*) show_install_gaming_menu ;;
-  *AI*) show_install_ai_menu ;;
-  *Windows*) present_terminal "slievr-windows-vm install" ;;
-  *) show_main_menu ;;
-  esac
-}
-
-show_install_browser_menu() {
-  case $(menu "Install" "  Chrome\n  Edge\n  Brave\n  Brave Origin\n  Firefox\n󰖟  Zen") in
-  *Chrome*) present_terminal "slievr-install-browser chrome" ;;
-  *Edge*) present_terminal "slievr-install-browser edge" ;;
-  *"Brave Origin"*) present_terminal "slievr-install-browser brave-origin" ;;
-  *Brave*) present_terminal "slievr-install-browser brave" ;;
-  *Firefox*) present_terminal "slievr-install-browser firefox" ;;
-  *Zen*) present_terminal "slievr-install-browser zen" ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_service_menu() {
-  case $(menu "Install" "  Dropbox\n  Tailscale\n󱇱  NordVPN [AUR]\n󰏖  ONCE\n󰟵  Bitwarden\n  Chromium Account") in
-  *Dropbox*) present_terminal slievr-install-dropbox ;;
-  *Tailscale*) present_terminal slievr-install-tailscale ;;
-  *NordVPN*) present_terminal slievr-install-nordvpn ;;
-  *ONCE*) present_terminal slievr-install-once ;;
-  *Bitwarden*) install_and_launch "Bitwarden" "bitwarden bitwarden-cli" "bitwarden" ;;
-  *Chromium*) present_terminal slievr-install-chromium-google-account ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_editor_menu() {
-  case $(menu "Install" "  VSCode\n  Cursor\n  Zed\n  Sublime Text\n  Helix\n  Vim\n  Emacs") in
-  *VSCode*) present_terminal slievr-install-vscode ;;
-  *Cursor*) install_and_launch "Cursor" "cursor-bin" "cursor" ;;
-  *Zed*) present_terminal slievr-install-zed ;;
-  *Sublime*) install_and_launch "Sublime Text" "sublime-text-4" "sublime_text" ;;
-  *Helix*) present_terminal slievr-install-helix ;;
-  *Vim*) install "Vim" "vim" ;;
-  *Emacs*) install "Emacs" "emacs-wayland" && systemctl --user enable --now emacs.service ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_terminal_menu() {
-  case $(menu "Install" "  Alacritty\n  Foot\n  Ghostty\n  Kitty") in
-  *Alacritty*) install_terminal "alacritty" ;;
-  *Foot*) install_terminal "foot" ;;
-  *Ghostty*) install_terminal "ghostty" ;;
-  *Kitty*) install_terminal "kitty" ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_ai_menu() {
-  ollama_pkg=$(
-    (slievr-cmd-present nvidia-smi && echo ollama-cuda) ||
-      (slievr-cmd-present rocminfo && echo ollama-rocm) ||
-      echo ollama
-  )
-
-  case $(menu "Install" "  Dictation\n󱚤  LM Studio\n󱚤  Ollama\n󱚤  Crush") in
-  *Dictation*) present_terminal slievr-voxtype-install ;;
-  *Studio*) install "LM Studio" "lmstudio-bin" ;;
-  *Ollama*) install "Ollama" $ollama_pkg ;;
-  *Crush*) install "Crush" "crush-bin" ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_gaming_menu() {
-  case $(menu "Install" "  Steam\n  RetroArch\n󰍳  Minecraft\n󰢹  NVIDIA GeForce NOW\n  Xbox Cloud Gaming\n󰂯  Xbox Controller\n󰍹  Moonlight (GameStream)\n  Lutris (Battle.net)\n󱓟  Heroic (Epic Games)") in
-  *Steam*) present_terminal slievr-install-gaming-steam ;;
-  *RetroArch*) present_terminal slievr-install-gaming-retroarch ;;
-  *Minecraft*) install_and_launch "Minecraft" "minecraft-launcher" "minecraft-launcher" ;;
-  *GeForce*) present_terminal slievr-install-gaming-geforce-now ;;
-  *"Xbox Cloud"*) present_terminal slievr-install-gaming-xbox-cloud ;;
-  *Xbox*) present_terminal slievr-install-gaming-xbox-controllers ;;
-  *Lutris*) present_terminal slievr-install-gaming-lutris ;;
-  *Heroic*) present_terminal slievr-install-gaming-heroic ;;
-  *Moonlight*) present_terminal slievr-install-gaming-moonlight ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_style_menu() {
-  case $(menu "Install" "󰸌  Theme\n  Background\n  Font") in
-  *Theme*) present_terminal slievr-theme-install ;;
-  *Background*) slievr-theme-bg-install ;;
-  *Font*) show_install_font_menu ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_font_menu() {
-  case $(menu "Install" "  Cascadia Mono\n  Meslo LG Mono\n  Fira Code\n  Victor Code\n  Bitstream Vera Mono\n  Iosevka" "--width 350") in
-  *Cascadia*) install_font "Cascadia Mono" "ttf-cascadia-mono-nerd" "CaskaydiaMono Nerd Font" ;;
-  *Meslo*) install_font "Meslo LG Mono" "ttf-meslo-nerd" "MesloLGL Nerd Font" ;;
-  *Fira*) install_font "Fira Code" "ttf-firacode-nerd" "FiraCode Nerd Font" ;;
-  *Victor*) install_font "Victor Code" "ttf-victor-mono-nerd" "VictorMono Nerd Font" ;;
-  *Bitstream*) install_font "Bitstream Vera Code" "ttf-bitstream-vera-mono-nerd" "BitstromWera Nerd Font" ;;
-  *Iosevka*) install_font "Iosevka" "ttf-iosevka-nerd" "Iosevka Nerd Font Mono" ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_development_menu() {
-  case $(menu "Install" "󰫏  Ruby on Rails\n  Docker DB\n  JavaScript\n  Go\n  PHP\n  Python\n  Elixir\n  Zig\n  Rust\n  Java\n  .NET\n  OCaml\n  Clojure\n  Scala") in
-  *Rails*) present_terminal "slievr-install-dev-env ruby" ;;
-  *Docker*) present_terminal slievr-install-docker-dbs ;;
-  *JavaScript*) show_install_javascript_menu ;;
-  *Go*) present_terminal "slievr-install-dev-env go" ;;
-  *PHP*) show_install_php_menu ;;
-  *Python*) present_terminal "slievr-install-dev-env python" ;;
-  *Elixir*) show_install_elixir_menu ;;
-  *Zig*) present_terminal "slievr-install-dev-env zig" ;;
-  *Rust*) present_terminal "slievr-install-dev-env rust" ;;
-  *Java*) present_terminal "slievr-install-dev-env java" ;;
-  *NET*) present_terminal "slievr-install-dev-env dotnet" ;;
-  *OCaml*) present_terminal "slievr-install-dev-env ocaml" ;;
-  *Clojure*) present_terminal "slievr-install-dev-env clojure" ;;
-  *Scala*) present_terminal "slievr-install-dev-env scala" ;;
-  *) show_install_menu ;;
-  esac
-}
-
-show_install_javascript_menu() {
-  case $(menu "Install" "  Node.js\n  Bun\n  Deno") in
-  *Node*) present_terminal "slievr-install-dev-env node" ;;
-  *Bun*) present_terminal "slievr-install-dev-env bun" ;;
-  *Deno*) present_terminal "slievr-install-dev-env deno" ;;
-  *) show_install_development_menu ;;
-  esac
-}
-
-show_install_php_menu() {
-  case $(menu "Install" "  PHP\n  Laravel\n  Symfony") in
-  *PHP*) present_terminal "slievr-install-dev-env php" ;;
-  *Laravel*) present_terminal "slievr-install-dev-env laravel" ;;
-  *Symfony*) present_terminal "slievr-install-dev-env symfony" ;;
-  *) show_install_development_menu ;;
-  esac
-}
-
-show_install_elixir_menu() {
-  case $(menu "Install" "  Elixir\n  Phoenix") in
-  *Elixir*) present_terminal "slievr-install-dev-env elixir" ;;
-  *Phoenix*) present_terminal "slievr-install-dev-env phoenix" ;;
-  *) show_install_development_menu ;;
-  esac
-}
-
-show_remove_menu() {
-  case $(menu "Remove" "󰣇  Package\n  Web App\n  TUI\n󰵮  Development\n󰸌  Theme\n  Browser\n  Dictation\n  Gaming\n󰍲  Windows\n󰏓  Preinstalls\n  Security") in
-  *Package*) terminal slievr-pkg-remove ;;
-  *Web*) present_terminal slievr-webapp-remove ;;
-  *TUI*) present_terminal slievr-tui-remove ;;
-  *Development*) show_remove_development_menu ;;
-  *Theme*) present_terminal slievr-theme-remove ;;
-  *Browser*) show_remove_browser_menu ;;
-  *Dictation*) present_terminal slievr-voxtype-remove ;;
-  *Gaming*) show_remove_gaming_menu ;;
-  *Windows*) present_terminal "slievr-windows-vm remove" ;;
-  *Preinstalls*) present_terminal slievr-remove-preinstalls ;;
-  *Security*) show_remove_security_menu ;;
-  *) show_main_menu ;;
-  esac
-}
-
-show_remove_security_menu() {
-  case $(menu "Remove" "󰈷  Fingerprint\n  Fido2") in
-  *Fingerprint*) present_terminal slievr-remove-security-fingerprint ;;
-  *Fido2*) present_terminal slievr-remove-security-fido2 ;;
-  *) show_remove_menu ;;
-  esac
-}
-
-show_remove_browser_menu() {
-  case $(menu "Remove" "  Chrome\n  Edge\n  Brave\n  Brave Origin\n  Firefox\n  Zen") in
-  *Chrome*) present_terminal "slievr-remove-browser chrome" ;;
-  *Edge*) present_terminal "slievr-remove-browser edge" ;;
-  *"Brave Origin"*) present_terminal "slievr-remove-browser brave-origin" ;;
-  *Brave*) present_terminal "slievr-remove-browser brave" ;;
-  *Firefox*) present_terminal "slievr-remove-browser firefox" ;;
-  *Zen*) present_terminal "slievr-remove-browser zen" ;;
-  *) show_remove_menu ;;
-  esac
-}
-
-show_remove_gaming_menu() {
-  case $(menu "Remove" "  Steam\n  RetroArch\n󰍳  Minecraft\n󰢹  NVIDIA GeForce NOW\n  Xbox Cloud Gaming\n󰖺  Xbox Controller (󰂯)\n󰍹  Moonlight (GameStream)\n  Lutris (Battle.net)\n󱓟  Heroic (Epic Games)") in
-  *Steam*) present_terminal slievr-remove-gaming-steam ;;
-  *RetroArch*) present_terminal slievr-remove-gaming-retroarch ;;
-  *Minecraft*) present_terminal slievr-remove-gaming-minecraft ;;
-  *GeForce*) present_terminal slievr-remove-gaming-geforce-now ;;
-  *"Xbox Cloud"*) present_terminal slievr-remove-gaming-xbox-cloud ;;
-  *Xbox*) present_terminal slievr-remove-gaming-xbox-controllers ;;
-  *Moonlight*) present_terminal slievr-remove-gaming-moonlight ;;
-  *Lutris*) present_terminal slievr-remove-gaming-lutris ;;
-  *Heroic*) present_terminal slievr-remove-gaming-heroic ;;
-  *) show_remove_menu ;;
-  esac
-}
-
-show_remove_development_menu() {
-  case $(menu "Remove" "󰫏  Ruby on Rails\n  JavaScript\n  Go\n  PHP\n  Python\n  Elixir\n  Zig\n  Rust\n  Java\n  .NET\n  OCaml\n  Clojure\n  Scala") in
-  *Rails*) present_terminal "slievr-remove-dev-env ruby" ;;
-  *JavaScript*) show_remove_javascript_menu ;;
-  *Go*) present_terminal "slievr-remove-dev-env go" ;;
-  *PHP*) show_remove_php_menu ;;
-  *Python*) present_terminal "slievr-remove-dev-env python" ;;
-  *Elixir*) show_remove_elixir_menu ;;
-  *Zig*) present_terminal "slievr-remove-dev-env zig" ;;
-  *Rust*) present_terminal "slievr-remove-dev-env rust" ;;
-  *Java*) present_terminal "slievr-remove-dev-env java" ;;
-  *NET*) present_terminal "slievr-remove-dev-env dotnet" ;;
-  *OCaml*) present_terminal "slievr-remove-dev-env ocaml" ;;
-  *Clojure*) present_terminal "slievr-remove-dev-env clojure" ;;
-  *Scala*) present_terminal "slievr-remove-dev-env scala" ;;
-  *) show_remove_menu ;;
-  esac
-}
-
-show_remove_javascript_menu() {
-  case $(menu "Remove" "  Node.js\n  Bun\n  Deno") in
-  *Node*) present_terminal "slievr-remove-dev-env node" ;;
-  *Bun*) present_terminal "slievr-remove-dev-env bun" ;;
-  *Deno*) present_terminal "slievr-remove-dev-env deno" ;;
-  *) show_remove_development_menu ;;
-  esac
-}
-
-show_remove_php_menu() {
-  case $(menu "Remove" "  PHP\n  Laravel\n  Symfony") in
-  *PHP*) present_terminal "slievr-remove-dev-env php" ;;
-  *Laravel*) present_terminal "slievr-remove-dev-env laravel" ;;
-  *Symfony*) present_terminal "slievr-remove-dev-env symfony" ;;
-  *) show_remove_development_menu ;;
-  esac
-}
-
-show_remove_elixir_menu() {
-  case $(menu "Remove" "  Elixir\n  Phoenix") in
-  *Elixir*) present_terminal "slievr-remove-dev-env elixir" ;;
-  *Phoenix*) present_terminal "slievr-remove-dev-env phoenix" ;;
-  *) show_remove_development_menu ;;
-  esac
-}
-
-show_update_menu() {
-  case $(menu "Update" "  Slievr\n󰔫  Channel\n  Config\n󰸌  Extra Themes\n  Process\n󰇅  Hardware\n  Firmware\n  Password\n  Timezone\n  Time") in
-  *Slievr*) present_terminal slievr-update ;;
-  *Channel*) show_update_channel_menu ;;
-  *Config*) show_update_config_menu ;;
-  *Themes*) present_terminal slievr-theme-update ;;
-  *Process*) show_update_process_menu ;;
-  *Hardware*) show_update_hardware_menu ;;
-  *Firmware*) present_terminal slievr-update-firmware ;;
-  *Timezone*) present_terminal slievr-tz-select ;;
-  *Time*) present_terminal slievr-update-time ;;
-  *Password*) show_update_password_menu ;;
-  *) show_main_menu ;;
-  esac
-}
-
-show_update_channel_menu() {
-  case $(menu "Update channel" "🟢 Stable\n🟡 RC\n🟠 Edge\n🔴 Dev") in
-  *Stable*) present_terminal "slievr-channel-set stable" ;;
-  *RC*) present_terminal "slievr-channel-set rc" ;;
-  *Edge*) present_terminal "slievr-channel-set edge" ;;
-  *Dev*) present_terminal "slievr-channel-set dev" ;;
-  *) show_update_menu ;;
-  esac
-}
-show_update_process_menu() {
-  case $(menu "Restart" "  Hyprland\n  Hyprsunset\n󰍜  Shell") in
-  *Hyprland*) present_terminal slievr-refresh-hyprland ;;
-  *Hyprsunset*) slievr-restart-hyprsunset ;;
-  *Shell*) systemctl --user restart mbm-shell ;;
-  *) show_update_menu ;;
-  esac
-}
-
-show_update_config_menu() {
-  case $(menu "Use default config" "  Hyprsunset\n󱣴  Plymouth\n  Tmux") in
-  *Hyprsunset*) present_terminal slievr-refresh-hyprsunset ;;
-  *Plymouth*) present_terminal slievr-refresh-plymouth ;;
-  *Tmux*) present_terminal slievr-refresh-tmux ;;
-  *) show_update_menu ;;
-  esac
-}
-
-show_update_hardware_menu() {
-  case $(menu "Restart" "  Audio\n󱚾  Wi-Fi\n󰂯  Bluetooth\n󰟸  Trackpad") in
-  *Audio*) present_terminal slievr-restart-pipewire ;;
-  *Wi-Fi*) present_terminal slievr-restart-wifi ;;
-  *Bluetooth*) present_terminal slievr-restart-bluetooth ;;
-  *Trackpad*) present_terminal slievr-restart-trackpad ;;
-  *) show_update_menu ;;
-  esac
-}
-
-show_update_password_menu() {
-  case $(menu "Update Password" "  Drive Encryption\n  User") in
-  *Drive*) present_terminal slievr-drive-password ;;
-  *User*) present_terminal passwd ;;
-  *) show_update_menu ;;
-  esac
-}
-
 show_about() {
   slievr-launch-about
 }
@@ -866,7 +532,6 @@ show_main_menu() {
 go_to_menu() {
   case "${1,,}" in
   *apps*) qs -c mbm ipc call launcher open apps ;;
-  *learn*) show_learn_menu ;;
   *trigger*) show_trigger_menu ;;
   *toggle*) show_toggle_menu ;;
   *hardware*) show_hardware_menu ;;
@@ -880,9 +545,6 @@ go_to_menu() {
   *screenrecord*) show_screenrecord_menu ;;
   *setup*) show_setup_menu ;;
   *power*) show_setup_power_menu ;;
-  *install*) show_install_menu ;;
-  *remove*) show_remove_menu ;;
-  *update*) show_update_menu ;;
   *about*) show_about ;;
   *system*) show_system_menu ;;
   esac

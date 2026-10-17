@@ -1,6 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Overwrite the user config for hyprsunset with the Omarchy default and restart the service.
-
-slievr-refresh-config hypr/hyprsunset.conf
-slievr-restart-hyprsunset

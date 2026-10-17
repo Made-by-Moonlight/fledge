@@ -1,9 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Update system packages with pacman
-# slievr:requires-sudo=true
-
-set -e
-
-echo -e "\e[32m\nUpdate system packages\e[0m"
-sudo pacman -Syyu --noconfirm

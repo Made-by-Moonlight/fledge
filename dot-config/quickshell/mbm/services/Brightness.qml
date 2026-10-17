@@ -58,7 +58,7 @@ Singleton {
     }
 
     // Percent after applying the pending ops to cur, one press at a time so the small-step
-    // rule (±5 steps by 1 at or below 5%, same feel as slievr-brightness-display) is not lost
+    // rule (±5 steps by 1 at or below 5%, same feel as Omarchy's brightness script) is not lost
     // when presses are combined. Floor 1%, ceiling 100%.
     function fold(cur) {
         let v = cur;

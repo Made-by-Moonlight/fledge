@@ -1,5 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Launch the Omarchy audio controls TUI (provided by wiremix).
-
-slievr-launch-or-focus-tui wiremix

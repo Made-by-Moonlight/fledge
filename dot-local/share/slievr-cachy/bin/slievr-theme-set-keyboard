@@ -1,7 +1,0 @@
-#!/bin/bash
-
-# slievr:summary=Apply the current theme keyboard color to supported keyboards
-# slievr:hidden=true
-
-slievr-theme-set-keyboard-asus-rog
-slievr-theme-set-keyboard-f16
