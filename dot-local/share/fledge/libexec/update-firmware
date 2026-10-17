@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Update system firmware using fwupd. Ensures the fwupd EFI binary is installed
+# Update system firmware using fwupd
 
 set -e
 echo -e "\e[32mUpdate Firmware\e[0m"
@@ -9,9 +9,9 @@ if fledge cmd missing fwupdmgr; then
   fledge pkg add fwupd
 fi
 
-if [[ -d /sys/firmware/efi ]] && [[ -f /usr/lib/fwupd/efi/fwupdx64.efi ]]; then
-  sudo install -D /usr/lib/fwupd/efi/fwupdx64.efi /boot/EFI/arch/fwupdx64.efi
-fi
+# No copying fwupd's EFI binary onto the ESP (Omarchy put one in /boot/EFI/arch/):
+# fledge boots Limine with UKIs from /boot, and fwupd places its own capsule
+# loader there when an update needs one.
 
 fwupdmgr refresh --force
 sudo fwupdmgr update
