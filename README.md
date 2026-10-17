@@ -70,6 +70,6 @@ bootstrap from a TTY (Ctrl+Alt+F2) and log in afterwards.
 - `dot-local/share/fledge/` — the `fledge` command: `fledge <group> <action>` over the scripts in `libexec/`, `fledge settings` (defaults + overrides → generated Hyprland Lua), `fledge hypr`, `fledge dmenu`
 - `dot-config/`, `dot-local/` — dotfiles, stowed into `~` (`.stow-local-ignore` keeps the rest of the repo out)
 
-The repo is [Made-by-Moonlight/fledge](https://github.com/Made-by-Moonlight/fledge).
+The repo is [github.com/Made-by-Moonlight/fledge](https://github.com/Made-by-Moonlight/fledge).
 Releases are built by GitHub Actions when a `v*` tag is pushed on `main`
 (see `cachyos/iso/README.md`).
