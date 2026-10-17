@@ -352,13 +352,15 @@ show_setup_time_menu() {
   esac
 }
 
-# For a device that stopped responding.
+# For a device, or the desktop shell (bar, launcher, notifications), that
+# stopped responding. The shell is a user service: no terminal needed.
 show_setup_restart_menu() {
-  case $(menu "Restart" "  Audio\n󱚾  Wi-Fi\n󰂯  Bluetooth\n󰟸  Trackpad") in
+  case $(menu "Restart" "  Audio\n󱚾  Wi-Fi\n󰂯  Bluetooth\n󰟸  Trackpad\n󰑓  Shell") in
   *Audio*) present_terminal fledge restart pipewire ;;
   *Wi-Fi*) present_terminal fledge restart wifi ;;
   *Bluetooth*) present_terminal fledge restart bluetooth ;;
   *Trackpad*) present_terminal fledge restart trackpad ;;
+  *Shell*) systemctl --user restart mbm-shell.service ;;
   *) show_setup_menu ;;
   esac
 }
