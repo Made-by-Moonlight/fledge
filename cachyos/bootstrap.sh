@@ -334,21 +334,34 @@ sudo systemctl enable sddm.service
 # query, the same on both config managers). From slievr-firstboot there is no
 # Hyprland and nothing to reload.
 fledge="$HOME/.local/share/fledge/bin/fledge"
-in_session="" lua_session=""
+# hypr_manager <fledge>: the running Hyprland's config manager, picked at session
+# start: lua (it answers eval), conf (eval refused the way only the .conf manager
+# refuses it), or "unknown: <why>" (any other failure, e.g. no fledge yet).
+# cachyos/test-bootstrap.sh tests this function on its own.
+hypr_manager() {
+  local out
+  if out="$("$1" hypr eval 'return 1' 2>&1)"; then
+    echo lua
+  elif [[ $out == *"only supported with the lua config manager"* ]]; then
+    echo conf
+  else
+    echo "unknown: ${out%%$'\n'*}"
+  fi
+}
+in_session="" lua_session="" manager=""
 if [[ -n ${HYPRLAND_INSTANCE_SIGNATURE:-} ]] && hyprctl version >/dev/null 2>&1; then
   in_session=1
-  # Hyprland picks its config manager at session start; only the Lua one answers eval.
-  if "$fledge" hypr eval 'return 1' >/dev/null 2>&1; then lua_session=1; fi
+  manager="$(hypr_manager "$fledge")"
+  case $manager in
+    lua) lua_session=1 ;;
+    unknown*) echo "WARN: could not tell which config Hyprland is running (${manager#unknown: }); if your binds are gone, log out and back in" >&2 ;;
+  esac
 fi
 if ! MBM_NO_RELOAD=1 "$HOME/.local/share/mbm/bin/mbm" settings apply; then
   echo "WARN: mbm settings apply failed; fix ~/.config/mbm/settings.json (mbm settings check)" >&2
 fi
 if [[ -n $in_session ]]; then
   hyprctl reload >/dev/null 2>&1 || echo "WARN: hyprctl reload failed" >&2
-fi
-if [[ -n $in_session && -z $lua_session ]]; then
-  # An upgrade from the .conf config: this session can't load the new config.
-  echo "Hyprland switches to the Lua config at your next login."
 fi
 # A .conf session that saw hyprland.conf deleted (this upgrade) writes
 # Hyprland's stub in its place, through the stow link into the repo, and again
@@ -405,10 +418,12 @@ fi
 # Keybind execs (Super+Return) run with Hyprland's own process environment,
 # which still holds the login-time SHELL. After the one hyprctl reload above,
 # so nothing re-reads config over it. A .conf session can't take it (no eval);
-# it ends at the next login anyway (see above).
-if [[ -n $lua_session ]]; then
+# it has to end now anyway (see the end). Unknown: try, it may still work.
+if [[ $manager == conf ]]; then
+  echo "NOTE: Hyprland's SHELL not updated in this .conf session; the next login has it"
+elif [[ -n $in_session ]]; then
   "$fledge" hypr eval "hl.env(\"SHELL\", $("$fledge" hypr quote "$login_shell"))" >/dev/null 2>&1 ||
-    echo "WARN: could not update Hyprland's SHELL" >&2
+    echo "WARN: could not update Hyprland's SHELL; the next login has it" >&2
 fi
 
 # fish's command-not-found suggestions read pkgfile's database.
@@ -487,6 +502,17 @@ if [[ -n $in_session ]]; then
   else
     echo "WARN: could not start mbm-shell; it starts at the next login" >&2
   fi
+fi
+
+# An upgrade from the .conf config, run inside that session: the stow fold
+# means the pull already deleted ~/.config/hypr/hyprland.conf, and a .conf
+# session that sees it go loads Hyprland's own stub within seconds: stock binds,
+# rules and monitors. It can't load the Lua config; only a new login can. Last,
+# so the notification goes to the shell started above.
+if [[ $manager == conf ]]; then
+  msg="This session is now on Hyprland's fallback config (stock binds). Log out and back in now to start fledge's Lua config."
+  printf '\n%s\n\n' "$msg"
+  notify-send -u critical -a fledge "Log out and back in now" "$msg" >/dev/null 2>&1 || true
 fi
 
 echo "Bootstrap complete."

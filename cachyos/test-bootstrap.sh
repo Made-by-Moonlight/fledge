@@ -38,5 +38,22 @@ check "a tracked stub: kept" "rc=0 kept" "$(case_ tracked-stub "" "")"
 check "marker past the first 200 bytes: kept" "rc=0 kept" "$(case_ late-marker "" "")"
 check "no hyprland.conf: fine" "rc=0 gone" "$(case_ none "" "")"
 
+# hypr_manager: which config manager the running Hyprland has, from how a stub
+# fledge answers `hypr eval 'return 1'`.
+fn="$(sed -n '/^hypr_manager() {/,/^}/p' "$DIR/bootstrap.sh")"
+check "found hypr_manager in bootstrap.sh" "yes" "$([[ -n $fn ]] && echo yes || echo no)"
+eval "$fn"
+mkfledge() { # mkfledge <rc> <output>: a stub fledge
+  printf '#!/usr/bin/env bash\nprintf "%%s\\n" %q >&2\nexit %s\n' "$2" "$1" >"$T/fledge"; chmod +x "$T/fledge"
+}
+mkfledge 0 ""
+check "eval answered: lua" "lua" "$(hypr_manager "$T/fledge")"
+mkfledge 1 "fledge hypr: eval is only supported with the lua config manager"
+check "the .conf manager's refusal: conf" "conf" "$(hypr_manager "$T/fledge")"
+mkfledge 1 $'fledge hypr: HYPRLAND_INSTANCE_SIGNATURE was not set!\nmore'
+check "any other failure: unknown, with the first line of why" \
+  "unknown: fledge hypr: HYPRLAND_INSTANCE_SIGNATURE was not set!" "$(hypr_manager "$T/fledge")"
+contains "no fledge at all: unknown" "unknown: " "$(hypr_manager "$T/nope")"
+
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail
