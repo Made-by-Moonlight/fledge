@@ -27,7 +27,8 @@ jobs:
     steps:
       - name: Tools
         # qt6-declarative: qmltestrunner (and QtTest) for the shell's and installer's QML tests.
-        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq lua qt6-declarative
+        # stow: check-stow-ignore.sh asks stow itself what it would link into ~.
+        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq lua qt6-declarative stow
 
       - uses: actions/checkout@v4
 
@@ -42,7 +43,8 @@ jobs:
                    dot-local/share/fledge/test/test-dmenu.sh dot-local/share/fledge/test/test-lua-syntax.sh \
                    dot-local/share/fledge/test/test-migrate.sh dot-local/share/fledge/test/test-dispatch.sh \
                    dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh \
-                   cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh cachyos/test-check-names.sh; do
+                   cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh cachyos/test-check-names.sh \
+                   cachyos/test-check-stow-ignore.sh; do
             echo "::group::$t"
             bash "$t"
             echo "::endgroup::"
@@ -59,6 +61,10 @@ jobs:
         run: |
           git config --global --add safe.directory "$GITHUB_WORKSPACE"
           bash cachyos/check-names.sh
+
+      - name: Nothing but dotfiles stowed
+        # .stow-local-ignore lists the project's top-level entries by name; a new one must be added there.
+        run: bash cachyos/check-stow-ignore.sh
 
       - name: shellcheck
         run: |

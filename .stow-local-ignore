@@ -23,6 +23,7 @@ _darcs
 # top-level entry that isn't dot-* belongs here too. Named one by one, not
 # "everything but dot-*": stow matches nested paths by their translated
 # names (.config/...), so a negative pattern would hide all of dot-config.
+# cachyos/check-stow-ignore.sh fails CI on an entry missing here.
 ^/AGENTS\.md
 ^/cachyos
 ^/docs

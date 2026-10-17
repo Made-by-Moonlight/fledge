@@ -66,7 +66,8 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
 - `dot-config/` and `dot-local/` are GNU stow `--dotfiles` names
   (`dot-config` → `~/.config`). `bootstrap.sh` stows the repo into `~`, and
   `.stow-local-ignore` keeps everything that isn't `dot-*` out of it: a new
-  top-level file or directory goes in that list.
+  top-level file or directory goes in that list (`cachyos/check-stow-ignore.sh`
+  fails CI otherwise).
 - `cachyos/install/`: installer (bash). `cachyos/iso/`: ISO build/test.
   `cachyos/bootstrap.sh`: the desktop layer, run on first boot.
 - Settings: defaults in `dot-local/share/fledge/defaults/settings.json`,

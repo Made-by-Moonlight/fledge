@@ -80,7 +80,8 @@ shell won't open (sulogin refuses a locked root); recover by booting this ISO.
 ## Release (GitHub Actions)
 
 `.github/workflows/iso.yml` runs the unit tests, shellcheck and the repo guards
-(`cachyos/check-legacy-ipc.sh`, `cachyos/check-names.sh`) on every push and
+(`cachyos/check-legacy-ipc.sh`, `cachyos/check-names.sh`,
+`cachyos/check-stow-ignore.sh`) on every push and
 pull request. Pushing a version tag on `main` builds the ISO on GitHub and
 publishes a Release with the ISO and its `.sha256` attached (a tag that isn't
 on `main` fails the build):
