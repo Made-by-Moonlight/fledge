@@ -86,6 +86,21 @@ Column {
             readonly property bool didFail: p.failed[modelData.name] === true
             width: p.width; height: 32; radius: 7
             color: modelData.connected ? Theme.accentSoft : (ma.containsMouse ? Theme.surface : "transparent")
+            // In the Tab chain like the other controls: Space/Return do what a click does, Delete forgets.
+            objectName: modelData.name
+            activeFocusOnTab: true
+            FocusRing { shown: row.activeFocus }
+            Keys.onPressed: ev => {
+                if ([Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter].includes(ev.key)) { ev.accepted = true; if (!ev.isAutoRepeat) row.activate(); }
+                else if (ev.key === Qt.Key_Delete && row.modelData.known) { ev.accepted = true; row.modelData.forget(); }
+            }
+            function activate() {
+                const n = row.modelData;
+                if (row.connecting) { p.mark("tried", n.name, false); n.disconnect(); }   // cancel: a late failure must not prompt
+                else if (n.connected) n.disconnect();
+                else if (n.known || n.security === WifiSecurityType.Open) p.connectTo(n);
+                else p.pending = n;
+            }
             Row {
                 anchors.fill: parent; anchors.leftMargin: 8; spacing: 8
                 Glyph { text: Net.strengthGlyph(row.modelData.signalStrength); anchors.verticalCenter: parent.verticalCenter }
@@ -103,13 +118,7 @@ Column {
             }
             MouseArea {
                 id: ma; anchors.fill: parent; hoverEnabled: true; z: -1
-                onClicked: {
-                    const n = row.modelData;
-                    if (row.connecting) { p.mark("tried", n.name, false); n.disconnect(); }   // cancel: a late failure must not prompt
-                    else if (n.connected) n.disconnect();
-                    else if (n.known || n.security === WifiSecurityType.Open) p.connectTo(n);
-                    else p.pending = n;
-                }
+                onClicked: row.activate()
             }
         }
     }
