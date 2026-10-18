@@ -70,6 +70,9 @@ check "shift+tab back to the list" "Disk list" "$(tabs 1 shift)"
 key KEY_DOWN
 check "down picks the next disk" /dev/nvme0n1 "$(ipc_get disk)"
 check "passwords not readable over ipc" "refused: secret" "$(ipc_get password)"
+check "passwords not writable over ipc" "refused: password" "$(ipc set password x)"
+check "internals not writable over ipc" "refused: terminal" "$(ipc set terminal true)"
+check "answers writable over ipc" "ok|ethan" "$(ipc set username ethan)|$(ipc_get username)"
 key KEY_ENTER
 check "return on the list confirms" data "$(ipc current)"
 
