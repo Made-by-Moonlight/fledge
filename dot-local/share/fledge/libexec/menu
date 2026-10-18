@@ -481,9 +481,11 @@ show_setup_system_menu() {
     options="$options󰒲  Disable Suspend"
   fi
 
-  if fledge hibernation available; then
+  # hibernation remove undoes only its own setup (omarchy_resume.conf); the
+  # installer's (resume hook in mkinitcpio.conf, @swap) stays as installed.
+  if [[ -f /etc/mkinitcpio.conf.d/omarchy_resume.conf ]]; then
     options="$options\n󰤁  Disable Hibernate"
-  else
+  elif ! fledge hibernation available; then
     options="$options\n󰤁  Enable Hibernate"
   fi
 
