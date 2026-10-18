@@ -8,7 +8,7 @@ import "../../components"
 Row {
     id: root
     property var screen: null
-    spacing: 8
+    spacing: Math.round(8 * Theme.barScale)
 
     // The icon source to draw for a tray icon string, or "" for the glyph fallback.
     function resolve(raw) {
@@ -24,7 +24,7 @@ Row {
         delegate: Item {
             id: entry
             required property var modelData
-            width: 16; height: 16
+            width: Math.round(16 * Theme.barScale); height: width
             anchors.verticalCenter: parent.verticalCenter
             // Themed names no installed theme provides (fcitx5's input-keyboard-symbolic) draw
             // Qt's magenta checkerboard and report status Ready, so ask the theme first: try the
