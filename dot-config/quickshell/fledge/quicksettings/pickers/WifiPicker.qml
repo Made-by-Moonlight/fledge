@@ -123,16 +123,24 @@ Column {
         }
     }
     Rectangle {
+        id: pskBox
         visible: p.pending !== null
         width: p.width; height: 34; radius: 7; color: "transparent"; border.color: Theme.accent
+        property bool shown: false   // the eye, as in the installer's Input; hidden again for the next network
         TextInput {
             id: psk
-            anchors.fill: parent; anchors.margins: 8
-            echoMode: TextInput.Password; color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fontSize
+            anchors.fill: parent; anchors.margins: 8; anchors.rightMargin: 34
+            clip: true
+            echoMode: pskBox.shown ? TextInput.Normal : TextInput.Password; color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fontSize
             Glyph { visible: !psk.text; text: "Password for " + (p.pending?.name ?? ""); color: Theme.muted }
             Keys.onReturnPressed: { const t = text; text = ""; p.submit(t); }
             Keys.onEscapePressed: ev => { text = ""; p.pending = null; ev.accepted = true; }
         }
-        onVisibleChanged: if (visible) psk.forceActiveFocus()
+        Glyph {
+            anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
+            text: pskBox.shown ? "󰈉" : "󰈈"; color: Theme.muted
+            MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: { pskBox.shown = !pskBox.shown; psk.forceActiveFocus(); } }
+        }
+        onVisibleChanged: if (visible) { shown = false; psk.forceActiveFocus(); }
     }
 }
