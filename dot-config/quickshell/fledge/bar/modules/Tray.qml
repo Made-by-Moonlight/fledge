@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import QtQuick
+import "../../theme"
 import "../../components"
 
 Row {
@@ -35,6 +36,7 @@ Row {
             Glyph {
                 anchors.centerIn: parent
                 visible: entry.resolved === ""
+                font.pixelSize: Theme.barFont
                 text: /keyboard|input/.test(entry.name + " " + entry.modelData.id) ? "󰌌" : "󰀻"
             }
             QsMenuAnchor {

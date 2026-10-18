@@ -25,7 +25,11 @@ Singleton {
     readonly property int radius: 10
     readonly property int radiusLarge: 14
     readonly property int gap: 8
-    readonly property int barHeight: 32     // the bar's tabs, and the band reserved at the bar edge
+    // The bar's tabs, and the band reserved at the bar edge. Writable: the shell binds it to
+    // bar.height (shell.qml); the installer shares this file with no Settings, so it keeps 32.
+    property int barHeight: 32
+    readonly property int barFont: Math.round(fontSize * barHeight / 32)         // bar text scales with the bar
+    readonly property int barFontLarge: Math.round(fontLarge * barHeight / 32)
     readonly property int frame: 6          // the border round all four edges (the bar edge's is the strip)
     readonly property int frameRadius: 14   // the desktop's inner corners
     readonly property int tabRadius: 8      // a tab's fillet off the strip and its bottom corners

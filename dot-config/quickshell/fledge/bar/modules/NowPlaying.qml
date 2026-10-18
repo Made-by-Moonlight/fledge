@@ -7,6 +7,7 @@ Glyph {
     visible: Media.player !== null
     text: (Media.playing ? "󰏤 " : "󰐊 ") + (Media.player?.trackTitle ?? "")
     color: Theme.fgDim
+    font.pixelSize: Theme.barFont
     elide: Text.ElideRight
     width: Math.min(implicitWidth, 260)
     MouseArea { anchors.fill: parent; onClicked: Media.playPause() }

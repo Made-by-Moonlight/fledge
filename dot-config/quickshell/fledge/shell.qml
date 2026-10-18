@@ -10,6 +10,7 @@ import "notifications"
 import "launcher"
 import "quicksettings"
 import "services"
+import "theme"
 import "lock"
 import "polkit"
 import "settings"
@@ -31,6 +32,8 @@ ShellRoot {
         command: ["hyprctl", "submap"]
         stdout: StdioCollector { onStreamFinished: if (text.trim() === "fledge-record") Hypr.dispatch('hl.dsp.submap("reset")') }
     }
+
+    Binding { target: Theme; property: "barHeight"; value: Settings.barHeight }
 
     Variants {
         model: Quickshell.screens

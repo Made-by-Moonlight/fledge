@@ -60,6 +60,8 @@ Singleton {
 
     readonly property var binds: merged.binds ?? defaults.binds ?? ({})
     readonly property string barPosition: get("bar", "position", "top")
+    // Out-of-range or non-integer values (a hand-edited file `settings check` would reject) keep the default.
+    readonly property int barHeight: { const h = get("bar", "height", 32); return Number.isInteger(h) && h >= 20 && h <= 48 ? h : 32; }
     readonly property int clockFormat: get("bar", "clockFormat", 0)
     readonly property var barLeft: get("bar", "left", ["workspaces", "title"])
     readonly property var barCentre: get("bar", "centre", ["clock", "media"])

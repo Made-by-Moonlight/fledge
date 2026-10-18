@@ -12,6 +12,7 @@ Flickable {
     readonly property var sides: [["left", "Left section"], ["centre", "Centre section"], ["right", "Right section"]]
     function list(side) { return side === "left" ? Settings.barLeft : side === "centre" ? Settings.barCentre : Settings.barRight; }
     function save(side, mods) { Settings.set([[".bar." + side, mods]], false); }
+    function setHeight(h) { if (h !== Settings.barHeight) Settings.set([[".bar.height", h]], false); }
     function move(side, i, to) {
         const from = list(side).slice(), m = from.splice(i, 1)[0];
         if (to === side) return;
@@ -90,6 +91,20 @@ Flickable {
             Choice { label: "Notifications"; value: Settings.notifCorner
                      options: [["top-right", "Top right"], ["top-left", "Top left"], ["bottom-right", "Bottom right"], ["bottom-left", "Bottom left"]]
                      onPicked: v => Settings.set([[".notifications.corner", v]], false) }
+            Column {
+                spacing: 6
+                Glyph { text: "Bar height"; color: Theme.muted; font.pixelSize: Theme.fontSmall }
+                Row {
+                    spacing: 12
+                    Slider {
+                        width: 200; anchors.verticalCenter: parent.verticalCenter
+                        value: (Settings.barHeight - 20) / 28
+                        onMoved: v => page.setHeight(Math.round(20 + v * 28))
+                        onStepped: d => page.setHeight(Math.max(20, Math.min(48, Settings.barHeight + d)))
+                    }
+                    Glyph { text: Settings.barHeight + " px"; anchors.verticalCenter: parent.verticalCenter }
+                }
+            }
             Stepper { label: "Notification timeout"; value: Settings.notifTimeout / 1000; from: 1; to: 60; suffix: " s"
                       onChanged: v => Settings.set([[".notifications.timeoutMs", Math.round(v * 1000)]], false) }
         }
