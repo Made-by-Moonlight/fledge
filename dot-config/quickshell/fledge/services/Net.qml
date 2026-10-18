@@ -20,5 +20,10 @@ Singleton {
     readonly property string summary: !available ? "Unavailable" : wired ? "Wired" : !wifi ? (wiredAny ? "Disconnected" : "Unavailable") : activeWifi ? activeWifi.name : wifiEnabled ? "Not connected" : "Off"
 
     function setWifiEnabled(on) { Networking.wifiEnabled = on; }
-    function scan(on) { if (wifi) wifi.scannerEnabled = on; }
+    // A binding, not a one-off write: in the installer the picker is the first to use Net,
+    // before Networking has listed the adapter, and a write to a null wifi was lost (stuck
+    // on "Searching…"). Quickshell only lists networks while the scanner is on.
+    property bool scanning: false
+    function scan(on) { scanning = on; }
+    Binding { target: root.wifi; property: "scannerEnabled"; value: root.scanning; when: root.wifi !== null }
 }
