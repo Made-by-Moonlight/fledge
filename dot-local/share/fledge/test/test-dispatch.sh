@@ -144,7 +144,8 @@ check "toggle: flags found" yes "$(grep -qx suspend-off <<<"$flags" && echo yes 
 check "toggle: every flag has a '-'" "" "$(grep -v -- - <<<"$flags")"
 check "toggle: no flag is a toggle-* script name" "" "$(for f in $flags; do [[ -e $real/toggle-$f ]] && echo "toggle-$f"; done)"
 check "toggle: no toggle-* name is a dash-free flag" "" "$(cd "$real" && for t in toggle-*; do grep -qx -- "${t#toggle-}" <<<"$flags" && echo "$t"; done)"
-contains "toggle: the header says why flags carry a '-'" "must contain a '-'" "$(sed -n '1,12p' "$real/toggle")"
+# The header: the leading run of comment and blank lines, however long it grows.
+contains "toggle: the header says why flags carry a '-'" "must contain a '-'" "$(awk '!/^(#|$)/{exit} 1' "$real/toggle")"
 
 # shellcheck disable=SC2154 # $fail comes from lib.sh
 exit $fail
