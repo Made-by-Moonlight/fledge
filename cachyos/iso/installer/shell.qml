@@ -84,8 +84,13 @@ ShellRoot {
     IpcHandler {
         target: "installer"
         function go(id: string): void { Installer.step = Installer.indexOf(id); }
-        function set(key: string, value: string): void {
-            Installer[key] = value === "true" ? true : value === "false" ? false : value;
+        // Only the plain answers: not the passwords (typed, never scripted), not the
+        // step state (go, setDisk) and not the internals (terminal, mounts, shown).
+        function set(key: string, value: string): string {
+            const answers = ["layout", "variant", "timezone", "username", "hostname", "sameLuks", "disk"];
+            if (!answers.includes(key)) return "refused: " + key;
+            Installer[key] = typeof Installer[key] === "boolean" ? value === "true" : value;
+            return "ok";
         }
         function setDisk(path: string): void { Installer.disk = path; Installer.diskConfirmed = true; }
         function next(): void { Installer.next(); }
