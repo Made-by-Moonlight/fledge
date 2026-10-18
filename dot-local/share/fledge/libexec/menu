@@ -251,9 +251,8 @@ show_hardware_touchpad_haptics_menu() {
 }
 
 show_style_menu() {
-  case $(menu "Style" "󰸌  Theme\n󰟵  Unlock\n  Font\n  Background\n  Hyprland\n  About") in
+  case $(menu "Style" "󰸌  Theme\n  Font\n  Background\n  Hyprland\n  About") in
   *Theme*) show_theme_menu ;;
-  *Unlock*) fledge launch walker -m menus:omarchyunlocks --width 800 --minheight 400 ;;
   *Font*) show_font_menu ;;
   *Background*) show_background_menu ;;
   *Hyprland*) open_hypr_config ~/.config/hypr/fledge/looknfeel.lua ;;
@@ -271,12 +270,26 @@ show_about_menu() {
   esac
 }
 
+# fledge has one theme until project C brings the palette into fledge settings.
 show_theme_menu() {
-  fledge launch walker -m menus:omarchythemes --width 800 --minheight 400
+  notify-send -u low "The theme picker isn't available in fledge yet"
 }
 
+# Moonrise or a picture from ~/Pictures, newest first, saved as wallpaper.image
+# (the shell's wallpaper follows the settings file; "" is Moonrise).
 show_background_menu() {
-  fledge launch walker -m menus:omarchyBackgroundSelector --width 800 --minheight 400
+  local options="Moonrise" pick
+  if [[ -d $HOME/Pictures ]]; then
+    options+=$'\n'"$(find "$HOME/Pictures" -type d -name '.*' -prune -o -type f \
+      \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -printf '%T@\t%p\n' |
+      sort -rn | cut -f2- | sed "s|^$HOME/|~/|")"
+  fi
+  pick=$(printf '%s\n' "$options" | grep . | fledge dmenu --prompt "Background")
+  case "$pick" in
+  "") back_to show_style_menu ;;
+  Moonrise) fledge settings set .wallpaper.image '""' ;;
+  *) fledge settings set .wallpaper.image "$(jq -Rn --arg p "${pick/#\~\//$HOME/}" '$p')" ;;
+  esac
 }
 
 show_font_menu() {
