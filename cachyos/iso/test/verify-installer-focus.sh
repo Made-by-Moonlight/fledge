@@ -62,4 +62,15 @@ cycle="$(tabs 8)"
 contains "tab goes from back to username" "Back|Username" "$cycle"
 check "no tab lands on a disabled next" no "$([[ $cycle == *Next* ]] && echo yes || echo no)"
 
+# Disk: the list is in the chain, so Shift+Tab from its button brings the arrow keys back.
+ipc go welcome; ipc set disk /dev/vda; ipc go disk; sleep 1
+check "disk opens on the list" "Disk list" "$(focused)"
+check "tab to the erase button" "Erase this disk" "$(tabs 1)"
+check "shift+tab back to the list" "Disk list" "$(tabs 1 shift)"
+key KEY_DOWN
+check "down picks the next disk" /dev/nvme0n1 "$(ipc_get disk)"
+check "passwords not readable over ipc" "refused: secret" "$(ipc_get password)"
+key KEY_ENTER
+check "return on the list confirms" data "$(ipc current)"
+
 exit "$fail"
