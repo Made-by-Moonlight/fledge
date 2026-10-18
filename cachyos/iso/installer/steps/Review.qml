@@ -13,12 +13,14 @@ Flickable {
     boundsBehavior: Flickable.StopAtBounds
     readonly property var f: Installer.facts
     readonly property var ticked: Installer.dataRows.filter(r => Installer.mounts[r.uuid]?.on)
+    // The installer logs in automatically when the two match, ticked or typed twice.
+    readonly property bool sameSecret: Installer.sameLuks || (Installer.luks !== "" && Installer.luks === Installer.password)
     readonly property var rows: [
         ["Keyboard", Installer.layout + (Installer.variant ? " (" + Installer.variant + ")" : ""), "keyboard"],
         ["Timezone", Installer.timezone, "region"],
         ["Account", Installer.username + "  ·  root locked", "account"],
         ["Computer name", Installer.hostname, "account"],
-        ["Disk unlock", Installer.sameLuks ? "Same as your password" : "Its own passphrase", "account"],
+        ["Disk unlock", sameSecret ? "Same as your password, then straight to the desktop" : "Its own passphrase, then the login screen", "account"],
         ["Erase", Installer.confirmWord + "  ·  " + (Installer.diskInfo ? Fmt.size(Installer.diskInfo.size) : "") + "  ·  " + Installer.disk, "disk"],
         ["Data disks", ticked.length === 0 ? "None" : ticked.map(r => (r.label || r.uuid.slice(0, 13)) + "  →  " + Installer.mounts[r.uuid].path).join("\n"),
          Installer.dataRows.length > 0 ? "data" : ""],
