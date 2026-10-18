@@ -74,8 +74,12 @@ sets up key auth (via `expect`, using `slievr` / `$VM_PASSWORD`, default
 
 - `provision-vm.sh` uses `--boot uefi` — the installer requires UEFI.
 - `destroy-vm.sh` removes **both** qcow2 disks (`--remove-all-storage`).
-- The VM has 8 GiB RAM, so hibernate can't be meaningfully tested, but the
-  btrfs swapfile and `resume=` cmdline are still created and verifiable.
+- Hibernate works in the VM up to the picture: `systemctl hibernate`, unlock
+  the disk, and the session resumes (a file in `/tmp` and `uptime -s` survive),
+  lock screen and all. The first frame Hyprland draws after unlocking then
+  hangs the virtio-gpu driver (`virtio_gpu_queue_ctrl_sgs` blocked in the
+  kernel log, black screen, `grim` stuck); `virsh reset` recovers. That's
+  QEMU's virtual GPU, not fledge: check resume over ssh, not on screen.
 - `--events on_reboot=restart` is set but doesn't always take on this
   virt-install version — the VM may power off after the install reboot;
   just `virsh -c qemu:///system start cachyos-test`.
