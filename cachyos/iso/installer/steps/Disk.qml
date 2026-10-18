@@ -19,7 +19,7 @@ FocusScope {
     }
     function pick(path) {
         Installer.disk = path;
-        page.forceActiveFocus();
+        list.forceActiveFocus();
     }
     function confirm() {
         Installer.diskConfirmed = true;
@@ -38,31 +38,42 @@ FocusScope {
     Column {
         spacing: 14
         Title { text: "Disk"; sub: "The disk you pick is erased completely. USB drives and this installer's own stick aren't listed. ↑ ↓ to choose." }
-        Repeater {
-            model: page.disks
-            delegate: Rectangle {
-                required property var modelData
-                readonly property bool sel: Installer.disk === modelData.path
-                width: 680; height: col.implicitHeight + 24; radius: Theme.radius
-                color: sel ? Theme.accentSoft : Theme.bgRaised
-                border.color: sel ? Theme.accent : "transparent"
-                Column {
-                    id: col
-                    anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                    spacing: 4
-                    Glyph {
-                        font.bold: true
-                        // Model-less disks (virtio) lead with the path instead of repeating it.
-                        text: [modelData.model || modelData.path, Fmt.size(modelData.size), modelData.tran,
-                               modelData.model ? modelData.path : ""].filter(s => s).join("   ")
+        // The list takes the focus (its keys reach the page above), and is in the Tab chain so
+        // Shift+Tab from the button comes back to the arrow keys. Not the page itself: Qt's
+        // Shift+Tab never lands on an ancestor of the item it starts from.
+        Column {
+            id: list
+            spacing: 14
+            focus: true
+            activeFocusOnTab: true
+            objectName: "Disk list"
+            Repeater {
+                model: page.disks
+                delegate: Rectangle {
+                    required property var modelData
+                    readonly property bool sel: Installer.disk === modelData.path
+                    width: 680; height: col.implicitHeight + 24; radius: Theme.radius
+                    color: sel ? Theme.accentSoft : Theme.bgRaised
+                    border.color: sel ? Theme.accent : "transparent"
+                    FocusRing { shown: parent.sel && list.activeFocus }
+                    Column {
+                        id: col
+                        anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                        spacing: 4
+                        Glyph {
+                            font.bold: true
+                            // Model-less disks (virtio) lead with the path instead of repeating it.
+                            text: [modelData.model || modelData.path, Fmt.size(modelData.size), modelData.tran,
+                                   modelData.model ? modelData.path : ""].filter(s => s).join("   ")
+                        }
+                        Glyph {
+                            width: parent.width; wrapMode: Text.WordWrap; color: Theme.muted; font.pixelSize: Theme.fontSmall
+                            text: modelData.parts.length === 0 ? "Empty" : modelData.parts.map(p =>
+                                p.path.split("/").pop() + " " + (p.fstype || "unknown") + (p.label ? " “" + p.label + "”" : "") + " " + Fmt.size(p.size)).join("    ")
+                        }
                     }
-                    Glyph {
-                        width: parent.width; wrapMode: Text.WordWrap; color: Theme.muted; font.pixelSize: Theme.fontSmall
-                        text: modelData.parts.length === 0 ? "Empty" : modelData.parts.map(p =>
-                            p.path.split("/").pop() + " " + (p.fstype || "unknown") + (p.label ? " “" + p.label + "”" : "") + " " + Fmt.size(p.size)).join("    ")
-                    }
+                    MouseArea { anchors.fill: parent; onClicked: page.pick(modelData.path) }
                 }
-                MouseArea { anchors.fill: parent; onClicked: page.pick(modelData.path) }
             }
         }
         Glyph { text: Installer.err("disk", "disk"); color: Theme.error; visible: text !== "" }

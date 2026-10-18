@@ -90,7 +90,10 @@ ShellRoot {
         function setDisk(path: string): void { Installer.disk = path; Installer.diskConfirmed = true; }
         function next(): void { Installer.next(); }
         function current(): string { return Installer.current; }
-        function get(key: string): string { return String(Installer[key]); }
+        // Not the passwords: any process of this user can call IPC.
+        function get(key: string): string {
+            return ["password", "password2", "luks", "luks2"].includes(key) ? "refused: secret" : String(Installer[key]);
+        }
         // What has the keyboard: the focused item's objectName, or its nearest named
         // ancestor's (an Input's TextInput answers with the Input's label).
         function focused(): string {
