@@ -18,6 +18,10 @@ vm_ip() {
   local ips ip
   ips="$($VIRSH domifaddr "$VM_NAME" 2>/dev/null | awk '/ipv4/{print $4}' | cut -d/ -f1)"
   [[ -n $ips ]] || { echo "vm.sh: no IP for $VM_NAME (run cachyos/vm/dev-up.sh first)" >&2; exit 1; }
+  # One lease: no probe. sshd counts each probe as a connection that never
+  # authenticated and, after a burst (a test calling vm.sh run per keystroke),
+  # drops every connection from the host for a while (PerSourcePenalties noauth).
+  [[ $ips == *$'\n'* ]] || { printf '%s\n' "$ips"; return; }
   for ip in $ips; do
     if timeout 1 bash -c "echo >/dev/tcp/$ip/22" 2>/dev/null; then printf '%s\n' "$ip"; return; fi
   done
