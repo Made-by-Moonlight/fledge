@@ -4,7 +4,7 @@
 # ~/proj/fledge, which must still be clean), e.g.
 #   ip="$(cachyos/vm/vm.sh ip)"
 #   scp cachyos/iso/test/verify-install.sh "slievr@$ip:/tmp/"
-#   ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
+#   ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_AUTOLOGIN=1 VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
 # (needs a tty for sudo, so not `vm.sh run` and don't pipe it into ssh)
 set -uo pipefail
 # Its sudo calls need a password from a tty: without one each fails, and three
@@ -62,6 +62,12 @@ is "project files not stowed into ~"   ""     "$(for p in AGENTS.md README.md ca
 if [[ -n "${VERIFY_LAYOUT:-}" ]]; then
   is "settings kbLayout"               "$VERIFY_LAYOUT" "$(jq -r '.input.kbLayout' "$HOME/.config/fledge/settings.json" 2>/dev/null)"
   is "vconsole XKBLAYOUT"              "XKBLAYOUT=$VERIFY_LAYOUT" "$(grep '^XKBLAYOUT=' /etc/vconsole.conf)"
+fi
+# VERIFY_AUTOLOGIN=1: the run used the same password for disk and login.
+if [[ -n "${VERIFY_AUTOLOGIN:-}" ]]; then
+  is "autologin drop-in" "User=$USER" "$(grep '^User=' /etc/sddm.conf.d/autologin.conf 2>/dev/null)"
+else
+  is "no autologin" no "$([[ -e /etc/sddm.conf.d/autologin.conf ]] && echo yes || echo no)"
 fi
 # VERIFY_DATA_MOUNT=~/testdata: the data disk is in fstab and mounts on access.
 if [[ -n "${VERIFY_DATA_MOUNT:-}" ]]; then

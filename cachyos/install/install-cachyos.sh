@@ -321,6 +321,9 @@ rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh /mnt/root/cachyos-repos.
 add_data_mounts
 seed_user_settings "$USERNAME" "$XKB_LAYOUT" "$XKB_VARIANT" \
   "$(arch-chroot /mnt id -u "$USERNAME")" "$(arch-chroot /mnt id -g "$USERNAME")"
+# Before the Desktop stage, not inside it: a --desktop-only retry can't know
+# the disk passphrase, and must keep what this wrote.
+write_autologin "$USERNAME" "$USER_PASSWORD" "$LUKS_PASSPHRASE"
 
 ########################################################################
 rule "Staging repo + first-boot bootstrap"
@@ -350,7 +353,8 @@ copy_nm_profiles /etc/NetworkManager/system-connections /mnt/etc/NetworkManager/
 desktop_and_finish
 cat <<EOF
 
-Install complete. On reboot, unlock the disk, then log in.
+Install complete. On reboot, unlock the disk; the desktop starts by itself when
+the disk and login passwords are the same, otherwise log in.
 If anything in the desktop layer is missing, its log is /var/log/fledge-install.log.
 
 EOF

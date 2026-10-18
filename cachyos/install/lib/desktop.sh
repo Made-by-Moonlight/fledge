@@ -20,6 +20,24 @@ seed_user_settings() {
   chown "$uid:$gid" "$dir/settings.json"
 }
 
+# write_autologin <user> <user password> <luks passphrase>  ->  sddm logs the
+# user straight in when the disk and login passwords are the same: unlocking
+# the disk already proved the password, so a second prompt adds nothing. Any
+# other case removes the drop-in, so the greeter asks. A file of its own, not
+# default-session.conf, because bootstrap re-runs rewrite that one. Always 0;
+# the secrets are only compared, never printed.
+write_autologin() {
+  local user="$1" pw="$2" luks="$3" f="$FLEDGE_TARGET/etc/sddm.conf.d/autologin.conf"
+  if [[ -n "$pw" && "$pw" == "$luks" ]]; then
+    install -d "$FLEDGE_TARGET/etc/sddm.conf.d"
+    printf '[Autologin]\nUser=%s\nSession=hyprland-uwsm.desktop\n' "$user" > "$f"
+    chmod 644 "$f"
+  else
+    rm -f "$f"
+  fi
+  return 0
+}
+
 # remove_install_sudoers  ->  drop the temporary passwordless sudo. Called by
 # install-cachyos.sh's EXIT trap too, so a cancelled or killed install never
 # leaves the installed system with NOPASSWD:ALL.

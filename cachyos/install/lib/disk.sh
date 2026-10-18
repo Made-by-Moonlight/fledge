@@ -48,6 +48,8 @@ luks_format_open() {
     [[ "$p1" == "$p2" && -n "$p1" ]] || { echo "passphrases differ or empty" >&2; return 1; }
   fi
 
+  LUKS_PASSPHRASE="$p1"   # read by write_autologin (install-cachyos.sh)
+
   _log "luksFormat $part"
   printf '%s' "$p1" | cryptsetup luksFormat --type luks2 --batch-mode "$part" -
   _log "opening as /dev/mapper/$LUKS_NAME"

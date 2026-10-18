@@ -297,8 +297,9 @@ sudo systemctl enable bluetooth.service
 # started without start-hyprland" warning that a plain `Hyprland` binary
 # launch, or `uwsm start hyprland`, both trigger) without enabling
 # autologin: setting Session= under [Autologin] without User= just
-# pre-selects it in the greeter's session picker, real hardware/VM
-# testing should still see a real password prompt.
+# pre-selects it in the greeter's session picker, so the password prompt
+# shows unless the installer set up autologin (autologin.conf, same disk
+# and login password).
 sudo mkdir -p /etc/sddm.conf.d
 printf '[Autologin]\nSession=hyprland-uwsm.desktop\n' \
   | sudo tee /etc/sddm.conf.d/default-session.conf >/dev/null

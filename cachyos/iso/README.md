@@ -51,9 +51,9 @@ rewrites the installed repo, and the checks expect it clean) and **with a tty**
 
     ip="$(cachyos/vm/vm.sh ip)"
     scp cachyos/iso/test/verify-install.sh "slievr@$ip:/tmp/"
-    ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
+    ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_AUTOLOGIN=1 VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
 
-(`VERIFY_*` only when the run chose that layout and data disk: format the
+(`VERIFY_*` only when the run chose that layout, same disk and login password, and data disk: format the
 VM's second disk first with `mkfs.ext4 -U 00000000-0000-4000-8000-00000000da7a
 /dev/vdb` from a root console, the UUID `profile.sh` maps to `~/testdata`.)
 
