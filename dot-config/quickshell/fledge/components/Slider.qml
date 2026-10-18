@@ -15,6 +15,9 @@ Item {
     property bool holding: false
     readonly property real fill: (ma.pressed || holding) ? dragValue : value
     implicitHeight: 18
+    activeFocusOnTab: true
+    Keys.onLeftPressed: s.stepped(-1)
+    Keys.onRightPressed: s.stepped(1)
 
     function flush() { if (dirty) { dirty = false; moved(dragValue); } }
 
@@ -26,6 +29,7 @@ Item {
         width: parent.width; height: 6; radius: 3; color: Theme.surface
         Rectangle { width: parent.width * Math.max(0, Math.min(1, s.fill)); height: parent.height; radius: 3; color: Theme.accent }
     }
+    FocusRing { shown: s.activeFocus; radius: 6 }
     MouseArea {
         id: ma
         anchors.fill: parent

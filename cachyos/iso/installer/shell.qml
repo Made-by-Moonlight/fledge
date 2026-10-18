@@ -24,6 +24,8 @@ ShellRoot {
         for (let i = 0; i < all.length; i++) if (all[i].name === mainName) return all[i];
         return all.length > 0 ? all[0] : null;
     }
+    // The main window's focused item, for the IPC focused().
+    property Item focusItem: null
     function latchMain() { if (mainName === "" && Hyprland.focusedMonitor) mainName = Hyprland.focusedMonitor.name; }
     Component.onCompleted: latchMain()
     Connections { target: Hyprland; function onFocusedMonitorChanged() { shell.latchMain(); } }
@@ -42,6 +44,7 @@ ShellRoot {
             WlrLayershell.namespace: "fledge-installer"
             color: Theme.bg
             Loader { id: content; anchors.fill: parent; active: win.main; focus: true; sourceComponent: Component { Frame {} } }
+            Binding { when: win.main; target: shell; property: "focusItem"; value: content.Window.activeFocusItem }
             // The owl's visual centre (between the eyes) is 61.7% across: shift it onto the axis (as the lock does).
             Image {
                 visible: !win.main
@@ -87,5 +90,12 @@ ShellRoot {
         function setDisk(path: string): void { Installer.disk = path; Installer.diskConfirmed = true; }
         function next(): void { Installer.next(); }
         function current(): string { return Installer.current; }
+        function get(key: string): string { return String(Installer[key]); }
+        // What has the keyboard: the focused item's objectName, or its nearest named
+        // ancestor's (an Input's TextInput answers with the Input's label).
+        function focused(): string {
+            for (let i = shell.focusItem; i; i = i.parent) if (i.objectName !== "") return i.objectName;
+            return "";
+        }
     }
 }

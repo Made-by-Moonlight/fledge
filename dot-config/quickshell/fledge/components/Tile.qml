@@ -12,6 +12,14 @@ Rectangle {
     signal expand()
     height: 48; radius: 9
     color: on ? Theme.accent : Theme.surface
+    objectName: title
+    activeFocusOnTab: true
+    FocusRing { shown: t.activeFocus; onAccent: t.on }
+    Keys.onPressed: ev => {
+        if (![Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter].includes(ev.key)) return;
+        ev.accepted = true;
+        if (!ev.isAutoRepeat) t.clicked();
+    }
     Row {
         anchors.fill: parent; anchors.leftMargin: 10; spacing: 8
         Glyph { id: icon; text: t.glyph; color: t.on ? Theme.bg : Theme.fg; anchors.verticalCenter: parent.verticalCenter; font.pixelSize: Theme.fontLarge }
