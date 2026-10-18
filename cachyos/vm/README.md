@@ -80,6 +80,15 @@ sets up key auth (via `expect`, using `slievr` / `$VM_PASSWORD`, default
   hangs the virtio-gpu driver (`virtio_gpu_queue_ctrl_sgs` blocked in the
   kernel log, black screen, `grim` stuck); `virsh reset` recovers. That's
   QEMU's virtual GPU, not fledge: check resume over ssh, not on screen.
+- Wi-Fi without hardware: `mac80211_hwsim` gives two simulated radios, one
+  of them an access point through NetworkManager's hotspot (hostapd can't
+  take a radio wpa_supplicant holds; dnsmasq hands out the addresses):
+
+      sudo pacman -S --needed dnsmasq
+      sudo modprobe mac80211_hwsim radios=2
+      sudo nmcli dev wifi hotspot ifname wlan1 con-name test-ap ssid fledge-test password hunter2pass
+
+  `fledge-test` then shows in the Wi-Fi picker on `wlan0`.
 - `--events on_reboot=restart` is set but doesn't always take on this
   virt-install version — the VM may power off after the install reboot;
   just `virsh -c qemu:///system start cachyos-test`.
