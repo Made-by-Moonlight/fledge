@@ -28,11 +28,13 @@ Item {
         Glyph {
             text: Qt.formatDateTime(clock.date, root.fmt === 2 ? "HH:mm:ss" : root.fmt === 3 ? "hh:mm ap" : "HH:mm")
             font.bold: true
+            font.pixelSize: Theme.barFont
         }
         Glyph {
             visible: root.fmt !== 1
             text: Qt.formatDateTime(clock.date, root.fmt === 2 ? "dddd d MMMM yyyy" : "ddd d MMM").toLowerCase()
             color: Theme.muted
+            font.pixelSize: Theme.barFont
         }
     }
     MouseArea {

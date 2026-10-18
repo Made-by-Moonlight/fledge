@@ -6,6 +6,6 @@ import "../../components"
 Glyph {
     text: "󰒓"
     color: Theme.accent
-    font.pixelSize: Theme.fontLarge
+    font.pixelSize: Theme.barFontLarge
     MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: ShellState.toggleQuickSettings() }
 }

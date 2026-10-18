@@ -157,6 +157,10 @@ bad "clock format too big"       "bar.clockFormat must be"              '{"bar":
 bad "clock format negative"      "bar.clockFormat must be"              '{"bar":{"clockFormat":-1}}'
 bad "clock format fractional"    "bar.clockFormat must be"              '{"bar":{"clockFormat":1.5}}'
 bad "clock format text"          "bar.clockFormat must be"              '{"bar":{"clockFormat":"2"}}'
+bad "bar height too small"       "bar.height must be a whole number from 20 to 48" '{"bar":{"height":19}}'
+bad "bar height too big"         "bar.height must be a whole number from 20 to 48" '{"bar":{"height":49}}'
+bad "bar height fractional"      "bar.height must be a whole number from 20 to 48" '{"bar":{"height":32.5}}'
+bad "bar height text"            "bar.height must be a whole number from 20 to 48" '{"bar":{"height":"32"}}'
 bad "bar glyph"                  "bar.glyphs: unknown glyph"            '{"bar":{"glyphs":["wifi"]}}'
 bad "bar centre module"          "bar.centre: unknown module"           '{"bar":{"centre":["weather"]}}'
 bad "bar right module"           "bar.right: unknown module"            '{"bar":{"right":["weather"]}}'
@@ -198,6 +202,10 @@ good() { # good <description> <user-json>
 good "wallpaper: image and monitors" '{"wallpaper":{"image":"/home/u/Pictures/Wallpapers/a.png","monitors":{"DP-1":"/x/b.jpg","desc:Acer X34, 1":"/x/c.png"}}}'
 good "wallpaper: empty image"  '{"wallpaper":{"image":""}}'
 good "wallpaper: moonrise sentinel for a monitor" '{"wallpaper":{"image":"/x/a.png","monitors":{"DP-1":"moonrise"}}}'
+good "bar height 20"   '{"bar":{"height":20}}'
+good "bar height 48"   '{"bar":{"height":48}}'
+fresh "$REPO/dot-local/share/fledge/defaults/settings.json"
+check "bar.height: shipped default" 32 "$("$FLEDGE" settings get .bar.height)"
 good "clock format 0"  '{"bar":{"clockFormat":0}}'
 good "clock format 3"  '{"bar":{"clockFormat":3}}'
 good "code: key"       '{"binds":{"custom.1":{"mods":"SUPER","key":"code:11","label":"A","group":"Apps","action":{"exec":"a"}}}}'
