@@ -16,6 +16,7 @@ Column {
     signal accepted()
     spacing: 4
     width: 420
+    objectName: label
     function focusInput() { input.forceActiveFocus(); }
     Glyph { text: f.label; color: Theme.muted; font.pixelSize: Theme.fontSmall; visible: f.label !== "" }
     Rectangle {
@@ -23,6 +24,7 @@ Column {
         border.color: f.error !== "" ? Theme.error : input.activeFocus ? Theme.accent : Theme.surface
         TextInput {
             id: input
+            activeFocusOnTab: true
             anchors { fill: parent; margins: 10; rightMargin: f.secret ? 40 : 10 }
             clip: true
             verticalAlignment: TextInput.AlignVCenter

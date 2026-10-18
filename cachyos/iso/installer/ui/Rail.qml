@@ -36,6 +36,7 @@ Rectangle {
     Button {
         anchors { left: parent.left; bottom: parent.bottom; margins: 36 }
         text: "󰆍  Terminal"
+        activeFocusOnTab: false        // a way out, not a field: Tab stays on the step
         onClicked: Installer.openTerminal()
     }
 }

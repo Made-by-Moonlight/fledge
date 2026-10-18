@@ -8,9 +8,20 @@ Column {
     property var value
     signal picked(var value)
     spacing: 4
+    objectName: label
+    activeFocusOnTab: true
+    // Left/Right pick the neighbouring option, stopping at the ends.
+    function pickNext(d) {
+        const i = c.options.findIndex(o => o[0] === c.value);
+        const j = Math.max(0, Math.min(c.options.length - 1, i + d));
+        if (j !== i && c.options[j]) c.picked(c.options[j][0]);
+    }
+    Keys.onLeftPressed: c.pickNext(-1)
+    Keys.onRightPressed: c.pickNext(1)
     Glyph { text: c.label; color: Theme.muted; font.pixelSize: Theme.fontSmall; visible: c.label !== "" }
     Rectangle {
         height: 30; width: row.implicitWidth + 4; radius: 8; color: Theme.surface
+        FocusRing { shown: c.activeFocus }
         Row {
             id: row; anchors.centerIn: parent
             Repeater {
