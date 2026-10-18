@@ -18,6 +18,22 @@ check "us layout: no settings file" "no" "$([[ -e $FLEDGE_TARGET/home/ethan/.con
 seed_user_settings ethan gb extd "$(id -u)" "$(id -g)"
 check "layout seeded" '{"input":{"kbLayout":"gb","kbVariant":"extd"}}' "$(tr -d ' \n' < "$FLEDGE_TARGET/home/ethan/.config/fledge/settings.json")"
 
+al="$FLEDGE_TARGET/etc/sddm.conf.d/autologin.conf"
+write_autologin ethan 'pa=ss word' 'pa=ss word'
+check "autologin: same password writes the drop-in" \
+  $'[Autologin]\nUser=ethan\nSession=hyprland-uwsm.desktop' "$(cat "$al" 2>/dev/null)"
+check "autologin: drop-in is 644" 644 "$(stat -c %a "$al" 2>/dev/null)"
+write_autologin ethan 'pa=ss word' 'pa=ss word '
+check "autologin: different passwords, no drop-in" no "$([[ -e $al ]] && echo yes || echo no)"
+write_autologin ethan '' ''
+check "autologin: empty passwords, no drop-in" no "$([[ -e $al ]] && echo yes || echo no)"
+out="$(write_autologin ethan 's3cret*' 's3cret*' 2>&1)"
+check "autologin: never echoes the password" "" "$(grep -o 's3cret' <<<"$out")"
+
+src="$DIR/install-cachyos.sh"
+check "autologin: written before the Desktop stage" yes \
+  "$(awk '/^desktop_and_finish\(\)/,/^}/{next} /write_autologin/{w=NR} /^desktop_and_finish$/{d=NR} END{print (w && d && w<d) ? "yes" : "no"}' "$src")"
+
 mkdir -p "$FLEDGE_TARGET/etc/sudoers.d"
 echo x > "$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install"
 remove_install_sudoers

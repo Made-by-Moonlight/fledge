@@ -44,7 +44,7 @@ Column {
         }
     }
     Toggle {
-        label: "Use the same password to unlock the disk at boot"
+        label: "Same password for the disk; log in automatically after unlocking it"
         checked: Installer.sameLuks
         onToggled: c => Installer.sameLuks = c
     }
