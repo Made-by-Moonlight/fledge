@@ -15,7 +15,9 @@ Rectangle {
     objectName: title
     activeFocusOnTab: true
     FocusRing { shown: t.activeFocus; onAccent: t.on }
+    // Right is the "›": the keyboard's way into an expandable tile's panel.
     Keys.onPressed: ev => {
+        if (ev.key === Qt.Key_Right && t.expandable) { ev.accepted = true; t.expand(); return; }
         if (![Qt.Key_Space, Qt.Key_Return, Qt.Key_Enter].includes(ev.key)) return;
         ev.accepted = true;
         if (!ev.isAutoRepeat) t.clicked();
