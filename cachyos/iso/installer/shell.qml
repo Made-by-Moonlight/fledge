@@ -4,13 +4,14 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 import QtQuick
+import "components"
 import "services"
 import "theme"
 import "ui"
 
 // The fledge installer (made by moonlight): one full-screen layer per monitor; the
 // monitor Hyprland has focused at startup gets the installer, the others the
-// owl. Run by the live ISO's Hyprland (/etc/fledge-installer/hyprland.lua); dev:
+// owl and a button to move it there (Ctrl+M: to the next screen). Run by the live ISO's Hyprland (/etc/fledge-installer/hyprland.lua); dev:
 // dev/run.sh.
 ShellRoot {
     id: shell
@@ -27,6 +28,17 @@ ShellRoot {
     // The main window's focused item, for the IPC focused().
     property Item focusItem: null
     function latchMain() { if (mainName === "" && Hyprland.focusedMonitor) mainName = Hyprland.focusedMonitor.name; }
+    // A monitor mounted on its side still reports a landscape mode, so the live ISO
+    // shows it sideways, and nothing tells us which way up a screen sits: when
+    // Hyprland's first pick is the sideways one, the person moves the installer.
+    function useScreen(name) {
+        if (Quickshell.screens.some(s => s.name === name)) mainName = name;
+    }
+    function nextScreen() {
+        const all = Quickshell.screens;
+        if (all.length < 2) return;
+        useScreen(all[(all.indexOf(mainScreen) + 1) % all.length].name);
+    }
     Component.onCompleted: latchMain()
     Connections { target: Hyprland; function onFocusedMonitorChanged() { shell.latchMain(); } }
     Variants {
@@ -47,13 +59,30 @@ ShellRoot {
             Binding { when: win.main; target: shell; property: "focusItem"; value: content.Window.activeFocusItem }
             // The owl's visual centre (between the eyes) is 61.7% across: shift it onto the axis (as the lock does).
             Image {
+                id: owl
                 visible: !win.main
                 anchors { horizontalCenter: parent.horizontalCenter; horizontalCenterOffset: -19; verticalCenter: parent.verticalCenter }
                 source: Installer.owl
                 width: 160; height: 160; sourceSize.width: 160; fillMode: Image.PreserveAspectFit
                 opacity: 0.6
             }
+            Column {
+                visible: !win.main
+                anchors { horizontalCenter: parent.horizontalCenter; top: owl.bottom; topMargin: 4 * Theme.gap }
+                spacing: 1.5 * Theme.gap
+                Button {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Install on this screen"; primary: true
+                    onClicked: shell.useScreen(win.modelData.name)
+                }
+                Glyph {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "or press Ctrl+M to move the installer to the next screen"
+                    color: Theme.muted; font.pixelSize: Theme.fontSmall
+                }
+            }
             Shortcut { sequence: "Ctrl+Q"; enabled: Installer.dev; onActivated: Qt.quit() }
+            Shortcut { sequence: "Ctrl+M"; enabled: win.main; onActivated: shell.nextScreen() }
             // Back from another VT (Ctrl+Alt+F2 is the root console), Hyprland 0.56
             // re-adds the keyboards but no longer sends their keys to this layer,
             // and may stop showing new frames. Dropping exclusive focus for a
@@ -99,6 +128,9 @@ ShellRoot {
         function get(key: string): string {
             return ["password", "password2", "luks", "luks2"].includes(key) ? "refused: secret" : String(Installer[key]);
         }
+        // The screen the installer is on, and the owl screen's button.
+        function screen(): string { return shell.mainScreen ? shell.mainScreen.name : ""; }
+        function useScreen(name: string): string { shell.useScreen(name); return shell.mainName; }
         // What has the keyboard: the focused item's objectName, or its nearest named
         // ancestor's (an Input's TextInput answers with the Input's label).
         function focused(): string {

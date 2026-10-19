@@ -37,6 +37,10 @@ check it, and write it to a USB stick (or copy it onto a Ventoy stick):
 
 Secure Boot must be off. The install needs an internet connection; the
 installer can join Wi-Fi, and the network carries over to the installed system.
+With several screens, the installer opens on one and the others show the owl;
+if it opened on a screen you can't read (one mounted on its side shows
+sideways until it's set up), click Install on this screen on another, or press
+Ctrl+M to move it to the next one.
 
 ## Upgrade
 

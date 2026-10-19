@@ -72,6 +72,11 @@ change left by a dead shell is reverted at start):
 
     cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-displays.sh'
 
+Moving the installer to another screen (Ctrl+M, and the owl screen's button;
+run on the host, it drives the dev installer in the VM over a headless output):
+
+    bash cachyos/iso/test/verify-installer-screens.sh
+
 And that every command the desktop runs by name resolves (each `fledge …`,
 `"$fledge" …` or `…/bin/fledge …` in the merged settings, libexec, the stowed
 config, the shell's QML, bootstrap and the installer is a built-in or a
@@ -124,4 +129,5 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 | `test/verify-install.sh` | post-install checks |
 | `test/verify-shell.sh` | desktop shell checks on the installed system |
 | `test/verify-displays.sh` | monitor arrangement reaches Hyprland; a pending change reverts after a crash |
+| `test/verify-installer-screens.sh` | the installer moves to another screen (Ctrl+M, the owl screen's button) |
 | `test/verify-commands.sh` | every `fledge …` and IPC call the desktop makes resolves |
