@@ -77,6 +77,8 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
   change the defaults or the generator. Settings are `version` 2: a bind
   action is `{"exec"}`, `{"shell"}` or `{"dsp": "<hl.dsp name>", "args": …}`;
   a version-1 user file is migrated on apply (backup `settings.json.v1`).
+  Displays are keyed `desc:<description>` (the connector name when the
+  description is empty or has `,` `"` `\`), and the defaults carry no layout.
 - The shell runs as `fledge-shell.service`; IPC: `qs -c fledge ipc call <target> <fn>`
   (targets in `dot-config/quickshell/fledge/ipc/Ipc.qml`). Dev loop:
   `cachyos/vm/vm.sh restow && cachyos/vm/vm.sh shell`. End-to-end check:

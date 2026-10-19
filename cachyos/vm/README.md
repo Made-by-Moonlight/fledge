@@ -89,6 +89,13 @@ sets up key auth (via `expect`, using `slievr` / `$VM_PASSWORD`, default
       sudo nmcli dev wifi hotspot ifname wlan1 con-name test-ap ssid fledge-test password hunter2pass
 
   `fledge-test` then shows in the Wi-Fi picker on `wlan0`.
+- Extra monitors for Settings › Displays: in the session, `hyprctl output
+  create headless` adds one and `hyprctl output remove <name>` removes it
+  (`hyprctl monitors` shows the name). They report no physical size, so the
+  canvas draws them at 96 dpi tagged "size unknown". `verify-displays.sh`
+  does this itself: `vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-displays.sh'`
+  (the other `iso/test/verify-*.sh` checks run the same way; `verify-shell.sh`
+  also needs `wtype`, see `cachyos/iso/README.md`).
 - `--events on_reboot=restart` is set but doesn't always take on this
   virt-install version — the VM may power off after the install reboot;
   just `virsh -c qemu:///system start cachyos-test`.
