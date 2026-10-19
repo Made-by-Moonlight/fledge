@@ -13,8 +13,13 @@ emoji, system), notifications, OSD, lock screen, quick settings and a
 settings window. Settings are one JSON file that generates the Hyprland
 config. Hyprland runs a Lua config and doesn't reload on its own: after
 hand-editing `~/.config/hypr`, run `hyprctl reload`. Pinning workspaces to
-monitors is edited on the Displays page of the settings window. Wallpapers
-live in `~/Pictures/Wallpapers` and are chosen (per monitor if you like) on
+monitors is edited on the Displays page of the settings window, which also
+arranges the screens: drag them on a canvas drawn at their real size (they
+snap to each other, can rotate left or right, can't overlap, and each must
+touch another), switch one off or on from the chips under it, and one Apply
+sets every screen's position, rotation, mode and scale together, with 15
+seconds to Keep it before it reverts. Screens are remembered by description,
+so a layout follows the monitor to another port. Wallpapers live in `~/Pictures/Wallpapers` and are chosen (per monitor if you like) on
 the Displays page. Audio is PipeWire (wireplumber, pipewire-pulse), and the
 desktop ships an emoji font for the emoji picker.
 

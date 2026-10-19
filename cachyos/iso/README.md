@@ -67,6 +67,11 @@ tool the installed system doesn't ship: install it in the VM first.
     cachyos/vm/vm.sh relogin
     cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-shell.sh after-relogin'
 
+Monitor arrangement (headless outputs stand in for screens, and a pending
+change left by a dead shell is reverted at start):
+
+    cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test/verify-displays.sh'
+
 And that every command the desktop runs by name resolves (each `fledge …`,
 `"$fledge" …` or `…/bin/fledge …` in the merged settings, libexec, the stowed
 config, the shell's QML, bootstrap and the installer is a built-in or a
@@ -118,4 +123,5 @@ The build fails if the ISO reaches GitHub's 2 GiB release-asset limit.
 | `configs/pacman-cachyos.conf` | the `[cachyos]` repo section |
 | `test/verify-install.sh` | post-install checks |
 | `test/verify-shell.sh` | desktop shell checks on the installed system |
+| `test/verify-displays.sh` | monitor arrangement reaches Hyprland; a pending change reverts after a crash |
 | `test/verify-commands.sh` | every `fledge …` and IPC call the desktop makes resolves |
