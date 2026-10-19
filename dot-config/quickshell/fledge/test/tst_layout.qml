@@ -17,6 +17,34 @@ TestCase {
                 if (L.overlaps(rects[i], rects[j])) return true;
         return false;
     }
+    function permutations(xs) {
+        if (xs.length <= 1) return [xs];
+        const out = [];
+        xs.forEach((x, i) => {
+            for (const rest of permutations(xs.slice(0, i).concat(xs.slice(i + 1)))) out.push([x].concat(rest));
+        });
+        return out;
+    }
+    // Hyprland lists monitors in no fixed order: every order draws the same valid layout and
+    // gives it back.
+    function roundTripsInAnyOrder(mons, pos) {
+        const drawn = rects => rects.slice().sort((a, b) => a.key < b.key ? -1 : 1)
+            .map(q => [q.key, q.x, q.y, q.w, q.h].map(v => typeof v === "number" ? Math.round(v * 1000) / 1000 : v));
+        let first = null;
+        for (const order of permutations(mons)) {
+            const tag = order.map(m => m.key).join(",");
+            const rects = L.fromLogical(order, pos);
+            if (first === null) first = drawn(rects);
+            compare(drawn(rects), first, tag);
+            compare(L.problems(rects), [], tag);
+            const out = L.toLogical(order, rects);
+            verify(out.ok, tag + ": " + out.error);
+            compare(out.pos, pos, tag);
+            // The canvas keeps the anchor first; the rest come in whatever order.
+            const back = L.toLogical(order, [rects[0]].concat(rects.slice(1).reverse()));
+            compare(back.pos, pos, tag + " (reversed)");
+        }
+    }
     function touchesAny(rects, key) {
         const a = find(rects, key);
         return rects.some(b => b.key !== key && L.touching(a, b));
@@ -45,6 +73,7 @@ TestCase {
             verify(Math.abs(out.pos[k][0] - pos[k][0]) <= 1, k + " x " + out.pos[k][0]);
             verify(Math.abs(out.pos[k][1] - pos[k][1]) <= 1, k + " y " + out.pos[k][1]);
         }
+        roundTripsInAnyOrder(mons, { "desc:Acer": [0, 0], "desc:BenqL": [-1440, -563], "desc:BenqR": [3440, -563] });
         compare(benqL.transform, 1);
         compare(benqR.transform, 3);
     }
@@ -133,11 +162,7 @@ TestCase {
         const x = k => ({ key: k, px: [1920, 1080], mm: [530, 300], scale: 1, transform: 0 });
         const mons = [acer, x("X1"), x("X2")];
         const pos = { "desc:Acer": [0, 0], X1: [0, 1440], X2: [1920, 1440] };
-        const rects = L.fromLogical(mons, pos);
-        compare(L.problems(rects), []);
-        const out = L.toLogical(mons, rects);
-        verify(out.ok, out.error);
-        compare(out.pos, pos);
+        roundTripsInAnyOrder(mons, pos);
     }
     // Two pairs that each touch but not each other: the cursor can't reach the second pair.
     function test_disconnected_pairs() {

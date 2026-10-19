@@ -81,6 +81,33 @@ function problems(rects, eps) {
     return out;
 }
 
+function byKeyOrder(a, b) { return a.key < b.key ? -1 : a.key > b.key ? 1 : 0; }
+
+// Grows the placed set one monitor at a time over pairs that meet (eps as in meet()), always
+// taking the pair whose offset across the shared edge is smallest (aligned edges first), ties
+// by key: Hyprland lists monitors in no fixed order, and the result mustn't depend on it.
+// place(p, c, axis) positions c from placed p; rects should be sorted by key.
+function grow(rects, placed, eps, place) {
+    for (;;) {
+        let best = null;
+        for (const p of rects) {
+            if (!placed.has(p.key)) continue;
+            for (const c of rects) {
+                if (placed.has(c.key)) continue;
+                const axis = meet(p, c, eps);
+                if (!axis) continue;
+                const off = axis === "x"
+                    ? Math.min(Math.abs(c.y - p.y), Math.abs(c.y + c.h - p.y - p.h))
+                    : Math.min(Math.abs(c.x - p.x), Math.abs(c.x + c.w - p.x - p.w));
+                if (!best || off < best.off) best = { p: p, c: c, axis: axis, off: off };
+            }
+        }
+        if (!best) return;
+        place(best.p, best.c, best.axis);
+        placed.add(best.c.key);
+    }
+}
+
 // Logical positions -> mm rects. Anchor: the monitor at 0,0 (else the first), first in the result
 // so toLogical() keeps it there. Each monitor is placed from a neighbour it touches in px:
 // flush against its mm edge, offset across it at the neighbour's density. One touching nothing
@@ -88,55 +115,48 @@ function problems(rects, eps) {
 function fromLogical(mons, pos) {
     if (mons.length === 0) return [];
     const at = m => pos[m.key] || [0, 0];
-    const px = {}, mm = {};
+    const px = {}, mm = {}, byKey = {};
     for (const m of mons) {
         const l = logical(m), p = physical(m);
+        byKey[m.key] = m;
         px[m.key] = { key: m.key, x: at(m)[0], y: at(m)[1], w: l[0], h: l[1] };
         mm[m.key] = { key: m.key, x: 0, y: 0, w: p[0], h: p[1] };
     }
     const anchor = mons.find(m => at(m)[0] === 0 && at(m)[1] === 0) || mons[0];
-    const placed = new Set();
-    const walk = seed => {
-        const queue = [seed];
-        placed.add(seed.key);
-        while (queue.length) {
-            const pm = queue.shift(), P = px[pm.key], Q = mm[pm.key], d = ppm(pm);
-            for (const c of mons) {
-                if (placed.has(c.key)) continue;
-                const C = px[c.key], R = mm[c.key], axis = meet(P, C, 0);
-                if (axis === "x") {
-                    R.x = C.x > P.x ? Q.x + Q.w : Q.x - R.w;
-                    R.y = Q.y + (C.y - P.y) / d;
-                } else if (axis === "y") {
-                    R.y = C.y > P.y ? Q.y + Q.h : Q.y - R.h;
-                    R.x = Q.x + (C.x - P.x) / d;
-                } else continue;
-                // Also touching a placed one on the other axis (a wide monitor over two narrow
-                // ones): flush against it too, as toLogical() lines it up.
-                const other = axis === "x" ? "y" : "x";
-                const q = mons.find(o => o !== pm && placed.has(o.key) && meet(px[o.key], C, 0) === other);
-                if (q) {
-                    const O = mm[q.key];
-                    if (other === "x") R.x = C.x > px[q.key].x ? O.x + O.w : O.x - R.w;
-                    else R.y = C.y > px[q.key].y ? O.y + O.h : O.y - R.h;
-                }
-                placed.add(c.key);
-                queue.push(c);
-            }
+    const list = Object.keys(px).map(k => px[k]).sort(byKeyOrder);
+    const placed = new Set([anchor.key]);
+    const place = (P, C, axis) => {
+        const Q = mm[P.key], R = mm[C.key], d = ppm(byKey[P.key]);
+        if (axis === "x") {
+            R.x = C.x > P.x ? Q.x + Q.w : Q.x - R.w;
+            R.y = Q.y + (C.y - P.y) / d;
+        } else {
+            R.y = C.y > P.y ? Q.y + Q.h : Q.y - R.h;
+            R.x = Q.x + (C.x - P.x) / d;
+        }
+        // Also touching a placed one on the other axis (a wide monitor over two narrow
+        // ones): flush against it too, as toLogical() lines it up.
+        const other = axis === "x" ? "y" : "x";
+        const q = list.find(o => o !== P && placed.has(o.key) && meet(o, C, 0) === other);
+        if (q) {
+            const O = mm[q.key];
+            if (other === "x") R.x = C.x > q.x ? O.x + O.w : O.x - R.w;
+            else R.y = C.y > q.y ? O.y + O.h : O.y - R.h;
         }
     };
-    walk(anchor);
+    grow(list, placed, 0, place);
     const A = px[anchor.key], d = ppm(anchor);
-    for (const m of mons) {
-        if (placed.has(m.key)) continue;
-        mm[m.key].x = (px[m.key].x - A.x) / d;
-        mm[m.key].y = (px[m.key].y - A.y) / d;
-        walk(m);
+    for (const C of list) {
+        if (placed.has(C.key)) continue;
+        mm[C.key].x = (C.x - A.x) / d;
+        mm[C.key].y = (C.y - A.y) / d;
+        placed.add(C.key);
+        grow(list, placed, 0, place);
     }
     return [mm[anchor.key]].concat(mons.filter(m => m !== anchor).map(m => mm[m.key]));
 }
 
-// mm rects -> logical positions, rects[0] at 0,0: { ok, pos, error }. Walks outward over touching
+// mm rects -> logical positions, rects[0] at 0,0: { ok, pos, error }. Grows outward over touching
 // pairs; along the shared edge the parent's logical edge exactly, across it the mm offset
 // rounded at the parent's density. A monitor that also touches a placed one on the other axis
 // (a 2×2 grid) takes that axis from it exactly. Then checked in px: no overlap, nothing floating,
@@ -150,43 +170,37 @@ function toLogical(mons, rects) {
     if (rects.length === 0) return { ok: true, pos: {}, error: "" };
     const pos = {}, from = {}, order = [];
     const size = k => logical(byKey[k]);
-    const place = (k, x, y, src) => { pos[k] = [x, y]; from[k] = src; order.push(k); };
+    const set = (k, x, y, src) => { pos[k] = [x, y]; from[k] = src; order.push(k); };
     // Placed in px, from parent p on axis: the edge exactly, the other axis from mm.
     const fromParent = (p, c, axis) => {
         const P = pos[p.key], d = ppm(byKey[p.key]), lp = size(p.key), lc = size(c.key);
         if (axis === "x") return [c.x > p.x ? P[0] + lp[0] : P[0] - lc[0], P[1] + Math.round((c.y - p.y) * d)];
         return [P[0] + Math.round((c.x - p.x) * d), c.y > p.y ? P[1] + lp[1] : P[1] - lc[1]];
     };
-    const walk = seed => {
-        const queue = [seed];
-        while (queue.length) {
-            const p = queue.shift();
-            for (const c of rects) {
-                if (pos[c.key]) continue;
-                const axis = meet(p, c);
-                if (!axis) continue;
-                const xy = fromParent(p, c, axis), src = [p.key];
-                const other = axis === "x" ? "y" : "x";
-                const q = rects.find(o => o !== p && pos[o.key] && meet(o, c) === other);
-                if (q) {
-                    const xy2 = fromParent(q, c, other), i = other === "x" ? 0 : 1;
-                    xy[i] = xy2[i];
-                    src.push(q.key);
-                }
-                place(c.key, xy[0], xy[1], src);
-                queue.push(c);
-            }
+    const list = rects.slice().sort(byKeyOrder);
+    const placed = new Set();
+    const place = (p, c, axis) => {
+        const xy = fromParent(p, c, axis), src = [p.key];
+        const other = axis === "x" ? "y" : "x";
+        const q = list.find(o => o !== p && placed.has(o.key) && meet(o, c) === other);
+        if (q) {
+            const xy2 = fromParent(q, c, other), i = other === "x" ? 0 : 1;
+            xy[i] = xy2[i];
+            src.push(q.key);
         }
+        set(c.key, xy[0], xy[1], src);
     };
     const anchor = rects[0];
-    place(anchor.key, 0, 0, []);
-    walk(anchor);
+    set(anchor.key, 0, 0, []);
+    placed.add(anchor.key);
+    grow(list, placed, EPS, place);
     // Not reached from the anchor: placed from its density, for the checks below to name.
     const d = ppm(byKey[anchor.key]);
-    for (const q of rects) {
-        if (pos[q.key]) continue;
-        place(q.key, Math.round((q.x - anchor.x) * d), Math.round((q.y - anchor.y) * d), []);
-        walk(q);
+    for (const q of list) {
+        if (placed.has(q.key)) continue;
+        set(q.key, Math.round((q.x - anchor.x) * d), Math.round((q.y - anchor.y) * d), []);
+        placed.add(q.key);
+        grow(list, placed, EPS, place);
     }
     const px = rects.map(q => {
         const l = size(q.key);
