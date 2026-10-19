@@ -1,7 +1,8 @@
 .pragma library
 // Monitor arrangement maths for Settings › Displays. No Qt types.
-//   mon:  { key, px: [w, h], mm: [w, h], scale, transform }   px = mode, mm = reported; both of the
-//         unrotated panel (Hyprland still says 600×340 for a portrait BenQ).
+//   mon:  { key, px: [w, h], mm: [w, h], scale, transform, native? }   px = mode, mm = reported,
+//         native = the panel's preferred mode (else px); all of the unrotated panel (Hyprland
+//         still says 600×340 for a portrait BenQ).
 //   rect: { key, x, y, w, h }   millimetres on the canvas, y down.
 //   pos:  { key: [x, y] }       logical pixels, what Hyprland's monitor position takes.
 // The canvas is drawn at physical size; Hyprland places monitors in logical px, and the cursor
@@ -20,11 +21,41 @@ function swap(wh, m) { return odd(m) ? [wh[1], wh[0]] : [wh[0], wh[1]]; }
 // Integer, like Hyprland's: a scale that doesn't divide the mode is Hyprland's to refuse.
 function logical(m) { return swap([Math.round(m.px[0] / m.scale), Math.round(m.px[1] / m.scale)], m); }
 
-// Zero (virtual outputs, projectors) or an aspect ratio 10% off the mode's (TVs): made up.
+// Zero (virtual outputs, projectors) or an aspect ratio 10% off the panel's (TVs): made up.
+// Judged against the native mode, not the current one: the mm don't change with the mode, and a
+// 16:9 mode on a 21:9 panel mustn't turn its size into a guess.
 function trusted(m) {
-    const mw = m.mm[0], mh = m.mm[1];
-    if (!(mw > 0 && mh > 0 && m.px[0] > 0 && m.px[1] > 0)) return false;
-    return Math.abs((mw / mh) / (m.px[0] / m.px[1]) - 1) <= 0.1;
+    const mw = m.mm[0], mh = m.mm[1], n = m.native || m.px;
+    if (!(mw > 0 && mh > 0 && n[0] > 0 && n[1] > 0)) return false;
+    return Math.abs((mw / mh) / (n[0] / n[1]) - 1) <= 0.1;
+}
+
+// Scales Hyprland takes as they are for a w × h mode: n/120 (the fractional-scale protocol's
+// step) dividing both sides exactly. Any other it swaps for a nearby one, and logical() would no
+// longer be the size Hyprland lays out, leaving a few px of gap after Apply.
+function scales(px, lo, hi) {
+    const out = [];
+    for (let n = Math.ceil(lo * 120); n <= hi * 120; n++)
+        if ((px[0] * 120) % n === 0 && (px[1] * 120) % n === 0) out.push(n / 120);
+    return out;
+}
+
+// The valid scale nearest s (the lower on a tie).
+function nearestScale(px, s, lo, hi) {
+    const all = scales(px, lo, hi);
+    let best = all.length ? all[0] : s;
+    for (const v of all) if (Math.abs(v - s) < Math.abs(best - s) - 1e-9) best = v;
+    return best;
+}
+
+// The settings key for monitor m (Hyprland's name and description) among the connected ones,
+// disabled included: desc:<description> follows the screen across ports; the connector when the
+// description is empty, has a comma (it would split the rule) or is another connected monitor's
+// too (two identical panels without a serial: one desc: rule would apply to both).
+function keyFor(m, connected) {
+    const d = m.description || "";
+    if (d === "" || d.includes(",") || connected.some(o => o.name !== m.name && o.description === d)) return m.name;
+    return "desc:" + d;
 }
 
 function physical(m) {
@@ -156,13 +187,15 @@ function fromLogical(mons, pos) {
     return [mm[anchor.key]].concat(mons.filter(m => m !== anchor).map(m => mm[m.key]));
 }
 
-// mm rects -> logical positions, rects[0] at 0,0: { ok, pos, error }. Grows outward over touching
+// mm rects -> logical positions, rects[0] at origin (default 0,0; the page passes where the
+// anchor is now, so nothing moves that the user didn't move): { ok, pos, error }. Grows outward over touching
 // pairs; along the shared edge the parent's logical edge exactly, across it the mm offset
 // rounded at the parent's density. A monitor that also touches a placed one on the other axis
 // (a 2×2 grid) takes that axis from it exactly. Then checked in px: no overlap, nothing floating,
 // every monitor reachable from rects[0], and every pair touching on the canvas touching exactly;
 // else ok is false and error says why.
-function toLogical(mons, rects) {
+function toLogical(mons, rects, origin) {
+    if (!origin) origin = [0, 0];
     const byKey = {};
     for (const m of mons) byKey[m.key] = m;
     const missing = rects.find(q => !byKey[q.key]);
@@ -191,14 +224,14 @@ function toLogical(mons, rects) {
         set(c.key, xy[0], xy[1], src);
     };
     const anchor = rects[0];
-    set(anchor.key, 0, 0, []);
+    set(anchor.key, origin[0], origin[1], []);
     placed.add(anchor.key);
     grow(list, placed, EPS, place);
     // Not reached from the anchor: placed from its density, for the checks below to name.
     const d = ppm(byKey[anchor.key]);
     for (const q of list) {
         if (placed.has(q.key)) continue;
-        set(q.key, Math.round((q.x - anchor.x) * d), Math.round((q.y - anchor.y) * d), []);
+        set(q.key, origin[0] + Math.round((q.x - anchor.x) * d), origin[1] + Math.round((q.y - anchor.y) * d), []);
         placed.add(q.key);
         grow(list, placed, EPS, place);
     }

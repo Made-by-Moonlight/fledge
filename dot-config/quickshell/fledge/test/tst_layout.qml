@@ -37,11 +37,13 @@ TestCase {
             if (first === null) first = drawn(rects);
             compare(drawn(rects), first, tag);
             compare(L.problems(rects), [], tag);
-            const out = L.toLogical(order, rects);
+            // Placed from where the anchor is now (as the page does), whether that's 0,0 or not.
+            const origin = pos[rects[0].key];
+            const out = L.toLogical(order, rects, origin);
             verify(out.ok, tag + ": " + out.error);
             compare(out.pos, pos, tag);
             // The canvas keeps the anchor first; the rest come in whatever order.
-            const back = L.toLogical(order, [rects[0]].concat(rects.slice(1).reverse()));
+            const back = L.toLogical(order, [rects[0]].concat(rects.slice(1).reverse()), origin);
             compare(back.pos, pos, tag + " (reversed)");
         }
     }
@@ -59,6 +61,69 @@ TestCase {
         // A portrait panel claiming landscape mm: the aspect ratios disagree.
         verify(!L.trusted({ key: "k", px: [1440, 2560], mm: [160, 90], scale: 1, transform: 0 }));
         compare(L.physical({ key: "k", px: [1920, 1080], mm: [0, 0], scale: 1, transform: 0 }), [508, 285.75]);
+    }
+    // A 16:9 mode on the 21:9 Acer: still its real size, judged by the native mode.
+    function test_trust_follows_native_mode() {
+        const hd = { key: "desc:Acer", px: [1920, 1080], mm: [800, 350], scale: 1, transform: 0, native: [3440, 1440] };
+        verify(L.trusted(hd));
+        compare(L.physical(hd), [800, 350]);
+        fuzzyCompare(L.ppm(hd), 1920 / 800, 1e-9);
+        // Without a native mode the current one stands in.
+        verify(!L.trusted({ key: "desc:Acer", px: [1920, 1080], mm: [800, 350], scale: 1, transform: 0 }));
+    }
+    // Only scales that divide the mode: Hyprland swaps any other (1.75 on 1080p) for a nearby one.
+    function test_scales() {
+        const hd = L.scales([1920, 1080], 0.5, 3);
+        verify(hd.indexOf(1.25) >= 0 && hd.indexOf(1.5) >= 0 && hd.indexOf(2) >= 0 && hd.indexOf(1.6) >= 0);
+        verify(hd.indexOf(1.75) < 0);
+        compare(hd[0], 0.5);
+        compare(hd[hd.length - 1], 3);
+        for (const s of hd) {
+            verify(Math.abs(1920 / s - Math.round(1920 / s)) < 1e-9 && Math.abs(1080 / s - Math.round(1080 / s)) < 1e-9, String(s));
+        }
+        verify(L.scales([1280, 800], 0.5, 3).indexOf(1.5) < 0);
+        compare(L.nearestScale([1920, 1080], 1.75, 0.5, 3), 1.6666666666666667);
+        compare(L.nearestScale([1280, 800], 1.5, 0.5, 3), 1.6);
+        compare(L.nearestScale([1920, 1080], 2, 0.5, 3), 2);
+    }
+    // Two identical panels with no serial share a description: each keeps its connector, or one
+    // desc: rule (and one canvas rect) would stand for both.
+    function test_key_for_twins() {
+        const a = { name: "DP-1", description: "BenQ GW2780" }, b = { name: "DP-2", description: "BenQ GW2780" };
+        const c = { name: "HDMI-A-1", description: "Acer X34" };
+        compare(L.keyFor(a, [a, b, c]), "DP-1");
+        compare(L.keyFor(b, [a, b, c]), "DP-2");
+        compare(L.keyFor(c, [a, b, c]), "desc:Acer X34");
+        compare(L.keyFor(a, [a, c]), "desc:BenQ GW2780");
+        compare(L.keyFor({ name: "DP-3", description: "Odd, Inc. Panel" }, []), "DP-3");
+        compare(L.keyFor({ name: "HEADLESS-2", description: "" }, []), "HEADLESS-2");
+    }
+    // The anchor stays where it is: undocked, the laptop (saved right of the external at 2560x0)
+    // changes scale and keeps 2560x0, so re-docking doesn't land the external on it.
+    function test_anchor_keeps_position() {
+        const laptop = { key: "eDP-1", px: [2880, 1800], mm: [300, 190], scale: 2, transform: 0 };
+        let rects = L.fromLogical([laptop], { "eDP-1": [2560, 0] });
+        const scaled = Object.assign({}, laptop, { scale: 1.5 });
+        rects = L.rotate(rects, "eDP-1", L.physical(scaled)[0], L.physical(scaled)[1]);
+        let out = L.toLogical([scaled], rects, [2560, 0]);
+        verify(out.ok, out.error);
+        compare(out.pos["eDP-1"], [2560, 0]);
+        // Docked with no monitor at 0,0: moving the other one leaves the anchor put.
+        const ext = { key: "desc:Ext", px: [2560, 1440], mm: [600, 340], scale: 1, transform: 0 };
+        rects = L.fromLogical([laptop, ext], { "eDP-1": [100, 50], "desc:Ext": [1540, 50] });
+        rects = L.drag(rects, "desc:Ext", rects[0].x + rects[0].w, rects[0].y - 40, 0);
+        out = L.toLogical([laptop, ext], rects, [100, 50]);
+        verify(out.ok, out.error);
+        compare(out.pos["eDP-1"], [100, 50]);
+        compare(out.pos["desc:Ext"][0], 1540);
+        // The user's desk moved off the origin round-trips in any order, whichever is the anchor.
+        const pos = { "desc:Acer": [500, 200], "desc:BenqL": [-940, -363], "desc:BenqR": [3940, -363] };
+        for (const order of permutations([acer, benqL, benqR])) {
+            const rs = L.fromLogical(order, pos);
+            const back = L.toLogical(order, rs, pos[rs[0].key]);
+            verify(back.ok, back.error);
+            compare(back.pos, pos, order.map(m => m.key).join(","));
+        }
     }
     function test_user_desk_round_trip() {
         const mons = [acer, benqL, benqR];
