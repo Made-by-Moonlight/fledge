@@ -60,15 +60,24 @@ function overlaps(a, b, eps) {
 
 function copy(rects) { return rects.map(q => ({ key: q.key, x: q.x, y: q.y, w: q.w, h: q.h })); }
 
-// Overlap and floating messages, worded as toLogical() refuses them.
+// Overlap, floating and unreachable messages, worded as toLogical() refuses them. Two pairs
+// that each touch but not each other are refused too: the cursor must reach every screen.
 function problems(rects, eps) {
     const out = [];
     for (let i = 0; i < rects.length; i++)
         for (let j = i + 1; j < rects.length; j++)
             if (overlaps(rects[i], rects[j], eps)) out.push(label(rects[i].key) + " and " + label(rects[j].key) + " overlap");
-    if (rects.length > 1)
-        for (const a of rects)
-            if (!rects.some(b => b !== a && touching(a, b, eps))) out.push(label(a.key) + " doesn't touch another monitor");
+    if (rects.length < 2) return out;
+    const alone = rects.filter(a => !rects.some(b => b !== a && touching(a, b, eps)));
+    for (const a of alone) out.push(label(a.key) + " doesn't touch another monitor");
+    const reached = new Set([rects[0]]), queue = [rects[0]];
+    while (queue.length) {
+        const a = queue.shift();
+        for (const b of rects)
+            if (!reached.has(b) && touching(a, b, eps)) { reached.add(b); queue.push(b); }
+    }
+    for (const a of rects)
+        if (!reached.has(a) && !alone.includes(a)) out.push(label(a.key) + " can't be reached from " + label(rects[0].key));
     return out;
 }
 
@@ -102,6 +111,15 @@ function fromLogical(mons, pos) {
                     R.y = C.y > P.y ? Q.y + Q.h : Q.y - R.h;
                     R.x = Q.x + (C.x - P.x) / d;
                 } else continue;
+                // Also touching a placed one on the other axis (a wide monitor over two narrow
+                // ones): flush against it too, as toLogical() lines it up.
+                const other = axis === "x" ? "y" : "x";
+                const q = mons.find(o => o !== pm && placed.has(o.key) && meet(px[o.key], C, 0) === other);
+                if (q) {
+                    const O = mm[q.key];
+                    if (other === "x") R.x = C.x > px[q.key].x ? O.x + O.w : O.x - R.w;
+                    else R.y = C.y > px[q.key].y ? O.y + O.h : O.y - R.h;
+                }
                 placed.add(c.key);
                 queue.push(c);
             }
@@ -122,7 +140,8 @@ function fromLogical(mons, pos) {
 // pairs; along the shared edge the parent's logical edge exactly, across it the mm offset
 // rounded at the parent's density. A monitor that also touches a placed one on the other axis
 // (a 2×2 grid) takes that axis from it exactly. Then checked in px: no overlap, nothing floating,
-// and every pair touching on the canvas touching exactly; else ok is false and error says why.
+// every monitor reachable from rects[0], and every pair touching on the canvas touching exactly;
+// else ok is false and error says why.
 function toLogical(mons, rects) {
     const byKey = {};
     for (const m of mons) byKey[m.key] = m;
