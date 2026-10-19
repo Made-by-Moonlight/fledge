@@ -127,6 +127,27 @@ TestCase {
         verify(!out.ok);
         compare(out.error, "D can't line up with both C and B");
     }
+    // A wide monitor over two narrower, denser ones: the second lines up with the first in mm
+    // too, not only with the wide one at its density (which would overlap them on the canvas).
+    function test_wide_over_two_round_trip() {
+        const x = k => ({ key: k, px: [1920, 1080], mm: [530, 300], scale: 1, transform: 0 });
+        const mons = [acer, x("X1"), x("X2")];
+        const pos = { "desc:Acer": [0, 0], X1: [0, 1440], X2: [1920, 1440] };
+        const rects = L.fromLogical(mons, pos);
+        compare(L.problems(rects), []);
+        const out = L.toLogical(mons, rects);
+        verify(out.ok, out.error);
+        compare(out.pos, pos);
+    }
+    // Two pairs that each touch but not each other: the cursor can't reach the second pair.
+    function test_disconnected_pairs() {
+        const m = k => ({ key: k, px: [1920, 1080], mm: [530, 300], scale: 1, transform: 0 });
+        const rects = [r("A", 0, 0, 530, 300), r("B", 530, 0, 530, 300), r("C", 0, 500, 530, 300), r("D", 530, 500, 530, 300)];
+        compare(L.problems(rects), ["C can't be reached from A", "D can't be reached from A"]);
+        const out = L.toLogical([m("A"), m("B"), m("C"), m("D")], rects);
+        verify(!out.ok);
+        compare(out.error, "C can't be reached from A");
+    }
     // A hand-set gap: still drawn, with the problem named, rather than a throw.
     function test_broken_layout_draws() {
         const rects = L.fromLogical([acer, benqL, benqR], { "desc:Acer": [0, 0], "desc:BenqL": [-1540, -560], "desc:BenqR": [3440, -560] });
