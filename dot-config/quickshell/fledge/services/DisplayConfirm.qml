@@ -3,15 +3,18 @@ import Quickshell
 import Quickshell.Io
 import QtQuick
 
-// Confirm-or-revert for a display change. Lives here, not in the Displays page: the page is
-// destroyed when the settings window closes or another page is picked, and a countdown that
-// died with it would leave an unconfirmed (possibly unusable) layout in place. The timer keeps
+// Confirm-or-revert for a display change, which may touch several monitors at once (Apply on the
+// Displays page): they are kept or reverted together. Lives here, not in the Displays page: the
+// page is destroyed when the settings window closes or another page is picked, and a countdown
+// that died with it would leave an unconfirmed (possibly unusable) layout in place. The timer keeps
 // running with the window closed and reverts at zero; only "Keep" in the window stops it.
 // The pending revert is also written to disk before the change, so a shell that crashes or is
 // killed mid-countdown reverts it at its next start (shell.qml touches `active` at startup).
 Singleton {
     id: root
-    property var previous: null          // {name, old}: old is the user's entry, or undefined if there was none
+    // {old: {key: entry}}: every key the change touches, with the user's entry or undefined if
+    // there was none (kept as a key, so the revert knows to reset it).
+    property var previous: null
     property int awaiting: 0             // id of the queued apply job; the countdown starts when it lands
     property int countdown: 0
     property int revertJob: 0
@@ -19,23 +22,32 @@ Singleton {
     readonly property bool active: previous !== null
     readonly property string pendingFile: Settings.home + "/.local/state/fledge/display-pending.json"
 
-    function path(name) { return '.displays["' + name + '"]'; }
+    function path(key) { return '.displays["' + key + '"]'; }
 
     // A shell job (queued with the settings writes, so it keeps their order). `sh -c` gets the
     // file as $1 and the text as $2; the write is atomic (temp + mv).
     function savePending(p) {
+        // JSON drops undefined, which would lose the keys that had no entry: null stands for "none".
+        const old = {};
+        for (const k of Object.keys(p.old)) old[k] = p.old[k] === undefined ? null : p.old[k];
         Settings.run(["sh", "-c", 'mkdir -p "$(dirname "$1")" && printf %s "$2" >"$1.tmp" && mv "$1.tmp" "$1"', "sh", pendingFile,
-                      JSON.stringify({ name: p.name, old: p.old, deadline: Date.now() + 15000 })], false);
+                      JSON.stringify({ old: old, deadline: Date.now() + 15000 })], false);
     }
     function clearPending() { return Settings.run(["rm", "-f", pendingFile], false); }
 
-    // value: the full entry to write for `name`, or undefined to remove the user's entry (Reset).
-    // Refused while another change waits for its answer.
-    function begin(name, value) {
+    // changes: {set: {key: entry}, remove: [key]}. Each `set` entry replaces the key's whole entry,
+    // each `remove` key goes back to the defaults. Refused while another change waits for its answer.
+    function begin(changes) {
         if (active) return false;
-        previous = { name: name, old: Settings.user?.displays?.[name] };
+        const set = changes?.set ?? {}, remove = changes?.remove ?? [];
+        const keys = [...new Set([...Object.keys(set), ...remove])];
+        if (keys.length === 0) return false;
+        const old = {};
+        for (const k of keys) old[k] = Settings.user?.displays?.[k];
+        previous = { old: old };
         savePending(previous);
-        awaiting = value === undefined ? Settings.reset([path(name)], true) : Settings.set([[path(name), value]], true);
+        const pairs = Object.keys(set).map(k => [path(k), set[k]]);
+        awaiting = Settings.setReset(pairs, remove.filter(k => !(k in set)).map(path), true);
         return true;
     }
     function keep() { tick.stop(); previous = null; awaiting = 0; clearPending(); }
@@ -45,7 +57,11 @@ Singleton {
         previous = null; awaiting = 0;
         if (!p) return;
         // set replaces the whole entry (setpath), so no key of the unconfirmed change survives.
-        if (p.old === undefined) Settings.reset([path(p.name)], true); else Settings.set([[path(p.name), p.old]], true);
+        const pairs = [], paths = [];
+        for (const k of Object.keys(p.old)) {
+            if (p.old[k] === undefined || p.old[k] === null) paths.push(path(k)); else pairs.push([path(k), p.old[k]]);
+        }
+        if (pairs.length || paths.length) Settings.setReset(pairs, paths, true);
         revertJob = clearPending();   // the last job queued: when it lands the revert is done
     }
 
@@ -80,7 +96,9 @@ Singleton {
         onLoaded: {
             try {
                 const p = JSON.parse(text());
-                if (p?.name) root.undo({ name: p.name, old: p.old });
+                if (p?.name) root.undo({ old: { [p.name]: p.old ?? undefined } });   // file from before multi-monitor changes
+                else if (p?.old) root.undo({ old: p.old });
+                else root.clearPending();
             } catch (e) { root.clearPending(); }
         }
     }

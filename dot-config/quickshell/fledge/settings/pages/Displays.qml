@@ -44,7 +44,7 @@ Flickable {
     function apply(e) {
         const c = cur(e);
         if (e.mon && !c.enabled && liveCount <= 1) { Settings.lastError = "Can't switch off the only connected display."; return; }
-        if (DisplayConfirm.begin(e.name, { mode: c.mode, scale: c.scale, position: c.position, transform: c.transform, enabled: c.enabled })) {
+        if (DisplayConfirm.begin({ set: { [e.name]: { mode: c.mode, scale: c.scale, position: c.position, transform: c.transform, enabled: c.enabled } } })) {
             const x = Object.assign({}, edits); delete x[e.name]; edits = x;
         }
     }
@@ -172,7 +172,7 @@ Flickable {
                     Row { spacing: 8
                         Button { text: "Apply"; primary: true; enabled: page.edits[card.name] !== undefined && !DisplayConfirm.active; onClicked: page.apply(card.modelData) }
                         Button { text: "Reset"; enabled: !DisplayConfirm.active
-                                 onClicked: { const x = Object.assign({}, page.edits); delete x[card.name]; page.edits = x; if (Settings.user?.displays?.[card.name] !== undefined) DisplayConfirm.begin(card.name, undefined); } } }
+                                 onClicked: { const x = Object.assign({}, page.edits); delete x[card.name]; page.edits = x; if (Settings.user?.displays?.[card.name] !== undefined) DisplayConfirm.begin({ remove: [card.name] }); } } }
                 }
             }
         }
