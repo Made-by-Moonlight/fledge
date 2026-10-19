@@ -22,25 +22,34 @@ had_user=0
 if [[ -e $user ]]; then cp -- "$user" "$backup"; had_user=1; fi
 outputs=()
 
+# Settings first: Hyprland won't remove an output that is switched off.
 cleanup() {
   local o
-  for o in "${outputs[@]}"; do hyprctl output remove "$o" >/dev/null 2>&1; done
   rm -f -- "$pending"
   if ((had_user)); then cp -- "$backup" "$user"; else rm -f -- "$user"; fi
   rm -f -- "$backup"
   fledge settings apply >/dev/null 2>&1
+  sleep 1
+  for o in "${outputs[@]}"; do hyprctl output remove "$o" >/dev/null 2>&1; done
 }
 trap cleanup EXIT
 
-# The key Settings > Displays gives a monitor: desc:<description> unless that is
-# empty or has a comma, quote or backslash, then the connector name.
+# The key Settings > Displays gives a monitor (Layout.js keyFor): desc:<description>
+# unless another connected monitor, switched off or not, has the same description
+# (twins: one desc: rule would hit both), or it is empty or has a comma, quote or
+# backslash; then the connector name.
 key_for() { # <name> <description>
+  local twins
+  twins="$(hyprctl monitors all -j | jq --arg n "$1" --arg d "$2" '[.[] | select(.name != $n and .description == $d)] | length')"
+  if ((twins > 0)); then printf '%s' "$1"; return; fi
   case "$2" in
     ''|*[,\"\\]*) printf '%s' "$1" ;;
     *) printf 'desc:%s' "$2" ;;
   esac
 }
 mon() { hyprctl monitors -j | jq -r --arg n "$1" ".[] | select(.name == \$n) | $2"; }
+# Like mon, but switched-off monitors too.
+mon_all() { hyprctl monitors all -j | jq -r --arg n "$1" ".[] | select(.name == \$n) | $2"; }
 
 before="$(hyprctl monitors -j | jq -r '.[].name')"
 hyprctl output create headless >/dev/null || { no "create headless output A"; exit 1; }
@@ -56,7 +65,11 @@ a=${outputs[0]} b=${outputs[1]}
 da="$(mon "$a" .description)"; db="$(mon "$b" .description)"
 ka="$(key_for "$a" "$da")"; kb="$(key_for "$b" "$db")"
 printf 'A=%s (%s) key=%s\nB=%s (%s) key=%s\n' "$a" "$da" "$ka" "$b" "$db" "$kb"
-# Two outputs on one key would be one entry: the checks below need two.
+# Headless outputs all share one description: the twin rule keys each by its
+# connector, so the two are two entries and not one rule that hits both.
+is "the two outputs have equal descriptions" "$da" "$db"
+is "twins: A keyed by its connector" "$a" "$ka"
+is "twins: B keyed by its connector" "$b" "$kb"
 [[ $ka != "$kb" ]] || { no "the two outputs have distinct keys"; exit 1; }
 da_path() { printf '.displays["%s"]' "$1"; }
 
@@ -71,6 +84,20 @@ is "A at 0x0"            "0x0"       "$(mon "$a" '"\(.x)x\(.y)"')"
 is "A not rotated"       0           "$(mon "$a" .transform)"
 is "B right of A"        "${wa}x0"   "$(mon "$b" '"\(.x)x\(.y)"')"
 is "B rotated (transform 1)" 1       "$(mon "$b" .transform)"
+
+# --- switched off but connected: still listed, with its real size -------------
+# Settings > Displays reads `hyprctl monitors all -j` for these: the normal list
+# drops them, and an unplugged monitor (absent from both) can't be switched on.
+wb="$(mon "$b" .width)"; hb="$(mon "$b" .height)"
+fledge settings set "$(da_path "$kb").enabled" false && fledge settings apply >/dev/null 2>&1
+sleep 1
+is "B switched off: gone from the normal list" "" "$(mon "$b" .name)"
+is "B switched off: listed by monitors all, disabled" true "$(mon_all "$b" .disabled)"
+is "B switched off: monitors all keeps its size" "${wb}x${hb}" "$(mon_all "$b" '"\(.width)x\(.height)"')"
+is "B switched off: monitors all keeps its modes" true "$(mon_all "$b" '.availableModes | length > 0')"
+fledge settings set "$(da_path "$kb").enabled" true && fledge settings apply >/dev/null 2>&1
+sleep 1
+is "B switched on again" "$b" "$(mon "$b" .name)"
 
 # --- connector and desc: entries for the same monitor --------------------------
 # The generator writes connector rules first and desc: rules after; Hyprland
