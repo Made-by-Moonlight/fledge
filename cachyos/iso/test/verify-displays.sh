@@ -75,19 +75,25 @@ is "B rotated (transform 1)" 1       "$(mon "$b" .transform)"
 # --- connector and desc: entries for the same monitor --------------------------
 # The generator writes connector rules first and desc: rules after; Hyprland
 # applies the later rule, so the description-keyed entry wins.
-if [[ $ka == desc:* ]]; then
-  fledge settings set "$(da_path "$a")" '{"mode":"preferred","position":"0x0","scale":1,"transform":0}' \
-                      "$(da_path "$ka")" '{"mode":"preferred","position":"0x0","scale":2,"transform":0}' \
+# The VM's own screen has a real description; the headless ones have none.
+v=Virtual-1
+dv="$(mon "$v" .description)"; kv="$(key_for "$v" "$dv")"
+if [[ -n $dv && $kv == desc:* ]]; then
+  fledge settings set "$(da_path "$v")" '{"mode":"preferred","position":"auto","scale":1,"transform":0}' \
+                      "$(da_path "$kv")" '{"mode":"preferred","position":"auto","scale":2,"transform":0}' \
     && fledge settings apply >/dev/null 2>&1
   is "connector + desc: entries apply" 0 $?
   sleep 1
-  is "the desc: entry's scale wins over the connector's" 2 "$(mon "$a" .scale)"
+  is "the desc: entry's scale wins over the connector's" 2 "$(mon "$v" .scale)"
+  fledge settings reset "$(da_path "$v")" "$(da_path "$kv")" >/dev/null && fledge settings apply >/dev/null 2>&1
 else
-  ok "connector + desc: precedence skipped (headless description is not a desc: key)"
+  printf 'SKIP  connector + desc: precedence (%s has no usable description)\n' "$v"
 fi
 
 # --- a pending change left by a dead shell is reverted at start ----------------
 wait_gone() { local _; for _ in $(seq 40); do [[ -e $pending ]] || return 0; sleep 0.5; done; return 1; }
+# settings_is <path> <want>: polls briefly for the reverted value to land.
+settings_is() { local _ got; for _ in $(seq 20); do got="$(fledge settings get "$1" | jq -c .)"; [[ $got == "$2" ]] && break; sleep 0.25; done; printf '%s' "$got"; }
 restart_shell() { systemctl --user restart fledge-shell.service; }
 old_a='{"mode":"preferred","position":"0x0","scale":1,"transform":0}'
 
@@ -98,14 +104,14 @@ jq -n --arg a "$ka" --arg b "$kb" --argjson old "$old_a" \
   '{old: {($a): $old, ($b): null}, deadline: ((now + 15) * 1000 | floor)}' >"$pending"
 restart_shell
 wait_gone; is "new-format pending file is gone after the shell starts" 0 $?
-is "new format: A back to its old entry" "$old_a" "$(fledge settings get ".displays[\"$ka\"]" | jq -c .)"
-is "new format: B (null) is reset"       null    "$(fledge settings get ".displays[\"$kb\"]" | jq -c .)"
+is "new format: A back to its old entry" "$old_a" "$(settings_is ".displays[\"$ka\"]" "$old_a")"
+is "new format: B (null) is reset"       null    "$(settings_is ".displays[\"$kb\"]" null)"
 
 # Old format: {name, old}.
 fledge settings set "$(da_path "$ka")" '{"mode":"preferred","position":"0x0","scale":2,"transform":0}' >/dev/null
 jq -n --arg a "$ka" --argjson old "$old_a" '{name: $a, old: $old}' >"$pending"
 restart_shell
 wait_gone; is "old-format pending file is gone after the shell starts" 0 $?
-is "old format: A back to its old entry" "$old_a" "$(fledge settings get ".displays[\"$ka\"]" | jq -c .)"
+is "old format: A back to its old entry" "$old_a" "$(settings_is ".displays[\"$ka\"]" "$old_a")"
 
 exit "$bad"
