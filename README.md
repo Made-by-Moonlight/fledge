@@ -52,16 +52,16 @@ from the ISO. Nothing migrates them.
 
 | | |
 |---|---|
-| ![Installer welcome](docs/screenshots/01-installer.png) | ![Installer summary](docs/screenshots/02-installer-summary.png) |
-| The installer | Everything asked up front, then unattended |
+| ![Installer welcome](docs/screenshots/01-installer.png) | ![Installer review](docs/screenshots/02-installer-summary.png) |
+| The graphical installer | Review: everything asked up front, then unattended |
 | ![Disk unlock](docs/screenshots/03-unlock.png) | ![Login](docs/screenshots/04-login.png) |
 | Disk unlock (Plymouth) | Login (SDDM) |
 | ![Desktop](docs/screenshots/05-desktop.png) | ![Launcher](docs/screenshots/07-launcher.png) |
 | Desktop: bar tabs and screen frame | Launcher (apps, clipboard, emoji, system) |
 | ![Lock screen](docs/screenshots/08-lock.png) | ![Quick settings](docs/screenshots/09-quick-settings.png) |
 | Lock screen | Quick settings |
-| ![Settings](docs/screenshots/10-settings.png) | |
-| Settings (keybinds, displays, bar, idle, input) | |
+| ![Settings](docs/screenshots/10-settings.png) | ![Displays](docs/screenshots/11-displays.png) |
+| Settings (keybinds, displays, bar, idle, input) | Displays: arrange screens at their real size, rotated or not |
 
 ## Repo layout
 
