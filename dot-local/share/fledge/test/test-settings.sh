@@ -215,6 +215,9 @@ good "empty mods"      '{"binds":{"custom.1":{"mods":"","key":"F12","label":"A",
 good "multi-action"    '{"binds":{"custom.1":{"mods":"SUPER","key":"F11","label":"A","group":"Apps","action":[{"exec":"a"},{"dsp":"window.cycle_next"}]}}}'
 good "workspace: desc monitor with spaces" '{"workspaces":{"3":{"monitor":"desc:Some Maker Model 0x1","persistent":false}}}'
 good "workspace: connector name"  '{"workspaces":{"3":{"monitor":"HDMI-A-1"}}}'
+bad "display key with a comma" "displays: monitor name can't contain a comma" '{"displays":{"desc:Acer X34, 1":{"mode":"preferred"}}}'
+bad "empty display key" "displays: monitor name can't be empty" '{"displays":{"":{"mode":"preferred"}}}'
+good "display by description" '{"displays":{"desc:Acer Technologies X34 GS 0x1240460A":{"mode":"3440x1440@180","position":"0x0","scale":1}}}'
 
 # --- apply -------------------------------------------------------------------
 # shellcheck source=SCRIPTDIR/../../../../cachyos/install/test/luacheck.sh
@@ -228,6 +231,16 @@ fresh
 "$FLEDGE" settings apply
 check "apply: binds.lua"              "$(cat "$FIX/expected-binds.lua")"    "$(cat "$FLEDGE_HYPR_DIR/binds.lua")"
 check "apply: monitors.lua"           "$(cat "$FIX/expected-monitors.lua")" "$(cat "$FLEDGE_HYPR_DIR/monitors.lua")"
+# Connector rules first, desc: rules after, catch-all last (see gen-monitors.jq).
+fresh
+mkdir -p "$FLEDGE_CONFIG_DIR"
+printf '%s\n' '{"displays":{"desc:Z":{"scale":2},"eDP-1":{"scale":1}}}' >"$FLEDGE_CONFIG_DIR/settings.json"
+"$FLEDGE" settings apply
+order="$(grep -o 'output = "[^"]*"' "$FLEDGE_HYPR_DIR/monitors.lua" | tr '\n' ' ')"
+check "apply: connector rules before desc: rules, catch-all last" 'output = "DP-1" output = "DP-2" output = "eDP-1" output = "desc:Z" output = "" ' "$order"
+fresh
+"$FLEDGE" settings apply
+
 check "apply: input.lua"              "$(cat "$FIX/expected-input.lua")"    "$(cat "$FLEDGE_HYPR_DIR/input.lua")"
 check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$FLEDGE_STATE_DIR/settings.json")"
 check "apply: workspaces.lua"         "$(cat "$FIX/expected-workspaces.lua")" "$(cat "$FLEDGE_HYPR_DIR/workspaces.lua")"

@@ -98,6 +98,23 @@ Singleton {
         return run(args, apply);
     }
     function reset(paths, apply) { return run([root.fledge, "settings", "reset", ...paths], apply); }
+    // set, then reset, then apply as ONE job (one writeFinished): a page that
+    // saves some keys and drops others must not see a half-written file between
+    // two jobs. An empty paths list is a plain set.
+    function setReset(pairs, paths, apply) {
+        const set = [];
+        for (const p of pairs) set.push(p[0], JSON.stringify(p[1]));
+        if (paths.length === 0) return run([root.fledge, "settings", "set", ...set], apply);
+        // sh -c with $0 = the CLI; arguments are single-quoted into the script.
+        const q = a => "'" + String(a).replace(/'/g, "'\\''") + "'";
+        // `set` with no pairs is a usage error, so it is left out then.
+        let script = (set.length ? '"$0" settings set ' + set.map(q).join(" ") + ' && ' : '') + '"$0" settings reset ' + paths.map(q).join(" ");
+        if (apply) script += ' && "$0" settings apply';
+        const id = ++root.lastId;
+        root.queue = [...root.queue, { id: id, command: ["sh", "-c", script, root.fledge] }];
+        next();
+        return id;
+    }
     // FIFO: every call is one job, run one at a time, each ends in exactly one
     // writeFinished. A rapid second toggle must not be lost.
     function run(args, apply) {

@@ -68,6 +68,13 @@ def check_display($name):
      else "displays.\($name): bad transform \($d.transform | tojson)" end),
     (if ($d.enabled // true | type == "boolean") then empty else "displays.\($name): enabled must be true or false" end);
 
+# Keys are `desc:<description>` or a connector name; a rule is one comma-
+# separated Hyprland line, so a comma in a key would corrupt it.
+def check_display_key:
+  if . == "" then "displays: monitor name can't be empty"
+  elif test(",") then "displays: monitor name can't contain a comma"
+  else empty end;
+
 def check_workspace($k):
   . as $w
   | if type != "object" then "workspaces.\($k): must be an object"
@@ -99,6 +106,7 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
  | group_by(.c)[] | select(length > 1)
  | "binds: \(map(.id) | join(" and ")) use the same keys (\(.[0].c | sub("/.*$"; "")))"),
 
+(.displays // {} | keys[] | check_display_key),
 (.displays // {} | to_entries[] | .key as $n | .value | check_display($n)),
 
 (.workspaces // {} | to_entries[] | .key as $k
