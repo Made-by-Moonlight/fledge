@@ -126,8 +126,11 @@ Flickable {
         if (page.dirty) page.reconcile(); else page.rebuild();
     }
     // A reload moves monitors without an event Quickshell refreshes on: ask after every settings write.
+    // And redraw from Hyprland then, unless something is staged: Apply clears the staging, and a
+    // refused change (reverted, monitors never moved) changes nothing liveSig sees, so the canvas
+    // would keep the layout that was never applied.
     Connections { target: Settings; function onWriteFinished() { refresh.restart(); } }
-    Timer { id: refresh; interval: 300; onTriggered: Hyprland.refreshMonitors() }
+    Timer { id: refresh; interval: 300; onTriggered: { Hyprland.refreshMonitors(); if (!page.dirty) page.rebuild(); } }
 
     function stage(d, k, v) {
         if (k === "enabled" && !v && d.mon && page.on(d) && page.liveOn <= 1) { Settings.lastError = "Can't switch off the only connected display."; return; }
