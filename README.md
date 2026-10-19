@@ -22,8 +22,7 @@ scale together, with 15 seconds to Keep it before it reverts. Screens are
 remembered by description, so a layout follows the monitor to another port.
 Wallpapers live in `~/Pictures/Wallpapers` and are chosen (per monitor if you
 like) on the Displays page. Audio is PipeWire (wireplumber, pipewire-pulse),
-and the
-desktop ships an emoji font for the emoji picker.
+and the desktop ships an emoji font for the emoji picker.
 
 ![Desktop with btop and a terminal](docs/screenshots/06-desktop-apps.png)
 
