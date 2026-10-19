@@ -10,8 +10,17 @@ Column {
     property real step: 1
     property int decimals: 0
     property string suffix: ""
+    // When set, − and + move to the next of these (ascending) instead of by step.
+    property var values: []
     signal changed(real value)
-    function nudge(d) { s.changed(Math.max(s.from, Math.min(s.to, +(s.value + d).toFixed(s.decimals)))); }
+    function nudge(d) {
+        if (s.values.length) {
+            const next = d > 0 ? s.values.find(v => v > s.value + 1e-9) : s.values.slice().reverse().find(v => v < s.value - 1e-9);
+            if (next !== undefined) s.changed(next);
+            return;
+        }
+        s.changed(Math.max(s.from, Math.min(s.to, +(s.value + d).toFixed(s.decimals))));
+    }
     spacing: 4
     Glyph { text: s.label; color: Theme.muted; font.pixelSize: Theme.fontSmall; visible: s.label !== "" }
     Row {
