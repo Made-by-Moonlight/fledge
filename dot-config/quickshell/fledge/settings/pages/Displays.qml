@@ -6,48 +6,178 @@ import QtQuick.Layouts
 import "../../theme"
 import "../../services"
 import "../../components"
+import ".."
+// Not "as Layout": that would hide QtQuick.Layouts' attached Layout.
+import "../Layout.js" as Geom
 
-// Monitors (confirm-or-revert, see DisplayConfirm), Workspaces and Wallpaper (both applied at once).
+// Monitors: an arrangement canvas (Arrange) over a card per monitor; everything only stages, and one
+// Apply writes the whole page through DisplayConfirm (confirm-or-revert). Workspaces and Wallpaper
+// apply at once.
 Flickable {
     id: page
     contentHeight: col.implicitHeight; clip: true
-    property var edits: ({})          // name -> staged {mode, scale, position, transform, enabled}
+    property var staged: ({})         // key -> {mode, scale, transform, enabled}
+    property var rects: []            // the canvas, mm (Layout.js); rects[0] is the anchor, at 0,0
+    property bool moved: false        // dragged or rotated on the canvas
+    property string selected: ""
+    readonly property bool dirty: moved || Object.keys(staged).length > 0
 
-    // Connected monitors, plus any the user switched off (Hyprland stops listing those, and
-    // without a card there would be no way to switch them back on).
-    readonly property var entries: {
-        const out = [], live = new Set();
-        for (const m of Hyprland.monitors.values) { out.push({ name: m.name, mon: m }); live.add(m.name); }
-        const saved = Settings.merged?.displays ?? {};
-        for (const n of Object.keys(saved)) if (!live.has(n) && saved[n]?.enabled === false) out.push({ name: n, mon: null });
+    // The settings key for a monitor: desc:<description> follows the screen across ports; the
+    // connector when the description is empty or has a comma (it would split the rule) or a quote
+    // or backslash (it would break the settings path).
+    function keyOf(m) { const v = page.monitorValue(m); return /["\\]/.test(v) ? m.name : v; }
+
+    // Connected monitors, plus saved ones switched off: Hyprland stops listing a disabled monitor,
+    // and without these there would be no way to switch it back on. A saved desc: key matches a
+    // monitor by description, a connector key by name.
+    readonly property var displays: {
+        const out = [], all = Settings.merged?.displays ?? {}, claimed = new Set();
+        for (const m of Hyprland.monitors.values) {
+            const key = page.keyOf(m), o = m.lastIpcObject ?? {};
+            claimed.add(key); claimed.add(m.name);
+            if (m.description) claimed.add("desc:" + m.description);
+            out.push({ key: key, name: m.name, title: o.model || m.description, mon: m, saved: all[key] ?? all[m.name] ?? null });
+        }
+        for (const k of Object.keys(all))
+            if (!claimed.has(k) && all[k]?.enabled === false) out.push({ key: k, name: Geom.label(k), title: "", mon: null, saved: all[k] });
         return out;
     }
-    readonly property int liveCount: entries.filter(e => e.mon !== null).length
+    function on(d) { const s = page.staged[d.key]?.enabled; return s !== undefined ? s : d.mon !== null; }
+    readonly property int liveOn: displays.filter(d => d.mon && page.on(d)).length
 
     // "2560x1440@144.00Hz", "2560x1440@144" and "2560x1440" compare equal on the rate's value.
     function modeKey(s) {
         const m = /^(\d+x\d+)(?:@([\d.]+))?/.exec(s ?? "");
         return m ? m[1] + (m[2] ? "@" + (+m[2]).toFixed(2) : "") : String(s);
     }
-    function cur(e) {
-        const m = e.mon, o = m?.lastIpcObject ?? {}, saved = Settings.merged?.displays?.[e.name] ?? null;
-        return Object.assign(m ? {
-            mode: saved?.mode ?? `${o.width}x${o.height}@${(o.refreshRate ?? 60).toFixed(2)}`,
-            scale: saved?.scale ?? m.scale, position: saved?.position ?? `${m.x}x${m.y}`,
-            transform: saved?.transform ?? (o.transform ?? 0), enabled: saved?.enabled ?? true
-        } : {
-            mode: saved?.mode ?? "preferred", scale: saved?.scale ?? 1, position: saved?.position ?? "auto",
-            transform: saved?.transform ?? 0, enabled: saved?.enabled ?? false
-        }, edits[e.name] ?? {});
+    function liveMode(d) { const o = d.mon?.lastIpcObject ?? {}; return `${o.width}x${o.height}@${(o.refreshRate ?? 60).toFixed(2)}`; }
+    // What the card shows: staged, else what Hyprland runs now (a switched-off monitor: its saved entry).
+    function cur(d) {
+        const s = page.staged[d.key] ?? {}, o = d.mon?.lastIpcObject ?? {}, v = d.saved ?? {};
+        return {
+            mode: s.mode ?? (d.mon ? page.liveMode(d) : v.mode ?? "preferred"),
+            scale: s.scale ?? (d.mon ? d.mon.scale : typeof v.scale === "number" ? v.scale : 1),
+            transform: s.transform ?? (d.mon ? o.transform ?? 0 : v.transform ?? 0),
+            enabled: page.on(d)
+        };
     }
-    function edit(name, k, v) { const e = Object.assign({}, edits); e[name] = Object.assign({}, e[name] ?? {}, { [k]: v }); edits = e; }
-    function apply(e) {
-        const c = cur(e);
-        if (e.mon && !c.enabled && liveCount <= 1) { Settings.lastError = "Can't switch off the only connected display."; return; }
-        if (DisplayConfirm.begin({ set: { [e.name]: { mode: c.mode, scale: c.scale, position: c.position, transform: c.transform, enabled: c.enabled } } })) {
-            const x = Object.assign({}, edits); delete x[e.name]; edits = x;
+    // The monitor as Layout.js sees it. One not listed by Hyprland has no reported size: its saved
+    // mode (else 1080p) at the 96 dpi fallback, until it is connected and the page reopens.
+    function geo(d) {
+        const c = page.cur(d), o = d.mon?.lastIpcObject ?? {}, wh = /^(\d+)x(\d+)/.exec(c.mode);
+        return { key: d.key, name: d.name, title: d.title,
+                 px: wh ? [+wh[1], +wh[2]] : d.mon ? [o.width, o.height] : [1920, 1080],
+                 mm: [o.physicalWidth ?? 0, o.physicalHeight ?? 0], scale: c.scale, transform: c.transform };
+    }
+    readonly property var onMons: displays.filter(d => page.on(d)).map(d => page.geo(d))
+    function savedPos(d) {
+        if (d.mon) return [d.mon.x, d.mon.y];
+        const p = /^(-?\d+)x(-?\d+)$/.exec(d.saved?.position ?? "");
+        return p ? [+p[1], +p[2]] : undefined;
+    }
+
+    // The canvas from where the monitors are now (a hand-set gap or overlap draws as it is, and
+    // Apply names it).
+    function rebuild() {
+        const pos = {};
+        for (const d of page.displays) if (page.on(d)) pos[d.key] = page.savedPos(d);
+        page.rects = Geom.fromLogical(page.onMons, pos);
+        page.moved = false;
+        if (!page.rects.some(r => r.key === page.selected)) page.selected = page.rects[0]?.key ?? "";
+    }
+    // Back on the canvas at its saved position (worked out with the others where they are now,
+    // then moved by however far the canvas has shifted from that), pushed out and slid to touch.
+    function placeBack(key, rects) {
+        const pos = {};
+        for (const d of page.displays) if (page.on(d)) pos[d.key] = page.savedPos(d);
+        // Last, so a saved 0,0 doesn't take the anchor from a monitor that is there now.
+        const ms = page.onMons.filter(m => m.key !== key).concat(page.onMons.filter(m => m.key === key));
+        const fresh = Geom.fromLogical(ms, pos), mine = fresh.find(r => r.key === key);
+        if (!mine) return rects;
+        const ref = rects.find(r => fresh.some(f => f.key === r.key)), f = ref ? fresh.find(q => q.key === ref.key) : null;
+        const dx = ref ? ref.x - f.x : 0, dy = ref ? ref.y - f.y : 0;
+        return Geom.settle(rects.concat([{ key: key, x: mine.x + dx, y: mine.y + dy, w: mine.w, h: mine.h }]), key);
+    }
+    // Rects to match what is on: switched off leaves, switched on comes back, a new mode, scale or
+    // rotation resizes about the centre (then settles).
+    function reconcile() {
+        const want = new Map(page.onMons.map(m => [m.key, Geom.physical(m)]));
+        let rs = page.rects.filter(r => want.has(r.key));
+        for (const r of rs.slice()) {
+            const wh = want.get(r.key);
+            if (Math.abs(r.w - wh[0]) > 0.01 || Math.abs(r.h - wh[1]) > 0.01) rs = Geom.rotate(rs, r.key, wh[0], wh[1]);
         }
+        for (const k of want.keys()) if (!rs.some(r => r.key === k)) rs = page.placeBack(k, rs);
+        page.rects = rs;
+        if (!rs.some(r => r.key === page.selected)) page.selected = rs[0]?.key ?? "";
     }
+    // Monitors plugged, unplugged or moved (an Apply, its revert): staged edits for monitors that
+    // went away are dropped; with nothing else staged the canvas is redrawn from Hyprland.
+    readonly property string liveSig: JSON.stringify(displays.map(d => {
+        const o = d.mon?.lastIpcObject ?? {};
+        return [d.key, d.mon ? [d.mon.x, d.mon.y, d.mon.scale, o.width, o.height, o.transform, o.physicalWidth, o.physicalHeight] : d.saved];
+    }))
+    onLiveSigChanged: page.sync()
+    function sync() {
+        const known = new Set(page.displays.map(d => d.key)), s = {};
+        let pruned = false;
+        for (const k of Object.keys(page.staged)) if (known.has(k)) s[k] = page.staged[k]; else pruned = true;
+        if (pruned) page.staged = s;
+        if (page.dirty) page.reconcile(); else page.rebuild();
+    }
+    // A reload moves monitors without an event Quickshell refreshes on: ask after every settings write.
+    Connections { target: Settings; function onWriteFinished() { refresh.restart(); } }
+    Timer { id: refresh; interval: 300; onTriggered: Hyprland.refreshMonitors() }
+
+    function stage(d, k, v) {
+        if (k === "enabled" && !v && d.mon && page.on(d) && page.liveOn <= 1) { Settings.lastError = "Can't switch off the only connected display."; return; }
+        const x = Object.assign({}, page.staged);
+        x[d.key] = Object.assign({}, x[d.key] ?? {}, { [k]: v });
+        page.staged = x;
+        page.reconcile();
+    }
+    // Keeps the flip bit; dir +1 is a quarter-turn anticlockwise (Wayland's 90).
+    function rotate(key, dir) {
+        const d = page.displays.find(q => q.key === key);
+        if (!d) return;
+        const t = page.cur(d).transform;
+        page.stage(d, "transform", (t & 4) | ((t + dir + 4) & 3));
+    }
+    // Error strings name monitors by key; the connector reads better.
+    function named(msg) {
+        for (const d of page.displays) if (d.key !== d.name) msg = msg.split(Geom.label(d.key)).join(d.name);
+        return msg;
+    }
+    // {ok, pos, error}: the layout Apply would write, or why it can't.
+    readonly property var verdict: {
+        if (page.onMons.some(m => !page.rects.some(r => r.key === m.key))) return { ok: false, pos: {}, error: "The canvas is missing a monitor: Discard and try again" };
+        const p = Geom.problems(page.rects);
+        if (p.length) return { ok: false, pos: {}, error: page.named(p[0]) };
+        const t = Geom.toLogical(page.onMons, page.rects);
+        return t.ok ? t : { ok: false, pos: t.pos, error: page.named(t.error) };
+    }
+    readonly property string blocked: !page.dirty ? "" : DisplayConfirm.active ? "Keep or revert the last change first." : page.verdict.error
+    // Every monitor that is on gets its whole entry (the anchor can shift any position); one
+    // switched off in this edit keeps its saved entry, off. A connector-keyed user entry of a
+    // monitor written under its desc: key goes, so one monitor never has two rules.
+    function apply() {
+        if (page.blocked !== "" || !page.dirty) return;
+        const set = {}, remove = [];
+        for (const d of page.displays) {
+            const s = page.staged[d.key] ?? {}, c = page.cur(d), v = d.saved ?? {};
+            if (page.on(d)) {
+                const p = page.verdict.pos[d.key];
+                if (!p) continue;
+                set[d.key] = { mode: s.mode ?? v.mode ?? c.mode, scale: s.scale ?? v.scale ?? c.scale, transform: c.transform,
+                               position: p[0] + "x" + p[1], enabled: true };
+            } else if (d.mon && s.enabled === false) {
+                set[d.key] = Object.assign({ mode: c.mode, scale: c.scale, transform: c.transform, position: d.mon.x + "x" + d.mon.y }, v, { enabled: false });
+            }
+            if (d.mon && d.key !== d.name && set[d.key] && Settings.user?.displays?.[d.name] !== undefined) remove.push(d.name);
+        }
+        if (DisplayConfirm.begin({ set: set, remove: remove })) { page.staged = ({}); page.moved = false; }
+    }
+    function discard() { page.staged = ({}); page.rebuild(); }
 
     // Workspaces 1–10, plus any other pinned number.
     readonly property var workspaceNumbers: {
@@ -83,8 +213,6 @@ Flickable {
     readonly property string moonrise: Theme.assets + "/moonrise-2560x1440.png"
     property string wallTarget: ""
     property var wallFiles: []
-    // Like monitorValue, but a name with a quote or backslash can't be a settings path key: use the connector.
-    function wallKey(m) { const v = page.monitorValue(m); return /["\\]/.test(v) ? m.name : v; }
     function wallPath(target) { return target === "" ? ".wallpaper.image" : ".wallpaper.monitors[" + JSON.stringify(target) + "]"; }
     // What this target shows now: the chosen file, "" for Moonrise (All), null when a monitor follows All.
     function wallCurrent(target) {
@@ -116,19 +244,52 @@ Flickable {
             onStreamFinished: page.wallFiles = text.split("\0").filter(f => f !== "").sort()
         }
     }
-    Component.onCompleted: maker.running = true
+    Component.onCompleted: { maker.running = true; Hyprland.refreshMonitors(); page.rebuild(); }
 
     ColumnLayout {
         id: col
         width: page.width; spacing: 14
 
+        Glyph { Layout.fillWidth: true; wrapMode: Text.WordWrap; color: Theme.muted; font.pixelSize: Theme.fontSmall
+                text: "Drag the monitors to match your desk, drawn at their real size. Changes here wait for Apply, then you have 15 seconds to keep them." }
+        Arrange {
+            Layout.fillWidth: true
+            mons: page.onMons; rects: page.rects; selected: page.selected
+            onMoved: r => { page.rects = r; page.moved = true; }
+            onPicked: k => page.selected = k
+            onRotated: (k, dir) => page.rotate(k, dir)
+        }
+        // Switched off: off the canvas, a click puts it back.
+        Flow {
+            Layout.fillWidth: true; spacing: 6
+            visible: page.displays.some(d => !page.on(d))
+            Glyph { height: 26; text: "Off:"; color: Theme.muted; font.pixelSize: Theme.fontSmall }
+            Repeater {
+                model: page.displays.filter(d => !page.on(d))
+                delegate: Rectangle {
+                    id: chip
+                    required property var modelData
+                    height: 26; width: chipText.implicitWidth + 18; radius: 6; color: Theme.surface; opacity: 0.6
+                    Glyph { id: chipText; anchors.centerIn: parent; font.pixelSize: Theme.fontSmall; color: Theme.fgDim
+                            text: chip.modelData.name.slice(0, 32) + "  · switch on" }
+                    MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: page.stage(chip.modelData, "enabled", true) }
+                }
+            }
+        }
+        RowLayout {
+            Layout.fillWidth: true; spacing: 8
+            Button { text: "Apply"; primary: true; enabled: page.dirty && page.blocked === ""; onClicked: page.apply() }
+            Button { text: "Discard"; enabled: page.dirty; onClicked: page.discard() }
+            Glyph { Layout.fillWidth: true; elide: Text.ElideRight; color: Theme.muted; font.pixelSize: Theme.fontSmall; text: page.blocked }
+        }
+
+        // A card for each monitor that is connected or switched on; its controls only stage.
         Repeater {
-            model: page.entries
+            model: page.displays.filter(d => d.mon || page.on(d))
             delegate: Pill {
                 id: card
                 required property var modelData
                 readonly property var mon: modelData.mon
-                readonly property string name: modelData.name
                 readonly property var c: page.cur(modelData)
                 readonly property var modes: {
                     const seen = new Set(), out = [];
@@ -139,15 +300,19 @@ Flickable {
                     return out;
                 }
                 Layout.fillWidth: true; color: Theme.bgRaised; implicitHeight: inner.implicitHeight + 24
+                border.color: page.selected === modelData.key ? Theme.accent : Theme.surface
+                opacity: c.enabled ? 1 : 0.6
                 ColumnLayout {
                     id: inner
                     anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                     spacing: 10
                     RowLayout {
                         Layout.fillWidth: true
-                        Glyph { text: card.name; font.bold: true }
-                        Glyph { Layout.fillWidth: true; text: card.mon ? card.mon.description : "switched off"; color: Theme.muted; elide: Text.ElideRight }
-                        Toggle { visible: !card.mon || page.liveCount > 1; label: "Enabled"; checked: card.c.enabled; onToggled: v => page.edit(card.name, "enabled", v) }
+                        Glyph { text: card.modelData.name; font.bold: true; Layout.maximumWidth: 260; elide: Text.ElideRight
+                                MouseArea { anchors.fill: parent; onClicked: page.selected = card.modelData.key } }
+                        Glyph { Layout.fillWidth: true; color: Theme.muted; elide: Text.ElideRight
+                                text: card.mon ? card.mon.description : "not listed by Hyprland: placed from its saved settings" }
+                        Toggle { visible: page.displays.length > 1; label: "Enabled"; checked: card.c.enabled; onToggled: v => page.stage(card.modelData, "enabled", v) }
                     }
                     Flow {
                         visible: card.mon !== null
@@ -158,21 +323,16 @@ Flickable {
                                 height: 26; width: t.implicitWidth + 14; radius: 6
                                 color: on ? Theme.accent : Theme.surface
                                 Glyph { id: t; anchors.centerIn: parent; text: parent.modelData; font.pixelSize: 10; color: parent.on ? Theme.bg : Theme.fgDim }
-                                MouseArea { anchors.fill: parent; onClicked: page.edit(card.name, "mode", parent.modelData) } } }
+                                MouseArea { anchors.fill: parent; onClicked: page.stage(card.modelData, "mode", parent.modelData) } } }
                     }
                     RowLayout {
                         visible: card.mon !== null
                         spacing: 16
                         Stepper { label: "Scale"; value: typeof card.c.scale === "number" ? card.c.scale : 1; from: 0.5; to: 3; step: 0.25; decimals: 2
-                                  onChanged: v => page.edit(card.name, "scale", v) }
-                        Field { Layout.preferredWidth: 140; label: "Position (XxY)"; text: card.c.position; onEdited: t => page.edit(card.name, "position", t) }
+                                  onChanged: v => page.stage(card.modelData, "scale", v) }
                         Choice { label: "Rotation"; value: card.c.transform; options: [[0, "0°"], [1, "90°"], [2, "180°"], [3, "270°"]]
-                                 onPicked: v => page.edit(card.name, "transform", v) }
+                                 onPicked: v => page.stage(card.modelData, "transform", v) }
                     }
-                    Row { spacing: 8
-                        Button { text: "Apply"; primary: true; enabled: page.edits[card.name] !== undefined && !DisplayConfirm.active; onClicked: page.apply(card.modelData) }
-                        Button { text: "Reset"; enabled: !DisplayConfirm.active
-                                 onClicked: { const x = Object.assign({}, page.edits); delete x[card.name]; page.edits = x; if (Settings.user?.displays?.[card.name] !== undefined) DisplayConfirm.begin({ remove: [card.name] }); } } }
                 }
             }
         }
@@ -183,7 +343,7 @@ Flickable {
         RowLayout {
             Layout.fillWidth: true; spacing: 12
             Choice { label: "Monitor"; value: page.wallTarget
-                     options: { const o = [["", "All"]]; for (const m of Hyprland.monitors.values) o.push([page.wallKey(m), m.name]); return o; }
+                     options: { const o = [["", "All"]]; for (const m of Hyprland.monitors.values) o.push([page.keyOf(m), m.name]); return o; }
                      onPicked: v => page.wallTarget = v }
             Item { Layout.fillWidth: true }
             Button { text: page.wallTarget === "" ? "Moonrise on all monitors" : "Same as all"; Layout.alignment: Qt.AlignBottom
