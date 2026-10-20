@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-install checks for a VM installed from the made by moonlight ISO.
+# Post-install checks for a VM installed from the fledge ISO.
 # Run as slievr on the installed system, before any `vm.sh sync` (it rewrites
 # ~/proj/fledge, which must still be clean), e.g.
 #   ip="$(cachyos/vm/vm.sh ip)"

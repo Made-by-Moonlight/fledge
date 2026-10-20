@@ -1,4 +1,4 @@
-name: made by moonlight ISO
+name: fledge ISO
 
 # test: every push / PR — unit tests + shellcheck, in Arch (ImageMagick 7 etc.)
 # iso:  version tags (v*) build the installer ISO and publish a GitHub Release;
@@ -145,7 +145,7 @@ jobs:
         run: |
           set -euo pipefail
           cat > notes.md <<EOF
-          The made by moonlight installer ISO, built from \`${TAG}\` (${GITHUB_SHA::7}).
+          The fledge installer ISO (made by moonlight), built from \`${TAG}\` (${GITHUB_SHA::7}).
 
           | File | SHA-256 |
           | --- | --- |
@@ -157,4 +157,4 @@ jobs:
               sudo dd if=${ISO} of=/dev/sdX bs=4M status=progress oflag=sync
           EOF
           gh release create "$TAG" "release/${ISO}" "release/${ISO}.sha256" \
-            --title "made by moonlight ${TAG}" --notes-file notes.md --generate-notes --verify-tag
+            --title "fledge ${TAG}" --notes-file notes.md --generate-notes --verify-tag
