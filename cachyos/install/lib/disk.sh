@@ -124,7 +124,7 @@ add_data_mounts() {
   local uid gid uuid path dev fs d
   [[ -n "${DATA_MOUNTS_TSV:-}" ]] || return 0
   uid="$(arch-chroot /mnt id -u "$USERNAME")"; gid="$(arch-chroot /mnt id -g "$USERNAME")"
-  printf '\n# Data disks (made by moonlight installer): mounted by UUID on every boot;\n# nofail, so a missing disk never holds up boot.\n' >> /mnt/etc/fstab
+  printf '\n# Data disks (fledge installer): mounted by UUID on every boot;\n# nofail, so a missing disk never holds up boot.\n' >> /mnt/etc/fstab
   while IFS=$'\t' read -r uuid path; do
     [[ -n "$uuid" ]] || continue
     dev="$(blkid -U "$uuid")"
