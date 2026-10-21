@@ -10,6 +10,10 @@
 # (promptly: the loader's notification times out 15 s after Hyprland starts).
 set -uo pipefail
 
+# Without wtype the lock checks can't type the password back in, and the run
+# would end with the session locked. dev-up.sh installs it.
+command -v wtype >/dev/null || { echo "verify-shell.sh: needs wtype in the VM (cachyos/vm/dev-up.sh installs it)" >&2; exit 2; }
+
 PASSWORD="${VM_PASSWORD:-TestPass1}"
 # Over ssh the locale is "C", and qs prints a Qt locale warning on stdout.
 export LC_ALL=C.UTF-8

@@ -52,13 +52,14 @@ for _ in $(seq 1 30); do
   sleep 2
 done
 
-if ! [ -f "$SSH_KEY" ]; then
-  echo "Generating SSH key..."
-  ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -q
-fi
-
+# Key auth that already works (a key authorized before, or an agent such as
+# 1Password's) needs no key of our own; only generate one when it's missing.
 if ! ssh -o BatchMode=yes -o ConnectTimeout=3 -o StrictHostKeyChecking=accept-new \
     "$VM_USER@$vm_ip" 'true' 2>/dev/null; then
+  if ! [ -f "$SSH_KEY" ]; then
+    echo "Generating SSH key..."
+    ssh-keygen -t ed25519 -f "$SSH_KEY" -N "" -q
+  fi
   echo "Setting up passwordless SSH..."
   ssh-keygen -R "$vm_ip" &>/dev/null || true
   pubkey="$(cat "${SSH_KEY}.pub")"
@@ -75,6 +76,13 @@ EOF
 fi
 
 echo "SSH ready: ssh $VM_USER@$vm_ip"
+
+# Test-only tools the desktop doesn't ship: wtype types into the session for
+# verify-shell.sh's lock and keybind checks. The login shell is fish, so the
+# script goes to bash on stdin.
+ssh -o BatchMode=yes "$VM_USER@$vm_ip" bash -s <<EOF || echo "Couldn't install wtype in the VM; verify-shell.sh needs it." >&2
+command -v wtype >/dev/null || printf '%s\\n' '$VM_PASSWORD' | sudo -S -p '' pacman -S --needed --noconfirm wtype >/dev/null
+EOF
 echo "Opening graphical console..."
 setsid virt-viewer --connect qemu:///system "$VM_NAME" &>/dev/null &
 
