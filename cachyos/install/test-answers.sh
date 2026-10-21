@@ -105,6 +105,23 @@ check "data mounts: system path"     1 "$(parse_data_mounts 'a-1:/usr' >/dev/nul
 check "data mounts: no colon"        1 "$(parse_data_mounts 'a-1' >/dev/null; echo $?)"
 check "data mounts: bad uuid chars"  1 "$(parse_data_mounts 'a/1:/data' >/dev/null; echo $?)"
 
+check "label: kind name"           yes "$(ok valid_data_label nvme1)"
+check "label: spaces inside"       yes "$(ok valid_data_label 'Game Drive')"
+check "label: 16 bytes"            yes "$(ok valid_data_label abcdefghijklmnop)"
+check "label: 17 bytes refused"     no "$(ok valid_data_label abcdefghijklmnopq)"
+check "label: empty refused"        no "$(ok valid_data_label '')"
+check "label: edge space refused"   no "$(ok valid_data_label ' x')"
+check "label: colon refused"        no "$(ok valid_data_label 'a:b')"
+check "label: comma refused"        no "$(ok valid_data_label 'a,b')"
+check "wipes: two" "$(printf '/dev/nvme0n1\t/home/e/nvme1\tnvme1\n/dev/disk/by-id/usb-X-0:0\t/data\tStick')" \
+  "$(parse_data_wipes 'nvme1:/home/e/nvme1:/dev/nvme0n1,Stick:/data:/dev/disk/by-id/usb-X-0:0')"
+check "wipes: empty"               "" "$(parse_data_wipes '')"
+check "wipes: same label any case"  no "$(ok parse_data_wipes 'a:/x1:/dev/sda,A:/x2:/dev/sdb')"
+check "wipes: same disk"            no "$(ok parse_data_wipes 'a:/x1:/dev/sda,b:/x2:/dev/sda')"
+check "wipes: same folder"          no "$(ok parse_data_wipes 'a:/x1:/dev/sda,b:/x1:/dev/sdb')"
+check "wipes: system folder"        no "$(ok parse_data_wipes 'a:/var/x:/dev/sda')"
+check "wipes: malformed"            no "$(ok parse_data_wipes 'a:/x1')"
+
 f="$(mk keys 600 $'XKB_LAYOUT=gb\nXKB_VARIANT=\nDATA_MOUNTS=a-1:/data\n')"
 check "answers: new keys load" "gb||a-1:/data" "$( load_answers "$f" && printf '%s|%s|%s' "$XKB_LAYOUT" "$XKB_VARIANT" "$DATA_MOUNTS" )"
 

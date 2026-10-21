@@ -4,7 +4,7 @@
 # '=', unquoted). It is parsed, never sourced, so a value can never run as code.
 
 ANSWER_KEYS=(DISK DISK_CONFIRMED HOSTNAME TIMEZONE USERNAME USER_PASSWORD LUKS_PASSPHRASE ROOT_PASSWORD
-             XKB_LAYOUT XKB_VARIANT DATA_MOUNTS)
+             XKB_LAYOUT XKB_VARIANT DATA_MOUNTS DATA_WIPES)
 
 # valid_username <name>  ->  0 for a safe login name: lowercase, starts with a
 # letter or '_', then letters, digits, '_' or '-', at most 32; not a name the
@@ -98,4 +98,42 @@ parse_data_mounts() {
     seen+="u:$uuid"$'\n'"p:$path"$'\n'
     printf '%s\t%s\n' "$uuid" "$path"
   done
+}
+
+# valid_data_label <label>  ->  0 for a label a wiped data disk can carry: 1 to
+# 16 bytes of printable ASCII, no edge space, no ':' or ',' (they separate the
+# fields of DATA_WIPES). Bytes, not characters: the label becomes a filesystem
+# label, and filesystem labels have a byte limit.
+valid_data_label() {
+  local LC_ALL=C l="$1" re='^[ -~]+$'
+  (( ${#l} >= 1 && ${#l} <= 16 )) || return 1
+  [[ "$l" =~ $re ]] || return 1
+  [[ "$l" != " "* && "$l" != *" " ]] || return 1
+  [[ "$l" != *[:,]* ]]
+}
+
+# parse_data_wipes <"label:folder:disk,label:folder:disk">  ->
+# "disk<TAB>folder<TAB>label" lines. Empty spec -> nothing. The label is up to
+# the first ':', the folder up to the second, the disk is the rest (a
+# /dev/disk/by-id name can hold a ':'). Returns 1 (callers die) on a malformed
+# entry, a label valid_data_label refuses, a folder valid_mount_path refuses, a
+# disk that is not a /dev node, or a disk, folder or label (lowercased) used twice.
+# Output is held back until every entry checks out, so a failure prints nothing.
+parse_data_wipes() {
+  local spec="$1" e label lc path disk rest seen=$'\n' entries out=""
+  [[ -n "$spec" ]] || return 0
+  IFS=, read -ra entries <<<"$spec"
+  for e in "${entries[@]}"; do
+    [[ "$e" == *:*:* ]] || return 1
+    label="${e%%:*}"; rest="${e#*:}"; path="${rest%%:*}"; disk="${rest#*:}"
+    valid_data_label "$label" || return 1
+    valid_mount_path "$path" || return 1
+    [[ "$disk" =~ ^/dev/[^,[:space:]]+$ ]] || return 1
+    lc="${label,,}"
+    [[ "$seen" == *$'\n'"l:$lc"$'\n'* || "$seen" == *$'\n'"p:$path"$'\n'* \
+       || "$seen" == *$'\n'"d:$disk"$'\n'* ]] && return 1
+    seen+="l:$lc"$'\n'"p:$path"$'\n'"d:$disk"$'\n'
+    out+="$disk"$'\t'"$path"$'\t'"$label"$'\n'
+  done
+  printf '%s' "$out"
 }
