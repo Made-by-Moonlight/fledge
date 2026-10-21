@@ -183,6 +183,16 @@ TestCase {
         ins.setWipeLabel("/dev/nvme2n1", "rocket");
         compare(ins.errors("data")["label:/dev/nvme0n1"], "Another drive is already called Rocket");
     }
+    function test_rewipeKeepsItsOwnName() {
+        // A reinstall: the SN570 already holds the "nvme1" a first install wiped
+        // it into. Wiping it again frees that name, so it isn't skipped.
+        const f = stub();
+        f.drives[1].parts = [{ path: "/dev/nvme0n1p1", size: 1e12, fstype: "ext4", label: "nvme1" }];
+        ins.facts = f;
+        ins.setChoice("/dev/nvme0n1", "wipe");
+        compare(ins.wipes["/dev/nvme0n1"].path, "~/nvme1"); compare(ins.wipes["/dev/nvme0n1"].label, "nvme1");
+        compare(ins.errors("data")["label:/dev/nvme0n1"], undefined);
+    }
     function test_answersWipes() {
         ins.setChoice("/dev/nvme0n1", "wipe"); ins.confirmWipe("/dev/nvme0n1");
         verify(ins.answers().includes("DATA_WIPES=nvme1:/home/e/nvme1:/dev/nvme0n1\n"));
