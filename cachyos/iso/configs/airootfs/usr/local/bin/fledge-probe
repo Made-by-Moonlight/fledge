@@ -25,7 +25,7 @@ case "${1:-}" in
     if mountpoint -q /mnt || [[ -e "/dev/mapper/$LUKS_NAME" ]]; then leftover=true; fi
     defaults="$(for e in "${DATA_DISKS[@]}"; do printf '%s\t%s\n' "${e%%:*}" "${e#*:}"; done \
       | jq -Rn '[inputs | split("\t") | {(.[0]): .[1]}] | add // {}')"
-    lsblk -J -b -o PATH,SIZE,MODEL,TRAN,TYPE,FSTYPE,UUID,LABEL,PARTTYPE \
+    lsblk -J -b -o PATH,SIZE,MODEL,TRAN,TYPE,FSTYPE,UUID,LABEL,PARTTYPE,ROTA,MOUNTPOINTS \
       | jq --arg live "$(live_disk)" --argjson defaults "$defaults" -f "$FLEDGE_REPO/cachyos/iso/lib/probe.jq" \
       | jq --arg ucode "$(detect_ucode /proc/cpuinfo || true)" \
            --arg gpu "$(detect_gpu_pkgs "$(lspci -nn 2>/dev/null || true)")" \
