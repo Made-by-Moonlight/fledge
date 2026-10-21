@@ -24,6 +24,11 @@ format_data_disk() {
   fi
 
   _log "wiping $disk into storage '$label'"
+  # Old signatures on the partitions go too: left behind, a new partition at
+  # the same offset would resurrect them.
+  while read -r old; do
+    wipefs -a "$old" >&2 || return 1
+  done < <(lsblk -rpno NAME,TYPE "$disk" | awk '$2=="part"{print $1}')
   wipefs -a "$disk" >&2 || return 1
   sgdisk --zap-all "$disk" >&2 || return 1
   sgdisk -n1:0:0 -t1:8300 -c1:"$label" "$disk" >&2 || return 1
@@ -34,8 +39,10 @@ format_data_disk() {
 
   part="$(lsblk -rpno NAME,TYPE "$disk" | awk '$2=="part"{print $1; exit}')"
   [[ -n "$part" ]] || { echo "no partition on $disk after partitioning" >&2; return 1; }
+  wipefs -a "$part" >&2 || return 1
   mkfs.ext4 -F -L "$label" "$part" >&2 || return 1
-  uuid="$(blkid -s UUID -o value "$part")" && [[ -n "$uuid" ]] || { echo "no uuid on new filesystem $part" >&2; return 1; }
+  # -p probes the device itself; the blkid cache could still hold the old uuid.
+  uuid="$(blkid -p -s UUID -o value "$part")" && [[ -n "$uuid" ]] || { echo "no uuid on new filesystem $part" >&2; return 1; }
   echo "$uuid"
 }
 
