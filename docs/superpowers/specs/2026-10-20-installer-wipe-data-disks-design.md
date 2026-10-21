@@ -79,7 +79,12 @@ The step changes from one row per filesystem to **one card per drive**
 header shows the model (or the kernel name when there is none), size and
 kind (`NVMe`, `SATA SSD`, `Hard disk`, `USB`) and the disk path, muted.
 
-Each card has three choices (a segmented control or radio row):
+Each card has three choices (a segmented control or radio row). The choice
+is explicit per drive (`choices`: disk path → leave / mount / wipe, only
+what the person picked). Unpicked, it is Mount when a row on the drive has
+a `profile.sh` default, else Leave alone, and never Wipe. Ticking a row
+picks Mount for its drive; a drive that turns busy after a probe refresh
+loses a stored Wipe and falls back to the default.
 
 1. **Leave alone** — nothing mounted, nothing changed. The default unless
    a filesystem on it has a `profile.sh` default.
@@ -99,8 +104,8 @@ Each card has three choices (a segmented control or radio row):
 
    Wipe isn't offered on a drive the live system is using: a partition
    that is an active LVM physical volume, an assembled RAID member, or
-   active swap (probe: `lsblk` children of `TYPE` `lvm`/`raid*`, or
-   `swapon --show`). The card shows "In use as LVM / RAID / swap here,
+   active swap (probe: `lsblk` children of `TYPE` `lvm`/`raid*`/`crypt`, a
+   swap partition, or a mounted partition, as `busy`). The card shows "In use as LVM / RAID / swap here,
    can't be wiped" and only Leave alone / Mount. A LUKS container that is
    closed (the live system never opens one) is not "in use".
 
@@ -157,20 +162,29 @@ install is wiped and gets `~/nvme1` by default. The VM's test-disk entry
 - New `drives[]`: every whole disk but the live one, USB included, as
   `{path, size, model, tran, kind, parts}`. This is the Data disks step's
   card list (`disks[]` stays the Disk step's list, which still hides USB).
-- each `drives[]` entry gains `busy`: `""`, `"lvm"`, `"raid"` or `"swap"`,
-  as above.
+- each `drives[]` entry gains `busy`: `""`, `"lvm"`, `"raid"`, `"crypt"`,
+  `"swap"` or `"mounted"`, as above.
+- `fledge-probe` calls `lsblk -J -T`: without a `NAME` column lsblk 2.42
+  prints a flat list with no children, so every partitioned drive looked
+  empty and `-T` (tree) restores them.
 - `datafs[]` unchanged except that it can be joined to `drives[]` by
   `disk`.
 
 ### State (`services/Installer.qml`)
 
-- `mounts` (uuid → `{on, path}`) stays. New `wipes`: disk path →
-  `{on, path}`. A drive's card state is derived: wipe on → Wipe; any
-  mount on → Mount; else Leave alone.
+- `mounts` (uuid → `{on, path, edited}`) stays. New `choices` (above) and
+  `wipes`: disk path → `{on, path, label, pathEdited, labelEdited,
+  confirmed}`. `wipes[d].on` always matches `choices[d] === "wipe"`.
+- The live-test IPC (`qs -c installer ipc`) gains `setWipe <path>` (choose
+  Wipe and press Erase, refusing the target and busy drives) and
+  `choice <path>` (the drive's effective choice).
 - `dataRows` and the new card list drop the target disk, as today. A wipe
   on the drive just chosen as target is dropped with it.
-- Default-name assignment (`onFactsChanged`) moves to a pure function in
-  `lib/` (testable in `tst_validate.qml`), covering both mounts and wipes.
+- Default-name assignment, choice switching, confirmation and validation
+  are pure functions in `lib/Choices.js` (Installer.qml wraps them), tested
+  in `tst_choices.qml`, covering both mounts and wipes. A profile default
+  on a drive being wiped does not reserve its folder: the filesystem
+  won't exist.
 
 ### Answers (`lib/Answers.js`, `lib/answers.sh`)
 
@@ -184,7 +198,11 @@ label `valid_data_label` refuses, a path `valid_mount_path` refuses, a disk
 or path used twice. `install-cachyos.sh` additionally dies when:
 
 - a wipe disk isn't a block device or isn't a whole disk;
-- it's the target, or backs the live `/`, or has a mounted partition;
+- it's listed twice (under two path forms), the target, or backs the live
+  `/` or the live stick (`live_disk()` from `lib/detect.sh`, which finds it
+  through `/run/archiso/bootmnt`: on the ISO `/` is airootfs and lsblk
+  can't resolve it), or has a mounted partition; the target is refused on
+  the live stick too, and the stick's labels never count as kept;
 - a `DATA_MOUNTS` UUID lives on it;
 - a wipe folder equals a `DATA_MOUNTS` folder;
 - it's held by LVM, RAID or swap (the same check as the probe's `busy`).
