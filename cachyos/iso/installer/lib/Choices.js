@@ -73,8 +73,11 @@ function names(s) {
     const active = i => i.disk !== s.disk && it(i).on;
     const defaults = f.datafs.filter(r => r.disk !== s.disk && r.mount).map(r => V.expand(r.mount, home));
     // Labels a new wipe's name must not take: every label on a drive that stays.
+    // A drive's own labels never count against its wipe: the idle suggestion
+    // is the one it keeps when Wipe is picked, and by then they're gone.
     const kept = drives(f).filter(d => d.path !== s.disk && !wipes[d.path].on);
-    const partLabels = [].concat(...kept.map(d => d.parts.map(p => (p.label || "").toLowerCase()).filter(l => l)));
+    const labelsOn = d => d.parts.map(p => (p.label || "").toLowerCase()).filter(l => l);
+    const partLabels = disk => [].concat(...kept.filter(d => d.path !== disk).map(labelsOn));
 
     // Names that are settled first (typed, a profile default, or an active
     // item's), then the rest against them: active ones before idle ones.
@@ -88,7 +91,7 @@ function names(s) {
         const others = items.filter(o => o !== i && active(o));
         const used = defaults.concat(others.map(o => V.expand(it(o).path, home)));
         const label = w => w.labelEdited ? w.label : D.labelFor(w.path);
-        const labels = partLabels.concat(others.filter(o => o.w).map(o => label(o.w).toLowerCase()));
+        const labels = partLabels(i.w ? i.disk : null).concat(others.filter(o => o.w).map(o => label(o.w).toLowerCase()));
         it(i).path = D.suggest(kind[i.disk] || "hdd", home, used, labels);
     }
     for (const d of drives(f)) if (!wipes[d.path].labelEdited) wipes[d.path].label = D.labelFor(wipes[d.path].path);
