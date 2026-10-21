@@ -40,7 +40,9 @@ Everything runs in the test VM (`cachyos/vm/`), never on the host:
 dev mode (`installer/dev/facts.json`, `installer/dev/replay.sh` stands in
 for the install, keyboard layout left alone). The IPC target `installer` has
 `go <step>`, `set <key> <value>` (`key` is an `Installer` property: `username`,
-`hostname`, `password`, …), `setDisk <path>`, `next` and `current`.
+`hostname`, `password`, …), `setDisk <path>`, `setWipe <path>` (wipe a data
+drive and confirm it), `choice <path>` (a data drive's leave/mount/wipe),
+`get <key>` (objects as JSON), `next` and `current`.
 
 Full run: `cachyos/vm/destroy-vm.sh; cachyos/iso/bin/fledge-iso-boot` boots
 the newest ISO and, when the install powers the VM off, boots the installed

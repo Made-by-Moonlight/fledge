@@ -131,11 +131,16 @@ ShellRoot {
             Installer.setChoice(path, "wipe"); Installer.confirmWipe(path);
             return "ok";
         }
+        // A data drive's choice, the default included: leave, mount or wipe.
+        function choice(path: string): string { return Installer.choice(path); }
         function next(): void { Installer.next(); }
         function current(): string { return Installer.current; }
-        // Not the passwords: any process of this user can call IPC.
+        // Not the passwords: any process of this user can call IPC. Objects (choices,
+        // mounts, wipes) as JSON, for a test to read with jq.
         function get(key: string): string {
-            return ["password", "password2", "luks", "luks2"].includes(key) ? "refused: secret" : String(Installer[key]);
+            if (["password", "password2", "luks", "luks2"].includes(key)) return "refused: secret";
+            const v = Installer[key];
+            return v !== null && typeof v === "object" ? JSON.stringify(v) : String(v);
         }
         // The screen the installer is on, and the owl screen's button.
         function screen(): string { return shell.mainScreen ? shell.mainScreen.name : ""; }
