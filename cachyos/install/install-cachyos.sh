@@ -204,6 +204,11 @@ fi
 root_src="$(findmnt -nvo SOURCE / || true)"
 [[ "$(lsblk -no PKNAME "$root_src" 2>/dev/null)" == "${DISK_KNAME##*/}" ]] \
   && die "$DISK_KNAME backs the live / - refusing"
+# On the ISO / is airootfs, which lsblk can't resolve: the stick is found
+# through its mount instead.
+live_dev="$(live_disk)"
+[[ -z "$live_dev" || "$(realpath "$DISK_KNAME")" != "$live_dev" ]] \
+  || die "$DISK_KNAME is the live medium - refusing"
 if [[ "$DISK_TRAN" == "usb" && $ALLOW_USB -eq 0 ]]; then
   die "$DISK_KNAME is a USB device - pass --allow-usb if you really mean it"
 fi
@@ -228,6 +233,8 @@ while IFS=$'\t' read -r wdisk wpath wlabel; do
   wk="$(realpath "$wdisk")"
   [[ "$(lsblk -dno TYPE "$wk" 2>/dev/null)" == disk ]] || die "wipe drive $wdisk is not a whole disk"
   [[ "$wk" != "$DISK_KNAME" ]] || die "wipe drive $wdisk is the install target"
+  [[ -z "${_wipe_seen[$wk]:-}" ]] || die "wipe drive $wdisk is listed twice"
+  [[ -z "$live_dev" || "$wk" != "$live_dev" ]] || die "wipe drive $wdisk is the live medium - refusing"
   [[ "$(lsblk -no PKNAME "$root_src" 2>/dev/null)" == "${wk##*/}" ]] && die "wipe drive $wdisk backs the live / - refusing"
   reason="$(busy_reason "$(lsblk -rno TYPE,MOUNTPOINT "$wk" | tail -n +2)")"
   [[ -z "$reason" ]] || die "wipe drive $wdisk is in use ($reason) - refusing"
@@ -246,7 +253,7 @@ if (( ${#WIPE_DISKS[@]} )); then
   live_root_disk="$(lsblk -no PKNAME "$root_src" 2>/dev/null | head -n1 || true)"
   kept_labels=""
   while read -r d; do
-    [[ -n "$d" && "$d" != "$DISK_KNAME" && -z "${_wipe_seen[$d]:-}" && "${d##*/}" != "$live_root_disk" ]] || continue
+    [[ -n "$d" && "$d" != "$DISK_KNAME" && -z "${_wipe_seen[$d]:-}" && "${d##*/}" != "$live_root_disk" && "$d" != "$live_dev" ]] || continue
     kept_labels+="$(lsblk -rno LABEL "$d")"$'\n'
   done < <(lsblk -dpno NAME,TYPE | awk '$2=="disk"{print $1}')
   kept_labels="$(sed 's/\\x20/ /g' <<<"$kept_labels" | tr 'A-Z' 'a-z')"   # lsblk -r escapes spaces
