@@ -109,12 +109,14 @@ PACMAN_PACKAGES=(
   sddm qt5-declarative
   # Explicit vulkan-driver/lib32-vulkan-driver provider(s) for the GPUs
   # actually present (see GPU_VULKAN_PKGS above) — installed in the same
-  # transaction as steam-jupiter-stable below so pacman doesn't need to
+  # transaction as steam below so pacman doesn't need to
   # prompt for (and non-interactively default to a conflicting) provider
   # choice for that virtual dependency.
   "${GPU_VULKAN_PKGS[@]}"
-  # CachyOS's Jupiter-bootstrapped Steam build.
-  steam-jupiter-stable
+  # The desktop Steam client. Not steam-jupiter-stable: that's the Steam
+  # Deck build, launched with -steamdeck on the steamdeck_stable branch, and
+  # on a desktop its store, community and profile pages don't open.
+  steam
   # Discord (fledge/rules.lua already pins it to workspace 9).
   discord
   # GUI file manager — lighter than the GNOME stack, no dependency on the
@@ -122,7 +124,7 @@ PACMAN_PACKAGES=(
   thunar
 )
 
-# steam-jupiter-stable needs lib32-* packages, which need the multilib
+# steam needs lib32-* packages, which need the multilib
 # repo — commented out by default on a fresh install.
 if grep -q '^#\[multilib\]' /etc/pacman.conf; then
   sudo sed -i '/^#\[multilib\]/,/^#Include = \/etc\/pacman.d\/mirrorlist$/ s/^#//' /etc/pacman.conf
