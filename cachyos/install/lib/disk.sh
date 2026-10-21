@@ -16,7 +16,7 @@ _log() { printf '>>> %s\n' "$*" >&2; }
 # One GPT partition spanning the drive; the label names both the partition
 # and the filesystem.
 format_data_disk() {
-  local disk="$1" label="$2" part
+  local disk="$1" label="$2" part uuid
   [[ -b "$disk" ]] || { echo "not a block device: $disk" >&2; return 1; }
   if findmnt -rno SOURCE | grep -q "^$(realpath "$disk")"; then
     echo "refusing: $disk (or a partition of it) is mounted" >&2
@@ -24,15 +24,19 @@ format_data_disk() {
   fi
 
   _log "wiping $disk into storage '$label'"
-  wipefs -a "$disk" >&2
-  sgdisk --zap-all "$disk" >&2
-  sgdisk -n1:0:0 -t1:8300 -c1:"$label" "$disk" >&2
-  partprobe "$disk"; udevadm settle
+  wipefs -a "$disk" >&2 || return 1
+  sgdisk --zap-all "$disk" >&2 || return 1
+  sgdisk -n1:0:0 -t1:8300 -c1:"$label" "$disk" >&2 || return 1
+  # errexit is suspended under the caller's `|| die`, so every step checks itself:
+  # a half-done wipe must never fall through to blkid and report the OLD uuid.
+  partprobe "$disk" || return 1
+  udevadm settle || return 1
 
   part="$(lsblk -rpno NAME,TYPE "$disk" | awk '$2=="part"{print $1; exit}')"
   [[ -n "$part" ]] || { echo "no partition on $disk after partitioning" >&2; return 1; }
-  mkfs.ext4 -F -L "$label" "$part" >&2
-  blkid -s UUID -o value "$part"
+  mkfs.ext4 -F -L "$label" "$part" >&2 || return 1
+  uuid="$(blkid -s UUID -o value "$part")" && [[ -n "$uuid" ]] || { echo "no uuid on new filesystem $part" >&2; return 1; }
+  echo "$uuid"
 }
 
 # partition_disk <disk>  (by-id path or /dev/xxx)

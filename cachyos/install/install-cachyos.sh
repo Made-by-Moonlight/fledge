@@ -234,7 +234,7 @@ while IFS=$'\t' read -r wdisk wpath wlabel; do
   while IFS=$'\t' read -r uuid mpath; do
     [[ -n "$uuid" ]] || continue
     dev="$(blkid -U "$uuid" 2>/dev/null || true)"
-    [[ -n "$dev" && "$(lsblk -no PKNAME "$dev" 2>/dev/null | head -n1)" == "${wk##*/}" ]] \
+    [[ -n "$dev" && ( "$dev" == "$wk" || "$(lsblk -no PKNAME "$dev" 2>/dev/null | head -n1)" == "${wk##*/}" ) ]] \
       && die "data disk $uuid is on $wdisk, a drive to wipe"
     [[ "$mpath" != "$wpath" ]] || die "folder $wpath is used by both a mounted disk and a wiped drive"
   done <<<"$DATA_MOUNTS_TSV"
