@@ -41,7 +41,7 @@ EXTRA_CMDLINE="quiet splash plymouth.ignore-serial-consoles zswap.enabled=0"
 # Per-machine, optional: data filesystems the installer pre-selects for a
 # permanent mount, "uuid:mountpoint" (~ = the new user's home). Entries whose
 # UUID isn't on the machine are ignored, so one list serves every machine.
-# The installer writes them to fstab by UUID with nofail + automount. A drive
+# The installer writes them to fstab by UUID with nofail, mounted at boot. A drive
 # listed here defaults to Mount, never to Wipe: erasing is always chosen by hand.
 # Folders are named by kind (nvme/ssd/hdd/usb + n); nvme1 is left free for the
 # old system drive, wiped into storage at install time.

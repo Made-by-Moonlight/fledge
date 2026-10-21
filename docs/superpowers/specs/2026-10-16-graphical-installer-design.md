@@ -27,7 +27,7 @@ dependable on that machine (Radeon RX 9070 + Raphael iGPU, root on
   keyboard layout (live), graphical Wi-Fi, a data-disk review, a review page
   with jump-to-edit, and a live progress screen.
 - **Permanent data-disk mounts** chosen in the installer: UUID fstab entries
-  with `nofail,x-systemd.automount`, mounted on every boot with no manual
+  with `nofail`, mounted on every boot with no manual
   remounting, never blocking boot when a disk is missing.
 - **The desktop is installed before the reboot**: `bootstrap.sh` runs in the
   chroot as the user, so the first boot lands on SDDM. firstboot stays as the
@@ -223,7 +223,7 @@ DATA_DISKS=(
 ```
 
 `install-cachyos.sh` writes, per `DATA_MOUNTS` entry,
-`UUID=<uuid> <path> <fstype> defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10 0 0`
+`UUID=<uuid> <path> <fstype> defaults,nofail,x-systemd.device-timeout=10 0 0`
 (fstype from `blkid`; ntfs → `ntfs3`, vfat/exfat get `uid=,gid=` of the
 user), creates the mountpoint in the target and chowns it (and, for paths in
 the user's home, its parents up to home) to the user. A pure

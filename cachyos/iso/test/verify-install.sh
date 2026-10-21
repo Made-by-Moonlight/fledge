@@ -69,22 +69,20 @@ if [[ -n "${VERIFY_AUTOLOGIN:-}" ]]; then
 else
   is "no autologin" no "$([[ -e /etc/sddm.conf.d/autologin.conf ]] && echo yes || echo no)"
 fi
-# VERIFY_DATA_MOUNT=~/testdata: the data disk is in fstab and mounts on access.
+# VERIFY_DATA_MOUNT=~/testdata: the data disk is in fstab and mounted at boot.
 if [[ -n "${VERIFY_DATA_MOUNT:-}" ]]; then
   d="${VERIFY_DATA_MOUNT/#\~/$HOME}"
-  is "data disk in fstab (nofail, automount)" 1 "$(grep -c " $d ext4 defaults,nofail,x-systemd.automount" /etc/fstab)"
-  ls "$d" >/dev/null 2>&1
-  is "data disk mounts on access"       yes   "$(findmnt -n "$d" -t ext4 >/dev/null && echo yes || echo no)"
+  is "data disk in fstab (nofail)"      1     "$(grep -c " $d ext4 defaults,nofail,x-systemd.device-timeout=10 " /etc/fstab)"
+  # Checked before anything opens it: an automount would pass only after access.
+  is "data disk mounted at boot"        yes   "$(findmnt -n "$d" -t ext4 >/dev/null && echo yes || echo no)"
   # The marker the README's setup writes onto the test disk: Mount must never format it.
   is "data disk contents untouched"     yes   "$([[ -e $d/fledge-test-marker ]] && echo yes || echo no)"
 fi
 # VERIFY_WIPE=~/hdd1:hdd1: the drive wiped into storage at <folder>, labelled <label>.
 if [[ -n "${VERIFY_WIPE:-}" ]]; then
   w="${VERIFY_WIPE%%:*}"; w="${w/#\~/$HOME}"; wlabel="${VERIFY_WIPE#*:}"
-  is "wiped drive in fstab (nofail, automount)" 1 "$(grep -c " $w ext4 defaults,nofail,x-systemd.automount" /etc/fstab)"
-  ls "$w" >/dev/null 2>&1
-  is "wiped drive mounts on access"     yes   "$(findmnt -n "$w" -t ext4 >/dev/null && echo yes || echo no)"
-  # The automount point is autofs; the ext4 under it is the second line.
+  is "wiped drive in fstab (nofail)"    1     "$(grep -c " $w ext4 defaults,nofail,x-systemd.device-timeout=10 " /etc/fstab)"
+  is "wiped drive mounted at boot"      yes   "$(findmnt -n "$w" -t ext4 >/dev/null && echo yes || echo no)"
   wpart="$(findmnt -rn -t ext4 -o SOURCE "$w" | head -n1)"
   wdisk="$(lsblk -no PKNAME "$wpart" 2>/dev/null)"
   is "wiped drive has one partition"    1     "$(lsblk -rno TYPE "/dev/$wdisk" 2>/dev/null | grep -c '^part$')"
