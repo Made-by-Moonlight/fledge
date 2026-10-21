@@ -167,3 +167,50 @@ disk_by_id() {
   done
   echo "$kname"
 }
+
+# busy_reason <"TYPE MOUNTPOINT" lines of a disk's descendants>  ->  lvm|raid|
+# crypt|swap|mounted, or nothing when the disk is free. Mirrors `def busy` in
+# iso/lib/probe.jq (same order), so the installer refuses what the UI hid.
+busy_reason() {
+  local type mp swap=0 mounted=0
+  while read -r type mp; do
+    case "$type" in
+      lvm)     echo lvm;   return 0 ;;
+      raid*)   echo raid;  return 0 ;;
+      crypt)   echo crypt; return 0 ;;
+    esac
+    if [[ "$mp" == "[SWAP]" ]]; then swap=1
+    elif [[ -n "$mp" ]]; then mounted=1; fi
+  done <<<"$1"
+  if (( swap )); then echo swap; elif (( mounted )); then echo mounted; fi
+  return 0
+}
+
+# stale_boot_entries <efibootmgr -v text> <partuuid>...  ->  the 4-hex number
+# of every entry whose HD(n,GPT,<guid>,...) path names one of the GUIDs, one
+# per line. GUIDs compare case-insensitively (firmware upper-cases them,
+# blkid lower-cases). Entries without a disk path never match.
+stale_boot_entries() {
+  local text="$1"; shift
+  awk -v guids="$*" '
+    BEGIN { n = split(tolower(guids), g, " "); for (i = 1; i <= n; i++) want[g[i]] = 1 }
+    /^Boot[0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f][0-9A-Fa-f]/ {
+      if (match(tolower($0), /hd\([0-9]+,gpt,[0-9a-f-]+,/)) {
+        s = substr(tolower($0), RSTART, RLENGTH); split(s, f, ",")
+        if (f[3] in want) print substr($1, 5, 4)
+      }
+    }' <<<"$text"
+}
+
+# boot_entry_for <efibootmgr -v text> <partuuid>  ->  the first matching entry number.
+boot_entry_for() {
+  stale_boot_entries "$1" "$2" | head -n1
+}
+
+# order_first <BootOrder csv> <num>  ->  csv with num first, without duplicate.
+order_first() {
+  local order="$1" num="$2" out="$2" e
+  local IFS=,
+  for e in $order; do [[ "$e" == "$num" || -z "$e" ]] || out+=",$e"; done
+  echo "$out"
+}

@@ -7,9 +7,33 @@
 #                           CREATE_SNAPSHOTS_SUBVOL SWAP HIBERNATE_SWAP_SIZE
 # Consumes from detect.sh:  hibernate_swap_size
 # Consumes (optional):      LUKS_PASSPHRASE (unattended install)
+# Globals: WIPED_UUIDS USERNAME (own_wiped_roots)
 # Sets globals: ESP_PART LUKS_PART LUKS_PARTUUID RESUME_OFFSET
 
 _log() { printf '>>> %s\n' "$*" >&2; }
+
+# format_data_disk <disk> <label>  ->  prints the new ext4's UUID on stdout.
+# One GPT partition spanning the drive; the label names both the partition
+# and the filesystem.
+format_data_disk() {
+  local disk="$1" label="$2" part
+  [[ -b "$disk" ]] || { echo "not a block device: $disk" >&2; return 1; }
+  if findmnt -rno SOURCE | grep -q "^$(realpath "$disk")"; then
+    echo "refusing: $disk (or a partition of it) is mounted" >&2
+    return 1
+  fi
+
+  _log "wiping $disk into storage '$label'"
+  wipefs -a "$disk" >&2
+  sgdisk --zap-all "$disk" >&2
+  sgdisk -n1:0:0 -t1:8300 -c1:"$label" "$disk" >&2
+  partprobe "$disk"; udevadm settle
+
+  part="$(lsblk -rpno NAME,TYPE "$disk" | awk '$2=="part"{print $1; exit}')"
+  [[ -n "$part" ]] || { echo "no partition on $disk after partitioning" >&2; return 1; }
+  mkfs.ext4 -F -L "$label" "$part" >&2
+  blkid -s UUID -o value "$part"
+}
 
 # partition_disk <disk>  (by-id path or /dev/xxx)
 partition_disk() {
@@ -137,4 +161,20 @@ add_data_mounts() {
     fi
     _log "data disk $uuid ($fs) -> $path"
   done <<<"$DATA_MOUNTS_TSV"
+}
+
+# own_wiped_roots  ->  a fresh ext4 root belongs to root; give each wiped
+# filesystem's (WIPED_UUIDS) to the user. Existing filesystems keep theirs.
+own_wiped_roots() {
+  local uuid dev tmp uid gid
+  (( ${#WIPED_UUIDS[@]} )) || return 0
+  uid="$(arch-chroot /mnt id -u "$USERNAME")"; gid="$(arch-chroot /mnt id -g "$USERNAME")"
+  for uuid in "${WIPED_UUIDS[@]}"; do
+    dev="$(blkid -U "$uuid")"
+    tmp="$(mktemp -d)"
+    mount "$dev" "$tmp"
+    chown "$uid:$gid" "$tmp"
+    umount "$tmp"; rmdir "$tmp"
+    _log "storage $uuid is owned by $USERNAME"
+  done
 }
