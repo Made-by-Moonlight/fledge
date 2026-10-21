@@ -97,7 +97,8 @@ fi
 # Firmware boot entries: none names a partition that no longer exists (an
 # erased target or wiped drive; the VM keeps NVRAM across reinstalls), and the
 # first in BootOrder is on the ESP this install made.
-efi="$(sudo efibootmgr -v)"
+efi="$(sudo efibootmgr -v)" || efi=""
+is "efibootmgr lists entries" yes "$([[ -n $efi ]] && echo yes || echo no)"
 parts=" $(lsblk -rno PARTUUID | tr '[:upper:]' '[:lower:]' | tr '\n' ' ')"
 stale=""
 for g in $(grep -oiE 'HD\([0-9]+,GPT,[0-9a-f-]+,' <<<"$efi" | cut -d, -f3 | tr '[:upper:]' '[:lower:]'); do
@@ -106,7 +107,8 @@ done
 is "no boot entry names a missing partition" "" "$stale"
 first="$(awk '/^BootOrder:/{split($2, o, ","); print o[1]}' <<<"$efi")"
 esp="$(lsblk -no PARTUUID "$(findmnt -rn -t vfat -o SOURCE /boot | head -n1)" | tr '[:upper:]' '[:lower:]')"
+is "BootOrder is set" yes "$([[ -n $first ]] && echo yes || echo no)"
 is "first boot entry is on the installed ESP" yes \
-  "$(grep -i "^Boot$first" <<<"$efi" | grep -qi "GPT,$esp," && echo yes || echo no)"
+  "$([[ -n $first ]] && grep -iE "^Boot${first}[* ]" <<<"$efi" | grep -qi "GPT,$esp," && echo yes || echo no)"
 
 exit $bad
