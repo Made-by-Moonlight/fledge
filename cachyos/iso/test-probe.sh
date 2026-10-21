@@ -36,4 +36,8 @@ check "drives: active lvm is busy" "lvm"  "$(probe '.drives[] | select(.path=="/
 check "drives: active swap is busy" "swap" "$(probe '.drives[] | select(.path=="/dev/nvme0n1") | .busy')"
 check "drives: closed LUKS is free" ""    "$(probe '.drives[] | select(.path=="/dev/nvme2n1") | .busy')"
 
+# The fixture is a tree; lsblk only prints one when asked (-T) or when NAME is a column.
+check "fledge-probe asks lsblk for a tree" yes \
+  "$(grep -q 'lsblk -J -T ' "$DIR/configs/airootfs/usr/local/bin/fledge-probe" && echo yes || echo no)"
+
 exit $fail

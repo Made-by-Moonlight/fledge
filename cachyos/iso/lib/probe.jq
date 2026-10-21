@@ -1,4 +1,4 @@
-# lsblk -J -b -o PATH,SIZE,MODEL,TRAN,TYPE,FSTYPE,UUID,LABEL,PARTTYPE,ROTA,MOUNTPOINTS  ->  {disks, drives, datafs}
+# lsblk -J -T -b -o PATH,SIZE,MODEL,TRAN,TYPE,FSTYPE,UUID,LABEL,PARTTYPE,ROTA,MOUNTPOINTS  ->  {disks, drives, datafs}
 #   $live      the disk holding the live medium ("" when unknown): never listed
 #   $defaults  {uuid: mountpoint} from profile.sh DATA_DISKS
 # disks:  install targets (whole disks, not USB, not zram/ram/loop)
