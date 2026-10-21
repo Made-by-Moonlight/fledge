@@ -53,4 +53,25 @@ ipc useScreen Virtual-1 >/dev/null; sleep 1
 "$VM" key KEY_ESC; sleep 0.5
 check "keyboard follows the installer back" region "$(ipc current)"
 
+# Screenshots of the Data disks cards and the Review they lead to (in
+# .superpowers/shots/, to look at): the Predator is the target and the SN570 is
+# wiped, so the cards show each choice (SN570 Wipe, Rocket/PNY/Crucial Mount, the
+# stick Leave alone) and Review two Erase rows.
+ipc setDisk /dev/nvme1n1 >/dev/null
+check "setWipe on the sn570" ok "$(ipc setWipe /dev/nvme0n1)"
+check "setWipe refuses the target" "refused: target" "$(ipc setWipe /dev/nvme1n1)"
+check "one card per choice" "leave mount wipe" \
+  "$(ipc get dataDrives | jq -r '.[].path' | while read -r d; do ipc choice "$d" </dev/null; done | sort -u | xargs)"
+ipc go data >/dev/null; sleep 1
+"$VM" shot installer-data-disks
+# The stick's card is below the fold: tabbing to its choice scrolls it into view.
+for ((i = 0; i < 20; i++)); do
+  "$VM" key KEY_TAB; sleep 0.3
+  [[ $(ipc focused) == "SanDisk Ultra choice" ]] && break
+done
+check "tab scrolls to the last card" "SanDisk Ultra choice" "$(ipc focused)"
+"$VM" shot installer-data-disks-end
+ipc go review >/dev/null; sleep 1
+"$VM" shot installer-review-erase
+
 exit "$fail"

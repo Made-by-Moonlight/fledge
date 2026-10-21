@@ -1,14 +1,35 @@
 {
   "disks": [
-    {"path": "/dev/vda", "size": 42949672960, "model": "", "tran": "", "parts": []},
-    {"path": "/dev/nvme0n1", "size": 1000204886016, "model": "WD Blue SN570 1TB", "tran": "nvme",
+    {"path": "/dev/nvme0n1", "size": 1000204886016, "model": "WD Blue SN570 1TB", "tran": "nvme", "kind": "nvme",
      "parts": [{"path": "/dev/nvme0n1p1", "size": 2147483648, "fstype": "vfat", "label": ""},
-               {"path": "/dev/nvme0n1p2", "size": 998056312320, "fstype": "crypto_LUKS", "label": ""}]}
+               {"path": "/dev/nvme0n1p2", "size": 998056312320, "fstype": "crypto_LUKS", "label": ""}]},
+    {"path": "/dev/nvme1n1", "size": 4000787030016, "model": "Predator SSD GM7 4TB", "tran": "nvme", "kind": "nvme", "parts": []},
+    {"path": "/dev/nvme2n1", "size": 1000204886016, "model": "Sabrent Rocket 4.0 1TB", "tran": "nvme", "kind": "nvme",
+     "parts": [{"path": "/dev/nvme2n1p1", "size": 1000202788864, "fstype": "ext4", "label": ""}]},
+    {"path": "/dev/sda", "size": 480103981056, "model": "PNY CS900 480GB SSD", "tran": "sata", "kind": "ssd",
+     "parts": [{"path": "/dev/sda1", "size": 480102916096, "fstype": "ext4", "label": ""}]},
+    {"path": "/dev/sdb", "size": 2000398934016, "model": "CT2000MX500SSD1", "tran": "sata", "kind": "ssd",
+     "parts": [{"path": "/dev/sdb1", "size": 2000397868544, "fstype": "ext4", "label": ""}]}
+  ],
+  "drives": [
+    {"path": "/dev/nvme0n1", "size": 1000204886016, "model": "WD Blue SN570 1TB", "tran": "nvme", "kind": "nvme", "busy": "",
+     "parts": [{"path": "/dev/nvme0n1p1", "size": 2147483648, "fstype": "vfat", "label": ""},
+               {"path": "/dev/nvme0n1p2", "size": 998056312320, "fstype": "crypto_LUKS", "label": ""}]},
+    {"path": "/dev/nvme1n1", "size": 4000787030016, "model": "Predator SSD GM7 4TB", "tran": "nvme", "kind": "nvme", "busy": "", "parts": []},
+    {"path": "/dev/nvme2n1", "size": 1000204886016, "model": "Sabrent Rocket 4.0 1TB", "tran": "nvme", "kind": "nvme", "busy": "",
+     "parts": [{"path": "/dev/nvme2n1p1", "size": 1000202788864, "fstype": "ext4", "label": ""}]},
+    {"path": "/dev/sda", "size": 480103981056, "model": "PNY CS900 480GB SSD", "tran": "sata", "kind": "ssd", "busy": "",
+     "parts": [{"path": "/dev/sda1", "size": 480102916096, "fstype": "ext4", "label": ""}]},
+    {"path": "/dev/sdb", "size": 2000398934016, "model": "CT2000MX500SSD1", "tran": "sata", "kind": "ssd", "busy": "",
+     "parts": [{"path": "/dev/sdb1", "size": 2000397868544, "fstype": "ext4", "label": ""}]},
+    {"path": "/dev/sdd", "size": 64023257088, "model": "SanDisk Ultra", "tran": "usb", "kind": "usb", "busy": "",
+     "parts": [{"path": "/dev/sdd1", "size": 64022208512, "fstype": "exfat", "label": "photos"}]}
   ],
   "datafs": [
-    {"uuid": "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7", "fstype": "ext4", "label": "", "size": 480102916096, "disk": "/dev/sda", "mount": "~/storage1"},
-    {"uuid": "1234-ABCD", "fstype": "exfat", "label": "photos", "size": 64023257088, "disk": "/dev/sdd", "mount": null},
-    {"uuid": "55cefb4f-6b27-4dbc-bbf8-5e9120defa26", "fstype": "ext4", "label": "big", "size": 3900000000000, "disk": "/dev/nvme0n1", "mount": "~/storage4"}
+    {"uuid": "77d7988e-2e64-4654-bda2-481d321eecdd", "fstype": "ext4", "label": "", "size": 1000202788864, "disk": "/dev/nvme2n1", "mount": "~/nvme2"},
+    {"uuid": "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7", "fstype": "ext4", "label": "", "size": 480102916096, "disk": "/dev/sda", "mount": "~/ssd2"},
+    {"uuid": "5e62f799-8df9-4ee3-b4d7-4da62c8c65ff", "fstype": "ext4", "label": "", "size": 2000397868544, "disk": "/dev/sdb", "mount": "~/ssd1"},
+    {"uuid": "1234-ABCD", "fstype": "exfat", "label": "photos", "size": 64022208512, "disk": "/dev/sdd", "mount": null}
   ],
   "ucode": "amd-ucode", "gpu": "vulkan-radeon lib32-vulkan-radeon", "memMiB": 31744, "zramMiB": 8192,
   "swapMiB": 34816, "timezone": "UTC", "online": true, "leftover": false

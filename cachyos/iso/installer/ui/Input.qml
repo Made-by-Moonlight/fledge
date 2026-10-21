@@ -14,6 +14,9 @@ Column {
     property bool secret: false
     property bool shown: false
     signal accepted()
+    // Only typing (or pasting): a step marks a field as typed by the person on
+    // this, not on textChanged, which a binding writing a suggestion also fires.
+    signal edited(string text)
     spacing: 4
     width: 420
     objectName: label
@@ -30,6 +33,7 @@ Column {
             verticalAlignment: TextInput.AlignVCenter
             color: Theme.fg; font.family: Theme.font; font.pixelSize: Theme.fontSize
             echoMode: f.secret && !f.shown ? TextInput.Password : TextInput.Normal
+            onTextEdited: f.edited(text)
             // Repeats of a held Return are swallowed: accepted() can mean next().
             Keys.onReturnPressed: ev => { ev.accepted = true; if (!ev.isAutoRepeat) f.accepted(); }
             Keys.onEnterPressed: ev => { ev.accepted = true; if (!ev.isAutoRepeat) f.accepted(); }

@@ -63,17 +63,58 @@ contains "tab goes from back to username" "Back|Username" "$cycle"
 check "no tab lands on a disabled next" no "$([[ $cycle == *Next* ]] && echo yes || echo no)"
 
 # Disk: the list is in the chain, so Shift+Tab from its button brings the arrow keys back.
-ipc go welcome; ipc set disk /dev/vda; ipc go disk; sleep 1
+ipc go welcome; ipc set disk /dev/nvme0n1; ipc go disk; sleep 1
 check "disk opens on the list" "Disk list" "$(focused)"
 check "tab to the erase button" "Erase this disk" "$(tabs 1)"
 check "shift+tab back to the list" "Disk list" "$(tabs 1 shift)"
 key KEY_DOWN
-check "down picks the next disk" /dev/nvme0n1 "$(ipc_get disk)"
+check "down picks the next disk" /dev/nvme1n1 "$(ipc_get disk)"
 check "passwords not readable over ipc" "refused: secret" "$(ipc_get password)"
 check "passwords not writable over ipc" "refused: password" "$(ipc set password x)"
 check "internals not writable over ipc" "refused: terminal" "$(ipc set terminal true)"
 check "answers writable over ipc" "ok|ethan" "$(ipc set username ethan)|$(ipc_get username)"
 key KEY_ENTER
 check "return on the list confirms" data "$(ipc current)"
+
+# Data disks: a card per drive besides the target (the Predator), each with its
+# choice in the Tab chain. tab_to <name>: Tab until <name> has the focus, at most
+# 30 presses; prints the names passed on the way, joined by |.
+tab_to() {
+  local i f out=()
+  for ((i = 0; i < 30; i++)); do
+    key KEY_TAB; f="$(focused)"; out+=("$f")
+    [[ $f == "$1" ]] && break
+  done
+  local IFS='|'; printf '%s\n' "${out[*]}"
+}
+picked() { ipc choice "$1"; }
+confirmed() { ipc_get wipes | jq -r --arg d "$1" '.[$d].confirmed'; }
+sn570="WD Blue SN570 1TB choice"; usb="SanDisk Ultra choice"
+check "tab reaches the first card" "$sn570" "$(tab_to "$sn570")"
+chain="$(tab_to "$usb")"
+for c in "Sabrent Rocket 4.0 1TB choice" "PNY CS900 480GB SSD choice" "CT2000MX500SSD1 choice" "$usb"; do
+  contains "tab reaches $c" "$c" "$chain"
+done
+# The stick has a filesystem and no profile default: Leave alone, then Mount, then Wipe.
+check "the stick starts on leave alone" leave "$(picked /dev/sdd)"
+key KEY_RIGHT
+check "right picks mount" mount "$(picked /dev/sdd)"
+key KEY_RIGHT
+check "right again picks wipe" wipe "$(picked /dev/sdd)"
+check "tab from a wipe card" "Mount at|Label|Erase this drive" "$(tabs 3)"
+ipc next
+check "an unconfirmed wipe holds the step" data "$(ipc current)"
+key KEY_SPACE
+check "space on the button confirms" true "$(confirmed /dev/sdd)"
+# The SN570 (only an ESP and LUKS: no Mount) goes Leave alone -> Wipe, and Return confirms.
+tab_to "$sn570" >/dev/null
+key KEY_RIGHT
+check "no mount on the sn570: right picks wipe" wipe "$(picked /dev/nvme0n1)"
+check "tab to its button" "Erase this drive" "$(tabs 3 | cut -d'|' -f3)"
+key KEY_ENTER
+check "return on the button confirms" true "$(confirmed /dev/nvme0n1)"
+check "return on the button stays on the step" data "$(ipc current)"
+ipc next
+check "confirmed wipes complete the step" review "$(ipc current)"
 
 exit "$fail"
