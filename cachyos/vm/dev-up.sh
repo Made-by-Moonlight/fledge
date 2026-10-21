@@ -80,6 +80,7 @@ echo "SSH ready: ssh $VM_USER@$vm_ip"
 # Test-only tools the desktop doesn't ship: wtype types into the session for
 # verify-shell.sh's lock and keybind checks. The login shell is fish, so the
 # script goes to bash on stdin.
+# shellcheck disable=SC2087  # $VM_PASSWORD is the host's: expanded here, on purpose
 ssh -o BatchMode=yes "$VM_USER@$vm_ip" bash -s <<EOF || echo "Couldn't install wtype in the VM; verify-shell.sh needs it." >&2
 command -v wtype >/dev/null || printf '%s\\n' '$VM_PASSWORD' | sudo -S -p '' pacman -S --needed --noconfirm wtype >/dev/null
 EOF
