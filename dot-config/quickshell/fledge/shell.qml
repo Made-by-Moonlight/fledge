@@ -41,7 +41,11 @@ ShellRoot {
             id: perScreen
             required property ShellScreen modelData
             Wallpaper { screen: perScreen.modelData }
-            Bar { screen: perScreen.modelData }
+            // No bar surface (and no reserved edge) on a monitor whose bar is off.
+            LazyLoader {
+                active: ShellState.showsBar(perScreen.modelData)
+                Bar { screen: perScreen.modelData }
+            }
         }
     }
     Osd { id: osd }
