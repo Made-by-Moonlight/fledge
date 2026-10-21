@@ -16,7 +16,7 @@
 - Shell: bash, `set -euo pipefail` in scripts, shellcheck-clean; comments explain *why*; match surrounding density.
 - Tests: `test-*.sh` with `cachyos/install/test/lib.sh` (`check name expected actual`, `contains`, `exit $fail`); QML unit tests in `cachyos/iso/installer/test/tst_validate.qml` via `cachyos/iso/test-installer-qml.sh`.
 - Commit messages: `area: what changed and why`, lowercase area (`install:`, `iso:`, `docs:`, `vm:`).
-- Names: product is `fledge`; no `mbm`/`slievr`/`made-by-moonlight` component names (`cachyos/check-names.sh`).
+- Names: product is `fledge`; never bring back an old component name (`cachyos/check-names.sh` lists them).
 - Wipe is **never** pre-selected, not even from `profile.sh`.
 - Wiped layout: GPT, one partition over the whole disk, type `8300`, ext4, unencrypted; partition name = ext4 label = the label.
 - Kind: `tran == nvme` → `nvme`; `tran == usb` → `usb`; else not rotational → `ssd`; else `hdd`. UI names: `NVMe`, `SATA SSD`, `Hard disk`, `USB`.
