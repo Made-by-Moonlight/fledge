@@ -2,6 +2,8 @@ pragma Singleton
 import Quickshell
 import Quickshell.Hyprland
 import QtQuick
+import "../settings/Layout.js" as Geom
+import "Main.js" as Main
 
 // Which popups are open. Every opener goes through here so only one popup
 // holds the keyboard at a time and a pending dmenu is always answered.
@@ -26,6 +28,24 @@ Singleton {
     function focusedScreen() {
         const name = Hyprland.focusedMonitor?.name;
         return Quickshell.screens.find(s => s.name === name) ?? Quickshell.screens[0];
+    }
+
+    // The main monitor (bar.main, else the top-left one) and which monitors show a bar.
+    // Keys as Displays writes them: Layout.js keyFor, the connector when that has a quote or backslash.
+    readonly property var monitors: Hyprland.monitors.values.map(m => {
+        const v = Geom.keyFor(m, Hyprland.monitors.values);
+        return { key: /["\\]/.test(v) ? m.name : v, name: m.name, x: m.x, y: m.y };
+    })
+    readonly property string mainKey: Main.pick(monitors, Settings.barMain)
+    readonly property var mainScreen: {
+        const name = monitors.find(m => m.key === mainKey)?.name;
+        return Quickshell.screens.find(s => s.name === name) ?? focusedScreen();
+    }
+    function keyOfScreen(screen) { return monitors.find(m => m.name === screen?.name)?.key ?? ""; }
+    // A screen Hyprland doesn't list yet keeps its bar until it does.
+    function showsBar(screen) {
+        const key = keyOfScreen(screen);
+        return key === "" || Main.showsBar(key, monitors, Settings.barMain, Settings.barHidden);
     }
 
     function closePopups() {

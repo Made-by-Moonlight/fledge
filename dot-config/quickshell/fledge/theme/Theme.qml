@@ -31,13 +31,12 @@ Singleton {
     readonly property real barScale: barHeight / 32   // bar text, pills and tray icons scale with the bar
     readonly property int barFont: Math.round(fontSize * barScale)
     readonly property int barFontLarge: Math.round(fontLarge * barScale)
-    readonly property int frame: 6          // the border round all four edges (the bar edge's is the strip)
-    readonly property int frameRadius: 14   // the desktop's inner corners
+    readonly property int frame: 6          // the strip along the bar edge, between the tabs
     readonly property int tabRadius: 8      // a tab's fillet off the strip and its bottom corners
     readonly property int tabPad: 12        // a tab's room either side of its section
     // Popups ignore exclusive zones, so they place themselves against the frame from the screen edge.
     readonly property int popupTop: barHeight + gap   // a popup hangs one gap below a tab
-    readonly property int popupSide: frame + gap      // and sits one gap inside the border
+    readonly property int popupSide: gap             // and one gap in from the screen's side
     readonly property int osdBottom: barHeight + 6 * gap   // the OSD floats clear of a bottom bar, with room to spare
     readonly property int anim: 140
 

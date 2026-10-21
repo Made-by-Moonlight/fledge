@@ -2,9 +2,8 @@ import Quickshell
 import Quickshell.Wayland
 import QtQuick
 
-// An invisible surface that only reserves space along one screen edge. The frame is drawn by
-// one fullscreen surface that ignores exclusive zones, and a layer surface reserves along at
-// most one edge, so each edge gets one of these.
+// An invisible surface that only reserves space along one screen edge. The bar is drawn by
+// one fullscreen surface that ignores exclusive zones, so the bar edge's zone is held by this.
 PanelWindow {
     id: reserve
     required property string edge   // top | bottom | left | right

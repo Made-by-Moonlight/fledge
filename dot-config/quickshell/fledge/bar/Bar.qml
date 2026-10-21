@@ -4,11 +4,11 @@ import QtQuick
 import "../theme"
 import "../services"
 
-// The attached bar and screen frame for one screen: a thin dark border round the screen whose
-// bar edge carries a tab per section (left from the corner, centre, right into the corner),
-// and a desktop with rounded corners. One fullscreen surface draws it all (no seams between
-// pieces) and takes clicks only on the strip and the tabs; four invisible Reserve surfaces hold
-// the exclusive zones, so windows tile inside the frame and below the tabs.
+// The attached bar for one screen: a thin dark strip along the bar edge carrying a tab per
+// section (left from the corner, centre, right into the corner); the other edges have no
+// border. One fullscreen surface draws it (no seams between pieces) and takes clicks only on
+// the strip and the tabs; an invisible Reserve holds the exclusive zone, so windows tile
+// below the tabs. Only on screens that show a bar (ShellState.showsBar).
 Scope {
     id: root
     required property ShellScreen screen
@@ -16,9 +16,6 @@ Scope {
     readonly property bool shown: ShellState.barVisible
 
     Reserve { screen: root.screen; visible: root.shown; edge: root.top ? "top" : "bottom"; size: Theme.barHeight }
-    Reserve { screen: root.screen; visible: root.shown; edge: root.top ? "bottom" : "top"; size: Theme.frame }
-    Reserve { screen: root.screen; visible: root.shown; edge: "left"; size: Theme.frame }
-    Reserve { screen: root.screen; visible: root.shown; edge: "right"; size: Theme.frame }
 
     PanelWindow {
         id: bar
@@ -68,7 +65,7 @@ Scope {
 
         Section {
             id: left
-            x: Theme.frame + Theme.gap
+            x: Theme.gap
             anchors.verticalCenter: leftTab.verticalCenter
             modules: Settings.barLeft
             screen: root.screen
@@ -83,7 +80,7 @@ Scope {
         }
         Section {
             id: right
-            x: parent.width - width - Theme.frame - Theme.gap
+            x: parent.width - width - Theme.gap
             anchors.verticalCenter: leftTab.verticalCenter
             modules: Settings.barRight
             screen: root.screen
