@@ -65,6 +65,9 @@ Column {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: pressed ? Qt.ClosedHandCursor : Qt.OpenHandCursor
+                    // The page is a Flickable: past its drag threshold it would take the grab
+                    // (cancelling this drag) and scroll the page instead.
+                    preventStealing: true
                     property point press
                     property var start: null
                     property bool dragging: false
