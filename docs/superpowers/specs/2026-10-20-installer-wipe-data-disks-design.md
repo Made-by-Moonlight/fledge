@@ -210,9 +210,12 @@ or path used twice. `install-cachyos.sh` additionally dies when:
 ### Backend (`lib/disk.sh`, `install-cachyos.sh`)
 
 - New `format_data_disk <disk> <label>`: refuses a mounted disk (same check
-  as `partition_disk`), then `wipefs -a`, `sgdisk --zap-all`,
-  `sgdisk -n1:0:0 -t1:8300 -c1:<label>`, `partprobe`, `udevadm settle`,
-  `mkfs.ext4 -F -L <label>`, and prints the new filesystem's UUID.
+  as `partition_disk`), then `wipefs -a` on each existing partition and on
+  the disk, `sgdisk --zap-all`, `sgdisk -n1:0:0 -t1:8300 -c1:<label>`,
+  `partprobe`, `udevadm settle`, `wipefs -a` on the new partition,
+  `mkfs.ext4 -F -L <label>`, and prints the new filesystem's UUID read with
+  `blkid -p` (from the device, never blkid's cache). Every step fails the
+  function: it runs under `|| die`, where `set -e` is suspended.
 - Runs in the **disk** stage, right after the target's guards and
   confirmation, before the target is partitioned, one drive at a time,
   logged. Each wiped drive's `uuid<TAB>path` is appended to
