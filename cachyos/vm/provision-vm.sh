@@ -15,6 +15,9 @@ VM_DISK_GB=40
 # disks so multi-disk selection and the wrong-disk guard get exercised, and it
 # doubles as the "staged repo" delivery medium in the test loop.
 VM_DATA_DISK_GB=8
+# A third, blank disk for the installer to wipe into storage (Data disks ›
+# Wipe); the second keeps its test filesystem for the Mount path.
+VM_WIPE_DISK_GB=4
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VIRSH="virsh -c qemu:///system"
 
@@ -48,6 +51,7 @@ virt-install \
   --memory "$VM_RAM_MB" \
   --disk "size=$VM_DISK_GB,path=/var/lib/libvirt/images/${VM_NAME}.qcow2" \
   --disk "size=$VM_DATA_DISK_GB,path=/var/lib/libvirt/images/${VM_NAME}-data.qcow2" \
+  --disk "size=$VM_WIPE_DISK_GB,path=/var/lib/libvirt/images/${VM_NAME}-wipe.qcow2" \
   --cdrom "$iso_path" \
   --os-variant archlinux \
   --network network=default \
