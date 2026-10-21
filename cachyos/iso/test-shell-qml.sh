@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Unit tests for the fledge shell's JavaScript (dot-config/quickshell/fledge/settings/*.js):
-# the keybind editor's dispatcher short form and the Displays page's layout maths.
+# Unit tests for the fledge shell's JavaScript (dot-config/quickshell/fledge/settings/*.js, services/Main.js):
+# the keybind editor's dispatcher short form, the Displays page's layout maths and the main monitor.
 # No display needed.
 #   bash cachyos/iso/test-shell-qml.sh
 set -euo pipefail
@@ -13,3 +13,4 @@ RUNNER="${QMLTESTRUNNER:-/usr/lib/qt6/bin/qmltestrunner}"   # qt6-declarative
 # File reads let a test check every shipped bind (defaults/settings.json).
 QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_dspshort.qml"
 QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_layout.qml"
+QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_main.qml"
