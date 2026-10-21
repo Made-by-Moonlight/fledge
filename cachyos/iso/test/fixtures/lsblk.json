@@ -1,25 +1,32 @@
 {
   "blockdevices": [
-    {"path": "/dev/sda", "size": 480103981056, "model": "PNY CS900 480GB SSD  ", "tran": "sata", "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
+    {"path": "/dev/sda", "size": 480103981056, "model": "PNY CS900 480GB SSD  ", "tran": "sata", "rota": false, "mountpoints": [null], "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
      "children": [
-       {"path": "/dev/sda1", "size": 480102916096, "model": null, "tran": null, "type": "part", "fstype": "ext4", "uuid": "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7", "label": null, "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"}
+       {"path": "/dev/sda1", "size": 480102916096, "model": null, "tran": null, "rota": false, "mountpoints": [null], "type": "part", "fstype": "ext4", "uuid": "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7", "label": null, "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"}
      ]},
-    {"path": "/dev/sdc", "size": 32010928128, "model": "Ultra USB 3.0", "tran": "usb", "type": "disk", "fstype": "iso9660", "uuid": "2026-10-16-00-00-00-00", "label": "FLEDGE_202610", "parttype": null,
+    {"path": "/dev/sdc", "size": 32010928128, "model": "Ultra USB 3.0", "tran": "usb", "rota": false, "mountpoints": [null], "type": "disk", "fstype": "iso9660", "uuid": "2026-10-16-00-00-00-00", "label": "FLEDGE_202610", "parttype": null,
      "children": [
-       {"path": "/dev/sdc2", "size": 1048576, "model": null, "tran": null, "type": "part", "fstype": "vfat", "uuid": "AAAA-BBBB", "label": "ARCHISO_EFI", "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b"}
+       {"path": "/dev/sdc2", "size": 1048576, "model": null, "tran": null, "rota": false, "mountpoints": [null], "type": "part", "fstype": "vfat", "uuid": "AAAA-BBBB", "label": "ARCHISO_EFI", "parttype": "c12a7328-f81f-11d2-ba4b-00a0c93ec93b"}
      ]},
-    {"path": "/dev/sdd", "size": 64023257088, "model": "Extreme", "tran": "usb", "type": "disk", "fstype": "exfat", "uuid": "1234-ABCD", "label": "photos", "parttype": null},
-    {"path": "/dev/nvme2n1", "size": 1000204886016, "model": "WD Blue SN570 1TB", "tran": "nvme", "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
+    {"path": "/dev/sdd", "size": 64023257088, "model": "Extreme", "tran": "usb", "rota": true, "mountpoints": [null], "type": "disk", "fstype": "exfat", "uuid": "1234-ABCD", "label": "photos", "parttype": null},
+    {"path": "/dev/nvme2n1", "size": 1000204886016, "model": "WD Blue SN570 1TB", "tran": "nvme", "rota": false, "mountpoints": [null], "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
      "children": [
-       {"path": "/dev/nvme2n1p1", "size": 2147483648, "model": null, "tran": null, "type": "part", "fstype": "vfat", "uuid": "87B6-F21D", "label": null, "parttype": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"},
-       {"path": "/dev/nvme2n1p2", "size": 998056312320, "model": null, "tran": null, "type": "part", "fstype": "crypto_LUKS", "uuid": "0c99f7a8-02e0-421c-8d4a-9d2a60202af0", "label": null, "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"}
+       {"path": "/dev/nvme2n1p1", "size": 2147483648, "model": null, "tran": null, "rota": false, "mountpoints": [null], "type": "part", "fstype": "vfat", "uuid": "87B6-F21D", "label": null, "parttype": "C12A7328-F81F-11D2-BA4B-00A0C93EC93B"},
+       {"path": "/dev/nvme2n1p2", "size": 998056312320, "model": null, "tran": null, "rota": false, "mountpoints": [null], "type": "part", "fstype": "crypto_LUKS", "uuid": "0c99f7a8-02e0-421c-8d4a-9d2a60202af0", "label": null, "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"}
      ]},
-    {"path": "/dev/nvme0n1", "size": 4000787030016, "model": "Predator SSD GM7 4TB", "tran": "nvme", "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
+    {"path": "/dev/nvme0n1", "size": 4000787030016, "model": "Predator SSD GM7 4TB", "tran": "nvme", "rota": false, "mountpoints": [null], "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
      "children": [
-       {"path": "/dev/nvme0n1p3", "size": 3900000000000, "model": null, "tran": null, "type": "part", "fstype": "ext4", "uuid": "55cefb4f-6b27-4dbc-bbf8-5e9120defa26", "label": "big", "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"},
-       {"path": "/dev/nvme0n1p4", "size": 34359738368, "model": null, "tran": null, "type": "part", "fstype": "swap", "uuid": "37299452-ecec-4937-8e67-b00311334d13", "label": null, "parttype": "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"}
+       {"path": "/dev/nvme0n1p3", "size": 3900000000000, "model": null, "tran": null, "rota": false, "mountpoints": [null], "type": "part", "fstype": "ext4", "uuid": "55cefb4f-6b27-4dbc-bbf8-5e9120defa26", "label": "big", "parttype": "0fc63daf-8483-4772-8e79-3d69d8477de4"},
+       {"path": "/dev/nvme0n1p4", "size": 34359738368, "model": null, "tran": null, "rota": false, "mountpoints": ["[SWAP]"], "type": "part", "fstype": "swap", "uuid": "37299452-ecec-4937-8e67-b00311334d13", "label": null, "parttype": "0657fd6d-a4ab-43c4-84e5-0933c84b4f4f"}
      ]},
-    {"path": "/dev/vde", "size": 1073741824, "model": "Blank", "tran": "sata", "type": "disk", "fstype": "vfat", "uuid": null, "label": null, "parttype": null},
-    {"path": "/dev/zram0", "size": 4294967296, "model": null, "tran": null, "type": "disk", "fstype": "swap", "uuid": null, "label": null, "parttype": null}
+    {"path": "/dev/vde", "size": 1073741824, "model": "Blank", "tran": "sata", "rota": false, "mountpoints": [null], "type": "disk", "fstype": "vfat", "uuid": null, "label": null, "parttype": null},
+    {"path": "/dev/sdf", "size": 2000398934016, "model": null, "tran": "sata", "rota": true, "mountpoints": [null], "type": "disk", "fstype": null, "uuid": null, "label": null, "parttype": null,
+     "children": [
+       {"path": "/dev/sdf1", "size": 2000397885440, "model": null, "tran": null, "rota": true, "mountpoints": [null], "type": "part", "fstype": "LVM2_member", "uuid": "Yd1f2a-aaaa-bbbb-cccc-dddd-eeee-ffff00", "label": null, "parttype": "e6d6d379-f507-44c2-a23c-238f2a3df928",
+        "children": [
+          {"path": "/dev/mapper/vg-root", "size": 2000000000000, "model": null, "tran": null, "rota": true, "mountpoints": [null], "type": "lvm", "fstype": null, "uuid": null, "label": null, "parttype": null}
+        ]}
+     ]},
+    {"path": "/dev/zram0", "size": 4294967296, "model": null, "tran": null, "rota": false, "mountpoints": [null], "type": "disk", "fstype": "swap", "uuid": null, "label": null, "parttype": null}
   ]
 }
