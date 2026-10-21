@@ -125,6 +125,9 @@ back from main restores its own choice).
 - Shell only: no Hyprland config generator changes, nothing written to
   Hyprland.
 - The defaults file gets no layout or monitor keys (AGENTS.md).
+- `fledge settings check` (`lib/check.jq`) rejects unknown keys, so it learns
+  `bar.main` (text) and `bar.hidden` (a list of text), with the same
+  no-quote-or-backslash rule as `wallpaper.monitors` names.
 - `fledge settings apply` doesn't need to run for these keys; the shell reads
   them live.
 
