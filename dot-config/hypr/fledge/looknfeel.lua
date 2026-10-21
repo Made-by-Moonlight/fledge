@@ -27,7 +27,8 @@ hl.config({
   },
 
   decoration = {
-    rounding = 0,
+    -- fledge: the shell's radius (Theme.radius), so windows match the rounded frame and popups
+    rounding = 10,
 
     -- fledge: no transparency
     fullscreen_opacity = 1.0,
