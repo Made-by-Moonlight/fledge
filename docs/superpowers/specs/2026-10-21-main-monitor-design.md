@@ -28,8 +28,9 @@ from the main bar.
 - **The frame only where there's a bar** (the user's call): the strip and its
   tabs along the bar edge, nothing down the sides or along the far edge. A
   monitor without a bar has no frame at all.
-- **Notifications, OSD and quick settings on the main monitor** (the user's
-  choice), instead of the focused one.
+- **Notifications and the OSD on the main monitor** (the user's choice),
+  instead of the focused one. Quick settings opens on the bar it's opened
+  from (see below).
 - **The main bar's workspace dots show every monitor's workspaces**, grouped
   by monitor (the user's choice), so a bar-less monitor's workspaces stay
   visible.
@@ -114,9 +115,11 @@ back from main restores its own choice).
 
 - Notifications (`Popups.qml`) and the OSD (`Osd.qml`) take the main monitor
   instead of `ShellState.focusedScreen()`.
-- Quick settings opens on the main monitor, under its bar's cog. The cog on
-  any other bar that shows also opens it on the main monitor (one panel, one
-  place).
+- Quick settings opens where it's asked from (the user's call, 2026-10-21,
+  after trying it with two bars): under the cog or status glyphs of the bar
+  that was clicked. From a keybind or the launcher, on the focused monitor
+  when that shows a bar, else on the main one. Clicking another bar's cog
+  while it's open moves it there.
 - The launcher, the lock, the polkit dialog and the settings window are
   unchanged.
 

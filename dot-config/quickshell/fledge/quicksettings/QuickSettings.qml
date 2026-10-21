@@ -16,14 +16,14 @@ PanelWindow {
     property bool nightLight: false
     readonly property bool barTop: Settings.barPosition !== "bottom"
 
-    // On the main monitor, under its bar's cog. Fixed when the panel opens: a live binding would
-    // recreate the surface (moving it, dropping the grab) if the main monitor changed meanwhile.
+    // Under the cog of the bar it was opened from (ShellState.qsScreen). Fixed when the panel
+    // opens: a live binding would recreate the surface (moving it, dropping the grab) mid-use.
     property var openScreen: ShellState.mainScreen
     property bool opened: false
     Connections {
         target: ShellState
         function onQsOpenChanged() {
-            if (ShellState.qsOpen) win.openScreen = ShellState.mainScreen;
+            if (ShellState.qsOpen) win.openScreen = ShellState.qsScreen ?? ShellState.mainScreen;
             win.opened = ShellState.qsOpen;
         }
     }

@@ -1,3 +1,4 @@
+import Quickshell
 import QtQuick
 import "../../theme"
 import "../../services"
@@ -7,5 +8,5 @@ Glyph {
     text: "󰒓"
     color: Theme.accent
     font.pixelSize: Theme.barFontLarge
-    MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: ShellState.toggleQuickSettings() }
+    MouseArea { anchors.fill: parent; anchors.margins: -6; onClicked: ShellState.toggleQuickSettings(QsWindow.window?.screen) }
 }

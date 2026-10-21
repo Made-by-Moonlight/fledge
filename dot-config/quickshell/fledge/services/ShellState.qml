@@ -15,6 +15,7 @@ Singleton {
     property string launcherMode: "apps"
     property bool qsOpen: false
     property string qsPicker: ""
+    property var qsScreen: null         // where quick settings opens: the clicked bar's screen
     // A picker only lives while the panel is open: destroying it stops its Wi-Fi scan / BT discovery.
     onQsOpenChanged: if (!qsOpen) qsPicker = ""
     property bool settingsOpen: false
@@ -65,15 +66,19 @@ Singleton {
         if (launcherOpen && (!mode || mode === launcherMode)) closePopups();
         else openLauncher(mode);
     }
-    function openQuickSettings(picker) {
+    // screen: the bar clicked. Without one (a keybind, the launcher) the focused monitor
+    // when it shows a bar, else the main one: quick settings hangs under a bar's cog.
+    function openQuickSettings(picker, screen) {
         if (locked || polkitOpen) return;
         closePopups();
+        qsScreen = screen ?? (showsBar(focusedScreen()) ? focusedScreen() : mainScreen);
         qsPicker = picker || "";
         qsOpen = true;
     }
-    function toggleQuickSettings() {
-        if (qsOpen) qsOpen = false;
-        else openQuickSettings("");
+    // Open on another bar's screen moves it there; on the same screen closes it.
+    function toggleQuickSettings(screen) {
+        if (qsOpen && (!screen || screen === qsScreen)) qsOpen = false;
+        else openQuickSettings("", screen);
     }
     function openSettings(page) {
         if (locked || polkitOpen) return;
