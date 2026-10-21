@@ -70,8 +70,8 @@ echo ">>> CachyOS repos" >&2
 # pacstrap writes a stock /etc/pacman.conf into the target (no [cachyos]
 # repos), even though the live ISO used its own config to resolve
 # linux-cachyos. Add them, at the most specific level this CPU runs, so
-# `pacman -Syu` and bootstrap.sh find cachyos-only packages (steam-jupiter-
-# stable, elephant providers, etc.). pacstrap installed cachyos-keyring and the
+# `pacman -Syu` and bootstrap.sh find cachyos-only packages (elephant
+# providers, etc.). pacstrap installed cachyos-keyring and the
 # mirrorlists; the keyring's own populate is skipped when it is installed
 # before pacman, so populate here (idempotent).
 pacman-key --populate cachyos
