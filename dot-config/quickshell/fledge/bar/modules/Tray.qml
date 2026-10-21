@@ -19,6 +19,7 @@ Row {
         const bare = name.replace(/-symbolic$/, "");
         return Quickshell.iconPath(bare, true) !== "" ? "image://icon/" + bare : "";
     }
+    TrayMenu { id: menu }
     Repeater {
         model: SystemTray.items.values
         delegate: Item {
@@ -39,18 +40,12 @@ Row {
                 font.pixelSize: Theme.barFont
                 text: /keyboard|input/.test(entry.name + " " + entry.modelData.id) ? "󰌌" : "󰀻"
             }
-            QsMenuAnchor {
-                id: menu
-                menu: entry.modelData.menu
-                anchor.item: entry
-                anchor.edges: Edges.Bottom
-            }
             MouseArea {
                 anchors.fill: parent
                 acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
                 onClicked: mouse => {
                     if (mouse.button === Qt.MiddleButton) entry.modelData.secondaryActivate();
-                    else if (mouse.button === Qt.RightButton || entry.modelData.onlyMenu) { if (entry.modelData.hasMenu) menu.open(); }
+                    else if (mouse.button === Qt.RightButton || entry.modelData.onlyMenu) { if (entry.modelData.hasMenu) menu.open(entry, entry.modelData.menu); }
                     else entry.modelData.activate();
                 }
             }
