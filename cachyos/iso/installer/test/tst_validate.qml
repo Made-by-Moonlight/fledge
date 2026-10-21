@@ -3,9 +3,30 @@ import QtTest
 import "../lib/Validate.js" as V
 import "../lib/Progress.js" as P
 import "../lib/Answers.js" as A
+import "../lib/Drives.js" as D
 
 TestCase {
     name: "installer"
+    function test_drivesNames() {
+        compare(D.kindName("ssd"), "SATA SSD");
+        compare(D.name({ path: "/dev/vdc", model: "" }), "vdc");
+        compare(D.suggest("nvme", "/home/e", ["/home/e/nvme2"], []), "~/nvme1");
+        compare(D.suggest("nvme", "/home/e", ["/home/e/nvme1", "/home/e/nvme2"], []), "~/nvme3");
+        compare(D.suggest("ssd", "/home/e", [], ["ssd1"]), "~/ssd2");
+        compare(D.labelFor("~/games"), "games");
+        compare(D.labelFor("/data/abcdefghijklmnopqrst"), "abcdefghijklmnop");
+    }
+    function test_dataLabel() {
+        compare(V.dataLabel("nvme1"), ""); compare(V.dataLabel("Game Drive"), "");
+        verify(V.dataLabel("") !== ""); verify(V.dataLabel(" x") !== "");
+        verify(V.dataLabel("abcdefghijklmnopq") !== ""); verify(V.dataLabel("a:b") !== "");
+    }
+    function test_answersWipes() {
+        const t = A.text({ disk: "/dev/vda", hostname: "h", timezone: "UTC", username: "e", password: "a",
+                           sameLuks: true, luks: "", layout: "us", variant: "", mounts: [],
+                           wipes: [{ disk: "/dev/vdc", path: "~/hdd1", label: "hdd1" }] });
+        verify(t.endsWith("DATA_WIPES=hdd1:/home/e/hdd1:/dev/vdc\nEND\n"));
+    }
     function test_username() {
         verify(V.username("ethan")); verify(V.username("_svc")); verify(V.username("e_b-2"));
         verify(!V.username("Ethan")); verify(!V.username("2e")); verify(!V.username("root"));
@@ -70,7 +91,7 @@ TestCase {
                            mounts: [{ uuid: "u-1", path: "~/storage1" }, { uuid: "u-2", path: "/data" }] });
         compare(t, "DISK=/dev/vda\nDISK_CONFIRMED=yes\nHOSTNAME=glaux\nTIMEZONE=Europe/London\nUSERNAME=ethan\n"
                  + "USER_PASSWORD=pw one\nLUKS_PASSPHRASE=pw one\nXKB_LAYOUT=gb\nXKB_VARIANT=\n"
-                 + "DATA_MOUNTS=u-1:/home/ethan/storage1,u-2:/data\nEND\n");
+                 + "DATA_MOUNTS=u-1:/home/ethan/storage1,u-2:/data\nDATA_WIPES=\nEND\n");
         const own = A.text({ disk: "/dev/vda", hostname: "h", timezone: "UTC", username: "e", password: "a",
                              sameLuks: false, luks: "b", layout: "us", variant: "", mounts: [] });
         verify(own.includes("LUKS_PASSPHRASE=b\n"));
@@ -81,7 +102,7 @@ TestCase {
         const t = A.text({ disk: "/dev/vda", hostname: "glaux", timezone: "UTC", username: "ethan",
                            password: "pw\nEND\nDISK=/dev/sda", sameLuks: true, luks: "", layout: "us\r\n", variant: "",
                            mounts: [{ uuid: "u-1\n", path: "/data\r" }] });
-        compare(t.split("\n").length, 12);
+        compare(t.split("\n").length, 13);
         compare(t.indexOf("\r"), -1);
         verify(t.includes("USER_PASSWORD=pwENDDISK=/dev/sda\n"));
         verify(t.includes("LUKS_PASSPHRASE=pwENDDISK=/dev/sda\n"));
