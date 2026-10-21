@@ -277,6 +277,13 @@ Flickable {
     property var wallFiles: []
     function wallPath(target) { return target === "" ? ".wallpaper.image" : ".wallpaper.monitors[" + JSON.stringify(target) + "]"; }
     // What this target shows now: the chosen file, "" for Moonrise (All), null when a monitor follows All.
+    // bar.main and bar.hidden hold monitor keys as values (a quote in a description is safe there).
+    function makeMain(key) { Settings.set([[".bar.main", key]], false); }
+    function setBar(key, on) {
+        const hidden = Settings.barHidden.filter(k => k !== key);
+        if (!on) hidden.push(key);
+        Settings.set([[".bar.hidden", hidden]], false);
+    }
     function wallCurrent(target) {
         const o = target === "" ? Settings.wallpaperImage : Settings.wallpaperMonitors?.[target];
         if (typeof o !== "string") return null;
@@ -316,7 +323,7 @@ Flickable {
                 text: "Drag the monitors to match your desk, drawn at their real size. Changes here wait for Apply, then you have 15 seconds to keep them." }
         Arrange {
             Layout.fillWidth: true
-            mons: page.onMons; rects: page.rects; selected: page.selected
+            mons: page.onMons; rects: page.rects; selected: page.selected; mainKey: ShellState.mainKey
             onMoved: r => { page.rects = r; page.moved = true; }
             onPicked: k => page.selected = k
             onRotated: (k, dir) => page.rotate(k, dir)
@@ -397,6 +404,24 @@ Flickable {
                                   onChanged: v => page.stage(card.modelData, "scale", v) }
                         Choice { label: "Rotation"; value: card.c.transform; options: [[0, "0°"], [1, "90°"], [2, "180°"], [3, "270°"]]
                                  onPicked: v => page.stage(card.modelData, "transform", v) }
+                    }
+                    // The shell's own settings, not Hyprland's: they apply at once, outside Apply's keep/revert.
+                    Rectangle { visible: card.modelData.mon !== null; Layout.fillWidth: true; implicitHeight: 1; color: Theme.surface }
+                    RowLayout {
+                        id: barRow
+                        visible: card.modelData.mon !== null
+                        readonly property bool isMain: ShellState.mainKey === card.modelData.key
+                        spacing: 16
+                        Toggle { label: "Show bar"; enabled: !barRow.isMain; opacity: enabled ? 1 : 0.5
+                                 checked: barRow.isMain || !Settings.barHidden.includes(card.modelData.key)
+                                 onToggled: v => page.setBar(card.modelData.key, v) }
+                        Button { visible: !barRow.isMain; text: "Make main monitor"; onClicked: page.makeMain(card.modelData.key) }
+                        Rectangle {
+                            visible: barRow.isMain
+                            implicitWidth: mainTag.implicitWidth + 12; implicitHeight: 18; radius: 4; color: Theme.accent
+                            Glyph { id: mainTag; anchors.centerIn: parent; text: "main"; font.bold: true; font.pixelSize: Theme.fontSmall; color: Theme.bg }
+                        }
+                        Glyph { visible: barRow.isMain; text: "Main monitor: it always has the bar."; color: Theme.fgDim; font.pixelSize: Theme.fontSmall }
                     }
                 }
             }
