@@ -99,12 +99,13 @@ data_disk_defaults() {
 }
 
 # fstab_line <uuid> <fstype> <path> <uid> <gid>  ->  a permanent data mount:
-# by UUID, automounted on first access, and nofail with a short timeout so a
-# missing disk never holds up boot. Filesystems without Unix owners (ntfs,
+# by UUID, mounted at boot (not automounted: an autofs point stays empty in df,
+# lsblk and file managers until something opens it), and nofail with a short
+# timeout so a missing disk never holds up boot. Filesystems without Unix owners (ntfs,
 # vfat, exfat) are mounted as the user so they're writable.
 fstab_line() {
   local uuid="$1" fs="$2" path="$3" uid="$4" gid="$5"
-  local opts="defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10"
+  local opts="defaults,nofail,x-systemd.device-timeout=10"
   case "$fs" in
     ntfs|ntfs3) fs=ntfs3; opts+=",uid=$uid,gid=$gid" ;;
     vfat|exfat) opts+=",uid=$uid,gid=$gid,umask=022" ;;

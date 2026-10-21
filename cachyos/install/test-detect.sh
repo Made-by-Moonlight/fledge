@@ -46,7 +46,7 @@ check "data defaults keep present, in order" $'aaaa-1111\t~/s1\nbbbb-2222\t/data
 check "data defaults none present" "" "$(data_disk_defaults "" "aaaa-1111:~/s1")"
 check "data defaults exact uuid only" "" "$(data_disk_defaults "aaaa-11112" "aaaa-1111:~/s1")"
 
-O="defaults,nofail,x-systemd.automount,x-systemd.device-timeout=10"
+O="defaults,nofail,x-systemd.device-timeout=10"
 check "fstab ext4"  "UUID=u1 /home/e/s1 ext4 $O 0 0"                         "$(fstab_line u1 ext4 /home/e/s1 1000 1000)"
 check "fstab ntfs"  "UUID=u2 /data ntfs3 $O,uid=1000,gid=1000 0 0"          "$(fstab_line u2 ntfs /data 1000 1000)"
 check "fstab vfat"  "UUID=u3 /data vfat $O,uid=1000,gid=1000,umask=022 0 0" "$(fstab_line u3 vfat /data 1000 1000)"
