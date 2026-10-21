@@ -26,6 +26,14 @@ function mountPath(p, home) {
     return "";
 }
 
+// "" when a wiped drive can carry this label, else why not. Mirrors valid_data_label:
+// 1 to 16 letters, digits, spaces, . _ -, and no space at either end.
+function dataLabel(l) {
+    if (!/^[A-Za-z0-9 ._-]{1,16}$/.test(l)) return "Up to 16 letters, digits, spaces, . _ -";
+    if (l.startsWith(" ") || l.endsWith(" ")) return "No space at the start or end";
+    return "";
+}
+
 // Index of the first entry ({ skipped, valid }) that is neither skipped nor
 // valid, else -1. Review uses it to re-check every earlier step before erasing.
 function firstInvalid(list) { return list.findIndex(s => !s.skipped && !s.valid); }
