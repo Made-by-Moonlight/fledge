@@ -1,7 +1,7 @@
 # Installer: wipe drives as new storage, folders named by speed — design
 
 **Date:** 2026-10-20
-**Status:** approved 2026-10-20
+**Status:** implemented 2026-10-21
 **Branch:** `data-disk-wipe`
 
 ## Problem
