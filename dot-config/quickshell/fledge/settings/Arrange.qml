@@ -12,6 +12,7 @@ Column {
     property var mons: []          // Layout monitors, plus name (connector) and title (model)
     property var rects: []         // mm, in and out
     property string selected: ""
+    property string mainKey: ""    // the main monitor, tagged on the canvas
     signal moved(var rects)
     signal picked(string key)
     signal rotated(string key, int dir)
@@ -51,6 +52,12 @@ Column {
 
                 Column {
                     anchors.centerIn: parent; width: parent.width - 10; spacing: 2
+                    Rectangle {
+                        visible: box.modelData.key === arr.mainKey
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: mainTag.implicitWidth + 12; height: 16; radius: 4; color: Theme.accent
+                        Glyph { id: mainTag; anchors.centerIn: parent; text: "main"; font.bold: true; font.pixelSize: 10; color: Theme.bg }
+                    }
                     Glyph { width: parent.width; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight
                             text: box.modelData.name; font.bold: true; color: box.on ? Theme.accent : Theme.fg }
                     Glyph { width: parent.width; horizontalAlignment: Text.AlignHCenter; elide: Text.ElideRight
