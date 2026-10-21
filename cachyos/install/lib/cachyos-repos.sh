@@ -75,3 +75,18 @@ add_cachyos_repos() {
   cat "$tmp" >"$conf"
   rm -f "$tmp"
 }
+
+# <pacman.conf>: enable [multilib]. The GPU packages pacstrap installs
+# (lib32-vulkan-radeon, lib32-nvidia-utils) live there, and archiso's stock
+# config ships it commented out, so pacstrap fails to resolve them. Uncomments
+# the stock section, or appends one when there is none. Idempotent.
+enable_multilib() {
+  local conf="$1"
+  [[ -f $conf ]] || { echo "enable_multilib: no $conf" >&2; return 1; }
+  grep -qx '\[multilib\]' "$conf" && return 0
+  if grep -qx '#\[multilib\]' "$conf"; then
+    sed -i '/^#\[multilib\]$/,/^#Include = / s/^#//' "$conf"
+  else
+    printf '\n[multilib]\nInclude = /etc/pacman.d/mirrorlist\n' >>"$conf"
+  fi
+}

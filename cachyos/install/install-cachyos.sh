@@ -23,6 +23,8 @@ source "$HERE/lib/network.sh"
 source "$HERE/lib/progress.sh"
 # shellcheck source=lib/desktop.sh
 source "$HERE/lib/desktop.sh"
+# shellcheck source=lib/cachyos-repos.sh
+source "$HERE/lib/cachyos-repos.sh"
 
 die()  { printf '\e[31mERROR:\e[0m %s\n' "$*" >&2; exit 1; }
 warn() { printf '\e[33mWARN:\e[0m  %s\n' "$*" >&2; }
@@ -122,6 +124,9 @@ grep -qiE 'archiso|cachyos|miso' /proc/cmdline \
   || warn "this doesn't look like a live ISO ( /proc/cmdline has no archiso/cachyos )"
 ping -c1 -W2 "$MIRROR_CHECK_HOST" >/dev/null 2>&1 \
   || warn "can't reach $MIRROR_CHECK_HOST - pacstrap will fail without network"
+# pacstrap resolves against the live env's repos, and the AMD/NVIDIA GPU
+# packages pull lib32-* from [multilib].
+enable_multilib /etc/pacman.conf || die "couldn't enable [multilib] in the live pacman.conf"
 pacman -Sy --noconfirm >/dev/null || die "couldn't sync package databases"
 KERNEL_VER="$(pacman -Si "$KERNEL" 2>/dev/null | awk '/^Version/ {print $3; exit}')"
 [[ -n "$KERNEL_VER" ]] || die "$KERNEL is not in the configured repos"

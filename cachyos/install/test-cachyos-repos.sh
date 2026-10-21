@@ -99,4 +99,20 @@ check "missing file fails" 1 "$(add_cachyos_repos "$TMP/nope" v3 2>/dev/null; ec
 check "unknown level fails, file untouched" "1 " \
   "$(cp "$FIX/pacman.conf-stock" "$TMP/bad"; add_cachyos_repos "$TMP/bad" v5 2>/dev/null; echo "$? $(diff "$FIX/pacman.conf-stock" "$TMP/bad")")"
 
+# --- multilib ------------------------------------------------------------
+ml="$TMP/multilib"
+cp "$FIX/pacman.conf-stock" "$ml"
+enable_multilib "$ml"
+check "multilib: rc 0" 0 "$?"
+contains "multilib: section enabled" $'[multilib]\nInclude = /etc/pacman.d/mirrorlist' "$(cat "$ml")"
+contains "multilib: testing stays commented" $'#[multilib-testing]\n#Include' "$(cat "$ml")"
+check "multilib: only those two lines changed" 2 "$(diff "$FIX/pacman.conf-stock" "$ml" | grep -c '^>')"
+cp "$ml" "$TMP/ml-once"
+enable_multilib "$ml"
+check "multilib twice: unchanged" "" "$(diff "$TMP/ml-once" "$ml")"
+grep -v 'multilib\]' "$FIX/pacman.conf-stock" >"$TMP/noml"
+enable_multilib "$TMP/noml"
+check "multilib absent: appended" "[multilib]" "$(tail -2 "$TMP/noml" | head -1)"
+check "multilib no file: rc 1" 1 "$(enable_multilib "$TMP/nope" 2>/dev/null; echo $?)"
+
 exit $fail

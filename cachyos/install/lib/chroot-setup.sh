@@ -79,6 +79,9 @@ pacman-key --populate cachyos
 source "${HERE}/cachyos-repos.sh"
 add_cachyos_repos /etc/pacman.conf \
   "$(cachyos_repo_level "$(/lib/ld-linux-x86-64.so.2 --help)" /proc/cpuinfo)"
+# The lib32-* GPU packages pacstrap installed come from [multilib]; without
+# it here they would never be upgraded.
+enable_multilib /etc/pacman.conf
 # A single slow file fails the whole transaction (as with pacstrap): retry
 # with fresh databases.
 for attempt in 1 2 3; do
