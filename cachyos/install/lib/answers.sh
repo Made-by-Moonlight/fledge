@@ -101,11 +101,12 @@ parse_data_mounts() {
 }
 
 # valid_data_label <label>  ->  0 for a label a wiped data disk can carry: 1 to
-# 16 bytes of printable ASCII, no edge space, no ':' or ',' (they separate the
-# fields of DATA_WIPES). Bytes, not characters: the label becomes a filesystem
-# label, and filesystem labels have a byte limit.
+# 16 bytes of letters, digits, space, '.', '_' or '-', no edge space. The
+# charset also keeps out ':' and ',' (they separate the fields of DATA_WIPES).
+# Bytes, not characters: the label becomes a filesystem label, and filesystem
+# labels have a byte limit.
 valid_data_label() {
-  local LC_ALL=C l="$1" re='^[ -~]+$'
+  local LC_ALL=C l="$1" re='^[A-Za-z0-9 ._-]+$'
   (( ${#l} >= 1 && ${#l} <= 16 )) || return 1
   [[ "$l" =~ $re ]] || return 1
   [[ "$l" != " "* && "$l" != *" " ]] || return 1
@@ -122,6 +123,9 @@ valid_data_label() {
 parse_data_wipes() {
   local spec="$1" e label lc path disk rest seen=$'\n' entries out=""
   [[ -n "$spec" ]] || return 0
+  # read drops a trailing ',' without a trace, so an empty entry is refused on
+  # the whole spec before it is split.
+  [[ "$spec" == ,* || "$spec" == *, || "$spec" == *,,* ]] && return 1
   IFS=, read -ra entries <<<"$spec"
   for e in "${entries[@]}"; do
     [[ "$e" == *:*:* ]] || return 1
