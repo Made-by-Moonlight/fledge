@@ -41,12 +41,14 @@ EXTRA_CMDLINE="quiet splash plymouth.ignore-serial-consoles zswap.enabled=0"
 # Per-machine, optional: data filesystems the installer pre-selects for a
 # permanent mount, "uuid:mountpoint" (~ = the new user's home). Entries whose
 # UUID isn't on the machine are ignored, so one list serves every machine.
-# The installer writes them to fstab by UUID with nofail + automount.
+# The installer writes them to fstab by UUID with nofail + automount. A drive
+# listed here defaults to Mount, never to Wipe: erasing is always chosen by hand.
+# Folders are named by kind (nvme/ssd/hdd/usb + n); nvme1 is left free for the
+# old system drive, wiped into storage at install time.
 DATA_DISKS=(
-  "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7:~/storage1"
-  "5e62f799-8df9-4ee3-b4d7-4da62c8c65ff:~/storage2"
-  "77d7988e-2e64-4654-bda2-481d321eecdd:~/storage3"
-  "55cefb4f-6b27-4dbc-bbf8-5e9120defa26:~/storage4"
+  "77d7988e-2e64-4654-bda2-481d321eecdd:~/nvme2"   # Sabrent Rocket 4.0 1TB
+  "5e62f799-8df9-4ee3-b4d7-4da62c8c65ff:~/ssd1"    # Crucial MX500 2TB
+  "ceb2ac52-2fea-40e5-b2b6-e6f6fe1c8bc7:~/ssd2"    # PNY CS900 480GB
   # The VM's test data disk (cachyos/vm, formatted with this UUID by the
   # end-to-end test); absent on every real machine.
   "00000000-0000-4000-8000-00000000da7a:~/testdata"

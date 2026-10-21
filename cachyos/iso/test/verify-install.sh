@@ -4,7 +4,7 @@
 # ~/proj/fledge, which must still be clean), e.g.
 #   ip="$(cachyos/vm/vm.sh ip)"
 #   scp cachyos/iso/test/verify-install.sh "slievr@$ip:/tmp/"
-#   ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_AUTOLOGIN=1 VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
+#   ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_AUTOLOGIN=1 VERIFY_DATA_MOUNT=~/testdata VERIFY_WIPE=~/hdd1:hdd1 bash /tmp/verify-install.sh'
 # (needs a tty for sudo, so not `vm.sh run` and don't pipe it into ssh)
 set -uo pipefail
 # Its sudo calls need a password from a tty: without one each fails, and three
@@ -75,6 +75,38 @@ if [[ -n "${VERIFY_DATA_MOUNT:-}" ]]; then
   is "data disk in fstab (nofail, automount)" 1 "$(grep -c " $d ext4 defaults,nofail,x-systemd.automount" /etc/fstab)"
   ls "$d" >/dev/null 2>&1
   is "data disk mounts on access"       yes   "$(findmnt -n "$d" -t ext4 >/dev/null && echo yes || echo no)"
+  # The marker the README's setup writes onto the test disk: Mount must never format it.
+  is "data disk contents untouched"     yes   "$([[ -e $d/fledge-test-marker ]] && echo yes || echo no)"
 fi
+# VERIFY_WIPE=~/hdd1:hdd1: the drive wiped into storage at <folder>, labelled <label>.
+if [[ -n "${VERIFY_WIPE:-}" ]]; then
+  w="${VERIFY_WIPE%%:*}"; w="${w/#\~/$HOME}"; wlabel="${VERIFY_WIPE#*:}"
+  is "wiped drive in fstab (nofail, automount)" 1 "$(grep -c " $w ext4 defaults,nofail,x-systemd.automount" /etc/fstab)"
+  ls "$w" >/dev/null 2>&1
+  is "wiped drive mounts on access"     yes   "$(findmnt -n "$w" -t ext4 >/dev/null && echo yes || echo no)"
+  # The automount point is autofs; the ext4 under it is the second line.
+  wpart="$(findmnt -rn -t ext4 -o SOURCE "$w" | head -n1)"
+  wdisk="$(lsblk -no PKNAME "$wpart" 2>/dev/null)"
+  is "wiped drive has one partition"    1     "$(lsblk -rno TYPE "/dev/$wdisk" 2>/dev/null | grep -c '^part$')"
+  is "wiped drive is ext4"              ext4  "$(lsblk -no FSTYPE "$wpart" 2>/dev/null)"
+  is "wiped drive label"                "$wlabel" "$(lsblk -no LABEL "$wpart" 2>/dev/null)"
+  is "wiped drive partition name"       "$wlabel" "$(lsblk -no PARTLABEL "$wpart" 2>/dev/null)"
+  is "wiped drive writable by the user" yes   "$(touch "$w/.w" 2>/dev/null && rm "$w/.w" && echo yes || echo no)"
+fi
+
+# Firmware boot entries: none names a partition that no longer exists (an
+# erased target or wiped drive; the VM keeps NVRAM across reinstalls), and the
+# first in BootOrder is on the ESP this install made.
+efi="$(sudo efibootmgr -v)"
+parts=" $(lsblk -rno PARTUUID | tr '[:upper:]' '[:lower:]' | tr '\n' ' ')"
+stale=""
+for g in $(grep -oiE 'HD\([0-9]+,GPT,[0-9a-f-]+,' <<<"$efi" | cut -d, -f3 | tr '[:upper:]' '[:lower:]'); do
+  [[ $parts == *" $g "* ]] || stale+="$g "
+done
+is "no boot entry names a missing partition" "" "$stale"
+first="$(awk '/^BootOrder:/{split($2, o, ","); print o[1]}' <<<"$efi")"
+esp="$(lsblk -no PARTUUID "$(findmnt -rn -t vfat -o SOURCE /boot | head -n1)" | tr '[:upper:]' '[:lower:]')"
+is "first boot entry is on the installed ESP" yes \
+  "$(grep -i "^Boot$first" <<<"$efi" | grep -qi "GPT,$esp," && echo yes || echo no)"
 
 exit $bad
