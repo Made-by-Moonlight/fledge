@@ -16,14 +16,14 @@ PanelWindow {
     property bool nightLight: false
     readonly property bool barTop: Settings.barPosition !== "bottom"
 
-    // The screen is fixed when the panel opens: a live binding to the focused monitor would
-    // recreate the surface (moving it, dropping the grab) whenever the pointer crosses monitors.
-    property var openScreen: ShellState.focusedScreen()
+    // On the main monitor, under its bar's cog. Fixed when the panel opens: a live binding would
+    // recreate the surface (moving it, dropping the grab) if the main monitor changed meanwhile.
+    property var openScreen: ShellState.mainScreen
     property bool opened: false
     Connections {
         target: ShellState
         function onQsOpenChanged() {
-            if (ShellState.qsOpen) win.openScreen = ShellState.focusedScreen();
+            if (ShellState.qsOpen) win.openScreen = ShellState.mainScreen;
             win.opened = ShellState.qsOpen;
         }
     }
