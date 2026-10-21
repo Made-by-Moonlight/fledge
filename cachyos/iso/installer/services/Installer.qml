@@ -4,6 +4,7 @@ import Quickshell.Io
 import QtQuick
 import "../lib/Validate.js" as V
 import "../lib/Answers.js" as A
+import "../lib/Choices.js" as C
 
 // Every answer and the step machine. Steps only read and set these; nothing
 // leaves the UI until Review's "Erase and install" hands answers() to fledge-install.
@@ -42,52 +43,49 @@ Singleton {
     property string luks2: ""
     property string disk: ""           // kernel path, e.g. /dev/nvme2n1
     property bool diskConfirmed: false  // "Erase this disk" pressed for the current disk
-    property var mounts: ({})          // uuid -> { on, path }
+    // The Data disks step (lib/Choices.js): a choice per drive, its mounts and its wipe.
+    property var choices: ({})         // disk path -> "leave" | "mount" | "wipe", as picked
+    property var mounts: ({})          // uuid -> { on, path, edited }
+    property var wipes: ({})           // disk path -> { on, path, label, pathEdited, labelEdited, confirmed }
 
     readonly property var facts: Probe.facts
     readonly property var diskInfo: facts ? (facts.disks.find(d => d.path === disk) ?? null) : null
     readonly property string confirmWord: A.confirmWord(diskInfo)
-    readonly property var dataRows: facts ? facts.datafs.filter(f => f.disk !== disk) : []
+    readonly property var dataDrives: C.dataDrives(facts, disk)   // the Data disks cards
+    // The wiped drives as a string: it signals only when the set changes, so
+    // dataRows (a Repeater model) isn't rebuilt on every keystroke in a folder.
+    readonly property string wiped: C.wiped({ facts: facts, disk: disk, wipes: wipes }).join("\n")
+    readonly property var dataRows: C.dataRows(facts, disk, wiped ? wiped.split("\n") : [])
     readonly property string home: "/home/" + (username || "you")
 
-    onDiskChanged: diskConfirmed = false
+    onDiskChanged: { diskConfirmed = false; apply(C.retarget(st())); }
     onLayoutChanged: Xkb.apply(layout, variant)
     onVariantChanged: Xkb.apply(layout, variant)
     onFactsChanged: {
         if (!facts) return;
         if (timezone === "") timezone = facts.timezone;
-        // Keep choices across a refresh; new filesystems get the profile default
-        // (ticked) or the next free ~/storageN (unticked).
-        const used = new Set(facts.datafs.map(f => f.mount).filter(p => p));
-        const m = {};
-        let n = 1;
-        for (const f of facts.datafs) {
-            if (mounts[f.uuid]) { m[f.uuid] = mounts[f.uuid]; continue; }
-            if (f.mount) { m[f.uuid] = { on: true, path: f.mount }; continue; }
-            while (used.has("~/storage" + n)) n++;
-            used.add("~/storage" + n);
-            m[f.uuid] = { on: false, path: "~/storage" + n };
-        }
-        mounts = m;
+        // Keeps choices and typed names across a refresh; new filesystems get the
+        // profile default (ticked) or the next free ~/<kind><n> (unticked).
+        apply(C.names(st()));
     }
-    function setMount(uuid, on, path) {
-        // Unchanged: no new object, so DataDisks' bound field writing back its own
-        // text doesn't re-trigger its binding (a binding loop).
-        const r = mounts[uuid];
-        if (r && r.on === on && r.path === path) return;
-        const m = Object.assign({}, mounts);
-        m[uuid] = { on: on, path: path };
-        mounts = m;
+    function st() { return { facts: facts, disk: disk, home: home, choices: choices, mounts: mounts, wipes: wipes }; }
+    // Assign only what changed: a new object re-runs every binding on it.
+    function apply(n) {
+        if (!n) return;
+        if (JSON.stringify(n.choices) !== JSON.stringify(choices)) choices = n.choices;
+        if (JSON.stringify(n.mounts) !== JSON.stringify(mounts)) mounts = n.mounts;
+        if (JSON.stringify(n.wipes) !== JSON.stringify(wipes)) wipes = n.wipes;
     }
-    function mountError(uuid) {
-        const r = mounts[uuid];
-        if (!r || !r.on) return "";
-        const e = V.mountPath(r.path, home);
-        if (e) return e;
-        const abs = V.expand(r.path, home);
-        const clash = dataRows.some(o => o.uuid !== uuid && mounts[o.uuid]?.on && V.expand(mounts[o.uuid].path, home) === abs);
-        return clash ? "Two disks can't share a folder" : "";
-    }
+    function choice(disk) { return C.choice(st(), disk); }
+    function setChoice(disk, c) { apply(C.setChoice(st(), disk, c)); }
+    // edited left out: a path that differs from the stored one counts as typed.
+    // Unchanged is a no-op (Choices.setMount), so DataDisks' bound field writing
+    // back its own text doesn't re-trigger its binding (a binding loop).
+    function setMount(uuid, on, path, edited) { apply(C.setMount(st(), uuid, on, path, edited)); }
+    function setWipePath(disk, path) { apply(C.setWipePath(st(), disk, path)); }
+    function setWipeLabel(disk, label) { apply(C.setWipeLabel(st(), disk, label)); }
+    function confirmWipe(disk) { apply(C.confirmWipe(st(), disk)); }
+    function names() { apply(C.names(st())); }
 
     // step id -> { field: message }. Empty object: the step is complete.
     function errors(id) {
@@ -114,9 +112,7 @@ Singleton {
             if (!diskInfo) e.disk = "Pick the disk to install to";
             else if (!diskConfirmed) e.confirm = "Confirm the erase to continue";
             break;
-        case "data":
-            for (const r of dataRows) { const m = mountError(r.uuid); if (m) e[r.uuid] = m; }
-            break;
+        case "data": Object.assign(e, C.errors(st())); break;
         }
         return e;
     }
@@ -128,7 +124,7 @@ Singleton {
 
     function skipped(i) {
         const id = steps[i].id;
-        return (id === "network" && Probe.online) || (id === "data" && dataRows.length === 0);
+        return (id === "network" && Probe.online) || (id === "data" && dataDrives.length === 0);
     }
     function next() {
         if (current === "install") { primary(); return; }
@@ -168,9 +164,10 @@ Singleton {
 
     // The answers file fledge-install reads (lib/Answers.js).
     function answers() {
+        const c = C.chosen(st());
         return A.text({ disk: disk, hostname: hostname, timezone: timezone, username: username,
                         password: password, sameLuks: sameLuks, luks: luks, layout: layout, variant: variant,
-                        mounts: dataRows.filter(r => mounts[r.uuid]?.on).map(r => ({ uuid: r.uuid, path: mounts[r.uuid].path })) });
+                        mounts: c.mounts, wipes: c.wipes });
     }
 
     // The installer layer steps aside (Frame.qml) while the terminal is open.

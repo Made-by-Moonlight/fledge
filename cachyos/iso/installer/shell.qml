@@ -114,7 +114,7 @@ ShellRoot {
         target: "installer"
         function go(id: string): void { Installer.step = Installer.indexOf(id); }
         // Only the plain answers: not the passwords (typed, never scripted), not the
-        // step state (go, setDisk) and not the internals (terminal, mounts, shown).
+        // step state (go, setDisk, setWipe) and not the internals (terminal, mounts, shown).
         function set(key: string, value: string): string {
             const answers = ["layout", "variant", "timezone", "username", "hostname", "sameLuks", "disk"];
             if (!answers.includes(key)) return "refused: " + key;
@@ -122,6 +122,15 @@ ShellRoot {
             return "ok";
         }
         function setDisk(path: string): void { Installer.disk = path; Installer.diskConfirmed = true; }
+        // Wipe a data drive and press its Erase button, like setDisk for the target.
+        function setWipe(path: string): string {
+            if (path === Installer.disk) return "refused: target";
+            const d = Installer.dataDrives.find(x => x.path === path);
+            if (!d) return "refused: unknown";
+            if (d.busy) return "refused: busy";
+            Installer.setChoice(path, "wipe"); Installer.confirmWipe(path);
+            return "ok";
+        }
         function next(): void { Installer.next(); }
         function current(): string { return Installer.current; }
         // Not the passwords: any process of this user can call IPC.
