@@ -97,4 +97,15 @@ check "list_disks: no live mount keeps the disks" \
 check "list_disks: live disk is hidden" \
   "/dev/nvme0n1 476.9G SAMSUNG MZVL2512 nvme" "$(list_disks_strict /dev/sdc1)"
 
+EFI=$'BootCurrent: 0001\nBootOrder: 0003,0001,0002,0000\nBoot0000* UiApp\tFvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(462caa21-7614-4503-836e-8ab6f4662331)\nBoot0001* Limine\tHD(1,GPT,6C2D0E1A-0000-4000-8000-000000000001,0x800,0x400000)/File(\\EFI\\limine\\BOOTX64.EFI)\nBoot0002* Windows Boot Manager\tHD(1,GPT,aaaa0000-0000-4000-8000-0000000000bb,0x800,0x32000)/File(\\EFI\\Microsoft\\Boot\\bootmgfw.efi)\nBoot0003* CachyOS\tHD(1,GPT,6c2d0e1a-0000-4000-8000-000000000009,0x800,0x400000)/File(\\EFI\\limine\\BOOTX64.EFI)'
+check "boot: erased drives' entries" $'0001\n0003' "$(stale_boot_entries "$EFI" 6c2d0e1a-0000-4000-8000-000000000001 6C2D0E1A-0000-4000-8000-000000000009)"
+check "boot: kept drive and firmware untouched" "" "$(stale_boot_entries "$EFI" 00000000-0000-4000-8000-000000000000)"
+check "boot: entry for the new ESP" "0002" "$(boot_entry_for "$EFI" AAAA0000-0000-4000-8000-0000000000BB)"
+check "boot: order first"   "0004,0003,0001" "$(order_first 0003,0004,0001 0004)"
+check "boot: order new"     "0004,0003"      "$(order_first 0003 0004)"
+check "busy: lvm"   lvm  "$(busy_reason $'part \nlvm /')"
+check "busy: swap"  swap "$(busy_reason $'part [SWAP]')"
+check "busy: mount" mounted "$(busy_reason $'part /run/media/x')"
+check "busy: free"  ""   "$(busy_reason $'part \npart ')"
+
 exit $fail

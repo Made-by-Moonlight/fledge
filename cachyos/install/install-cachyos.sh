@@ -77,6 +77,8 @@ fi
 XKB_LAYOUT="us"
 XKB_VARIANT=""
 DATA_MOUNTS=""
+DATA_WIPES=""        # only the answers file can ask for wipes
+DATA_WIPES_TSV=""
 if [[ -n "$ANSWERS" ]]; then
   load_answers "$ANSWERS" || die "unusable answers file: $ANSWERS"
   for k in DISK HOSTNAME USER_PASSWORD LUKS_PASSPHRASE; do
@@ -91,6 +93,8 @@ if [[ -n "$ANSWERS" ]]; then
   valid_xkb_variant "$XKB_VARIANT" || die "answers XKB_VARIANT is malformed: $XKB_VARIANT"
   DATA_MOUNTS_TSV="$(parse_data_mounts "$DATA_MOUNTS")" \
     || die "answers DATA_MOUNTS is malformed, repeats a disk or folder, or uses a system path"
+  DATA_WIPES_TSV="$(parse_data_wipes "$DATA_WIPES")" \
+    || die "answers DATA_WIPES is malformed, repeats a disk, folder or label, or uses a system path"
   ROOT_PASSWORD="${ROOT_PASSWORD:-}"     # empty -> root locked (chroot-setup.sh)
   # USERNAME is optional (profile.sh has the default) but always re-checked:
   # it reaches useradd, paths and a sed expression.
@@ -109,7 +113,7 @@ rule "Preflight"
 
 missing=()
 for c in pacstrap genfstab arch-chroot cryptsetup sgdisk wipefs partprobe \
-         mkfs.btrfs mkfs.fat efibootmgr blkid lsblk findmnt lspci; do
+         mkfs.btrfs mkfs.ext4 mkfs.fat efibootmgr blkid lsblk findmnt lspci; do
   command -v "$c" >/dev/null 2>&1 || missing+=("$c")
 done
 (( ${#missing[@]} == 0 )) || die "missing tools in the live env: ${missing[*]}"
@@ -163,6 +167,7 @@ cat <<EOF
   hostname       : ${HOSTNAME:-(will prompt)}
   keyboard       : ${XKB_LAYOUT}${XKB_VARIANT:+ (${XKB_VARIANT})}
   data disks     : $(grep -c . <<<"$DATA_MOUNTS_TSV" || true) to mount permanently
+  storage wipes  : $(grep -c . <<<"$DATA_WIPES_TSV" || true) drive(s)
 EOF
 
 progress_stage disk "Partition & encrypt"
@@ -212,6 +217,43 @@ while IFS=$'\t' read -r uuid _; do
   fi
 done <<<"$DATA_MOUNTS_TSV"
 
+# Drives to wipe into storage. Same refusals as the target, plus: nothing the
+# install keeps may live on one, and its label must stay unique. The UI
+# enforces all of this; the answers file is the last word.
+WIPE_DISKS=()
+declare -A _wipe_seen=()
+while IFS=$'\t' read -r wdisk wpath wlabel; do
+  [[ -n "$wdisk" ]] || continue
+  [[ -b "$wdisk" ]] || die "wipe drive is not a block device: $wdisk"
+  wk="$(realpath "$wdisk")"
+  [[ "$(lsblk -dno TYPE "$wk" 2>/dev/null)" == disk ]] || die "wipe drive $wdisk is not a whole disk"
+  [[ "$wk" != "$DISK_KNAME" ]] || die "wipe drive $wdisk is the install target"
+  [[ "$(lsblk -no PKNAME "$root_src" 2>/dev/null)" == "${wk##*/}" ]] && die "wipe drive $wdisk backs the live / - refusing"
+  reason="$(busy_reason "$(lsblk -rno TYPE,MOUNTPOINT "$wk" | tail -n +2)")"
+  [[ -z "$reason" ]] || die "wipe drive $wdisk is in use ($reason) - refusing"
+  while IFS=$'\t' read -r uuid mpath; do
+    [[ -n "$uuid" ]] || continue
+    dev="$(blkid -U "$uuid" 2>/dev/null || true)"
+    [[ -n "$dev" && "$(lsblk -no PKNAME "$dev" 2>/dev/null | head -n1)" == "${wk##*/}" ]] \
+      && die "data disk $uuid is on $wdisk, a drive to wipe"
+    [[ "$mpath" != "$wpath" ]] || die "folder $wpath is used by both a mounted disk and a wiped drive"
+  done <<<"$DATA_MOUNTS_TSV"
+  WIPE_DISKS+=("$wk"); _wipe_seen["$wk"]=1
+done <<<"$DATA_WIPES_TSV"
+if (( ${#WIPE_DISKS[@]} )); then
+  live_root_disk="$(lsblk -no PKNAME "$root_src" 2>/dev/null | head -n1)"
+  kept_labels=""
+  while read -r d; do
+    [[ -n "$d" && "$d" != "$DISK_KNAME" && -z "${_wipe_seen[$d]:-}" && "${d##*/}" != "$live_root_disk" ]] || continue
+    kept_labels+="$(lsblk -rno LABEL "$d")"$'\n'
+  done < <(lsblk -dpno NAME,TYPE | awk '$2=="disk"{print $1}')
+  kept_labels="$(sed 's/\\x20/ /g' <<<"$kept_labels" | tr 'A-Z' 'a-z')"   # lsblk -r escapes spaces
+  while IFS=$'\t' read -r _ _ wlabel; do
+    [[ -n "$wlabel" ]] || continue
+    grep -qxF -- "${wlabel,,}" <<<"$kept_labels" && die "another drive is already called $wlabel"
+  done <<<"$DATA_WIPES_TSV"
+fi
+
 echo
 echo "Target: $DISK"
 echo "  model : ${DISK_MODEL:-(unknown)}"
@@ -242,6 +284,21 @@ fi
 ########################################################################
 rule "Partitioning + encryption + filesystems"
 ########################################################################
+# Every partition GUID on a drive about to be erased, for the boot-entry
+# pruning after the bootloader stage.
+mapfile -t ERASED_GUIDS < <(lsblk -rno PARTUUID "$DISK_KNAME" "${WIPE_DISKS[@]}" | grep . || true)
+
+WIPED_UUIDS=()
+if [[ -n "$DATA_WIPES_TSV" ]]; then
+  rule "Storage drives"
+  while IFS=$'\t' read -r wdisk wpath wlabel; do
+    [[ -n "$wdisk" ]] || continue
+    wuuid="$(format_data_disk "$wdisk" "$wlabel")" || die "couldn't wipe $wdisk"
+    DATA_MOUNTS_TSV+="${DATA_MOUNTS_TSV:+$'\n'}$wuuid"$'\t'"$wpath"
+    WIPED_UUIDS+=("$wuuid")
+  done <<<"$DATA_WIPES_TSV"
+fi
+
 partition_disk "$DISK"
 luks_format_open "$LUKS_PART"          # LUKS_PASSPHRASE from answers, else prompts x2
 make_filesystems
@@ -318,7 +375,28 @@ arch-chroot /mnt env \
 FLEDGE_STAGE=boot
 
 rm -f /mnt/root/chroot-setup.sh /mnt/root/bootloader.sh /mnt/root/cachyos-repos.sh
+
+# Firmware entries naming a partition we just erased point at nothing; some
+# firmware lists or even tries them first. Entries on kept drives and ones
+# without a disk path stay. A failure only warns: the system boots either way.
+prune_boot_entries() {
+  local efi n new_guid order
+  efi="$(efibootmgr -v)" || return 1
+  for n in $(stale_boot_entries "$efi" "${ERASED_GUIDS[@]}"); do
+    efibootmgr -b "$n" -B >/dev/null || return 1
+    echo "removed stale boot entry Boot$n"
+  done
+  efi="$(efibootmgr -v)" || return 1
+  new_guid="$(blkid -s PARTUUID -o value "$ESP_PART")"
+  n="$(boot_entry_for "$efi" "$new_guid")"
+  [[ -n "$n" ]] || return 0
+  order="$(awk '/^BootOrder:/{print $2}' <<<"$efi")"
+  efibootmgr -o "$(order_first "$order" "$n")" >/dev/null || return 1
+}
+prune_boot_entries || warn "couldn't tidy the firmware boot entries; check efibootmgr after the first boot"
+
 add_data_mounts
+own_wiped_roots
 seed_user_settings "$USERNAME" "$XKB_LAYOUT" "$XKB_VARIANT" \
   "$(arch-chroot /mnt id -u "$USERNAME")" "$(arch-chroot /mnt id -g "$USERNAME")"
 # Before the Desktop stage, not inside it: a --desktop-only retry can't know
