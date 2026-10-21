@@ -129,9 +129,6 @@ local media = "^(zoom|vlc|mpv|org.kde.kdenlive|com.obsproject.Studio|com.github.
 rule({ match = { class = media }, tag = "-default-opacity" })
 rule({ match = { class = media }, opacity = "1 1" })
 
--- Popped window rounding
-rule({ match = { tag = "pop" }, rounding = 8 })
-
 -- Prevent idle while open
 rule({ match = { tag = "noidle" }, idle_inhibit = "always" })
 
