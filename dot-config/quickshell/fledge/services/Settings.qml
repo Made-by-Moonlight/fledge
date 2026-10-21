@@ -67,6 +67,9 @@ Singleton {
     readonly property var barCentre: get("bar", "centre", ["clock", "media"])
     readonly property var barRight: get("bar", "right", ["tray", "glyphs", "cog"])
     readonly property var barGlyphs: get("bar", "glyphs", ["network", "battery"])
+    // Monitor keys (Layout.js keyFor): the main monitor, and the monitors whose bar is off.
+    readonly property string barMain: { const m = get("bar", "main", ""); return typeof m === "string" ? m : ""; }
+    readonly property var barHidden: { const h = get("bar", "hidden", []); return Array.isArray(h) ? h.filter(k => typeof k === "string") : []; }
     readonly property string launcherPosition: get("launcher", "position", "centre")
     readonly property string notifCorner: get("notifications", "corner", "top-right")
     readonly property int notifTimeout: get("notifications", "timeoutMs", 5000)

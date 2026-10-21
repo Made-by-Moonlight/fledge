@@ -124,11 +124,17 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
     else "wallpaper.monitors must be an object" end)),
 
 (.bar // {}
- | unknown(["position", "left", "centre", "right", "glyphs", "clockFormat", "height"]; "bar"),
+ | unknown(["position", "left", "centre", "right", "glyphs", "clockFormat", "height", "main", "hidden"]; "bar"),
    (if (.height // 32 | isint and . >= 20 and . <= 48) then empty else "bar.height must be a whole number from 20 to 48" end),
    (if (.clockFormat // 0 | isint and . >= 0 and . <= 3) then empty else "bar.clockFormat must be a whole number from 0 to 3" end),
    (if (.position // "top" | IN("top", "bottom")) then empty else "bar.position must be top or bottom" end),
    modules("left"), modules("centre"), modules("right"),
+   # Monitor keys as Displays writes them (desc:<description> or a connector), stored as values.
+   (.main // "" | if type != "string" then "bar.main must be text (a monitor name)"
+     elif test("[\"\\\\]") then "bar.main: monitor name can't contain a quote or backslash: \(tojson)" else empty end),
+   ((.hidden // []) | if type != "array" then "bar.hidden must be a list"
+     elif any(.[]; type != "string") then "bar.hidden must be a list of monitor names"
+     else .[] | select(test("[\"\\\\]")) | "bar.hidden: monitor name can't contain a quote or backslash: \(tojson)" end),
    ((.glyphs // []) | if type != "array" then "bar.glyphs must be a list"
      else .[] | select(IN("network", "bluetooth", "battery", "volume") | not) | "bar.glyphs: unknown glyph \(tojson)" end)),
 
