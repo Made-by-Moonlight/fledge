@@ -63,8 +63,8 @@ monitors); the user approved the shape.
   enabled, connected monitor is a rectangle at physical scale, labelled with its
   connector/model, its rotated pixel size and its rotation. The canvas fits the
   whole arrangement, whatever its extent.
-- **Click** selects a monitor (highlighted; its card below is the one being
-  edited). **Drag** moves it.
+- **Click** selects a monitor (highlighted; only its card is shown below, the
+  one being edited). **Drag** moves it.
 - While dragging, the monitor **snaps** to other monitors' edges (touching left,
   right, top or bottom) and to alignment lines (tops, bottoms, centres level;
   for stacked monitors, lefts, rights, centres). The snap threshold is the

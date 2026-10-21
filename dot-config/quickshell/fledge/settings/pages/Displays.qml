@@ -347,9 +347,11 @@ Flickable {
             Glyph { Layout.fillWidth: true; elide: Text.ElideRight; color: Theme.muted; font.pixelSize: Theme.fontSmall; text: page.blocked }
         }
 
-        // A card for each monitor that is connected or switched on; its controls only stage.
+        // The selected monitor's card (one at a time: a card each made the page long, the canvas
+        // already says which monitor is which); its controls only stage. Switching it off
+        // selects another monitor, and its chip above switches it back on.
         Repeater {
-            model: page.displays.filter(d => d.mon || page.on(d))
+            model: page.displays.filter(d => (d.mon || page.on(d)) && d.key === page.selected)
             delegate: Pill {
                 id: card
                 required property var modelData
