@@ -241,7 +241,9 @@ while IFS=$'\t' read -r wdisk wpath wlabel; do
   WIPE_DISKS+=("$wk"); _wipe_seen["$wk"]=1
 done <<<"$DATA_WIPES_TSV"
 if (( ${#WIPE_DISKS[@]} )); then
-  live_root_disk="$(lsblk -no PKNAME "$root_src" 2>/dev/null | head -n1)"
+  # On the ISO / is the airootfs overlay, not a device: lsblk fails, and under
+  # pipefail that failure alone would end the install with no message.
+  live_root_disk="$(lsblk -no PKNAME "$root_src" 2>/dev/null | head -n1 || true)"
   kept_labels=""
   while read -r d; do
     [[ -n "$d" && "$d" != "$DISK_KNAME" && -z "${_wipe_seen[$d]:-}" && "${d##*/}" != "$live_root_disk" ]] || continue
