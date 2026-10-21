@@ -61,7 +61,7 @@ good "bar main and hidden"       '{"bar":{"main":"desc:Acer X34","hidden":["DP-3
 
 **Interfaces:**
 - `pick(mons, mainKey) -> key | ""`: `mons` = `[{key, x, y}]`, enabled monitors only.
-- `showsBar(key, mainKey, hidden, mons) -> bool`: true for `pick(mons, mainKey)`, else `!hidden.includes(key)`.
+- `showsBar(key, mons, mainKey, hidden) -> bool`: true for `pick(mons, mainKey)`, else `!hidden.includes(key)`.
 
 - [ ] **Step 1: Failing tests** `tst_main.qml` (import `"../services/Main.js" as M`): `test_mainNamed`, `test_mainAbsent` (falls back to top-left), `test_mainUnset`, `test_topThenLeft` (a monitor higher up but further right beats one lower and left), `test_mainBeatsHidden`, `test_hiddenOthers`, `test_noMonitors` (`""`), `test_mainBack` (same inputs with the key present again pick it).
 - [ ] **Step 2: Run, fail.** `cachyos/vm/vm.sh run 'bash ~/proj/fledge/cachyos/iso/test-shell-qml.sh'`
