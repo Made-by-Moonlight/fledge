@@ -46,6 +46,8 @@ the first reboot.
    - `HOSTNAME` — set it, or leave `""` to be prompted.
    - `DATA_DISKS` — the data disks to mount permanently (matched by UUID;
      disks not present on the machine are skipped). Set to `()` for none.
+     The graphical installer pre-selects these for Mount; wiping a drive is
+     only ever chosen by hand.
 2. Get this repo onto a partition the install will **not** touch:
    - Desktop: copy `~/proj/fledge` onto one of the data disks.
    - Laptop: copy it onto a USB stick.
@@ -86,8 +88,13 @@ The ISO's graphical installer (`fledge-install`, not the configurator) writes
 Keys: `DISK` (by-id path), `DISK_CONFIRMED=yes`, `HOSTNAME`, `TIMEZONE`,
 `USER_PASSWORD`, `LUKS_PASSPHRASE`, optional `ROOT_PASSWORD` (empty → root
 locked), `XKB_LAYOUT` / `XKB_VARIANT` (keyboard; default `us`, seeded into the
-user's fledge settings) and `DATA_MOUNTS` (`uuid:/abs/path,…`, `~` already
-expanded, may be empty). One `KEY=value` per line, unquoted; parsed by `lib/answers.sh`, never
+user's fledge settings), `DATA_MOUNTS` (`uuid:/abs/path,…`, `~` already
+expanded, may be empty) and `DATA_WIPES` (`label:/abs/path:disk,…`: each disk
+is erased into one ext4 partition named and labelled `label`, mounted at the
+path like a data disk; may be empty, and the disk path, a by-id one included,
+goes last because it can hold `:`). Before erasing, firmware boot entries on
+the target or a wiped drive are noted and removed after the bootloader stage,
+and fledge's entry goes first in `BootOrder`. One `KEY=value` per line, unquoted; parsed by `lib/answers.sh`, never
 sourced; deleted once read. Without `--answers` everything prompts as before.
 Without `--answers`, data-disk fstab entries from `profile.sh` are only
 written when their UUID is present on the machine.

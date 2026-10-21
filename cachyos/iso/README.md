@@ -53,11 +53,39 @@ rewrites the installed repo, and the checks expect it clean) and **with a tty**
 
     ip="$(cachyos/vm/vm.sh ip)"
     scp cachyos/iso/test/verify-install.sh "slievr@$ip:/tmp/"
-    ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_AUTOLOGIN=1 VERIFY_DATA_MOUNT=~/testdata bash /tmp/verify-install.sh'
+    ssh -t "slievr@$ip" 'VERIFY_LAYOUT=gb VERIFY_AUTOLOGIN=1 VERIFY_DATA_MOUNT=~/testdata VERIFY_WIPE=~/hdd1:hdd1 bash /tmp/verify-install.sh'
 
-(`VERIFY_*` only when the run chose that layout, same disk and login password, and data disk: format the
-VM's second disk first with `mkfs.ext4 -U 00000000-0000-4000-8000-00000000da7a
-/dev/vdb` from a root console, the UUID `profile.sh` maps to `~/testdata`.)
+(`VERIFY_*` only when the run chose that layout, same disk and login password,
+and data disks. `VERIFY_DATA_MOUNT`: before starting the installer, format the
+VM's second disk from a root console with the UUID `profile.sh` maps to
+`~/testdata` and leave a marker on it, which the check expects to survive:
+
+    mkfs.ext4 -F -U 00000000-0000-4000-8000-00000000da7a /dev/vdb
+    mount /dev/vdb /mnt
+    touch /mnt/fledge-test-marker
+    umount /mnt
+
+`VERIFY_WIPE=<folder>:<label>`: Data disks › Wipe on the VM's blank third disk
+(`vdc`; virtio reports it rotational with no transport, so it's a Hard disk and
+the default is `~/hdd1` / `hdd1`). It checks one ext4 partition with that label
+and partition name, the fstab line, the mount on access and that the user can
+write there. Every run also checks the firmware boot entries: none names a
+partition that no longer exists, and the first in `BootOrder` is on the new
+ESP. OVMF keeps NVRAM across reinstalls but `destroy-vm.sh` deletes it, so
+the stale-entry case needs a second install into the same VM. The CD drive
+is empty after the first install, so put the ISO back and boot it through
+Limine's firmware menu:
+
+    virsh -c qemu:///system destroy cachyos-test
+    virsh -c qemu:///system change-media cachyos-test sda ~/.cache/cachyos-iso/<iso> --insert --config
+    virsh -c qemu:///system start cachyos-test   # then Esc (Limine menu), S, the DVD-ROM
+
+and install again, the same choices.)
+
+The live ISO has no ssh by default. For IPC from the host, start it from a
+root console (`systemctl start sshd`, your key in `/root/.ssh/authorized_keys`)
+and call the installer as the live user:
+`runuser -u fledge -- env XDG_RUNTIME_DIR=/run/user/1000 WAYLAND_DISPLAY=wayland-1 qs -c fledge-installer ipc call installer setWipe /dev/vdc`.
 
 Then the desktop checks (no tty needed), including a broken generated
 `binds.lua` across a login. verify-shell types keys with `wtype`, a test-only

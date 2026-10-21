@@ -7,7 +7,7 @@ QEMU/KVM VM before touching real hardware.
 | --- | --- |
 | `host-deps.sh` | one-time: install libvirt/qemu/etc., join the `libvirt` group, grant the ISO-dir ACLs |
 | `download-iso.sh` | fetch + verify the latest stock CachyOS desktop ISO (cached) |
-| `provision-vm.sh` | create the VM: 40G system disk + 8G blank data disk, boot the ISO |
+| `provision-vm.sh` | create the VM: 40G system disk, 8G data disk, 4G disk to wipe, boot the ISO |
 | `dev-up.sh` | bring an already-installed VM up for a test iteration (SSH + viewer) |
 | `destroy-vm.sh` | delete the VM and all its disks |
 | `vm.sh` | dev loop: `sync` the working tree in, `run`/`sudo` commands in the logged-in session, `restow`, restart the dev `shell`, `shot` screenshots into `.superpowers/shots/`, `type` into the console, `relogin` |
@@ -15,13 +15,15 @@ QEMU/KVM VM before touching real hardware.
 Only `host-deps.sh` needs `sudo`. Everything else talks to the system
 libvirt over `qemu:///system` via `libvirt`-group membership.
 
-VM name: `cachyos-test`. Two disks:
+VM name: `cachyos-test`. Three disks:
 
 - **disk 1** (`vda`, 40G) — install target
 - **disk 2** (`vdb`, 8G) — stands in for the real machine's data disks;
   exercises multi-disk selection and the wrong-disk guard, and carries the
   staged repo (mirrors the real "copy the repo onto an untouched
   partition" delivery)
+- **disk 3** (`vdc`, 4G, blank) — the drive the graphical installer's
+  Data disks › Wipe erases into storage
 
 ## First-time setup
 
@@ -73,7 +75,8 @@ sets up key auth (via `expect`, using `slievr` / `$VM_PASSWORD`, default
 ## Notes
 
 - `provision-vm.sh` uses `--boot uefi` — the installer requires UEFI.
-- `destroy-vm.sh` removes **both** qcow2 disks (`--remove-all-storage`).
+- `destroy-vm.sh` removes **all three** qcow2 disks (`--remove-all-storage`)
+  and the NVRAM.
 - Hibernate works in the VM up to the picture: `systemctl hibernate`, unlock
   the disk, and the session resumes (a file in `/tmp` and `uptime -s` survive),
   lock screen and all. The first frame Hyprland draws after unlocking then
