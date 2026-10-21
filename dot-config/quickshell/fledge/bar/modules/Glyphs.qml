@@ -21,5 +21,5 @@ Item {
         Glyph { font.pixelSize: Theme.barFont; visible: root.show.includes("volume") && Audio.ready; text: Audio.muted ? "󰝟" : Audio.volume > 0.5 ? "󰕾" : "󰖀" }
         Glyph { font.pixelSize: Theme.barFont; visible: root.show.includes("battery") && Power.battery; text: Power.glyph + " " + Power.percent + "%"; color: Power.percent <= 15 && !Power.charging ? Theme.error : Theme.fg }
     }
-    MouseArea { anchors.fill: parent; onClicked: ShellState.toggleQuickSettings() }
+    MouseArea { anchors.fill: parent; onClicked: ShellState.toggleQuickSettings(root.QsWindow.window?.screen) }
 }

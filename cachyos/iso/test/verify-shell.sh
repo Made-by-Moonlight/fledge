@@ -285,9 +285,18 @@ if [[ -n "$second" ]]; then
   # A monitor with no description is keyed by its connector (Layout.js keyFor).
   key2="$(hyprctl monitors -j | jq -r --arg n "$second" '.[] | select(.name == $n) | if .description == "" then .name else "desc:" + .description end')"
   is "second monitor has a bar by default" 1 "$(layers_on "$second" fledge-bar)"
+  # Quick settings opens where it's asked from: the focused monitor while that has a bar.
+  fledge hypr dispatch "hl.dsp.focus({monitor = \"$second\"})" >/dev/null; sleep 1
+  ipc quicksettings open "" >/dev/null; sleep 1
+  is "quick settings on the focused bar's monitor" 1 "$(layers_on "$second" fledge-quicksettings)"
+  ipc quicksettings close >/dev/null; sleep 1
   fledge settings set .bar.hidden "$(jq -cn --arg k "$key2" '[$k]')" >/dev/null; sleep 2
   is "hidden: no bar on it"             0 "$(layers_on "$second" fledge-bar)"
   is "hidden: no reserved edge on it"   0 "$(layers_on "$second" fledge-frame-reserve)"
+  ipc quicksettings open "" >/dev/null; sleep 1
+  is "focused monitor without a bar: quick settings on main" 1 "$(layers_on "$first" fledge-quicksettings)"
+  ipc quicksettings close >/dev/null
+  fledge hypr dispatch "hl.dsp.focus({monitor = \"$first\"})" >/dev/null; sleep 1
   fledge settings set .bar.main "$(jq -cn --arg k "$key2" '$k')" >/dev/null; sleep 2
   is "main beats hidden"                1 "$(layers_on "$second" fledge-bar)"
   notify-send "fledge verify" "main monitor"; sleep 1
