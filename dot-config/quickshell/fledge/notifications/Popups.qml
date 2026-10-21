@@ -11,7 +11,7 @@ PanelWindow {
     // The bar's tab hangs off one edge; only a pop-up on that edge needs to clear it.
     readonly property bool belowTab: ShellState.barVisible && (Settings.barPosition !== "bottom") === win.topSide
     readonly property int edgeMargin: win.belowTab ? Theme.popupTop : Theme.popupSide
-    screen: ShellState.focusedScreen()
+    screen: ShellState.mainScreen
     // Hidden while quick settings is open: its history shows the same items.
     visible: Notifs.popups.length > 0 && !ShellState.qsOpen && !ShellState.locked
     anchors { top: win.topSide; bottom: !win.topSide; right: corner.endsWith("right"); left: corner.endsWith("left") }

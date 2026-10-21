@@ -24,7 +24,7 @@ PanelWindow {
 
     function show(icon, text, value) {
         osd.icon = iconMap[icon] ?? icon; osd.text = text; osd.value = value;
-        screen = ShellState.focusedScreen();
+        screen = ShellState.mainScreen;
         visible = true;
         hide.restart();
     }
