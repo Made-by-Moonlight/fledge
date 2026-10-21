@@ -122,6 +122,8 @@ cleanup() {
   rm -f "$DMENU_OUT"
   # Night light is left off (6000 = hyprsunset's identity), even if a check died mid-toggle.
   [[ "$(nl_temp)" == 4000 ]] && hyprctl hyprsunset temperature 6000 >/dev/null 2>&1
+  fledge settings reset .bar.main .bar.hidden >/dev/null 2>&1
+  [[ -n "${headless:-}" ]] && hyprctl output remove "$headless" >/dev/null 2>&1
 }
 trap cleanup EXIT INT TERM
 trap 'exit 130' INT TERM
@@ -265,6 +267,36 @@ unlock
 is "right password unlocks"      unlocked "$(ipc lock status)"
 is "relock flag cleared after unlock" "" "$(lockflag)"
 is "screens on after unlock (dpms)" true "$(hyprctl monitors -j | jq 'all(.dpmsStatus)')"
+
+# Main monitor and per-monitor bars. layers_on <output> <namespace>: how many of that
+# layer the output has. The two-monitor checks get a headless second output when the
+# VM has one screen (removed again by cleanup).
+layers_on() { hyprctl layers -j | jq --arg o "$1" --arg n "$2" '[.[$o].levels[]?[]? | select(.namespace == $n)] | length'; }
+mons() { hyprctl monitors -j | jq -r 'sort_by(.y, .x) | .[].name'; }
+fledge settings reset .bar.main .bar.hidden >/dev/null 2>&1; sleep 1
+first="$(mons | head -n1)"
+is "main monitor has a bar"             1 "$(layers_on "$first" fledge-bar)"
+is "only the bar edge is reserved"      1 "$(layers_on "$first" fledge-frame-reserve)"
+if [[ "$(mons | wc -l)" -lt 2 ]]; then
+  headless=FLEDGE-TEST; hyprctl output create headless "$headless" >/dev/null; sleep 2
+fi
+second="$(mons | sed -n 2p)"
+if [[ -n "$second" ]]; then
+  # A monitor with no description is keyed by its connector (Layout.js keyFor).
+  key2="$(hyprctl monitors -j | jq -r --arg n "$second" '.[] | select(.name == $n) | if .description == "" then .name else "desc:" + .description end')"
+  is "second monitor has a bar by default" 1 "$(layers_on "$second" fledge-bar)"
+  fledge settings set .bar.hidden "$(jq -cn --arg k "$key2" '[$k]')" >/dev/null; sleep 2
+  is "hidden: no bar on it"             0 "$(layers_on "$second" fledge-bar)"
+  is "hidden: no reserved edge on it"   0 "$(layers_on "$second" fledge-frame-reserve)"
+  fledge settings set .bar.main "$(jq -cn --arg k "$key2" '$k')" >/dev/null; sleep 2
+  is "main beats hidden"                1 "$(layers_on "$second" fledge-bar)"
+  notify-send "fledge verify" "main monitor"; sleep 1
+  is "notification on the main monitor" 1 "$(layers_on "$second" fledge-notifications)"
+  ipc notifications dismissAll >/dev/null
+  fledge settings reset .bar.main .bar.hidden >/dev/null; sleep 2
+else
+  echo "SKIP  two-monitor checks (no second output)"
+fi
 
 # GTK dark is seeded once: with the marker present, bootstrap's seeding must leave a
 # user's light choice alone. Runs the function exactly as bootstrap.sh defines it.
