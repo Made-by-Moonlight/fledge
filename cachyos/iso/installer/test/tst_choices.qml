@@ -146,21 +146,32 @@ TestCase {
         ins.setChoice("/dev/nvme0n1", "wipe");
         compare(ins.choice("/dev/nvme0n1"), "leave"); compare(ins.wipes["/dev/nvme0n1"].on, false);
     }
+    function test_wipedDefaultFreesItsFolder() {
+        // nvme1 is taken by a wiped SN570; wiping the Rocket (default ~/nvme2) gives ~/nvme2, not ~/nvme3.
+        ins.setChoice("/dev/nvme0n1", "wipe"); ins.setChoice("/dev/nvme2n1", "wipe");
+        compare(ins.wipes["/dev/nvme0n1"].path, "~/nvme1"); compare(ins.wipes["/dev/nvme2n1"].path, "~/nvme2");
+    }
+    function test_busyAfterRefreshDropsWipe() {
+        ins.setChoice("/dev/nvme0n1", "wipe"); compare(ins.choice("/dev/nvme0n1"), "wipe");
+        const f = stub(); f.drives[1].busy = "mounted"; ins.facts = f;
+        compare(ins.choice("/dev/nvme0n1"), "leave"); compare(ins.wipes["/dev/nvme0n1"].on, false);
+    }
     function test_targetRefused() {
         ins.setChoice("/dev/nvme1n1", "wipe"); compare(ins.wipes["/dev/nvme1n1"].on, false);
     }
     function test_suggestionsAreNotReservations() {
         // The SN570, wiped first, holds ~/nvme1; the Rocket then takes the next name
-        // free of profile defaults (its own ~/nvme2 counts: it's off the target).
+        // free of profile defaults (its own ~/nvme2 no longer counts: wiped, it
+        // has no filesystem to mount there).
         ins.setChoice("/dev/nvme0n1", "wipe");
         ins.setChoice("/dev/nvme2n1", "wipe");
         compare(ins.wipes["/dev/nvme0n1"].path, "~/nvme1");
-        compare(ins.wipes["/dev/nvme2n1"].path, "~/nvme3");
+        compare(ins.wipes["/dev/nvme2n1"].path, "~/nvme2");
         // Left alone again, the SN570 shows a fresh suggestion; the active Rocket keeps its name.
         ins.setChoice("/dev/nvme0n1", "leave");
         compare(ins.wipes["/dev/nvme0n1"].path, "~/nvme1");
         ins.setChoice("/dev/nvme0n1", "wipe");
-        compare(ins.wipes["/dev/nvme2n1"].path, "~/nvme3");
+        compare(ins.wipes["/dev/nvme2n1"].path, "~/nvme2");
         compare(ins.wipes["/dev/nvme0n1"].path, "~/nvme1");
     }
     function test_editedMountSticks() {

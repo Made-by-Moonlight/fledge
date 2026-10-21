@@ -51,7 +51,12 @@ function names(s) {
     const kind = {};
     for (const d of drives(f)) kind[d.path] = d.kind;
     const choices = {};
-    for (const k in s.choices) if (present.includes(k)) choices[k] = s.choices[k];
+    for (const k in s.choices) {
+        if (!present.includes(k)) continue;
+        // A drive that turned busy after a refresh can't be wiped any more.
+        if (s.choices[k] === "wipe" && drives(f).find(d => d.path === k).busy) continue;
+        choices[k] = s.choices[k];
+    }
     const t = { facts: f, disk: s.disk, choices: choices };
 
     const wipes = {};
@@ -71,7 +76,8 @@ function names(s) {
         .concat(drives(f).map(d => ({ w: wipes[d.path], disk: d.path, edited: wipes[d.path].pathEdited, fixed: null })));
     const it = i => i.m || i.w;
     const active = i => i.disk !== s.disk && it(i).on;
-    const defaults = f.datafs.filter(r => r.disk !== s.disk && r.mount).map(r => V.expand(r.mount, home));
+    // A drive being wiped loses its filesystems, so its profile default frees its folder.
+    const defaults = f.datafs.filter(r => r.disk !== s.disk && r.mount && !wipes[r.disk]?.on).map(r => V.expand(r.mount, home));
     // Labels a new wipe's name must not take: every label on a drive that stays.
     // A drive's own labels never count against its wipe: the idle suggestion
     // is the one it keeps when Wipe is picked, and by then they're gone.
@@ -112,7 +118,10 @@ function setChoice(s, disk, c) {
     if (c === "wipe" && (d.busy || disk === s.disk)) return null;
     const n = copy(s);
     n.choices[disk] = c;
-    n.wipes[disk] = Object.assign({}, n.wipes[disk], { on: c === "wipe", confirmed: false });
+    // Becoming a wipe drops the idle suggestion (computed while its default
+    // folder was still reserved) so it is re-derived now; a typed folder stays.
+    const w = n.wipes[disk];
+    n.wipes[disk] = Object.assign({}, w, { on: c === "wipe", confirmed: false }, c === "wipe" && !w?.pathEdited ? { path: "" } : {});
     if (c !== "mount")
         for (const r of s.facts.datafs) if (r.disk === disk && n.mounts[r.uuid]) n.mounts[r.uuid] = Object.assign({}, n.mounts[r.uuid], { on: false });
     return names(n);
