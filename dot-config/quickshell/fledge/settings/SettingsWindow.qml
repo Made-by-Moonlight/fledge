@@ -26,7 +26,7 @@ FloatingWindow {
     // [id, glyph, label, page file]. Task 17's pages slot in by file name.
     readonly property var pages: [
         ["keybinds", "⌨", "Keybinds", "Keybinds"], ["displays", "󰍹", "Displays", "Displays"], ["bar", "󰕮", "Bar", "Bar"],
-        ["idle", "󰒲", "Idle & lock", "Idle"], ["input", "󰌌", "Input", "Input"]
+        ["apps", "󰖯", "Apps", "Apps"], ["idle", "󰒲", "Idle & lock", "Idle"], ["input", "󰌌", "Input", "Input"]
     ]
     readonly property var current: pages.find(p => p[0] === ShellState.settingsPage) ?? pages[0]
 

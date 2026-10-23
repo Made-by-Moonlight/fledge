@@ -120,6 +120,11 @@ Scope {
         target: "settings"
         function open(page: string): void { ShellState.openSettings(page); }
         function close(): void { ShellState.settingsOpen = false; }
+        // Settings › Apps with this window class's row open (a bind can pass the focused window's).
+        function app(cls: string): void {
+            ShellState.openSettings("apps");
+            if (ShellState.settingsOpen) ShellState.appsExpand = cls;
+        }
         function record(id: string): void {
             ShellState.openSettings("keybinds");
             if (ShellState.settingsOpen) ShellState.recordRequest = id;   // refused open (locked, polkit): no silent recording later
