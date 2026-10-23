@@ -40,7 +40,7 @@ is() { if [[ "$2" == "$3" ]]; then ok "$1"; else no "$1 (got: $3)"; fi; }
 # --- What resolves, all from the dispatcher's own help --------------------
 # `fledge help` lists the groups; `fledge help <group>` lists a libexec
 # group's actions as "  fledge w1 w2  about". A group with no such rows is a
-# built-in (hypr, settings, dmenu, help), whose help text names its
+# built-in (hypr, settings, dmenu, screenshare, help), whose help text names its
 # subcommands ("fledge hypr dispatch ...", "| set <path>").
 declare -A CMDS=() BUILTIN_SUBS=() BUILTIN=()
 mapfile -t groups < <("$FLEDGE" help | sed -nE 's/^  ([a-z0-9][a-z0-9_.]*)( .*)?$/\1/p')
@@ -54,7 +54,7 @@ for g in "${groups[@]}"; do
     BUILTIN_SUBS[$g]="$({ grep -oE "(fledge $g|\\|) [a-z][a-z0-9_]*" <<<"$text" || true; } | awk '{print $NF}' | sort -u | tr '\n' ' ')"
   fi
 done
-is "fledge help lists the built-ins" "dmenu help hypr settings" "$(printf '%s\n' "${!BUILTIN[@]}" | sort | tr '\n' ' ' | sed 's/ $//')"
+is "fledge help lists the built-ins" "dmenu help hypr screenshare settings" "$(printf '%s\n' "${!BUILTIN[@]}" | sort | tr '\n' ' ' | sed 's/ $//')"
 is "fledge help lists libexec actions" yes "$( (( ${#CMDS[@]} > 50 )) && echo yes || echo no)"
 
 # resolves w1 w2 ...: the dispatcher's rule, against the lists above. Sets
