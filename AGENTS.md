@@ -8,7 +8,7 @@ Read this first, then the newest spec under `docs/superpowers/specs/`.
 **fledge**, by made by moonlight: a CachyOS + Hyprland desktop and the
 installer ISO that puts it on a machine. `README.md` has the user-facing
 overview and the repo layout. The repo is
-`github.com/Made-by-Moonlight/fledge` (private), checked out at `~/proj/fledge`.
+`github.com/Made-by-Moonlight/fledge` (public), checked out at `~/proj/fledge`.
 
 ## Hard rules
 
@@ -109,8 +109,11 @@ Until B's internals land, `libexec/` holds a vendored, renamed Omarchy fork
   (or fledge menu › Setup › Config › Reload Hyprland). After changing which
   config Hyprland loads, test with `cachyos/vm/vm.sh relogin`: the config
   manager is picked at login, `reload` never switches it.
-- Upgrading (README "Upgrade"): `git pull` in `~/proj/fledge`, then
-  `bootstrap.sh`. That works only for installs made since the fledge rename;
-  older installs (repo not at `~/proj/fledge`, old component names,
+- Upgrading (README "Upgrade"): `fledge update` moves a release checkout to
+  the newest `v*` tag and re-runs `bootstrap.sh` (after a snapper snapshot
+  and the package updates), so a change existing machines need goes in
+  `bootstrap.sh`, idempotently. A dev checkout (not on `main`, uncommitted
+  changes, local commits) is never moved. That works only for installs made
+  since the fledge rename; older installs (repo not at `~/proj/fledge`, old component names,
   `.conf`-era Hyprland) reinstall from the ISO. Nothing migrates them, by
   design: don't add migration code for the old names.
