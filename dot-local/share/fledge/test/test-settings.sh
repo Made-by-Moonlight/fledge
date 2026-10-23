@@ -203,6 +203,9 @@ bad "apps: both placements"      "apps.kitty: pick a workspace or a monitor, not
 bad "apps: unknown field"        "apps.kitty: unknown field float"            '{"apps":{"kitty":{"float":true}}}'
 bad "apps: entry not an object"  "apps.kitty: must be an object"              '{"apps":{"kitty":0.9}}'
 bad "apps: empty class"          "apps: a window class can't be empty"        '{"apps":{"":{"workspace":2}}}'
+bad "apps: volume above 1"       "apps.kitty.volume must be a number from 0 to 1" '{"apps":{"kitty":{"volume":1.2}}}'
+bad "apps: volume below 0"       "apps.kitty.volume must be a number from 0 to 1" '{"apps":{"kitty":{"volume":-0.1}}}'
+bad "apps: volume as text"       "apps.kitty.volume must be a number from 0 to 1" '{"apps":{"kitty":{"volume":"60%"}}}'
 bad "windows: opacity range"     "windows.opacity.inactive must be a number from 0.1 to 1" '{"windows":{"opacity":{"active":1,"inactive":0}}}'
 bad "windows: unknown field"     "windows: unknown field blur"                '{"windows":{"blur":true}}'
 bad "wallpaper monitor key with a quote" "wallpaper.monitors: monitor name can't contain a quote or backslash" '{"wallpaper":{"monitors":{"DP-\"1":"/x/a.png"}}}'
@@ -244,6 +247,7 @@ good "apps: bounds 0.1 and 1"      '{"apps":{"mpv":{"opacity":{"active":1,"inact
 good "apps: workspace only"        '{"apps":{"spotify":{"workspace":9}}}'
 good "apps: odd class"             '{"apps":{"a\"b\\c d":{"workspace":2}}}'
 good "apps: empty entry"           '{"apps":{"kitty":{}}}'
+good "apps: volume bounds"         '{"apps":{"kitty":{"volume":0},"mpv":{"volume":1},"vlc":{"volume":0.6}}}'
 bad "display key with a comma" "displays: monitor name can't contain a comma" '{"displays":{"desc:Acer X34, 1":{"mode":"preferred"}}}'
 bad "empty display key" "displays: monitor name can't be empty" '{"displays":{"":{"mode":"preferred"}}}'
 good "display by description" '{"displays":{"desc:Acer Technologies X34 GS 0x1240460A":{"mode":"3440x1440@180","position":"0x0","scale":1}}}'
@@ -404,6 +408,9 @@ check "apps: a null field drops just that field" "0 1" \
   "$(grep -c 'class = "kitty" }, opacity' "$FLEDGE_HYPR_DIR/apps.lua") $(grep -c 'class = "kitty" }, monitor' "$FLEDGE_HYPR_DIR/apps.lua")"
 "$FLEDGE" settings set '.apps.kitty.monitor' null '.apps.kitty.workspace' 4
 "$FLEDGE" settings check; check "apps: switching placement in one write is valid" 0 "$?"
+"$FLEDGE" settings set '.apps.vlc' '{"volume":0.6}'
+"$FLEDGE" settings apply
+check "apps: a volume alone generates no rule (the shell reads it live)" "0" "$(grep -c '"vlc"' "$FLEDGE_HYPR_DIR/apps.lua")"
 "$FLEDGE" settings reset '.apps.kitty'
 "$FLEDGE" settings apply
 contains "apps: reset brings the default entry back" 'opacity = "0.9 override 0.75 override"' "$(cat "$FLEDGE_HYPR_DIR/apps.lua")"
