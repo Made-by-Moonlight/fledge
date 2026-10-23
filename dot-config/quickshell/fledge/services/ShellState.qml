@@ -26,7 +26,8 @@ Singleton {
     property bool locked: false
     property bool polkitOpen: false     // the polkit dialog holds the keyboard
     property bool shareOpen: false      // so does the screen-share picker
-    readonly property bool dialogOpen: polkitOpen || shareOpen
+    property bool recoveryOpen: false   // and the "running a snapshot" dialog
+    readonly property bool dialogOpen: polkitOpen || shareOpen || recoveryOpen
 
     function focusedScreen() {
         const name = Hyprland.focusedMonitor?.name;
