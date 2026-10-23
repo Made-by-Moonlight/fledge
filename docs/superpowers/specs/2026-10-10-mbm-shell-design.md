@@ -153,7 +153,12 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
   "idle": { "dimSec": 0, "lockSec": 0, "screenOffSec": 0, "suspendSec": 0, "lockOnSleep": true }
   "input":         { "kbLayout": "us", "kbOptions": "compose:caps", "repeatRate": 40, "repeatDelay": 600,
                      "numlock": true, "touchpad": { "scrollFactor": 0.4, "naturalScroll": false, "tapToClick": true },
-                     "sensitivity": 0 }
+                     "sensitivity": 0 },
+  "windows":       { "opacity": { "active": 0.97, "inactive": 0.9 } },
+  "apps":          { "vesktop": { "opacity": { "active": 1, "inactive": 1 }, "workspace": 9 } }
+                   // Settings › Apps, added 2026-10-23: per window class, opacity (0.1-1) and one of
+                   // workspace or monitor; an app or one of its fields set to null is removed.
+                   // See 2026-10-23-app-rules-design.md.
 }
 ```
 
