@@ -155,9 +155,9 @@ rule({ match = { tag = "default-opacity" }, opacity = "0.97 0.9" })
 
 ---- fledge's own rules ----
 
--- Discord, Spotify and YouTube Music live on workspace 9
-rule({ match = { class = "discord" }, workspace = "9" })
-rule({ match = { class = "discord" }, opacity = "1.0 override 1.0 override 1.0 override" })
+-- Discord (Vesktop), Spotify and YouTube Music live on workspace 9
+rule({ match = { class = "vesktop" }, workspace = "9" })
+rule({ match = { class = "vesktop" }, opacity = "1.0 override 1.0 override 1.0 override" })
 rule({ match = { class = "spotify" }, workspace = "9" })
 -- YouTube Music is limusic (a native client, not a web app)
 rule({ match = { class = "limusic-app" }, workspace = "9" })
