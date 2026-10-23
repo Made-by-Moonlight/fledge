@@ -25,6 +25,10 @@ Scope {
         function streams(): string {
             return JSON.stringify(Audio.streams.map(n => ({ name: Audio.appName(n), volume: n.audio?.volume ?? null, muted: n.audio?.muted ?? null })));
         }
+        // The bar's updates module: the last `fledge update check`, and asking for a new one
+        // (`fledge update` does when it finishes).
+        function updates(): string { return JSON.stringify({ count: Updates.count, summary: Updates.summary, checking: Updates.checking }); }
+        function recheck(): void { Updates.recheck(); }
     }
     // `fledge screenshare pick` (lib/screenshare.sh): list is xdph's XDPH_WINDOW_SHARING_LIST,
     // result the FIFO it waits on. "ok", or "busy" while another request is up.

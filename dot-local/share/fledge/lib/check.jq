@@ -89,7 +89,7 @@ def check_workspace($k):
 def modules($side):
   (.[$side] // [])
   | if type != "array" then "bar.\($side) must be a list"
-    else .[] | select(IN("workspaces", "title", "clock", "tray", "glyphs", "cog", "media") | not) | "bar.\($side): unknown module \(tojson)"
+    else .[] | select(IN("workspaces", "title", "clock", "tray", "glyphs", "cog", "media", "updates") | not) | "bar.\($side): unknown module \(tojson)"
     end;
 
 def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) must be a whole number of seconds >= 0" end;

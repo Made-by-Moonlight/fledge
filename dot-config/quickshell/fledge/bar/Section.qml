@@ -28,6 +28,7 @@ Item {
                 DelegateChoice { roleValue: "tray"; Tray { anchors.verticalCenter: row.verticalCenter; screen: section.screen } }
                 DelegateChoice { roleValue: "glyphs"; Glyphs { anchors.verticalCenter: row.verticalCenter } }
                 DelegateChoice { roleValue: "cog"; Cog { anchors.verticalCenter: row.verticalCenter } }
+                DelegateChoice { roleValue: "updates"; Updates { anchors.verticalCenter: row.verticalCenter } }
                 DelegateChoice { roleValue: "media"; NowPlaying { anchors.verticalCenter: row.verticalCenter } }
             }
         }
