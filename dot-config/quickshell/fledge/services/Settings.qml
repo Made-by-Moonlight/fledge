@@ -65,7 +65,7 @@ Singleton {
     readonly property int clockFormat: get("bar", "clockFormat", 0)
     readonly property var barLeft: get("bar", "left", ["workspaces", "title"])
     readonly property var barCentre: get("bar", "centre", ["clock", "media"])
-    readonly property var barRight: get("bar", "right", ["tray", "glyphs", "cog"])
+    readonly property var barRight: get("bar", "right", ["tray", "updates", "glyphs", "cog"])
     readonly property var barGlyphs: get("bar", "glyphs", ["network", "battery"])
     // Monitor keys (Layout.js keyFor): the main monitor, and the monitors whose bar is off.
     readonly property string barMain: { const m = get("bar", "main", ""); return typeof m === "string" ? m : ""; }

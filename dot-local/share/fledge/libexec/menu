@@ -303,7 +303,7 @@ show_font_menu() {
 
 show_setup_menu() {
   local options="  Audio\n  Wifi\n󰂯  Bluetooth\n󱐋  Power Profile\n  System Sleep\n󰍹  Monitors\n  Keybindings\n  Input"
-  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Time\n  Firmware\n  Restart\n  Config"
+  options="$options\n  Defaults\n󰱔  DNS\n  Security\n  Time\n󰚰  Update\n  Firmware\n  Restart\n  Config"
 
   # Audio, Wi-Fi, Bluetooth, monitors, binds and input belong to the fledge shell since the
   # cutover (wiremix and bluetui are gone; the hypr .conf files are generated).
@@ -320,6 +320,7 @@ show_setup_menu() {
   *DNS*) present_terminal fledge setup dns ;;
   *Security*) show_setup_security_menu ;;
   *Time*) show_setup_time_menu ;;
+  *Update*) present_terminal fledge update ;;
   *Firmware*) present_terminal fledge update firmware ;;
   *Restart*) show_setup_restart_menu ;;
   *Config*) show_setup_config_menu ;;

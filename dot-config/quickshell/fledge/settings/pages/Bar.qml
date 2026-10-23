@@ -8,7 +8,7 @@ import "../../components"
 Flickable {
     id: page
     contentHeight: col.implicitHeight; clip: true
-    readonly property var allModules: ["workspaces", "title", "clock", "media", "tray", "glyphs", "cog"]
+    readonly property var allModules: ["workspaces", "title", "clock", "media", "tray", "updates", "glyphs", "cog"]
     readonly property var sides: [["left", "Left section"], ["centre", "Centre section"], ["right", "Right section"]]
     function list(side) { return side === "left" ? Settings.barLeft : side === "centre" ? Settings.barCentre : Settings.barRight; }
     function save(side, mods) { Settings.set([[".bar." + side, mods]], false); }
