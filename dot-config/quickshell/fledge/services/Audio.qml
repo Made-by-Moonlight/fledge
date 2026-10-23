@@ -14,9 +14,13 @@ Singleton {
     readonly property bool micMuted: source?.audio?.muted ?? true
     readonly property var sinks: Pipewire.nodes.values.filter(n => n.audio && n.isSink && !n.isStream)
     readonly property var sources: Pipewire.nodes.values.filter(n => n.audio && !n.isSink && !n.isStream)
+    // Apps playing audio: Quickshell counts a playback stream as a sink (it takes the app's audio
+    // in). By app name then id, so rows keep their place.
+    readonly property var streams: Pipewire.nodes.values.filter(n => n.audio && n.isSink && n.isStream)
+        .sort((a, b) => appName(a).localeCompare(appName(b)) || a.id - b.id)
 
     // Volume/mute of a node are only live while something tracks it.
-    PwObjectTracker { objects: [root.sink, root.source, ...root.sinks, ...root.sources] }
+    PwObjectTracker { objects: [root.sink, root.source, ...root.sinks, ...root.sources, ...root.streams] }
 
     // PipeWire values only update after the daemon round-trips, so back-to-back steps and toggles
     // build on what was last asked for, not on the (possibly stale) live value. Cleared shortly after
@@ -65,6 +69,15 @@ Singleton {
         source.audio.muted = m;
         return m;
     }
+    // A stream's app name, and its icon name ("" when there is none).
+    function appName(n) { return n?.properties["application.name"] || n?.description || n?.name || ""; }
+    function appIcon(n) {
+        const p = n?.properties ?? {};
+        return p["application.icon-name"] || DesktopEntries.heuristicLookup(p["application.process.binary"] || appName(n))?.icon || "";
+    }
+    function setStreamVolume(n, v) { if (n?.audio) { n.audio.muted = false; n.audio.volume = clamp(v); } }
+    function stepStreamVolume(n, delta) { if (n?.audio && !isNaN(delta)) setStreamVolume(n, n.audio.volume + delta); }
+    function toggleStreamMute(n) { if (n?.audio) n.audio.muted = !n.audio.muted; }
     function setDefaultSink(n) { Pipewire.preferredDefaultAudioSink = n; }
     function setDefaultSource(n) { Pipewire.preferredDefaultAudioSource = n; }
 }
