@@ -5,7 +5,7 @@
 #   fledge hypr dispatch|set|eval|quote ...          (below)
 #   fledge dmenu [--prompt P] [--select N] [--input-only]   (lib/dmenu.sh)
 #   fledge screenshare pick [--allow-token]          (lib/screenshare.sh)
-#   fledge update [--yes] | update check [--json]    (lib/update.sh; other
+#   fledge update [--yes] | check [--json] | recover (lib/update.sh; other
 #                                                     update actions are libexec)
 #   fledge version                                   (lib/update.sh)
 #   fledge help [group]
@@ -193,7 +193,8 @@ help_group() { # <group>
   # update's own actions are the builtin (lib/update.sh); firmware and time are libexec.
   if [[ $g == update ]]; then
     printf '  %-*s  %s\n' "$w" "fledge update" "Snapshot, then packages, AUR, fledge's newest release, firmware (--yes: no questions)" \
-      "$w" "fledge update check" "What's pending (--json for the bar)"
+      "$w" "fledge update check" "What's pending (--json for the bar)" \
+      "$w" "fledge update recover" "After a failed update: try again, or go back to its snapshot"
   fi
   for name in "${rows[@]}"; do
     printf '  %-*s  %s\n' "$w" "fledge ${name//-/ }" "$(about "$name")"
@@ -271,10 +272,10 @@ case "$1" in
       help_groups
     fi
     ;;
-  # `update`, `update check` and `update --yes` are the builtin; `update firmware`
+  # `update`, `update check|recover` and `update --yes` are the builtin; `update firmware`
   # and `update time` fall through to libexec.
   update)
-    if (($# == 1)) || [[ $2 == check || $2 == -* ]]; then
+    if (($# == 1)) || [[ $2 == check || $2 == recover || $2 == -* ]]; then
       shift
       # shellcheck source=../lib/update.sh
       source "$FLEDGE_ROOT/lib/update.sh"
