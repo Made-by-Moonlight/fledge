@@ -4,6 +4,7 @@
 #   fledge settings get|set|reset|check|apply ...   (lib/settings.sh)
 #   fledge hypr dispatch|set|eval|quote ...          (below)
 #   fledge dmenu [--prompt P] [--select N] [--input-only]   (lib/dmenu.sh)
+#   fledge screenshare pick [--allow-token]          (lib/screenshare.sh)
 #   fledge help [group]
 # Built-ins are checked first, so no script can shadow them. Everything else
 # resolves by the longest run of leading command words naming an executable in
@@ -93,6 +94,7 @@ declare -A GROUPS_ABOUT=(
   [dmenu]="Pick a line from stdin in the shell's launcher"
   [help]="This list, or a group's actions: fledge help <group>"
   [hypr]="Talk Lua to Hyprland: dispatch, set, eval, quote"
+  [screenshare]="The screen-share picker the portal runs (xdph.conf)"
   [settings]="Settings and the Hyprland config they generate: get, set, reset, check, apply"
   [ac]="AC power detection"
   [audio]="Audio output switching"
@@ -130,7 +132,7 @@ declare -A GROUPS_ABOUT=(
   [update]="Firmware and clock updates"
   [weather]="Weather status"
 )
-BUILTINS=(dmenu help hypr settings)
+BUILTINS=(dmenu help hypr screenshare settings)
 
 die_usage() { printf 'fledge: %s\n' "$*" >&2; exit 2; }
 
@@ -173,6 +175,7 @@ help_group() { # <group>
     hypr) hypr_usage_text | sed 's/^/  /'; exit 0 ;;
     settings) echo "  fledge settings get <jq path>... | set <path> <json>... | reset <path>... | check | apply"; exit 0 ;;
     dmenu) echo "  fledge dmenu [--prompt P] [--select N] [--input-only]   (options on stdin, the choice on stdout)"; exit 0 ;;
+    screenshare) echo "  fledge screenshare pick [--allow-token]   (XDPH_WINDOW_SHARING_LIST in, [SELECTION]... on stdout)"; exit 0 ;;
     help) echo "  fledge help [group]"; exit 0 ;;
   esac
   while IFS= read -r name; do
@@ -237,6 +240,12 @@ case "$1" in
     # shellcheck source=../lib/dmenu.sh
     source "$FLEDGE_ROOT/lib/dmenu.sh"
     dmenu_main "$@"
+    ;;
+  screenshare)
+    shift
+    # shellcheck source=../lib/screenshare.sh
+    source "$FLEDGE_ROOT/lib/screenshare.sh"
+    screenshare_main "$@"
     ;;
   help | -h | --help)
     if (($# >= 2)); then

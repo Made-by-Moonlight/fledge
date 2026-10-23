@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# The screen-share picker named in dot-config/hypr/xdph.conf. xdph runs that
+# setting as one program name (arguments in it would be part of the name), so
+# this stands in for `fledge screenshare pick` (lib/screenshare.sh).
+exec fledge screenshare pick "$@"

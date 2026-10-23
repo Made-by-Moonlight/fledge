@@ -13,6 +13,7 @@ import "services"
 import "theme"
 import "lock"
 import "polkit"
+import "share"
 import "settings"
 
 ShellRoot {
@@ -54,6 +55,7 @@ ShellRoot {
     Launcher { id: launcher }
     QuickSettings {}
     PolkitDialog {}
+    SharePicker { id: sharePicker }
     SettingsWindow {}
     Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
     Connections { target: launcher.systemMode; function onIdleToggleRequested() { Idle.toggle(); } }
@@ -75,5 +77,5 @@ ShellRoot {
         function onResumed() { Hypr.dispatch('hl.dsp.dpms({ action = "on" })'); Brightness.refresh(); }
     }
     Connections { target: lockScreen; function onSecureChanged() { if (lockScreen.secure && Sleep.pending) Sleep.release(); } }
-    Ipc { osd: osd; lockScreen: lockScreen }
+    Ipc { osd: osd; lockScreen: lockScreen; sharePicker: sharePicker }
 }
