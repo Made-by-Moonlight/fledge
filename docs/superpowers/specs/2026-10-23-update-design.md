@@ -91,9 +91,113 @@ firmware only.
    fwupd asks about its own reboot. Then the bar is asked to recheck
    (`shell.recheck`), however the run ended.
 
-A failing step stops the run with the step's name, and, when a snapshot was
-taken, how to get back: "boot Snapshots › #N in the Limine menu, or `sudo
-snapper -c root undochange N..0`". Steps after it don't run.
+A failing step stops the run with the step's name; steps after it don't run,
+and the guide below takes over.
+
+## When an update fails: guided recovery
+
+Added after the first review. The user asked what happens on a failure, then:
+"I'd also like recovery a guided process if possible". Their choices:
+**terminal guide + shell dialog**, and **keep pacman and paru separate**.
+
+### What going back means (VM, 2026-10-23)
+
+- `/boot` is the FAT ESP and isn't in the snapshot, so `snapper undochange`
+  on a running system brings back the old kernel's modules under the new
+  kernel's UKI: unbootable. The first version printed that as the way back;
+  it's gone.
+- The way back is limine-snapper-sync's: boot **Snapshots › N** in Limine
+  (each entry keeps the kernel it was taken with, in `limine_history/`), then
+  `limine-snapper-restore` from inside it. Seen in the VM: the menu shows
+  `N │ <date>`, newest first; `/proc/cmdline` has
+  `rootflags=subvol=/@/.snapshots/N/snapshot`; the root is the read-only
+  snapshot, so a few units fail (`ldconfig`, `systemd-sysusers`), but the
+  session, shell and `/home` work. The restore asks `[r] restore | [l] list |
+  [c] cancel`, then a description for the backup of the current system (Enter
+  is fine), keeps it as a snapshot ("backup before restore #N"), asks to
+  reboot (`[Y/n]`), and the next normal boot is the snapshot's system.
+- `limine-snapper-restore` reads its answers from a terminal only (piped input
+  hangs), and a killed one leaves `/run/lock/limine-snapper-restore.lock`
+  behind, which blocks the next run until a reboot.
+- The package's own "restore this snapshot" notification (an XDG autostart)
+  fires before the shell's notification server is up and is lost. fledge's
+  dialog replaces it; the autostart is hidden for the user.
+
+### The guide (terminal)
+
+When a step fails or the run is interrupted (Ctrl+C), the run stops as before
+and then, unless `--yes`, asks:
+
+```
+fledge update: AUR packages failed; the steps after it didn't run.
+A snapshot from before the update is in the boot menu: Snapshots › 7 │ 2026-10-23 21:24.
+
+What now?
+  1  Try again
+  2  Go back to before the update
+  3  Leave it for now (to come back here later: fledge update recover)
+```
+
+- **Try again** runs `fledge update` again.
+- **Go back** says how: reboot, in the boot menu (3 seconds; any arrow key
+  stops the countdown) open Snapshots and boot `7 │ 2026-10-23 21:24`; once
+  logged in, fledge offers to make it permanent. Then "Reboot now? [y/N]".
+  Not offered when no snapshot was taken.
+- Interrupting exits 1, not 130, so the terminal stays open on the guide.
+
+`fledge update recover` is the same guide on demand:
+
+- **Booted into a snapshot:** says which (number, date, how that update
+  ended), that `/home` isn't affected, and that restoring keeps the current
+  system as a backup snapshot. On yes: clears a stale restore lock (no
+  restore running), then runs `sudo limine-snapper-restore`, saying what it
+  will ask (`r`; a description, Enter is fine; Enter to reboot).
+- **Otherwise:** the menu above for the last failed run; with none, the
+  `fledge update` snapshots there are, newest first, and how to boot one.
+
+Runs are recorded in `~/.local/state/fledge/update.json` (in `/home`, so a
+booted snapshot still sees them): per snapshot its number, snapper's date (as
+the boot menu shows it) and how the run ended (`running`, `ok`,
+`failed: <step>`, `interrupted: <step>`), worded for people as "failed
+(AUR packages)", "was stopped (…)", "didn't finish". A new snapshot replaces an
+older record with its number: numbers start over when snapper's config is made
+again (seen in the VM).
+
+### The dialog (shell)
+
+Booted into a snapshot (from `/proc/cmdline`), the shell shows, once per boot:
+
+```
+ 󰁯  Running a snapshot
+ This is snapshot 7, taken before the update on 23 Oct at 21:24.
+ Changes to the system aren't kept until it's restored; your files are fine.
+                                         [ Not now ]  [ Restore it… ]
+```
+
+**Restore it…** opens `fledge update recover` in a floating terminal. The
+bar's updates module shows `󰁯 snapshot` (error colour) the whole time, and
+clicking it opens the dialog again.
+
+### A bootstrap that didn't finish
+
+`bootstrap.sh` records the release it finished at in
+`~/.local/state/fledge/bootstrapped` (`git describe`); `update` marks it
+unfinished before running bootstrap. `check` reports `"bootstrap": true` when
+the file is there and doesn't match the checkout, and the next run runs
+bootstrap again. No file (an install from before this) reports nothing.
+
+### Reboot prompt
+
+Also when a package that only takes effect at boot was upgraded: a kernel
+(`linux`, `linux-*` but not `-headers`/`-docs`/`linux-api-headers`),
+`linux-firmware*`, `*-ucode`, `nvidia*`. The list comes from what
+`checkupdates` and `paru -Qua` reported; the message names them.
+
+### Snapshot entries
+
+`post` snapshots stay in snapper (`snapper status pre..post` shows what an
+update changed) but not in the boot menu (`EXCLUDE_SNAPSHOT_TYPES="post"`):
+booting one is booting the current system, and each entry costs ESP space.
 
 No migrations directory: a release that needs a change on existing machines
 puts it in `bootstrap.sh`, which every update runs. (AGENTS.md: no migration
@@ -142,6 +246,18 @@ Existing user files with their own `bar.right` don't get it added; the Bar
 settings page can add it (it's one more entry in its module list).
 
 The fledge menu's Setup gets **Update** (`fledge update`) above Firmware.
+
+### Testing recovery
+
+`test-update.sh` covers the guide's choices, Ctrl+C, the record, the unfinished
+bootstrap, the reboot list and `recover` (booted or not, with or without a
+record). `verify-recovery.sh fail | snapshot | after` runs it for real around
+two reboots (`vm.sh reboot snapshot` boots the newest Snapshots entry through
+Limine's menu and unlocks the disk; `vm.sh reboot` a normal boot): an AUR step
+that changes `/` and fails, the guide naming the entry, the change gone in the
+snapshot, the dialog's text, the restore answered through a pty, and the
+normal boot after it on the restored system with no failed units. Passed in
+the VM, twice.
 
 ## Non-goals
 
