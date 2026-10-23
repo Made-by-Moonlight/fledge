@@ -129,6 +129,7 @@ cleanup() {
   done
   fledge settings reset '.apps["fledge-verify"]' >/dev/null 2>&1
   [[ -n "${player:-}" ]] && kill "$player" 2>/dev/null
+  [[ -n "${sound:-}" ]] && kill "$sound" 2>/dev/null
   ipc notifications dismissAll >/dev/null
   rm -f "$DMENU_OUT"
   # Night light is left off (6000 = hyprsunset's identity), even if a check died mid-toggle.
@@ -343,6 +344,23 @@ fledge hypr dispatch "hl.dsp.focus({ workspace = $ws_before })" >/dev/null
 ipc settings app "$app"; sleep 0.5
 is "apps: settings app <class> opens the Apps page" apps "$(state page)"
 ipc settings close
+# Sound: a stream belongs to an app by its name or by the window it plays from, and an app's
+# starting volume is what its new stream begins at.
+srow() { ipc shell streams | jq -r --arg a "$app" "[.[] | select(.app == \$a)][0] | $1"; }
+fledge settings set ".apps[\"$app\"]" '{"volume":0.3}' >/dev/null
+pw-cat --playback --raw --format s16 --rate 48000 --channels 2 -P "{ application.name = \"$app\" }" - </dev/zero &
+sound=$!
+sleep 2
+is "apps: a stream named like an app is that app's" "$app" "$(srow .app)"
+is "apps: it starts at the app's volume"           0.3 "$(srow '.volume * 100 | round / 100')"
+kill "$sound"; wait "$sound" 2>/dev/null; sound=""
+fledge settings reset ".apps[\"$app\"]" >/dev/null
+# pw-cat runs inside the window here (its own name is no app's): found by its process.
+setsid kitty --class "$app" sh -c 'pw-cat --playback --raw --format s16 --rate 48000 --channels 2 - </dev/zero' >/dev/null 2>&1 &
+sleep 3
+is "apps: a stream from inside a window is that window's app" "$app" "$(srow .app)"
+app_close "$(app_win)"
+fledge hypr dispatch "hl.dsp.focus({ workspace = $ws_before })" >/dev/null
 
 # Main monitor and per-monitor bars. layers_on <output> <namespace>: how many of that
 # layer the output has. The two-monitor checks get a headless second output when the
