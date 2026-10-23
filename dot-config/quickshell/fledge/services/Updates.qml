@@ -12,11 +12,12 @@ Singleton {
 
     property var result: null
     readonly property bool checking: checker.running
-    readonly property int count: result ? result.packages + result.aur + result.firmware + (result.fledge ? 1 : 0) : 0
+    readonly property int count: result ? result.packages + result.aur + result.firmware + (result.fledge || result.bootstrap ? 1 : 0) : 0
     readonly property string summary: {
         if (!result) return "";
         const parts = [];
         if (result.fledge) parts.push("fledge " + result.fledge.to);
+        else if (result.bootstrap) parts.push("fledge's setup to finish");
         if (result.packages) parts.push(result.packages + (result.packages === 1 ? " package" : " packages"));
         if (result.aur) parts.push(result.aur + " AUR");
         if (result.firmware) parts.push(result.firmware + " firmware");

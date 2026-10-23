@@ -30,6 +30,13 @@ Scope {
         function updates(): string { return JSON.stringify({ count: Updates.count, summary: Updates.summary, checking: Updates.checking }); }
         function recheck(): void { Updates.recheck(); }
     }
+    // Booted into a snapshot (services/Recovery.qml): the dialog, and what it knows.
+    IpcHandler {
+        target: "recovery"
+        function state(): string { return JSON.stringify({ snapshot: Recovery.snapshot, open: ShellState.recoveryOpen, run: Recovery.run, when: Recovery.when }); }
+        function open(): void { Recovery.show(); }
+        function close(): void { Recovery.dismiss(); }
+    }
     // `fledge screenshare pick` (lib/screenshare.sh): list is xdph's XDPH_WINDOW_SHARING_LIST,
     // result the FIFO it waits on. "ok", or "busy" while another request is up.
     IpcHandler {

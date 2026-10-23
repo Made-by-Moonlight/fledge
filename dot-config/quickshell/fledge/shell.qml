@@ -15,6 +15,7 @@ import "lock"
 import "polkit"
 import "share"
 import "settings"
+import "recovery"
 
 ShellRoot {
     // No live reload when a QML file changes (a git pull or restow under a locked screen).
@@ -22,10 +23,11 @@ ShellRoot {
     settings.watchFiles: false
     // Singletons are lazy; touch Settings now so its files are loaded before the first IPC call or bar paint.
     // DisplayConfirm too: at startup it reverts a display change the last shell never got confirmed.
+    // Recovery too: booted into a snapshot, it opens its dialog a moment after start.
     // A shell that died while recording a key left Hyprland in the empty fledge-record submap,
     // where no bind fires: leave it.
     Component.onCompleted: {
-        Settings.home; DisplayConfirm.active;
+        Settings.home; DisplayConfirm.active; Recovery.snapshot;
         staleSubmap.running = true;
     }
     Process {
@@ -56,6 +58,7 @@ ShellRoot {
     QuickSettings {}
     PolkitDialog {}
     SharePicker { id: sharePicker }
+    RecoveryDialog {}
     SettingsWindow {}
     Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
     Connections { target: launcher.systemMode; function onIdleToggleRequested() { Idle.toggle(); } }
