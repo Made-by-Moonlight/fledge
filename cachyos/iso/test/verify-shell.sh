@@ -122,6 +122,8 @@ cleanup() {
   [[ -n "${ws0:-}" ]] && fledge hypr dispatch "hl.dsp.focus({workspace = $ws0})" >/dev/null 2>&1
   [[ -n "${zoom0:-}" ]] && fledge hypr set "cursor = { zoom_factor = $zoom0 }" >/dev/null 2>&1
   ipc launcher close >/dev/null; ipc quicksettings close >/dev/null; ipc settings close >/dev/null
+  ipc screenshare close >/dev/null
+  [[ -n "${player:-}" ]] && kill "$player" 2>/dev/null
   ipc notifications dismissAll >/dev/null
   rm -f "$DMENU_OUT"
   # Night light is left off (6000 = hyprsunset's identity), even if a check died mid-toggle.
@@ -221,6 +223,45 @@ ipc settings open input; sleep 0.5; is "settings opens a page" input "$(state pa
 is "settings window floats at 960x680" "true [960,680]" \
   "$(hyprctl clients -j | jq -r '.[] | select(.title == "fledge · settings") | "\(.floating) \(.size | tojson)"')"
 ipc settings close
+
+# Per-app volume: a playing app gets a row in the audio picker, and its volume there is live.
+pw-cat --playback --raw --format s16 --rate 48000 --channels 2 -P '{ application.name = "verify-shell" }' - </dev/zero &
+player=$!
+sleep 1
+row() { ipc shell streams | jq -r --arg n verify-shell ".[] | select(.name == \$n) | $1"; }
+is "audio picker lists a playing app" verify-shell "$(row .name)"
+sid="$(pw-dump | jq -r '.[] | select(.info.props["application.name"] == "verify-shell" and .info.props["media.class"] == "Stream/Output/Audio") | .id' | head -n1)"
+wpctl set-volume "$sid" 0.3; sleep 0.5
+is "an app's volume is live"         0.3 "$(row '.volume * 100 | round / 100')"
+wpctl set-mute "$sid" 1; sleep 0.5
+is "an app's mute is live"           true "$(row .muted)"
+kill "$player"; wait "$player" 2>/dev/null; player=""; sleep 0.5
+is "a stopped app leaves the list"   "" "$(row .name)"
+
+# The screen-share picker (xdph runs `fledge screenshare pick`): it opens, Escape refuses,
+# Return picks the selected screen. An empty window list opens on the Screens tab.
+share_out=/tmp/verify-screenshare
+XDPH_WINDOW_SHARING_LIST="" fledge screenshare pick --allow-token >"$share_out" 2>/dev/null &
+sleep 1
+is "share picker opens"              true "$(state screenshare)"
+wtype -k Escape; wait $!; rc=$?
+is "Escape refuses the share"        "1:" "$rc:$(cat "$share_out")"
+is "share picker closes"             false "$(state screenshare)"
+XDPH_WINDOW_SHARING_LIST="" fledge screenshare pick --allow-token >"$share_out" 2>/dev/null &
+sleep 1; wtype -k Return; wait $!
+picked="$(cat "$share_out")"
+is "Return shares a screen, token allowed" yes \
+  "$(hyprctl monitors -j | jq -r '.[].name' | grep -qxF "${picked#\[SELECTION\]r/screen:}" && [[ $picked == "[SELECTION]r/screen:"* ]] && echo yes || echo "no: $picked")"
+# And through the portal, the way Discord asks (xdph.conf names fledge-share-picker):
+# Return shares what's selected (a window if any are open, else a screen), and the app
+# gets a PipeWire stream. The dialog is closed either way, or it keeps the keyboard.
+"$(dirname "$(realpath "${BASH_SOURCE[0]}")")/portal-screencast.py" --timeout 30 >"$share_out" 2>&1 &
+sleep 3
+is "a portal request opens the share picker" true "$(state screenshare)"
+wtype -k Return; wait $!
+ipc screenshare close >/dev/null
+is "the portal grants the picked screen" yes "$(grep -qE '^ok [0-9]+' "$share_out" && echo yes || echo "no: $(cat "$share_out")")"
+rm -f "$share_out"
 
 before="$(ipc notifications count)"
 notify-send verify-shell hello; sleep 0.5

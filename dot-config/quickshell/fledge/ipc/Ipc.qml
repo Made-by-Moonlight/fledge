@@ -21,6 +21,10 @@ Scope {
                 locked: ShellState.locked, polkit: ShellState.polkitOpen,
                 screenshare: ShellState.shareOpen });
         }
+        // The audio picker's app rows, as they read: name, volume (0-1), muted.
+        function streams(): string {
+            return JSON.stringify(Audio.streams.map(n => ({ name: Audio.appName(n), volume: n.audio?.volume ?? null, muted: n.audio?.muted ?? null })));
+        }
     }
     // `fledge screenshare pick` (lib/screenshare.sh): list is xdph's XDPH_WINDOW_SHARING_LIST,
     // result the FIFO it waits on. "ok", or "busy" while another request is up.
