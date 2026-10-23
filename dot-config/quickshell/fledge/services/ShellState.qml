@@ -25,6 +25,8 @@ Singleton {
     property var dmenu: null
     property bool locked: false
     property bool polkitOpen: false     // the polkit dialog holds the keyboard
+    property bool shareOpen: false      // so does the screen-share picker
+    readonly property bool dialogOpen: polkitOpen || shareOpen
 
     function focusedScreen() {
         const name = Hyprland.focusedMonitor?.name;
@@ -55,9 +57,10 @@ Singleton {
         qsOpen = false;
     }
     // Nothing opens under the lock: it would sit unseen behind it (and a dmenu caller would wait).
-    // Nor over the polkit dialog: a popup would take the keyboard and the password could land in it.
+    // Nor over the polkit dialog or the share picker: a popup would take the keyboard (and a
+    // password could land in it).
     function openLauncher(mode) {
-        if (locked || polkitOpen) return;
+        if (locked || dialogOpen) return;
         closePopups();
         launcherMode = mode || "apps";
         launcherOpen = true;
@@ -69,7 +72,7 @@ Singleton {
     // screen: the bar clicked. Without one (a keybind, the launcher) the focused monitor
     // when it shows a bar, else the main one: quick settings hangs under a bar's cog.
     function openQuickSettings(picker, screen) {
-        if (locked || polkitOpen) return;
+        if (locked || dialogOpen) return;
         closePopups();
         qsScreen = screen ?? (showsBar(focusedScreen()) ? focusedScreen() : mainScreen);
         qsPicker = picker || "";
@@ -81,7 +84,7 @@ Singleton {
         else openQuickSettings("", screen);
     }
     function openSettings(page) {
-        if (locked || polkitOpen) return;
+        if (locked || dialogOpen) return;
         closePopups();
         settingsPage = page || "keybinds";
         settingsOpen = true;
@@ -91,7 +94,7 @@ Singleton {
     function dmenuOpen(req) {
         closePopups();
         dmenu = req;
-        if (locked || polkitOpen) { dmenuCancel(); return; }
+        if (locked || dialogOpen) { dmenuCancel(); return; }
         launcherMode = "dmenu";
         launcherOpen = true;
     }

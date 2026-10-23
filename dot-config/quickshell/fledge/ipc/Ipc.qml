@@ -8,6 +8,7 @@ import "../services"
 Scope {
     property var osd
     property var lockScreen
+    property var sharePicker
 
     IpcHandler {
         target: "shell"
@@ -17,8 +18,18 @@ Scope {
             return JSON.stringify({ launcher: ShellState.launcherOpen, mode: ShellState.launcherMode,
                 qs: ShellState.qsOpen, picker: ShellState.qsPicker, settings: ShellState.settingsOpen,
                 page: ShellState.settingsPage, bar: ShellState.barVisible, dmenu: ShellState.dmenu !== null,
-                locked: ShellState.locked, polkit: ShellState.polkitOpen });
+                locked: ShellState.locked, polkit: ShellState.polkitOpen,
+                screenshare: ShellState.shareOpen });
         }
+    }
+    // `fledge screenshare pick` (lib/screenshare.sh): list is xdph's XDPH_WINDOW_SHARING_LIST,
+    // result the FIFO it waits on. "ok", or "busy" while another request is up.
+    IpcHandler {
+        target: "screenshare"
+        function open(list: string, result: string, allowToken: string): string { return sharePicker.open(list, result, allowToken); }
+        function close(): void { sharePicker.dismiss(); }
+        // Whether the dialog still waits on this FIFO (a restarted shell has lost it).
+        function waiting(result: string): bool { return sharePicker.request?.result === result; }
     }
     IpcHandler {
         target: "bar"
