@@ -123,6 +123,11 @@ cleanup() {
   [[ -n "${zoom0:-}" ]] && fledge hypr set "cursor = { zoom_factor = $zoom0 }" >/dev/null 2>&1
   ipc launcher close >/dev/null; ipc quicksettings close >/dev/null; ipc settings close >/dev/null
   ipc screenshare close >/dev/null
+  # Settings › Apps checks: the test app's windows and its entry.
+  for w in $(hyprctl clients -j | jq -r '.[] | select(.class == "fledge-verify") | .address'); do
+    fledge hypr dispatch "hl.dsp.window.close({ window = \"address:$w\" })" >/dev/null 2>&1
+  done
+  fledge settings reset '.apps["fledge-verify"]' >/dev/null 2>&1
   [[ -n "${player:-}" ]] && kill "$player" 2>/dev/null
   ipc notifications dismissAll >/dev/null
   rm -f "$DMENU_OUT"
@@ -313,6 +318,32 @@ is "right password unlocks"      unlocked "$(ipc lock status)"
 is "relock flag cleared after unlock" "" "$(lockflag)"
 is "screens on after unlock (dpms)" true "$(hyprctl monitors -j | jq 'all(.dpmsStatus)')"
 
+# Settings › Apps (generated apps.lua): an app's opacity reaches its open windows on apply,
+# forgetting it brings the default back, and a workspace entry places its next window.
+# kitty --class gives a class no shipped entry touches.
+app=fledge-verify
+app_win() { hyprctl clients -j | jq -r --arg c "$app" '[.[] | select(.class == $c)] | last | .address // empty'; }
+app_opacity() { echo "$(hyprctl getprop "address:$1" opacity) $(hyprctl getprop "address:$1" opacity_inactive)"; }
+app_close() { fledge hypr dispatch "hl.dsp.window.close({ window = \"address:$1\" })" >/dev/null; sleep 1; }
+ws_before="$(hyprctl activeworkspace -j | jq .id)"
+setsid kitty --class "$app" >/dev/null 2>&1 & sleep 2
+w="$(app_win)"
+is "apps: no entry, the default opacity"       "0.97 0.9" "$(app_opacity "$w")"
+fledge settings set ".apps[\"$app\"]" '{"opacity":{"active":0.6,"inactive":0.4}}' >/dev/null && fledge settings apply; sleep 1
+is "apps: its own opacity reaches the open window" "0.6 0.4" "$(app_opacity "$w")"
+fledge settings set ".apps[\"$app\"]" null >/dev/null && fledge settings apply; sleep 1
+is "apps: forgotten, back to the default"      "0.97 0.9" "$(app_opacity "$w")"
+app_close "$w"
+fledge settings set ".apps[\"$app\"]" '{"workspace":7}' >/dev/null && fledge settings apply; sleep 1
+setsid kitty --class "$app" >/dev/null 2>&1 & sleep 2
+w="$(app_win)"
+is "apps: a workspace entry opens it there"    7 "$(hyprctl clients -j | jq --arg a "$w" '.[] | select(.address == $a) | .workspace.id')"
+app_close "$w"
+fledge hypr dispatch "hl.dsp.focus({ workspace = $ws_before })" >/dev/null
+ipc settings app "$app"; sleep 0.5
+is "apps: settings app <class> opens the Apps page" apps "$(state page)"
+ipc settings close
+
 # Main monitor and per-monitor bars. layers_on <output> <namespace>: how many of that
 # layer the output has. The two-monitor checks get a headless second output when the
 # VM has one screen (removed again by cleanup).
@@ -348,6 +379,16 @@ if [[ -n "$second" ]]; then
   is "notification on the main monitor" 1 "$(layers_on "$second" fledge-notifications)"
   ipc notifications dismissAll >/dev/null
   fledge settings reset .bar.main .bar.hidden >/dev/null; sleep 2
+  # Settings › Apps: a monitor entry opens the app's next window on that monitor.
+  fledge settings set ".apps[\"$app\"]" "$(jq -cn --arg k "$key2" '{monitor: $k}')" >/dev/null && fledge settings apply; sleep 1
+  setsid kitty --class "$app" >/dev/null 2>&1 & sleep 2
+  w="$(app_win)"
+  mon_id="$(hyprctl clients -j | jq --arg a "$w" '.[] | select(.address == $a) | .monitor')"
+  is "apps: a monitor entry opens it on that monitor" "$second" \
+    "$(hyprctl monitors -j | jq -r --argjson id "${mon_id:-null}" '.[] | select(.id == $id) | .name')"
+  app_close "$w"
+  fledge settings reset ".apps[\"$app\"]" >/dev/null && fledge settings apply
+  fledge hypr dispatch "hl.dsp.focus({monitor = \"$first\"})" >/dev/null; sleep 1
 else
   echo "SKIP  two-monitor checks (no second output)"
 fi
