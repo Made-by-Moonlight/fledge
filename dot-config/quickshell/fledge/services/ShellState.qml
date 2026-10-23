@@ -22,6 +22,7 @@ Singleton {
     property string settingsPage: "keybinds"
     property bool recording: false      // the Keybinds page is capturing keys (Escape then cancels, not closes)
     property string recordRequest: ""   // test hook: settings.record(id) asks the Keybinds page to record this bind
+    property string appsExpand: ""      // settings.app(class) asks the Apps page to open that app's row
     property var dmenu: null
     property bool locked: false
     property bool polkitOpen: false     // the polkit dialog holds the keyboard

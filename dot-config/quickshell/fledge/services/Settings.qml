@@ -78,6 +78,12 @@ Singleton {
     readonly property int idleScreenOff: get("idle", "screenOffSec", 0)
     readonly property int idleSuspend: get("idle", "suspendSec", 0)
     readonly property bool lockOnSleep: get("idle", "lockOnSleep", true)
+    // Settings › Apps: the default window opacity, and the per-class entries (merged).
+    readonly property var windowOpacity: {
+        const o = get("windows", "opacity", null);
+        return o && typeof o.active === "number" && typeof o.inactive === "number" ? o : { active: 0.97, inactive: 0.9 };
+    }
+    readonly property var apps: merged.apps ?? defaults.apps ?? ({})
     readonly property string wallpaperImage: get("wallpaper", "image", "")
     readonly property var wallpaperMonitors: get("wallpaper", "monitors", ({}))
     // The image for one screen: its own entry (by connector or desc:<description>), else the
