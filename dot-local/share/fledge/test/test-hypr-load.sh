@@ -121,6 +121,7 @@ mkhome() { # mkhome <dir>: the config tree hyprland.lua expects, with tracing st
     printf 'trace[#trace + 1] = "%s"\n' "$f" >"$h/.config/hypr/fledge/$f.lua"
   done
   printf 'trace[#trace + 1] = "binds"\n' >"$h/.local/state/fledge/hypr/binds.lua"
+  printf 'trace[#trace + 1] = "apps"\n' >"$h/.local/state/fledge/hypr/apps.lua"
   printf 'trace[#trace + 1] = "toggle"\n' >"$h/.local/state/hypr-toggles/t.lua"
 }
 cat > "$T/driver3.lua" <<'EOL'
@@ -142,7 +143,7 @@ run_hypr() { out="$(HOME="$1" lua "$T/driver3.lua" 2>/dev/null)"; rc=$?; }
 
 mkhome "$T/h1"; cp "$LOAD" "$T/h1/.config/hypr/fledge/load.lua"
 run_hypr "$T/h1"
-check "hyprland.lua: everything loads, in order" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
+check "hyprland.lua: everything loads, in order" "envs looknfeel misc rules binds apps toggle autostart" "$(field trace)"
 check "hyprland.lua: no notification" "0" "$(field notes)"
 check "hyprland.lua: binds.lua loaded, no safety-net binds" "" "$(field binds)"
 
@@ -152,24 +153,24 @@ safety="SUPER + RETURN=exec(uwsm app -- \$TERMINAL)|Terminal;SUPER + SPACE=exec(
 mkhome "$T/hb1"; cp "$LOAD" "$T/hb1/.config/hypr/fledge/load.lua"; rm "$T/hb1/.local/state/fledge/hypr/binds.lua"
 run_hypr "$T/hb1"
 check "binds.lua missing: the safety-net binds" "$safety" "$(field binds)"
-check "binds.lua missing: the rest loads" "envs looknfeel misc rules toggle autostart" "$(field trace)"
+check "binds.lua missing: the rest loads" "envs looknfeel misc rules apps toggle autostart" "$(field trace)"
 check "binds.lua missing: no notification (a fresh account)" "0" "$(field notes)"
 mkhome "$T/hb2"; cp "$LOAD" "$T/hb2/.config/hypr/fledge/load.lua"
 printf 'this is not lua\n' >"$T/hb2/.local/state/fledge/hypr/binds.lua"
 run_hypr "$T/hb2"
 check "binds.lua broken: the safety-net binds" "$safety" "$(field binds)"
-check "binds.lua broken: the rest loads" "envs looknfeel misc rules toggle autostart" "$(field trace)"
+check "binds.lua broken: the rest loads" "envs looknfeel misc rules apps toggle autostart" "$(field trace)"
 contains "binds.lua broken: a notification names it" "/.local/state/fledge/hypr/binds.lua:" "$(field note1)"
 # hl.dsp gone (an API change): the safety net mustn't take hyprland.lua down.
 mkhome "$T/hb3"; cp "$LOAD" "$T/hb3/.config/hypr/fledge/load.lua"; rm "$T/hb3/.local/state/fledge/hypr/binds.lua"
 printf 'hl.dsp = nil\n' >"$T/hb3/.config/hypr/fledge/envs.lua"
 run_hypr "$T/hb3"
-check "no hl.dsp: hyprland.lua still runs to the end" "0|toggle autostart" "$rc|$(field trace | sed 's/^.*rules //')"
+check "no hl.dsp: hyprland.lua still runs to the end" "0|apps toggle autostart" "$rc|$(field trace | sed 's/^.*rules //')"
 
 mkhome "$T/h2"
 run_hypr "$T/h2"
 check "load.lua missing: no error escapes" 0 "$rc"
-check "load.lua missing: the rest still loads, toggles too" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
+check "load.lua missing: the rest still loads, toggles too" "envs looknfeel misc rules binds apps toggle autostart" "$(field trace)"
 check "load.lua missing: one notification" "1" "$(field notes)"
 contains "load.lua missing: notification names it" "fledge: fledge/load.lua: " "$(field note1)"
 check "load.lua missing: shown as an error" "error" "$(field icon1)"
@@ -177,14 +178,14 @@ check "load.lua missing: shown as an error" "error" "$(field icon1)"
 # Without hl.notification (an API change, say) the stand-in still only reports.
 out="$(NO_NOTIFY=1 HOME="$T/h2" lua "$T/driver3.lua" 2>&1)"; rc=$?
 check "load.lua missing, no hl.notification: no error escapes" 0 "$rc"
-check "load.lua missing, no hl.notification: the rest still loads" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
+check "load.lua missing, no hl.notification: the rest still loads" "envs looknfeel misc rules binds apps toggle autostart" "$(field trace)"
 contains "load.lua missing, no hl.notification: said on stderr" "fledge: fledge/load.lua: " "$out"
 
 mkhome "$T/h3"; printf 'local M = = {}\n' >"$T/h3/.config/hypr/fledge/load.lua"
 printf 'trace[#trace + 1] = "rules"\nerror("rules broke")\n' >"$T/h3/.config/hypr/fledge/rules.lua"
 run_hypr "$T/h3"
 check "load.lua broken: no error escapes" 0 "$rc"
-check "load.lua broken: the rest still loads" "envs looknfeel misc rules binds toggle autostart" "$(field trace)"
+check "load.lua broken: the rest still loads" "envs looknfeel misc rules binds apps toggle autostart" "$(field trace)"
 check "load.lua broken: it and the broken file notify" "2" "$(field notes)"
 contains "load.lua broken: names load.lua" "fledge: fledge/load.lua: " "$(field note1)"
 contains "load.lua broken: names the broken file" "rules.lua: " "$(field note2)"

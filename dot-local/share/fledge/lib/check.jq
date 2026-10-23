@@ -86,6 +86,32 @@ def check_workspace($k):
        else "workspaces.\($k): persistent must be true or false" end)
     end;
 
+# Opacity: focused (active) and unfocused (inactive), both given, each 0.1-1
+# (below 0.1 a window is as good as lost).
+def check_opacity($where):
+  if type != "object" then "\($where): must be an object with active and inactive"
+  else
+    unknown(["active", "inactive"]; $where),
+    (["active", "inactive"][] as $k
+     | if (.[$k] | type == "number" and . >= 0.1 and . <= 1) then empty
+       else "\($where).\($k) must be a number from 0.1 to 1" end)
+  end;
+
+# Settings › Apps: keyed by window class; opacity, and one of workspace or monitor.
+def check_app($c):
+  . as $a
+  | if type != "object" then "apps.\($c): must be an object"
+    else
+      unknown(["opacity", "workspace", "monitor"]; "apps.\($c)"),
+      (if has("opacity") then .opacity | check_opacity("apps.\($c).opacity") else empty end),
+      (if has("workspace") and (.workspace | isint and . >= 1 | not) then "apps.\($c).workspace must be a workspace number (1 or more)" else empty end),
+      (if has("monitor") then
+         (.monitor | if type != "string" or length == 0 then "apps.\($c).monitor must be a monitor name"
+          elif contains(",") then "apps.\($c).monitor can't contain a comma" else empty end)
+       else empty end),
+      (if has("workspace") and has("monitor") then "apps.\($c): pick a workspace or a monitor, not both" else empty end)
+    end;
+
 def modules($side):
   (.[$side] // [])
   | if type != "array" then "bar.\($side) must be a list"
@@ -94,7 +120,7 @@ def modules($side):
 
 def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) must be a whole number of seconds >= 0" end;
 
-((keys - ["version", "binds", "displays", "workspaces", "wallpaper", "bar", "launcher", "notifications", "idle", "input"])[] | "unknown setting: \(.)"),
+((keys - ["version", "binds", "displays", "workspaces", "wallpaper", "bar", "launcher", "notifications", "idle", "input", "windows", "apps"])[] | "unknown setting: \(.)"),
 
 (if .version != 2 then "version must be 2 (got \(.version | tojson))" else empty end),
 
@@ -112,6 +138,14 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
 (.workspaces // {} | to_entries[] | .key as $k
  | if ($k | test("^[1-9][0-9]*$")) then (.value | check_workspace($k))
    else "workspaces: \($k) is not a workspace number" end),
+
+(.windows // {}
+ | unknown(["opacity"]; "windows"),
+   (if has("opacity") then .opacity | check_opacity("windows.opacity") else empty end)),
+
+(.apps // {} | if type != "object" then "apps must be an object"
+ else to_entries[] | .key as $c
+   | if $c == "" then "apps: a window class can't be empty" else .value | check_app($c) end end),
 
 (.wallpaper // {}
  | unknown(["image", "monitors"]; "wallpaper"),

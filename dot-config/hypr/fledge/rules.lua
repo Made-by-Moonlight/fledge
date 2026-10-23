@@ -1,7 +1,8 @@
 -- Window and layer rules: https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 -- Regexes match the whole string, as before. Rules apply in this order, so
--- the tag rules come before the rules that match on those tags, and the
--- default opacity comes after every app has had the chance to opt out.
+-- the tag rules come before the rules that match on those tags. Opacity per app,
+-- the default opacity and which apps open where are settings (Settings › Apps):
+-- the generated apps.lua, loaded after this file, so they win over anything here.
 
 -- Each rule runs on its own: one Hyprland refuses (a field renamed in a new
 -- release, say) is listed in one notification at the end, instead of every
@@ -48,13 +49,8 @@ rule({
   tag = "+chromium-based-browser",
 })
 rule({ match = { class = "([fF]irefox|zen|librewolf)" }, tag = "+firefox-based-browser" })
-rule({ match = { tag = "chromium-based-browser" }, tag = "-default-opacity" })
-rule({ match = { tag = "firefox-based-browser" }, tag = "-default-opacity" })
 -- Chromium-based browsers always tile (from Omarchy, where its web app windows opened floating)
 rule({ match = { tag = "chromium-based-browser" }, tile = true })
--- Browsers get only a subtle opacity change
-rule({ match = { tag = "chromium-based-browser" }, opacity = "1.0 0.97" })
-rule({ match = { tag = "firefox-based-browser" }, opacity = "1.0 0.97" })
 -- Hide the screen-sharing notification bar (the "Hide" button on it is broken on Wayland)
 rule({ match = { title = ".*is sharing.*" }, workspace = "special silent" })
 
@@ -80,19 +76,15 @@ rule({ match = { tag = "pip" }, border_size = 0 })
 rule({ match = { tag = "pip" }, opacity = "1 1" })
 rule({ match = { tag = "pip" }, move = "(monitor_w-window_w-40) (monitor_h*0.04)" })
 
--- QEMU
-rule({ match = { class = "qemu" }, tag = "-default-opacity" })
-rule({ match = { class = "qemu" }, opacity = "1 1" })
-
 -- RetroArch
 rule({ match = { class = "com.libretro.RetroArch" }, fullscreen = true })
-rule({ match = { class = "com.libretro.RetroArch" }, tag = "-default-opacity" })
-rule({ match = { class = "com.libretro.RetroArch" }, opacity = "1 1" })
 rule({ match = { class = "com.libretro.RetroArch" }, idle_inhibit = "fullscreen" })
 
 -- Float Steam
 rule({ match = { class = "steam" }, float = true })
 rule({ match = { class = "steam", title = "Steam" }, center = true })
+-- Steam's helper windows and every game (steam_app_N) are opaque: a pattern, so
+-- here rather than in Settings › Apps (which matches one class).
 rule({ match = { class = "steam.*" }, tag = "-default-opacity" })
 rule({ match = { class = "steam.*" }, opacity = "1 1" })
 rule({ match = { class = "steam", title = "Steam" }, size = "1100 700" })
@@ -124,11 +116,6 @@ rule({
 })
 rule({ match = { class = "org.gnome.Calculator" }, float = true })
 
--- No transparency on media windows
-local media = "^(zoom|vlc|mpv|org.kde.kdenlive|com.obsproject.Studio|com.github.PintaProject.Pinta|imv|org.gnome.NautilusPreviewer)$"
-rule({ match = { class = media }, tag = "-default-opacity" })
-rule({ match = { class = media }, opacity = "1 1" })
-
 -- Prevent idle while open
 rule({ match = { tag = "noidle" }, idle_inhibit = "always" })
 
@@ -138,11 +125,6 @@ rule({ match = { class = "org.telegram.desktop" }, focus_on_activate = false })
 -- Float Typora print dialog
 rule({ match = { class = "^Typora$", title = "^Print$" }, float = true, center = true })
 
--- Define terminal tag to style them uniformly
-rule({ match = { class = "(Alacritty|kitty|com.mitchellh.ghostty|foot)" }, tag = "+terminal" })
-rule({ match = { tag = "terminal" }, tag = "-default-opacity" })
-rule({ match = { tag = "terminal" }, opacity = "0.97 0.9" })
-
 -- Webcam overlay for screen recording
 rule({ match = { title = "WebcamOverlay" }, float = true })
 rule({ match = { title = "WebcamOverlay" }, pin = true })
@@ -150,22 +132,10 @@ rule({ match = { title = "WebcamOverlay" }, no_initial_focus = true })
 rule({ match = { title = "WebcamOverlay" }, no_dim = true })
 rule({ match = { title = "WebcamOverlay" }, move = "(monitor_w-window_w-40) (monitor_h-window_h-40)" })
 
----- Apply default opacity after apps have had a chance to opt out ----
-rule({ match = { tag = "default-opacity" }, opacity = "0.97 0.9" })
-
 ---- fledge's own rules ----
-
--- Discord (Vesktop), Spotify and YouTube Music live on workspace 9
-rule({ match = { class = "vesktop" }, workspace = "9" })
-rule({ match = { class = "vesktop" }, opacity = "1.0 override 1.0 override 1.0 override" })
-rule({ match = { class = "spotify" }, workspace = "9" })
--- YouTube Music is limusic (a native client, not a web app)
-rule({ match = { class = "limusic-app" }, workspace = "9" })
-rule({ match = { class = "limusic-app" }, opacity = "1.0 override 1.0 override 1.0 override" })
 
 -- Zen
 rule({ match = { class = "zen" }, no_blur = true })
-rule({ match = { class = "zen" }, opacity = "1.0 override 1.0 override 1.0 override" })
 
 -- Force all Steam windows to tile and stay tiled
 rule({ match = { class = "steam" }, tile = true })

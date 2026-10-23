@@ -1953,5 +1953,174 @@
         "shell": "quicksettings.toggle"
       }
     }
+  },
+  "windows": {
+    "opacity": {
+      "active": 0.97,
+      "inactive": 0.9
+    }
+  },
+  "apps": {
+    "Alacritty": {
+      "opacity": {
+        "active": 0.97,
+        "inactive": 0.9
+      }
+    },
+    "brave-browser": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "chromium": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "com.github.PintaProject.Pinta": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "com.libretro.RetroArch": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "com.mitchellh.ghostty": {
+      "opacity": {
+        "active": 0.97,
+        "inactive": 0.9
+      }
+    },
+    "com.obsproject.Studio": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "firefox": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "foot": {
+      "opacity": {
+        "active": 0.97,
+        "inactive": 0.9
+      }
+    },
+    "google-chrome": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "helium": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "imv": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "kitty": {
+      "opacity": {
+        "active": 0.97,
+        "inactive": 0.9
+      }
+    },
+    "librewolf": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "limusic-app": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      },
+      "workspace": 9
+    },
+    "microsoft-edge": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "mpv": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "org.gnome.NautilusPreviewer": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "org.kde.kdenlive": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "qemu": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "spotify": {
+      "workspace": 9
+    },
+    "steam": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "vesktop": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      },
+      "workspace": 9
+    },
+    "vivaldi-stable": {
+      "opacity": {
+        "active": 1,
+        "inactive": 0.97
+      }
+    },
+    "vlc": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "zen": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    },
+    "zoom": {
+      "opacity": {
+        "active": 1,
+        "inactive": 1
+      }
+    }
   }
 }

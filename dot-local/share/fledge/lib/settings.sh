@@ -98,8 +98,9 @@ lock_settings() {
   FLEDGE_WRITE_MIGRATION=1
 }
 
-# merge <user-json>: defaults * overrides; a bind or workspace overridden with null
-# is removed, and a bind's action is replaced, not merged.
+# merge <user-json>: defaults * overrides; a bind, workspace or app overridden with
+# null is removed, so is an app's field (Settings › Apps clears a default entry's
+# opacity or placement that way), and a bind's action is replaced, not merged.
 merge() {
   jq -n --slurpfile d "$FLEDGE_DEFAULTS" --argjson u "$1" \
     '($d[0] * $u)
@@ -108,7 +109,9 @@ merge() {
      | reduce ($u.binds | objects | to_entries[] | select(.value | type == "object" and has("action"))) as $e
          (.; .binds[$e.key].action = $e.value.action)
      | .binds |= with_entries(select(.value != null))
-     | if has("workspaces") then .workspaces |= with_entries(select(.value != null)) else . end'
+     | if has("workspaces") then .workspaces |= with_entries(select(.value != null)) else . end
+     | if has("apps") then .apps |= (. // {} | with_entries(select(.value != null))
+         | map_values(if type == "object" then with_entries(select(.value != null)) else . end)) else . end'
 }
 
 merged_json() {
@@ -187,7 +190,7 @@ settings_check() {
 }
 
 settings_apply() {
-  local merged binds monitors input workspaces f lib="$FLEDGE_ROOT/lib"
+  local merged binds monitors input workspaces apps f lib="$FLEDGE_ROOT/lib"
   merged="$(merged_json)" || exit 1
   check_json "$merged" || die "settings are invalid; nothing applied"
   # Render everything before writing anything, so a jq failure can't leave a mix.
@@ -195,10 +198,12 @@ settings_apply() {
   monitors="$(jq -r -L "$lib" -f "$lib/gen-monitors.jq" <<<"$merged")" || die "could not generate monitors"
   input="$(jq -r -L "$lib" -f "$lib/gen-input.jq" <<<"$merged")" || die "could not generate input"
   workspaces="$(jq -r -L "$lib" -f "$lib/gen-workspaces.jq" <<<"$merged")" || die "could not generate workspaces"
+  apps="$(jq -r -L "$lib" -f "$lib/gen-apps.jq" <<<"$merged")" || die "could not generate apps"
   printf '%s\n' "$binds" | atomic_write "$FLEDGE_HYPR_DIR/binds.lua"
   printf '%s\n' "$monitors" | atomic_write "$FLEDGE_HYPR_DIR/monitors.lua"
   printf '%s\n' "$workspaces" | atomic_write "$FLEDGE_HYPR_DIR/workspaces.lua"
   printf '%s\n' "$input" | atomic_write "$FLEDGE_HYPR_DIR/input.lua"
+  printf '%s\n' "$apps" | atomic_write "$FLEDGE_HYPR_DIR/apps.lua"
   # The .conf fragments from before the Lua config: nothing loads them now, and a
   # stale one would only mislead. Only the names apply ever wrote are removed.
   for f in binds monitors workspaces input; do
