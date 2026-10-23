@@ -97,12 +97,14 @@ def check_opacity($where):
        else "\($where).\($k) must be a number from 0.1 to 1" end)
   end;
 
-# Settings › Apps: keyed by window class; opacity, and one of workspace or monitor.
+# Settings › Apps: keyed by window class; opacity, one of workspace or monitor, and the
+# volume its new streams start at (read live by the shell, not generated).
 def check_app($c):
   . as $a
   | if type != "object" then "apps.\($c): must be an object"
     else
-      unknown(["opacity", "workspace", "monitor"]; "apps.\($c)"),
+      unknown(["opacity", "workspace", "monitor", "volume"]; "apps.\($c)"),
+      (if has("volume") and (.volume | type == "number" and . >= 0 and . <= 1 | not) then "apps.\($c).volume must be a number from 0 to 1" else empty end),
       (if has("opacity") then .opacity | check_opacity("apps.\($c).opacity") else empty end),
       (if has("workspace") and (.workspace | isint and . >= 1 | not) then "apps.\($c).workspace must be a workspace number (1 or more)" else empty end),
       (if has("monitor") then
