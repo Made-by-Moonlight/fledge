@@ -44,9 +44,13 @@ Ctrl+M to move it to the next one.
 
 ## Upgrade
 
-An installed system keeps the repo in `~/proj/fledge`, stowed into `~`:
+The bar shows 󰚰 and a count when updates are pending; click it, or run:
 
-    git -C ~/proj/fledge pull && bash ~/proj/fledge/cachyos/bootstrap.sh
+    fledge update
+
+It snapshots `/` first (bootable from Limine's Snapshots menu), then updates
+packages (pacman, then the AUR), moves fledge to its newest release and re-runs
+its bootstrap, and updates firmware. `fledge update check` lists what's pending.
 
 Installs made before the fledge rename (any install whose repo isn't at
 `~/proj/fledge`) can't upgrade in place: back up your files and reinstall
