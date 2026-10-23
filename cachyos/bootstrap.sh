@@ -124,6 +124,9 @@ PACMAN_PACKAGES=(
   # GUI file manager — lighter than the GNOME stack, no dependency on the
   # yazi TUI keybind it replaces.
   thunar
+  # fledge update: checkupdates (pending packages, without touching the real
+  # sync db) and firmware. snapper is installed below, on btrfs only.
+  pacman-contrib fwupd
 )
 
 # steam needs lib32-* packages, which need the multilib
@@ -295,6 +298,34 @@ rm -f "$HOME/.local/state/hypr-toggles/flags.conf"
 sudo systemctl enable power-profiles-daemon.service
 # Same for bluetoothd (bluez): enable only, it starts with the system.
 sudo systemctl enable bluetooth.service
+
+# Snapshots of / before each `fledge update`, bootable from Limine's Snapshots
+# menu (limine-snapper-sync hooks into snapper; the installer's BOOT_ORDER
+# already lists them). btrfs / only; /home (@home) isn't snapshotted, so going
+# back never takes the user's files with it. Numbered only, the last 5: they're
+# for updates, not hourly history.
+if [[ "$(findmnt -no FSTYPE /)" == btrfs ]]; then
+  snap_pkgs=(snapper)
+  if pacman -Qi limine &>/dev/null; then snap_pkgs+=(limine-snapper-sync); fi
+  sudo pacman -S --needed --noconfirm "${snap_pkgs[@]}"
+  if ! sudo snapper -c root get-config &>/dev/null; then
+    # The installer creates @/.snapshots, and create-config refuses an existing
+    # one. An empty one goes (snapper makes its own); one with snapshots in it is
+    # someone else's setup and is left alone.
+    if [[ -d /.snapshots && -z "$(sudo ls -A /.snapshots)" ]]; then
+      sudo btrfs subvolume delete /.snapshots >/dev/null
+    fi
+    sudo snapper -c root create-config / || echo "WARN: no snapper config for /: fledge update runs without snapshots" >&2
+  fi
+  if sudo snapper -c root get-config &>/dev/null; then
+    sudo snapper -c root set-config NUMBER_LIMIT=5 NUMBER_LIMIT_IMPORTANT=5 TIMELINE_CREATE=no
+    # Enable only, as above: started from fledge-firstboot, --now could deadlock.
+    sudo systemctl enable snapper-cleanup.timer
+    if [[ " ${snap_pkgs[*]} " == *" limine-snapper-sync "* ]]; then
+      sudo systemctl enable limine-snapper-sync.service
+    fi
+  fi
+fi
 
 # Enable sddm as the login manager, pre-selecting the uwsm-managed
 # Hyprland session (hyprland-uwsm.desktop — resolves the "Hyprland was
