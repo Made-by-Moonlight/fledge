@@ -117,8 +117,10 @@ PACMAN_PACKAGES=(
   # Deck build, launched with -steamdeck on the steamdeck_stable branch, and
   # on a desktop its store, community and profile pages don't open.
   steam
-  # Discord (fledge/rules.lua already pins it to workspace 9).
-  discord
+  # Discord, as Vesktop: the official Linux client sends no screen-share
+  # audio, Vesktop can share one app's (fledge/rules.lua pins it to
+  # workspace 9).
+  vesktop-bin
   # GUI file manager — lighter than the GNOME stack, no dependency on the
   # yazi TUI keybind it replaces.
   thunar
@@ -461,6 +463,8 @@ RETIRED_PKGS=(waybar walker walker-bin elephant elephant-bin elephant-desktopapp
   elephant-symbols-bin elephant-files-bin elephant-clipboard-bin elephant-websearch-bin
   elephant-providerlist-bin elephant-menus-bin elephant-1password-bin
   mako swayosd swaybg hyprlock hypridle polkit-gnome bluetui wiremix)
+# Vesktop replaced the official Discord client (screen-share audio).
+RETIRED_PKGS+=(discord)
 # Exact names (the set reloaded here, after the removal just before): `pacman
 # -R walker`, or a name already gone, would fail the whole list.
 load_installed
