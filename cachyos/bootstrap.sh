@@ -201,8 +201,15 @@ fi
 # ~/.config/uwsm too: the repo ships dot-config/uwsm/env-hyprland, but env
 # (written below) must stay a real, untracked file rather than land in the repo.
 # ~/.config/fish too: fish writes fish_variables beside the stowed config.
+# ~/.config/autostart too: apps add their own entries there. A stow run before
+# this one (the repo shipped no autostart/ until fledge update) may have folded it
+# into one link to the repo: unfold it.
+if [[ -L $HOME/.config/autostart && "$(readlink "$HOME/.config/autostart")" == *fledge/dot-config/autostart ]]; then
+  rm "$HOME/.config/autostart"
+fi
 mkdir -p "$HOME/.local/share" "$HOME/.local/bin" "$HOME/.local/state" "$HOME/.config" \
-  "$HOME/.config/systemd/user/graphical-session.target.wants" "$HOME/.config/uwsm" "$HOME/.config/fish"
+  "$HOME/.config/systemd/user/graphical-session.target.wants" "$HOME/.config/uwsm" "$HOME/.config/fish" \
+  "$HOME/.config/autostart"
 
 stow --dotfiles -v -d "$DOTFILES_DIR" -t "$HOME" .
 
@@ -319,6 +326,11 @@ if [[ "$(findmnt -no FSTYPE /)" == btrfs ]]; then
   fi
   if sudo snapper -c root get-config &>/dev/null; then
     sudo snapper -c root set-config NUMBER_LIMIT=5 NUMBER_LIMIT_IMPORTANT=5 TIMELINE_CREATE=no
+    # A post snapshot is the system after the update, i.e. the current one: no use in the
+    # boot menu, and each entry costs ESP space. snapper keeps it (status pre..post).
+    if [[ -f /etc/limine-snapper-sync.conf ]]; then
+      sudo sed -i -E 's/^#?EXCLUDE_SNAPSHOT_TYPES=.*/EXCLUDE_SNAPSHOT_TYPES="post"/' /etc/limine-snapper-sync.conf
+    fi
     # Enable only, as above: started from fledge-firstboot, --now could deadlock.
     sudo systemctl enable snapper-cleanup.timer
     if [[ " ${snap_pkgs[*]} " == *" limine-snapper-sync "* ]]; then
@@ -548,5 +560,10 @@ if [[ $manager == conf ]]; then
   printf '\n%s\n\n' "$msg"
   notify-send -u critical -a fledge "Log out and back in now" "$msg" >/dev/null 2>&1 || true
 fi
+
+# What finished, for fledge update: it runs bootstrap again when this doesn't
+# match the checkout (one that failed or was stopped partway).
+mkdir -p "$HOME/.local/state/fledge"
+git -C "$DOTFILES_DIR" describe --tags --always --dirty >"$HOME/.local/state/fledge/bootstrapped" 2>/dev/null || true
 
 echo "Bootstrap complete."

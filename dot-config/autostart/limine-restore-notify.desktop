@@ -1,0 +1,7 @@
+# Hides limine-snapper-sync's own "restore this snapshot" prompt (/etc/xdg/autostart):
+# it runs before the shell's notification server is up and is lost, and the
+# fledge shell asks instead (fledge update recover).
+[Desktop Entry]
+Type=Application
+Name=Limine-snapper-restore notification
+Hidden=true
