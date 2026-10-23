@@ -3,6 +3,8 @@
 # commands inside the logged-in Hyprland session, take screenshots. All
 # project code runs in the VM, never on the host (AGENTS.md rule 1).
 #   vm.sh ip | sync | restow | shell | run CMD... | sudo CMD... | shot NAME | type TEXT | key KEY... | relogin
+#   vm.sh reboot [snapshot]: reboot, unlock the disk, wait for the session; with
+#   `snapshot`, boot the newest entry in Limine's Snapshots menu instead
 set -euo pipefail
 
 VM_NAME="cachyos-test"
@@ -134,6 +136,30 @@ case "${1:-}" in
   key)
     # Send keys without typing text, e.g. vm.sh key KEY_DOWN, vm.sh key KEY_LEFTCTRL KEY_LEFTALT KEY_F2
     shift; $VIRSH send-key "$VM_NAME" --holdtime 40 "$@" >/dev/null ;;
+  reboot)
+    # Limine waits 3 s: watch the console for its menu (dark, a little text) and stop the
+    # countdown with a key. Its tree: CachyOS › linux-cachyos (selected), Snapshots, EFI fallback;
+    # Snapshots lists newest first, each a folder holding its kernel entry.
+    shot_mean() { $VIRSH screenshot "$VM_NAME" "$1" >/dev/null 2>&1 && magick "$1" -format '%[fx:mean]' info:; }
+    ppm="$(mktemp --suffix=.ppm)"
+    ssh_vm "$SESSION_ENV"$'\n'"printf '%s\\n' '$VM_PASSWORD' | sudo -S -p '' systemctl reboot" >/dev/null 2>&1 || true
+    if [[ ${2:-} == snapshot ]]; then
+      for _ in $(seq 120); do
+        m="$(shot_mean "$ppm" || echo 0)"
+        awk "BEGIN{exit !($m > 0.002 && $m < 0.01)}" && break
+        sleep 0.25
+      done
+      for k in KEY_DOWN KEY_ENTER KEY_DOWN KEY_ENTER KEY_DOWN KEY_ENTER; do
+        $VIRSH send-key "$VM_NAME" --holdtime 40 "$k" >/dev/null; sleep 0.7
+      done
+    fi
+    rm -f "$ppm"
+    sleep 15; "$0" type "$VM_PASSWORD"
+    for _ in $(seq 60); do
+      sleep 3
+      ssh_vm "$SESSION_ENV"$'\n''hyprctl version >/dev/null && qs -c fledge ipc call shell ping' 2>/dev/null | grep -q pong && { echo "logged in"; exit 0; }
+    done
+    echo "vm.sh reboot: no session after the reboot" >&2; exit 1 ;;
   relogin)
     # End the session and log back in at SDDM by typing the password.
     ssh_vm "$SESSION_ENV"$'\n''(uwsm stop >/dev/null 2>&1 &)' || true

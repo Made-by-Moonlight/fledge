@@ -30,7 +30,7 @@ done
 REPO=~/proj/fledge
 FLEDGE="$REPO/dot-local/share/fledge/bin/fledge"
 T="$(mktemp -d)"; trap 'rm -rf "$T"' EXIT
-mkdir -p "$T/bin"
+mkdir -p "$T/bin" "$T/state"
 # sudo through an askpass helper: there's no terminal over ssh, and the password
 # must not go in on stdin, which is the command's own (bootstrap's `sudo tee <<EOF`
 # would write it, or nothing, into /etc).
@@ -71,12 +71,14 @@ fi
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 git init -q -b main "$T/src"
 ( cd "$T/src" && mkdir cachyos && echo 'exit 0' >cachyos/bootstrap.sh && git add . && git commit -qm one && git tag v2026.01.01 \
-  && printf 'echo "bootstrap ran at $(git -C "$(dirname "$0")/.." describe --tags)" >>%q\n' "$T/log" >cachyos/bootstrap.sh \
+  && printf 'echo "bootstrap ran at $(git -C "$(dirname "$0")/.." describe --tags)" >>%q\ngit -C "$(dirname "$0")/.." describe --tags --always --dirty >%q\n' "$T/log" "$T/state/bootstrapped" >cachyos/bootstrap.sh \
   && git commit -qam two && git tag v2026.01.02 )
 git clone -q --bare "$T/src" "$T/origin.git"
 git clone -q "$T/origin.git" "$T/checkout"
 git -C "$T/checkout" reset -q --hard v2026.01.01
-export FLEDGE_REPO="$T/checkout"
+# Its own state too: the real ~/.local/state/fledge (what bootstrap finished, the runs) stays
+# the VM's own.
+export FLEDGE_REPO="$T/checkout" FLEDGE_STATE="$T/state"
 
 is "check offers the newer tag" '{"from":"v2026.01.01","to":"v2026.01.02"}' "$("$FLEDGE" update check --json | jq -c .fledge)"
 before="$(sudo snapper -c root --jsonout list | jq '.root | map(.number) | max')"
