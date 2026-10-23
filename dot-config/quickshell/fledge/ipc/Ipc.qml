@@ -21,9 +21,11 @@ Scope {
                 locked: ShellState.locked, polkit: ShellState.polkitOpen,
                 screenshare: ShellState.shareOpen });
         }
-        // The audio picker's app rows, as they read: name, volume (0-1), muted.
+        // The audio picker's app rows, as they read: name, volume (0-1), muted, and the Settings › Apps
+        // class the stream maps to ("" for none, null while that is still being worked out).
         function streams(): string {
-            return JSON.stringify(Audio.streams.map(n => ({ name: Audio.appName(n), volume: n.audio?.volume ?? null, muted: n.audio?.muted ?? null })));
+            return JSON.stringify(Audio.streams.map(n => ({ name: Audio.appName(n), volume: n.audio?.volume ?? null,
+                muted: n.audio?.muted ?? null, app: Audio.classOf(n) ?? null })));
         }
         // The bar's updates module: the last `fledge update check`, and asking for a new one
         // (`fledge update` does when it finishes).

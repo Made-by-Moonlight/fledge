@@ -54,6 +54,7 @@ Flickable {
         const parts = [a.opacity ? pct(a.opacity.active) + " / " + pct(a.opacity.inactive) : "default"];
         if (a.workspace) parts.push("workspace " + a.workspace);
         if (a.monitor) parts.push(monitorLabel(a.monitor));
+        if (typeof a.volume === "number") parts.push("♪ " + pct(a.volume));
         return parts.join(" · ");
     }
     function monitorLabel(key) {
@@ -102,6 +103,7 @@ Flickable {
                         readonly property var app: Settings.apps[cls] ?? ({})
                         readonly property bool isOpen: cls === page.expanded
                         readonly property string placement: app.workspace ? "workspace" : app.monitor ? "monitor" : "anywhere"
+                        readonly property bool playing: Audio.streamsOf(cls).length > 0
                         implicitHeight: body.implicitHeight + 16
                         radius: Theme.radius
                         color: isOpen ? Theme.bgRaised : (hover.containsMouse ? Theme.surface : "transparent")
@@ -134,6 +136,7 @@ Flickable {
                                             visible: text !== ""
                                         }
                                     }
+                                    Glyph { text: "󰕾"; color: Theme.accent; visible: row.playing }
                                     Glyph { text: page.summary(row.cls); color: Settings.apps[row.cls] ? Theme.accent : Theme.muted; font.pixelSize: Theme.fontSmall }
                                     Glyph { text: row.isOpen ? "⌄" : "›"; color: Theme.muted }
                                 }
@@ -191,6 +194,47 @@ Flickable {
                                         }
                                         value: row.app.monitor ?? ""
                                         onPicked: v => page.write([[page.path(row.cls, "monitor"), v]])
+                                    }
+                                    // Sound: live while it plays (all its streams as one), and the volume
+                                    // its new streams start at (apps.<class>.volume, read live: no apply).
+                                    ColumnLayout {
+                                        Layout.fillWidth: true; spacing: 8
+                                        visible: row.playing || typeof row.app.volume === "number"
+                                        Glyph { text: "Sound"; color: Theme.muted; font.pixelSize: Theme.fontSmall }
+                                        RowLayout {
+                                            Layout.fillWidth: true; spacing: 10; visible: row.playing
+                                            Glyph { text: Audio.appMuted(row.cls) ? "󰝟" : "󰕾"; Layout.preferredWidth: 80
+                                                    MouseArea { anchors.fill: parent; onClicked: Audio.toggleAppMute(row.cls) } }
+                                            Slider { objectName: "app volume"; Layout.fillWidth: true; value: Audio.appVolume(row.cls)
+                                                     onMoved: v => Audio.setAppVolume(row.cls, v)
+                                                     onStepped: d => Audio.setAppVolume(row.cls, Audio.clamp(Audio.appVolume(row.cls) + d * 0.05)) }
+                                            Glyph { text: page.pct(Audio.appVolume(row.cls)); color: Theme.muted
+                                                    Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
+                                        }
+                                        Choice {
+                                            label: "Starts at"
+                                            options: [["last", "Last used"], ["fixed", "Fixed"]]
+                                            value: typeof row.app.volume === "number" ? "fixed" : "last"
+                                            // Fixed starts from what it plays at now, else full volume.
+                                            onPicked: v => Settings.set([[page.path(row.cls, "volume"),
+                                                v === "fixed" ? (row.playing ? Math.round(Audio.appVolume(row.cls) * 100) / 100 : 1) : null]], false)
+                                        }
+                                        RowLayout {
+                                            id: starts
+                                            Layout.fillWidth: true; spacing: 10
+                                            visible: typeof row.app.volume === "number"
+                                            // Saves 400 ms after the last move, like the opacity sliders.
+                                            property real pending: -1
+                                            readonly property real shown: pending >= 0 ? pending : (row.app.volume ?? 1)
+                                            function move(v) { pending = Math.round(Audio.clamp(v) * 100) / 100; saveSoon.restart(); }
+                                            Timer { id: saveSoon; interval: 400
+                                                    onTriggered: { Settings.set([[page.path(row.cls, "volume"), starts.pending]], false); starts.pending = -1; } }
+                                            Item { Layout.preferredWidth: 80 }
+                                            Slider { objectName: "app starting volume"; Layout.fillWidth: true; value: starts.shown
+                                                     onMoved: v => starts.move(v); onStepped: d => starts.move(starts.shown + d * 0.05) }
+                                            Glyph { text: page.pct(starts.shown); color: Theme.muted
+                                                    Layout.preferredWidth: 40; horizontalAlignment: Text.AlignRight }
+                                        }
                                     }
                                     RowLayout {
                                         spacing: Theme.gap
