@@ -4,7 +4,8 @@
 -- of a dispatcher, and every call is printed one per line, so a test can check
 -- what the file really does (e.g. that an escaped command comes back intact).
 -- HL_STUB_MISSING (comma-separated, e.g. "window.drag") makes those dispatchers
--- nil, as when a Hyprland release renames one.
+-- nil, as when a Hyprland release renames one. HL_STUB_BAD_RULE does the same for
+-- a window rule field.
 -- Usage: lua hl-stub.lua <generated.lua>...
 local out = {}
 local function show(v)
@@ -55,6 +56,12 @@ hl = {
   dispatch = function() error("hl.dispatch outside a bind") end,
   monitor = function(spec) out[#out + 1] = "monitor\t" .. show(spec) end,
   workspace_rule = function(spec) out[#out + 1] = "workspace_rule\t" .. show(spec) end,
+  window_rule = function(spec)
+    -- HL_STUB_BAD_RULE=<field>: refuse rules setting it, as Hyprland does a field it doesn't know.
+    local bad = os.getenv("HL_STUB_BAD_RULE")
+    if bad and spec[bad] ~= nil then error("hl.window_rule: unknown field '" .. bad .. "'") end
+    out[#out + 1] = "window_rule\t" .. show(spec)
+  end,
   config = function(spec) out[#out + 1] = "config\t" .. show(spec) end,
   notification = { create = function(spec) out[#out + 1] = "notify\t" .. show(spec) end },
 }

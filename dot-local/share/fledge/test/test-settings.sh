@@ -188,6 +188,23 @@ bad "workspace monitor comma"    "workspaces.2: monitor can't contain a comma" '
 bad "workspace persistent type"  "workspaces.2: persistent must be true or false" '{"workspaces":{"2":{"persistent":"yes"}}}'
 bad "workspace unknown field"    "workspaces.2: unknown field default"       '{"workspaces":{"2":{"default":true}}}'
 bad "workspace not an object"    "workspaces.7: must be an object"           '{"workspaces":{"7":"DP-1"}}'
+bad "apps: opacity too low"      "apps.kitty.opacity.active must be a number from 0.1 to 1"   '{"apps":{"kitty":{"opacity":{"active":0.05,"inactive":0.9}}}}'
+bad "apps: opacity above 1"      "apps.kitty.opacity.inactive must be a number from 0.1 to 1" '{"apps":{"kitty":{"opacity":{"active":1,"inactive":1.5}}}}'
+bad "apps: opacity half given"   "apps.foot.opacity.inactive must be a number from 0.1 to 1" '{"apps":{"foot":{"opacity":{"active":0.9}}}}'
+bad "apps: opacity as text"      "apps.kitty.opacity.active must be a number from 0.1 to 1"   '{"apps":{"kitty":{"opacity":{"active":"90%","inactive":0.9}}}}'
+bad "apps: opacity not an object" "apps.kitty.opacity: must be an object with active and inactive" '{"apps":{"kitty":{"opacity":0.9}}}'
+bad "apps: opacity unknown field" "apps.kitty.opacity: unknown field fullscreen" '{"apps":{"kitty":{"opacity":{"active":1,"inactive":1,"fullscreen":1}}}}'
+bad "apps: workspace 0"          "apps.kitty.workspace must be a workspace number (1 or more)" '{"apps":{"kitty":{"workspace":0}}}'
+bad "apps: workspace as text"    "apps.kitty.workspace must be a workspace number (1 or more)" '{"apps":{"kitty":{"workspace":"9"}}}'
+bad "apps: workspace 2.5"        "apps.kitty.workspace must be a workspace number (1 or more)" '{"apps":{"kitty":{"workspace":2.5}}}'
+bad "apps: monitor empty"        "apps.kitty.monitor must be a monitor name"  '{"apps":{"kitty":{"monitor":""}}}'
+bad "apps: monitor comma"        "apps.kitty.monitor can't contain a comma"   '{"apps":{"kitty":{"monitor":"desc:Maker, Model"}}}'
+bad "apps: both placements"      "apps.kitty: pick a workspace or a monitor, not both" '{"apps":{"kitty":{"workspace":2,"monitor":"DP-1"}}}'
+bad "apps: unknown field"        "apps.kitty: unknown field float"            '{"apps":{"kitty":{"float":true}}}'
+bad "apps: entry not an object"  "apps.kitty: must be an object"              '{"apps":{"kitty":0.9}}'
+bad "apps: empty class"          "apps: a window class can't be empty"        '{"apps":{"":{"workspace":2}}}'
+bad "windows: opacity range"     "windows.opacity.inactive must be a number from 0.1 to 1" '{"windows":{"opacity":{"active":1,"inactive":0}}}'
+bad "windows: unknown field"     "windows: unknown field blur"                '{"windows":{"blur":true}}'
 bad "wallpaper monitor key with a quote" "wallpaper.monitors: monitor name can't contain a quote or backslash" '{"wallpaper":{"monitors":{"DP-\"1":"/x/a.png"}}}'
 bad "wallpaper monitor key with a backslash" "wallpaper.monitors: monitor name can't contain a quote or backslash" '{"wallpaper":{"monitors":{"DP-\\1":"/x/a.png"}}}'
 bad "unknown wallpaper field"    "wallpaper: unknown field colour"           '{"wallpaper":{"colour":1}}'
@@ -222,6 +239,11 @@ good "empty mods"      '{"binds":{"custom.1":{"mods":"","key":"F12","label":"A",
 good "multi-action"    '{"binds":{"custom.1":{"mods":"SUPER","key":"F11","label":"A","group":"Apps","action":[{"exec":"a"},{"dsp":"window.cycle_next"}]}}}'
 good "workspace: desc monitor with spaces" '{"workspaces":{"3":{"monitor":"desc:Some Maker Model 0x1","persistent":false}}}'
 good "workspace: connector name"  '{"workspaces":{"3":{"monitor":"HDMI-A-1"}}}'
+good "apps: opacity and a monitor" '{"apps":{"kitty":{"opacity":{"active":0.9,"inactive":0.75},"monitor":"desc:Some Maker Model 0x1"}}}'
+good "apps: bounds 0.1 and 1"      '{"apps":{"mpv":{"opacity":{"active":1,"inactive":0.1}}}}'
+good "apps: workspace only"        '{"apps":{"spotify":{"workspace":9}}}'
+good "apps: odd class"             '{"apps":{"a\"b\\c d":{"workspace":2}}}'
+good "apps: empty entry"           '{"apps":{"kitty":{}}}'
 bad "display key with a comma" "displays: monitor name can't contain a comma" '{"displays":{"desc:Acer X34, 1":{"mode":"preferred"}}}'
 bad "empty display key" "displays: monitor name can't be empty" '{"displays":{"":{"mode":"preferred"}}}'
 good "display by description" '{"displays":{"desc:Acer Technologies X34 GS 0x1240460A":{"mode":"3440x1440@180","position":"0x0","scale":1}}}'
@@ -251,13 +273,27 @@ fresh
 check "apply: input.lua"              "$(cat "$FIX/expected-input.lua")"    "$(cat "$FLEDGE_HYPR_DIR/input.lua")"
 check "apply: merged state written"   '"centre"' "$(jq .launcher.position "$FLEDGE_STATE_DIR/settings.json")"
 check "apply: workspaces.lua"         "$(cat "$FIX/expected-workspaces.lua")" "$(cat "$FLEDGE_HYPR_DIR/workspaces.lua")"
+check "apply: apps.lua"               "$(cat "$FIX/expected-apps.lua")"     "$(cat "$FLEDGE_HYPR_DIR/apps.lua")"
 check "apply: no .conf written"       ""         "$(find "$FLEDGE_HYPR_DIR" -name '*.conf')"
-for f in binds monitors workspaces input; do
+for f in binds monitors workspaces input apps; do
   lua_syntax_ok "$FLEDGE_HYPR_DIR/$f.lua"; check "apply: $f.lua parses (luac -p)" 0 "$?"
 done
-for f in binds monitors workspaces input; do
+for f in binds monitors workspaces input apps; do
   stub "$FLEDGE_HYPR_DIR/$f.lua" >/dev/null; check "apply: $f.lua runs against the hl stub" 0 "$?"
 done
+# What Hyprland gets: the class escaped for its regex, back intact through Lua's quoting.
+check "apply: apps.lua as Hyprland sees it" \
+'window_rule	{match={tag=default-opacity} opacity=0.97 override 0.9 override}
+window_rule	{match={class=com\.libretro\.RetroArch} opacity=1 override 1 override}
+window_rule	{match={class=kitty} opacity=0.9 override 0.75 override}
+window_rule	{match={class=kitty} monitor=desc:BenQ Left}
+window_rule	{match={class=odd"class\\\(x\)} workspace=3}
+window_rule	{match={class=spotify} workspace=9}' "$(stub "$FLEDGE_HYPR_DIR/apps.lua")"
+# A rule Hyprland refuses costs only itself, and one notification names it.
+out="$(HL_STUB_BAD_RULE=monitor stub "$FLEDGE_HYPR_DIR/apps.lua")"; rc=$?
+check "refused rule: apps.lua still runs to the end" 0 "$rc"
+check "refused rule: the other rules load" 5 "$(grep -c '^window_rule' <<<"$out")"
+contains "refused rule: one notification names the app" "fledge: apps.lua: these window rules didn't load: kitty (" "$(grep '^notify' <<<"$out")"
 check "apply: one hl.bind per settings bind, plus the submap's" \
   "$(($(jq '.binds | length' "$FIX/defaults.json") + 1))" "$(stub "$FLEDGE_HYPR_DIR/binds.lua" | grep -c '^bind')"
 check "apply: submap bind" "bind@fledge-record	SUPER + CTRL + ALT + Escape	dsp.submap(reset)	nil" \
@@ -352,6 +388,37 @@ fresh
 "$FLEDGE" settings apply
 check "workspaces: null removes it from merged" "false" "$("$FLEDGE" settings get '.workspaces | has("2")')"
 check "workspaces: null removes it from the file" "0" "$(grep -c 'workspace = "2"' "$FLEDGE_HYPR_DIR/workspaces.lua")"
+
+fresh
+"$FLEDGE" settings set '.apps.spotify' null
+"$FLEDGE" settings apply
+check "apps: null removes it from merged" "false" "$("$FLEDGE" settings get '.apps | has("spotify")')"
+check "apps: null removes it from the file" "0" "$(grep -c '"spotify"' "$FLEDGE_HYPR_DIR/apps.lua")"
+"$FLEDGE" settings set '.apps.kitty.opacity' '{"active":0.5,"inactive":0.4}'
+"$FLEDGE" settings apply
+check "apps: an entry's opacity changes alone (the monitor stays)" "2" \
+  "$(grep -cE 'class = "kitty" \}, (opacity = "0.5 override 0.4 override"|monitor = "desc:BenQ Left")' "$FLEDGE_HYPR_DIR/apps.lua")"
+"$FLEDGE" settings set '.apps.kitty.opacity' null
+"$FLEDGE" settings apply
+check "apps: a null field drops just that field" "0 1" \
+  "$(grep -c 'class = "kitty" }, opacity' "$FLEDGE_HYPR_DIR/apps.lua") $(grep -c 'class = "kitty" }, monitor' "$FLEDGE_HYPR_DIR/apps.lua")"
+"$FLEDGE" settings set '.apps.kitty.monitor' null '.apps.kitty.workspace' 4
+"$FLEDGE" settings check; check "apps: switching placement in one write is valid" 0 "$?"
+"$FLEDGE" settings reset '.apps.kitty'
+"$FLEDGE" settings apply
+contains "apps: reset brings the default entry back" 'opacity = "0.9 override 0.75 override"' "$(cat "$FLEDGE_HYPR_DIR/apps.lua")"
+
+# Defaults with no windows or apps sections: an apps.lua with no rules, still valid Lua.
+jq 'del(.windows, .apps)' "$FIX/defaults.json" >"$T/no-apps.json"
+fresh "$T/no-apps.json"
+FLEDGE_NO_RELOAD=1 "$FLEDGE" settings apply
+check "apps: none at all gives no rules" "0" "$(grep -c '^rule(' "$FLEDGE_HYPR_DIR/apps.lua")"
+lua_syntax_ok "$FLEDGE_HYPR_DIR/apps.lua"; check "apps: an empty apps.lua parses" 0 "$?"
+# A user file that drops every app (apps: null) leaves the default opacity only.
+fresh
+mkdir -p "$FLEDGE_CONFIG_DIR"; printf '{"apps":null}\n' >"$FLEDGE_CONFIG_DIR/settings.json"
+FLEDGE_NO_RELOAD=1 "$FLEDGE" settings apply
+check "apps: null drops every app, the default stays" "rule(\"default opacity\"" "$(grep -o '^rule("[^"]*"' "$FLEDGE_HYPR_DIR/apps.lua")"
 
 fresh
 "$FLEDGE" settings set '.workspaces["2"]' '{"monitor":"DP-3","persistent":false}'

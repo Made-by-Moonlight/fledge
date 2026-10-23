@@ -31,5 +31,12 @@
   "idle": { "dimSec": 0, "lockSec": 0, "screenOffSec": 0, "suspendSec": 0, "lockOnSleep": true },
   "input": { "kbLayout": "us", "kbVariant": "", "kbOptions": "compose:caps", "repeatRate": 40, "repeatDelay": 600,
              "numlock": true, "sensitivity": 0,
-             "touchpad": { "naturalScroll": false, "tapToClick": true, "scrollFactor": 0.4 } }
+             "touchpad": { "naturalScroll": false, "tapToClick": true, "scrollFactor": 0.4 } },
+  "windows": { "opacity": { "active": 0.97, "inactive": 0.9 } },
+  "apps": {
+    "com.libretro.RetroArch": { "opacity": { "active": 1, "inactive": 1 } },
+    "kitty": { "opacity": { "active": 0.9, "inactive": 0.75 }, "monitor": "desc:BenQ Left" },
+    "odd\"class\\(x)": { "workspace": 3 },
+    "spotify": { "workspace": 9 }
+  }
 }
