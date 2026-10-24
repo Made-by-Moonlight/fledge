@@ -35,6 +35,9 @@ mapfile -t GPU_VULKAN_PKGS < <(printf '%s\n' "${GPU_VULKAN_PKGS[@]}" | sort -u)
 
 PACMAN_PACKAGES=(
   hyprland xorg-xwayland
+  # The shell makes the main monitor XWayland's primary output with xrandr (games
+  # open there); only steam pulls it in otherwise.
+  xorg-xrandr
   kitty
   starship
   git stow fzf mise base-devel
