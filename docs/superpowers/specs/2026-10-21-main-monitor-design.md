@@ -41,8 +41,13 @@ from the main bar.
   that shows is the same bar.
 - Moving the launcher: it keeps opening on the focused monitor (the user
   didn't ask for it to move, and it's typed into wherever you're looking).
-- Making a monitor the Hyprland "primary" in any other sense (cursor start,
-  XWayland primary): this is the shell's notion only.
+- Making a monitor the Hyprland "primary" in any other sense (cursor start):
+  this is the shell's notion only. **Except XWayland's primary output**
+  (the user's call, 2026-10-24): games under XWayland open on it, and with
+  none set they took the first output, a portrait side monitor. The shell
+  sets it to the main monitor with `xrandr --output <connector> --primary` at
+  start, when the main changes and after a hotplug (XWayland rebuilds its
+  outputs then). Hyprland has no option for it.
 
 ## What the person sees
 
@@ -126,7 +131,7 @@ back from main restores its own choice).
 ## Constraints
 
 - Shell only: no Hyprland config generator changes, nothing written to
-  Hyprland.
+  Hyprland (the XWayland primary goes to the X server, not Hyprland).
 - The defaults file gets no layout or monitor keys (AGENTS.md).
 - `fledge settings check` (`lib/check.jq`) rejects unknown keys, so it learns
   `bar.main` (text) and `bar.hidden` (a list of text), with the same
