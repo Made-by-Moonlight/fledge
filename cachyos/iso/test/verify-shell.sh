@@ -371,6 +371,9 @@ fledge settings reset .bar.main .bar.hidden >/dev/null 2>&1; sleep 1
 first="$(mons | head -n1)"
 is "main monitor has a bar"             1 "$(layers_on "$first" fledge-bar)"
 is "only the bar edge is reserved"      1 "$(layers_on "$first" fledge-frame-reserve)"
+# Games open on XWayland's primary output: the shell makes that the main monitor.
+x_primary() { xrandr --query 2>/dev/null | awk '/ connected primary /{print $1}'; }
+is "main monitor is XWayland's primary" "$first" "$(x_primary)"
 if [[ "$(mons | wc -l)" -lt 2 ]]; then
   headless=FLEDGE-TEST; hyprctl output create headless "$headless" >/dev/null; sleep 2
 fi
@@ -393,10 +396,12 @@ if [[ -n "$second" ]]; then
   fledge hypr dispatch "hl.dsp.focus({monitor = \"$first\"})" >/dev/null; sleep 1
   fledge settings set .bar.main "$(jq -cn --arg k "$key2" '$k')" >/dev/null; sleep 2
   is "main beats hidden"                1 "$(layers_on "$second" fledge-bar)"
+  is "new main is XWayland's primary"   "$second" "$(x_primary)"
   notify-send "fledge verify" "main monitor"; sleep 1
   is "notification on the main monitor" 1 "$(layers_on "$second" fledge-notifications)"
   ipc notifications dismissAll >/dev/null
   fledge settings reset .bar.main .bar.hidden >/dev/null; sleep 2
+  is "reset main: primary back on the top-left" "$first" "$(x_primary)"
   # Settings › Apps: a monitor entry opens the app's next window on that monitor.
   fledge settings set ".apps[\"$app\"]" "$(jq -cn --arg k "$key2" '{monitor: $k}')" >/dev/null && fledge settings apply; sleep 1
   setsid kitty --class "$app" >/dev/null 2>&1 & sleep 2
