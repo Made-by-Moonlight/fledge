@@ -42,10 +42,24 @@ Singleton {
         return { key: /["\\]/.test(v) ? m.name : v, name: m.name, x: m.x, y: m.y };
     })
     readonly property string mainKey: Main.pick(monitors, Settings.barMain)
-    readonly property var mainScreen: {
-        const name = monitors.find(m => m.key === mainKey)?.name;
-        return Quickshell.screens.find(s => s.name === name) ?? focusedScreen();
+    readonly property string mainName: monitors.find(m => m.key === mainKey)?.name ?? ""
+    readonly property var mainScreen: Quickshell.screens.find(s => s.name === mainName) ?? focusedScreen()
+
+    // Games under XWayland (Proton, SDL on X11) open on X's primary output, and with none
+    // set they take the first one, here a portrait side monitor. Hyprland has no option for
+    // it, so the main monitor is made primary with xrandr: at start, when the main changes,
+    // and after a hotplug (XWayland rebuilds its outputs then, a moment after the event).
+    onMainNameChanged: xPrimary.restart()
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) { if (event.name.startsWith("monitor")) xPrimary.restart(); }
     }
+    Timer {
+        id: xPrimary
+        interval: 500
+        onTriggered: if (root.mainName) Quickshell.execDetached(["xrandr", "--output", root.mainName, "--primary"])
+    }
+
     function keyOfScreen(screen) { return monitors.find(m => m.name === screen?.name)?.key ?? ""; }
     // A screen Hyprland doesn't list yet keeps its bar until it does.
     function showsBar(screen) {
