@@ -46,6 +46,7 @@ SESSION_ENV='export XDG_RUNTIME_DIR=/run/user/$(id -u)
 w=$(ls -1 "$XDG_RUNTIME_DIR" 2>/dev/null | grep -E "^wayland-[0-9]+$" | head -n1); [ -n "$w" ] && export WAYLAND_DISPLAY=$w
 h=$(ls -1t "$XDG_RUNTIME_DIR/hypr" 2>/dev/null | head -n1); [ -n "$h" ] && export HYPRLAND_INSTANCE_SIGNATURE=$h
 export DBUS_SESSION_BUS_ADDRESS=unix:path=$XDG_RUNTIME_DIR/bus
+d=$(systemctl --user show-environment 2>/dev/null | sed -n "s/^DISPLAY=//p"); [ -n "$d" ] && export DISPLAY=$d
 export PATH=$HOME/.local/share/fledge/bin:$PATH'
 
 cmd_sync() {
