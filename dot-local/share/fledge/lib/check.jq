@@ -142,8 +142,9 @@ def secs($k): if (.[$k] // 0 | isint and . >= 0) then empty else "idle.\($k) mus
    else "workspaces: \($k) is not a workspace number" end),
 
 (.windows // {}
- | unknown(["opacity"]; "windows"),
-   (if has("opacity") then .opacity | check_opacity("windows.opacity") else empty end)),
+ | unknown(["opacity", "switcher"]; "windows"),
+   (if has("opacity") then .opacity | check_opacity("windows.opacity") else empty end),
+   (if (.switcher // true | type == "boolean") then empty else "windows.switcher must be true or false" end)),
 
 (.apps // {} | if type != "object" then "apps must be an object"
  else to_entries[] | .key as $c

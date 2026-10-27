@@ -16,6 +16,7 @@ import "polkit"
 import "share"
 import "settings"
 import "recovery"
+import "switcher"
 
 ShellRoot {
     // No live reload when a QML file changes (a git pull or restow under a locked screen).
@@ -25,7 +26,7 @@ ShellRoot {
     // DisplayConfirm too: at startup it reverts a display change the last shell never got confirmed.
     // Recovery too: booted into a snapshot, it opens its dialog a moment after start.
     // A shell that died while recording a key left Hyprland in the empty fledge-record submap,
-    // where no bind fires: leave it.
+    // where no bind fires: leave it. Likewise the window switcher's, should it be stuck there.
     Component.onCompleted: {
         Settings.home; DisplayConfirm.active; Recovery.snapshot;
         staleSubmap.running = true;
@@ -33,7 +34,7 @@ ShellRoot {
     Process {
         id: staleSubmap
         command: ["hyprctl", "submap"]
-        stdout: StdioCollector { onStreamFinished: if (text.trim() === "fledge-record") Hypr.dispatch('hl.dsp.submap("reset")') }
+        stdout: StdioCollector { onStreamFinished: if (["fledge-record", "fledge-switcher"].includes(text.trim())) Hypr.dispatch('hl.dsp.submap("reset")') }
     }
 
     Binding { target: Theme; property: "barHeight"; value: Settings.barHeight }
@@ -60,6 +61,7 @@ ShellRoot {
     SharePicker { id: sharePicker }
     RecoveryDialog {}
     SettingsWindow {}
+    Switcher { id: switcher }
     Connections { target: launcher.systemMode; function onLockRequested() { lockScreen.lock(false); } }
     Connections { target: launcher.systemMode; function onIdleToggleRequested() { Idle.toggle(); } }
     // Idle lock only when nothing holds the lock (lock() while locked is a no-op anyway, and
@@ -80,5 +82,5 @@ ShellRoot {
         function onResumed() { Hypr.dispatch('hl.dsp.dpms({ action = "on" })'); Brightness.refresh(); }
     }
     Connections { target: lockScreen; function onSecureChanged() { if (lockScreen.secure && Sleep.pending) Sleep.release(); } }
-    Ipc { osd: osd; lockScreen: lockScreen; sharePicker: sharePicker }
+    Ipc { osd: osd; lockScreen: lockScreen; sharePicker: sharePicker; switcher: switcher }
 }

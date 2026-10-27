@@ -51,6 +51,7 @@ load.file(fledge .. "envs.lua")
 load.file(fledge .. "looknfeel.lua")
 load.file(fledge .. "misc.lua")
 load.file(fledge .. "rules.lua")
+load.file(fledge .. "switcher.lua")
 
 -- The current theme's colours: a table, e.g. { activeBorderColor = "rgb(f4af03)" }.
 local ok, theme = load.file(home .. "/.config/omarchy/current/theme/hyprland.lua")

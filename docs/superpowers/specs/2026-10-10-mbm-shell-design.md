@@ -154,7 +154,9 @@ dot-local/share/mbm/               -> ~/.local/share/mbm/   (bin/ on session PAT
   "input":         { "kbLayout": "us", "kbOptions": "compose:caps", "repeatRate": 40, "repeatDelay": 600,
                      "numlock": true, "touchpad": { "scrollFactor": 0.4, "naturalScroll": false, "tapToClick": true },
                      "sensitivity": 0 },
-  "windows":       { "opacity": { "active": 0.97, "inactive": 0.9 } },
+  "windows":       { "opacity": { "active": 0.97, "inactive": 0.9 }, "switcher": true },
+                   // switcher, added 2026-10-27 (2026-10-27-window-switcher-design.md): false makes
+                   // the switcher's binds plain window.cycle_next + bring_to_top, with no submap.
   "apps":          { "vesktop": { "opacity": { "active": 1, "inactive": 1 }, "workspace": 9 } }
                    // Settings › Apps, added 2026-10-23: per window class, opacity (0.1-1) and one of
                    // workspace or monitor; an app or one of its fields set to null is removed.

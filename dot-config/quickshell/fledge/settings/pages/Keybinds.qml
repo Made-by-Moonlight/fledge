@@ -120,6 +120,12 @@ Item {
     ColumnLayout {
         anchors.fill: parent
         spacing: 8
+        // Off: the switcher's binds (Alt+Tab) just cycle focus, with no panel (gen-binds.jq).
+        Toggle {
+            label: "Window switcher: Alt+Tab shows every window with a preview"
+            checked: Settings.windowSwitcher
+            onToggled: c => Settings.set([[".windows.switcher", c]], true)
+        }
         RowLayout {
             Layout.fillWidth: true
             Field { Layout.fillWidth: true; placeholder: "⌕ filter by action, key or group…"; onEdited: t => page.filter = t }
