@@ -6,6 +6,9 @@ if test -x /home/linuxbrew/.linuxbrew/bin/brew
 else if test -x /opt/homebrew/bin/brew
     /opt/homebrew/bin/brew shellenv fish | source
 end
+# Per-user installs (pipx, the Antigravity CLI, ...). -g: this session only, so nothing
+# lands in fish_variables; fish_add_path skips it if it's already there.
+fish_add_path -g ~/.local/bin
 
 status is-interactive; or return
 
