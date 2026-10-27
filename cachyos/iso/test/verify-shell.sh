@@ -74,7 +74,7 @@ safety_binds() {
 # ...and apply then writes it back.
 binds_restored() {
   fledge settings apply >/dev/null 2>&1
-  is "$1: settings apply restores the binds" "$(( $(fledge settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
+  is "$1: settings apply restores the binds" "$(fledge settings get .binds | jq length)" "$(hyprctl binds -j | jq '[.[] | select(.submap == "")] | length')"
 }
 
 case "${1:-}" in
@@ -157,14 +157,49 @@ is "Hyprland uses the Lua config" yes  "$(grep -q 'Using lua config' "$XDG_RUNTI
 is "no Hyprland config errors"   ""     "$(hyprctl configerrors)"
 is "no .conf notification"       no     "$(note_has '\.conf')"
 is "no fledge loader notification" no   "$(note_has '^fledge: ')"
-# Every settings bind is one Hyprland bind, plus the fledge-record submap's way out.
-is "every settings bind loaded"  "$(( $(fledge settings get .binds | jq length) + 1 ))" "$(hyprctl binds -j | jq length)"
+# Every settings bind is one Hyprland bind (the submaps' binds are checked below).
+is "every settings bind loaded"  "$(fledge settings get .binds | jq length)" "$(hyprctl binds -j | jq '[.[] | select(.submap == "")] | length')"
 is "bind descriptions are the settings labels" "$(fledge settings get .binds | jq -c '[.[].label] | sort')" "$(hyprctl binds -j | jq -c '[.[] | select(.submap == "") | .description] | sort')"
 is "fledge-record submap has its reset bind" 1 "$(hyprctl binds -j | jq '[.[] | select(.submap == "fledge-record" and .key == "Escape")] | length')"
 fledge hypr dispatch 'hl.dsp.submap("fledge-record")' >/dev/null
 is "fledge hypr enters the fledge-record submap" fledge-record "$(hyprctl submap)"
 fledge hypr dispatch 'hl.dsp.submap("reset")' >/dev/null
 is "fledge hypr leaves the submap" default "$(hyprctl submap)"
+# The window switcher: Alt+Tab sends fledge-switcher next and enters its submap. Driven here as
+# the bind does it; letting go of Alt (hypr/fledge/switcher.lua) needs a real keyboard.
+sw() { fledge hypr dispatch "hl.dsp.event(\"fledge-switcher $1\")" >/dev/null; }
+sw_state() { ipc switcher state | jq -c "$1"; }
+is "fledge-switcher submap: Alt+Tab, Alt+Shift+Tab, arrows, Return, Escape" \
+  '["Escape","Left","Return","Right","TAB","TAB"]' \
+  "$(hyprctl binds -j | jq -c '[.[] | select(.submap == "fledge-switcher") | .key] | sort')"
+swc_ws0="$(hyprctl activeworkspace -j | jq .id)"
+swc_ws1=$((swc_ws0 == 4 ? 5 : 4))
+fledge hypr dispatch "hl.dsp.focus({workspace = $swc_ws1})" >/dev/null
+setsid kitty --class verify-sw-far >/dev/null 2>&1 & sleep 2
+fledge hypr dispatch "hl.dsp.focus({workspace = $swc_ws0})" >/dev/null
+setsid kitty --class verify-sw-near >/dev/null 2>&1 & sleep 2
+sw_addr() { hyprctl clients -j | jq -r --arg c "$1" '.[] | select(.class == $c) | .address | ltrimstr("0x")'; }
+far="$(sw_addr verify-sw-far)"; near="$(sw_addr verify-sw-near)"
+is "switcher: windows most recent first" "[\"$near\",\"$far\"]" "$(sw_state '.mru[:2]')"
+sw next; fledge hypr dispatch 'hl.dsp.submap("fledge-switcher")' >/dev/null; sleep 0.5
+is "switcher: next opens on the previous window" "true 1 $far" "$(ipc switcher state | jq -r '"\(.active) \(.index) \(.items[.index])"')"
+is "switcher: panel up after the tap delay" true "$(sw_state .shown)"
+is "switcher: doesn't take the keyboard" "$near" "$(hyprctl activewindow -j | jq -r '.address | ltrimstr("0x")')"
+sw prev; sleep 0.2
+is "switcher: prev steps back" 0 "$(sw_state .index)"
+sw next; sw commit; fledge hypr dispatch 'hl.dsp.submap("reset")' >/dev/null; sleep 1
+is "switcher: commit focuses the window" "$far" "$(hyprctl activewindow -j | jq -r '.address | ltrimstr("0x")')"
+is "switcher: and switches to its workspace" "$swc_ws1" "$(hyprctl activeworkspace -j | jq .id)"
+is "switcher: closed" "false false" "$(ipc switcher state | jq -r '"\(.active) \(.shown)"')"
+sw next; fledge hypr dispatch 'hl.dsp.submap("fledge-switcher")' >/dev/null; sleep 0.3
+sw cancel; fledge hypr dispatch 'hl.dsp.submap("reset")' >/dev/null; sleep 0.5
+is "switcher: cancel leaves focus alone" "$far" "$(hyprctl activewindow -j | jq -r '.address | ltrimstr("0x")')"
+sw next; fledge hypr dispatch 'hl.dsp.submap("fledge-switcher")' >/dev/null; sleep 0.3
+fledge hypr dispatch 'hl.dsp.submap("reset")' >/dev/null; sleep 0.5
+is "switcher: closes when its submap is left another way" false "$(sw_state .active)"
+for a in "$far" "$near"; do fledge hypr dispatch "hl.dsp.window.close({ window = \"address:0x$a\" })" >/dev/null; done; sleep 1
+is "switcher: closed windows leave the order" 0 "$(sw_state "[.mru[] | select(. == \"$far\" or . == \"$near\")] | length")"
+fledge hypr dispatch "hl.dsp.focus({workspace = $swc_ws0})" >/dev/null
 ws0="$(hyprctl activeworkspace -j | jq .id)"
 ws1=$((ws0 == 2 ? 3 : 2))   # somewhere else, or the check proves nothing
 fledge hypr dispatch "hl.dsp.focus({workspace = $ws1})" >/dev/null

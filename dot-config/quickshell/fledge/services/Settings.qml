@@ -79,6 +79,7 @@ Singleton {
     readonly property int idleSuspend: get("idle", "suspendSec", 0)
     readonly property bool lockOnSleep: get("idle", "lockOnSleep", true)
     // Settings › Apps: the default window opacity, and the per-class entries (merged).
+    readonly property bool windowSwitcher: get("windows", "switcher", true) !== false
     readonly property var windowOpacity: {
         const o = get("windows", "opacity", null);
         return o && typeof o.active === "number" && typeof o.inactive === "number" ? o : { active: 0.97, inactive: 0.9 };

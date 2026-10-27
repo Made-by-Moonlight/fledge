@@ -1058,29 +1058,32 @@
     "windows.focus-on-next-window": {
       "mods": "ALT",
       "key": "TAB",
-      "label": "Focus on next window",
+      "label": "Switch windows",
       "group": "Windows",
       "action": [
         {
-          "dsp": "window.cycle_next"
+          "dsp": "event",
+          "args": "fledge-switcher next"
         },
         {
-          "dsp": "window.bring_to_top"
+          "dsp": "submap",
+          "args": "fledge-switcher"
         }
       ]
     },
     "windows.focus-on-previous-window": {
       "mods": "ALT SHIFT",
       "key": "TAB",
-      "label": "Focus on previous window",
+      "label": "Switch windows backwards",
       "group": "Windows",
       "action": [
         {
-          "dsp": "window.cycle_next",
-          "args": false
+          "dsp": "event",
+          "args": "fledge-switcher prev"
         },
         {
-          "dsp": "window.bring_to_top"
+          "dsp": "submap",
+          "args": "fledge-switcher"
         }
       ]
     },
@@ -1958,7 +1961,8 @@
     "opacity": {
       "active": 0.97,
       "inactive": 0.9
-    }
+    },
+    "switcher": true
   },
   "apps": {
     "Alacritty": {

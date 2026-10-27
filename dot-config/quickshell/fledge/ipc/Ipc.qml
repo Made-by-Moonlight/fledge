@@ -9,6 +9,7 @@ Scope {
     property var osd
     property var lockScreen
     property var sharePicker
+    property var switcher
 
     IpcHandler {
         target: "shell"
@@ -47,6 +48,14 @@ Scope {
         function close(): void { sharePicker.dismiss(); }
         // Whether the dialog still waits on this FIFO (a restarted shell has lost it).
         function waiting(result: string): bool { return sharePicker.request?.result === result; }
+    }
+    // The window switcher (switcher/Switcher.qml) is driven by Hyprland's events; this only reports.
+    IpcHandler {
+        target: "switcher"
+        function state(): string {
+            return JSON.stringify({ active: switcher.active, shown: switcher.shown, index: switcher.index,
+                items: switcher.items.map(t => t.address), mru: switcher.mru });
+        }
     }
     IpcHandler {
         target: "bar"
