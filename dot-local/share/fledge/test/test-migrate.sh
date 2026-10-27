@@ -97,7 +97,8 @@ check "migrate: a version-less file holding a v1 zoom command needs migrating" "
 # Every legacy dispatcher in the old defaults has a translation, and the result
 # is exactly the shipped v2 defaults, give or take the binds changed since on
 # purpose: the YouTube web app bind went (no web apps), YouTube Music runs
-# limusic, and the scripts became `fledge <group> <action>` (slievr-a-b and the
+# limusic, Alt+Tab and Alt+Shift+Tab open the window switcher, and the scripts
+# became `fledge <group> <action>` (slievr-a-b and the
 # slievr router's `slievr a b` both -> `fledge a b`), with the four bind ids that
 # were named after them renamed. The migration doesn't rename commands: a user's
 # own override keeps what it says (no migration, every install is fresh).
@@ -105,6 +106,8 @@ check "migrate: old v1 defaults == v2 defaults (binds)" "true" \
   "$(jq -L "$LIB" --slurpfile v2 "$HERE/../defaults/settings.json" \
      'include "migrate-dispatch"; migrate_user.settings.binds
       | del(.["apps.youtube"]) | .["apps.youtube-music"].action.exec = "slievr-launch-or-focus limusic-app"
+      | reduce ("windows.focus-on-next-window", "windows.focus-on-previous-window") as $id (.;
+          .[$id] += ($v2[0].binds[$id] | {label, action}))
       | walk(if type == "string" then
           gsub("(?<![A-Za-z0-9/._-])slievr-(?<n>[a-z0-9]+(-[a-z0-9]+)*)"; "fledge \(.n | gsub("-"; " "))")
           | gsub("^slievr "; "fledge ") else . end)
