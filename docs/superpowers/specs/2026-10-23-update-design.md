@@ -184,7 +184,19 @@ clicking it opens the dialog again.
 `~/.local/state/fledge/bootstrapped` (`git describe`); `update` marks it
 unfinished before running bootstrap. `check` reports `"bootstrap": true` when
 the file is there and doesn't match the checkout, and the next run runs
-bootstrap again. No file (an install from before this) reports nothing.
+bootstrap again. No file (an install from before this) also offers bootstrap:
+having the code in a checkout doesn't mean its dependencies, services or
+snapshot setup have been applied. This applies to a dev checkout too, once,
+without moving it to a release tag; an unfinished attempt is offered again.
+The terminal explicitly lists setup as
+pending while still reporting that release movement is skipped.
+
+If the package check couldn't run, an update that proceeds runs `pacman -Syu`
+before AUR builds or bootstrap; an unknown count must never skip the system
+upgrade. The terminal shows that count as unknown and doesn't claim that all
+updates are current after failed checks. The first repair may run without a
+snapshot when none is configured yet (the existing warning says so); bootstrap
+sets snapshots up for subsequent updates.
 
 ### Reboot prompt
 

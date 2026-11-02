@@ -45,6 +45,7 @@ jobs:
                    dot-local/share/fledge/test/test-dmenu.sh dot-local/share/fledge/test/test-screenshare.sh \
                    dot-local/share/fledge/test/test-lua-syntax.sh \
                    dot-local/share/fledge/test/test-migrate.sh dot-local/share/fledge/test/test-dispatch.sh \
+                   dot-local/share/fledge/test/test-update.sh \
                    dot-local/share/fledge/test/test-fledge.sh dot-local/share/fledge/test/test-hypr-load.sh \
                    cachyos/iso/test-shell-qml.sh cachyos/iso/test-installer-qml.sh cachyos/test-check-names.sh \
                    cachyos/test-check-stow-ignore.sh; do

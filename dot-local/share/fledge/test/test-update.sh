@@ -47,6 +47,7 @@ git clone -q --bare "$T/src" "$T/origin.git"
 fresh() { # <ref>: a release checkout at <ref>
   rm -rf "$FLEDGE_REPO" "$FLEDGE_STATE"; mkdir -p "$FLEDGE_STATE"; git clone -q "$T/origin.git" "$FLEDGE_REPO"
   git -C "$FLEDGE_REPO" reset -q --hard "$1"
+  git -C "$FLEDGE_REPO" describe --tags --always --dirty >"$FLEDGE_STATE/bootstrapped"
 }
 json() { "$FLEDGE" update check --json 2>/dev/null | jq -c "$1"; }
 jsonr() { "$FLEDGE" update check --json 2>/dev/null | jq -r "$1"; }
@@ -62,6 +63,16 @@ check "a part that can't be checked is an error, not a failure" '["packages: no 
   "$(FAKE_CU_ERR="no network" jsonr '"\(.errors|tojson) \(.packages)"')"
 check "paru's 'nothing' exit isn't an error" '[]' "$(json .errors)"
 check "an AUR error is reported" '["AUR: error: rpc down"]' "$(FAKE_AUR_ERR="error: rpc down" json .errors)"
+
+out="$(FAKE_CU_ERR='no network' "$FLEDGE" update check 2>&1)"
+contains "failed package check: count is unknown" "unknown" "$out"
+
+fresh v2026.10.02
+git -C "$FLEDGE_REPO" remote set-url origin "$T/missing-origin"
+out="$("$FLEDGE" update --yes 2>&1)"
+contains "failed fetch: doesn't claim newest" "couldn't check for a newer release" "$out"
+contains "failed checks: doesn't claim everything is current" "some checks failed" "$out"
+check "failed fetch: never labels the release newest" "" "$(grep -F '(newest)' <<<"$out")"
 
 fresh v2026.10.02
 check "at the newest tag: nothing for fledge" null "$(json .fledge)"
@@ -185,7 +196,23 @@ check "the next run runs it" "bootstrap v2026.10.02
 bootstrap v2026.10.02" "$(grep '^bootstrap' "$LOG")"
 check "and then it's done" false "$(json .bootstrap)"
 rm "$FLEDGE_STATE/bootstrapped"
-check "no record (an older install): not offered" false "$(json .bootstrap)"
+check "no record (an older install): bootstrap is offered" true "$(json .bootstrap)"
+: >"$LOG"
+out="$(FAKE_CU_ERR='checkupdates unavailable' FAKE_NOSNAP=1 "$FLEDGE" update --yes 2>&1)"; rc=$?
+check "older install with an unavailable package check: repairs setup" 0 "$rc"
+check "older install: full upgrade precedes bootstrap" \
+  $'pacman -Syu --noconfirm\nbootstrap v2026.10.02' "$(grep -E '^(pacman|bootstrap)' "$LOG")"
+check "older install: successful bootstrap records completion" false "$(json .bootstrap)"
+contains "older install: warns the first update has no snapshot" "without a snapshot" "$out"
+
+git -C "$FLEDGE_REPO" switch -q -c feature
+rm "$FLEDGE_STATE/bootstrapped"
+check "dev checkout missing setup: bootstrap is offered" true "$(json .bootstrap)"
+FAKE_BOOT_FAIL=1 "$FLEDGE" update --yes >/dev/null 2>&1
+check "dev checkout setup: a failure is offered again" true "$(json .bootstrap)"
+"$FLEDGE" update --yes >/dev/null 2>&1
+check "dev checkout setup: branch stays where it is" feature "$(git -C "$FLEDGE_REPO" branch --show-current)"
+check "dev checkout setup: bootstrap records completion" false "$(json .bootstrap)"
 
 # --- recover ---
 fresh v2026.10.02

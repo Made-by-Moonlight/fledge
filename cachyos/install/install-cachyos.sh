@@ -34,7 +34,7 @@ rule() { printf '\n\e[1m== %s ==\e[0m\n' "$*"; }
 # installer (no-op without FLEDGE_PROGRESS). die() lands here too.
 # It also removes the temporary NOPASSWD sudoers drop-in of the Desktop stage;
 # INT/TERM become exits so Ctrl-C or a GUI cancel run this trap too.
-trap 'rc=$?; remove_install_sudoers; if (( rc != 0 )); then progress_fail; fi' EXIT
+trap 'rc=$?; cleanup_install_desktop; if (( rc != 0 )); then progress_fail; fi' EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
