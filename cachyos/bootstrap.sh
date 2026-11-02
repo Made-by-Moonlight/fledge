@@ -84,8 +84,9 @@ PACMAN_PACKAGES=(
   quickshell cliphist unicode-emoji noto-fonts-emoji
   # Audio session: pipewire alone arrives only as a dependency; without a
   # session manager there are no sinks, so volume controls (and apps) have
-  # nothing to drive. pipewire-pulse serves PulseAudio clients.
-  wireplumber pipewire-pulse
+  # nothing to drive. pipewire-pulse serves PulseAudio clients; rtkit lets
+  # PipeWire obtain realtime scheduling to avoid audio dropouts under load.
+  wireplumber pipewire-pulse rtkit
   # Bluetooth stack for quick settings' Bluetooth picker. It used to arrive
   # only as bluetui's dependency, so retiring bluetui would cascade it away.
   bluez
