@@ -45,12 +45,27 @@ remove_install_sudoers() {
   rm -f "$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install"
 }
 
+# A chroot shares the live ISO's hostname. Let keyboxd close its database
+# before leaving it, or its archiso lock can survive into the installed system.
+stop_desktop_gpg() {
+  [[ -n ${FLEDGE_DESKTOP_USER:-} ]] || return 0
+  arch-chroot "$FLEDGE_TARGET" runuser -l "$FLEDGE_DESKTOP_USER" -c 'if command -v gpgconf >/dev/null; then gpgconf --kill all; fi' \
+    || echo "WARN: couldn't stop the installed user's GPG daemons" >&2
+}
+
+cleanup_install_desktop() {
+  stop_desktop_gpg
+  remove_install_sudoers
+  FLEDGE_DESKTOP_USER=""
+}
+
 # run_desktop_stage <user>  ->  0 once bootstrap.sh completed in the target.
 # bootstrap.sh calls sudo throughout: passwordless sudo for this stage only.
 # runuser -l starts from a clean login environment, so bootstrap sees no
 # Hyprland session and skips its live-session steps (hyprctl, systemctl --user).
 run_desktop_stage() {
   local user="$1" sudoers="$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install" attempt ok=0
+  FLEDGE_DESKTOP_USER=$user
   printf '%s ALL=(ALL) NOPASSWD:ALL\n' "$user" > "$sudoers"
   chmod 440 "$sudoers"
   for attempt in 1 2 3; do
@@ -60,12 +75,13 @@ run_desktop_stage() {
     fi
     # Mirrors are sometimes mid-sync (a listed package 404s); bootstrap.sh is safe to re-run.
     if (( attempt < 3 )); then
+      stop_desktop_gpg
       echo ">>> bootstrap failed; refreshing package databases and retrying in 30s"
       sleep 30
       arch-chroot "$FLEDGE_TARGET" pacman -Syy --noconfirm || true
     fi
   done
-  remove_install_sudoers
+  cleanup_install_desktop
   (( ok )) || return 1
   arch-chroot "$FLEDGE_TARGET" systemctl disable fledge-firstboot.service
   touch "$FLEDGE_TARGET/var/lib/fledge-firstboot-done"

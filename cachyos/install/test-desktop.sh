@@ -41,16 +41,43 @@ check "sudoers drop-in removed" "no" "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-fl
 remove_install_sudoers
 check "removal is idempotent" 0 "$?"
 
+# Installation must close the target user's key database before leaving the
+# live ISO's hostname behind, including failed attempts and interruptions.
+calls="$T/chroot-calls"
+arch-chroot() {
+  printf '%s\n' "$*" >>"$calls"
+  if [[ $* == *'bash ~/proj/fledge/cachyos/bootstrap.sh'* ]]; then return "${bootstrap_rc:-0}"; fi
+}
+sleep() { :; }
+mkdir -p "$FLEDGE_TARGET/var/lib"
+run_desktop_stage ethan >/dev/null
+check "desktop success: stops GPG once" 1 "$(grep -c 'gpgconf --kill all' "$calls")"
+check "desktop success: GPG stopped before enabling login" yes \
+  "$(awk '/gpgconf --kill all/{g=NR} /systemctl enable sddm/{s=NR} END{print (g && s && g<s) ? "yes" : "no"}' "$calls")"
+: >"$calls"
+bootstrap_rc=1
+run_desktop_stage ethan >/dev/null; rc=$?
+check "desktop failure: still fails" 1 "$rc"
+check "desktop failure: closes GPG after every attempt" 3 "$(grep -c 'gpgconf --kill all' "$calls")"
+check "desktop failure: temporary sudoers removed" no "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-fledge-install ]] && echo yes || echo no)"
+unset bootstrap_rc
+unset -f sleep
+
 # The trap must fire on SIGTERM/SIGINT, even while a child is running.
 for sig in TERM INT; do
+  : >"$calls"
   echo x > "$FLEDGE_TARGET/etc/sudoers.d/99-fledge-install"
   bash -c '
     source "$1/lib/desktop.sh"
-    trap "remove_install_sudoers" EXIT
+    calls=$2
+    arch-chroot() { printf "%s\n" "$*" >>"$calls"; }
+    FLEDGE_DESKTOP_USER=ethan
+    trap "cleanup_install_desktop" EXIT
     trap "exit 143" TERM; trap "exit 130" INT
-    sleep 30 & wait' _ "$DIR" &
+    sleep 30 & wait' _ "$DIR" "$calls" &
   pid=$!; sleep 1; kill -"$sig" "$pid"; wait "$pid" 2>/dev/null
   check "sudoers drop-in removed on SIG$sig" "no" "$([[ -e $FLEDGE_TARGET/etc/sudoers.d/99-fledge-install ]] && echo yes || echo no)"
+  contains "GPG stopped on SIG$sig" 'gpgconf --kill all' "$(tail -n1 "$calls")"
 done
 
 # A failed unmount or LUKS close after a good install must not fail the

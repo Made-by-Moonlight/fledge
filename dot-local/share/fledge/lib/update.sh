@@ -55,7 +55,7 @@ update_needs_boot() { # <package name>
 update_check() {
   local repo out err rc newest finished
   repo="$(update_repo)"
-  U_FROM="" U_TO="" U_BOOT=false U_DEV="" U_PKG=0 U_AUR=0 U_FW=0 U_BOOTPKGS=() U_ERRORS=()
+  U_FROM="" U_TO="" U_BOOT=false U_DEV="" U_PKG=0 U_PKG_CHECKED=false U_FETCHED=false U_AUR=0 U_FW=0 U_BOOTPKGS=() U_ERRORS=()
   err="$(mktemp)"
 
   U_FROM="$(git -C "$repo" describe --tags --match 'v*' 2>/dev/null || git -C "$repo" rev-parse --short HEAD 2>/dev/null || true)"
@@ -64,23 +64,33 @@ update_check() {
   if [[ -z $U_DEV ]]; then
     if ! git -C "$repo" fetch --quiet --tags origin 2>"$err"; then
       U_ERRORS+=("fledge: couldn't fetch: $(tail -n1 "$err")")
-    elif newest="$(git -C "$repo" tag -l 'v*' --sort=-v:refname | head -n1)" && [[ -n $newest ]]; then
-      if [[ "$(git -C "$repo" rev-parse "$newest^{commit}")" == "$(git -C "$repo" rev-parse HEAD)" ]]; then
-        :
-      elif git -C "$repo" merge-base --is-ancestor HEAD "$newest"; then
-        U_TO="$newest"
-      elif git -C "$repo" merge-base --is-ancestor "$newest" HEAD; then
-        U_DEV="main is ahead of $newest"
-      else
-        U_DEV="main has diverged from $newest"
+    else
+      U_FETCHED=true
+      newest="$(git -C "$repo" tag -l 'v*' --sort=-v:refname | head -n1)"
+      if [[ -n $newest ]]; then
+        if [[ "$(git -C "$repo" rev-parse "$newest^{commit}")" == "$(git -C "$repo" rev-parse HEAD)" ]]; then
+          :
+        elif git -C "$repo" merge-base --is-ancestor HEAD "$newest"; then
+          U_TO="$newest"
+        elif git -C "$repo" merge-base --is-ancestor "$newest" HEAD; then
+          U_DEV="main is ahead of $newest"
+        else
+          U_DEV="main has diverged from $newest"
+        fi
       fi
     fi
     # A bootstrap that failed (or was stopped) partway: the checkout moved but the machine
-    # didn't follow. No record at all is an install from before this, and isn't flagged.
+    # didn't follow. Missing records are handled below, including dev checkouts.
     if [[ -z $U_DEV && -z $U_TO && -f "$(update_state)/bootstrapped" ]]; then
       finished="$(<"$(update_state)/bootstrapped")"
       [[ $finished == "$(update_describe)" ]] || U_BOOT=true
     fi
+  fi
+  # Code can arrive through git without bootstrap ever applying its packages,
+  # snapshot setup and services. This also repairs a dev checkout's setup,
+  # without moving that checkout to a release tag.
+  if [[ ! -f "$(update_state)/bootstrapped" ]] || [[ $(cat "$(update_state)/bootstrapped") == unfinished ]]; then
+    U_BOOT=true
   fi
 
   # checkupdates: 0 = updates listed, 2 = none, anything else = couldn't check.
@@ -89,8 +99,8 @@ update_check() {
   else
     rc=0; out="$(checkupdates 2>"$err")" || rc=$?
     case $rc in
-      0) U_PKG="$(grep -c . <<<"$out")"; update_collect_boot "$out" ;;
-      2) ;;
+      0) U_PKG_CHECKED=true; U_PKG="$(grep -c . <<<"$out")"; update_collect_boot "$out" ;;
+      2) U_PKG_CHECKED=true ;;
       *) U_ERRORS+=("packages: $(tail -n1 "$err")") ;;
     esac
   fi
@@ -134,9 +144,13 @@ update_print() {
   local e
   if [[ -n $U_DEV ]]; then printf '  %-9s skipped: %s\n' fledge "$U_DEV"
   elif [[ -n $U_TO ]]; then printf '  %-9s %s → %s\n' fledge "$U_FROM" "$U_TO"
-  elif [[ $U_BOOT == true ]]; then printf '  %-9s %s (its bootstrap didn'\''t finish: it runs again)\n' fledge "$U_FROM"
+  elif [[ $U_BOOT == true ]]; then printf '  %-9s %s (setup needs applying)\n' fledge "$U_FROM"
+  elif [[ $U_FETCHED != true ]]; then printf '  %-9s %s (couldn'\''t check for a newer release)\n' fledge "$U_FROM"
   else printf '  %-9s %s (newest)\n' fledge "$U_FROM"; fi
-  printf '  %-9s %s\n' packages "$U_PKG" AUR "$U_AUR" firmware "$U_FW"
+  if [[ -n $U_DEV && $U_BOOT == true ]]; then echo "  setup     bootstrap needs applying (checkout stays where it is)"; fi
+  if [[ $U_PKG_CHECKED == true ]]; then printf '  %-9s %s\n' packages "$U_PKG"
+  else printf '  %-9s %s\n' packages unknown; fi
+  printf '  %-9s %s\n' AUR "$U_AUR" firmware "$U_FW"
   for e in "${U_ERRORS[@]}"; do printf '  couldn'\''t check %s\n' "$e"; done
 }
 
@@ -263,7 +277,12 @@ update_run() { # <yes: true|false>
   echo "Checking for updates…"
   update_check
   update_print
-  if (($(update_total) == 0)); then echo; echo "Everything is up to date."; return 0; fi
+  if (($(update_total) == 0)); then
+    echo
+    if ((${#U_ERRORS[@]})); then echo "No updates found in the checks that succeeded; some checks failed."
+    else echo "Everything is up to date."; fi
+    return 0
+  fi
   if [[ $yes != true ]]; then
     read -r -p $'\nUpdate now? [Y/n] ' answer || answer=n
     [[ $answer =~ ^[Nn] ]] && { echo "Nothing changed."; return 0; }
@@ -283,7 +302,11 @@ update_run() { # <yes: true|false>
     echo "No snapper config for /: updating without a snapshot." >&2
   fi
 
-  ((U_PKG)) && update_step "Packages" sudo pacman -Syu "${noconfirm[@]}"
+  # An unknown count must not skip the full system upgrade before AUR builds
+  # or bootstrap installs packages against the sync database.
+  if ((U_PKG)) || [[ $U_PKG_CHECKED != true ]]; then
+    update_step "Packages" sudo pacman -Syu "${noconfirm[@]}"
+  fi
   ((U_AUR)) && update_step "AUR packages" paru -Sua "${noconfirm[@]}"
   # After the packages, so bootstrap's installs go against a synced database.
   if [[ -n $U_TO ]]; then
