@@ -17,6 +17,7 @@ import "share"
 import "settings"
 import "recovery"
 import "switcher"
+import "bluetooth"
 
 ShellRoot {
     // No live reload when a QML file changes (a git pull or restow under a locked screen).
@@ -58,6 +59,7 @@ ShellRoot {
     Launcher { id: launcher }
     QuickSettings {}
     PolkitDialog {}
+    PairingDialog {}
     SharePicker { id: sharePicker }
     RecoveryDialog {}
     SettingsWindow {}

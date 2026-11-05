@@ -28,7 +28,7 @@ jobs:
       - name: Tools
         # qt6-declarative: qmltestrunner (and QtTest) for the shell's and installer's QML tests.
         # stow: check-stow-ignore.sh asks stow itself what it would link into ~.
-        run: pacman -Syu --noconfirm --needed git bash diffutils python imagemagick librsvg shellcheck jq lua qt6-declarative stow
+        run: pacman -Syu --noconfirm --needed git bash diffutils python python-dbus python-gobject imagemagick librsvg shellcheck jq lua qt6-declarative stow
 
       - uses: actions/checkout@v4
 

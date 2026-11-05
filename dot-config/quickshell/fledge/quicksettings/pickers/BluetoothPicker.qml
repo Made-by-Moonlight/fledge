@@ -7,8 +7,8 @@ import "../../components"
 // Per-device state machine (`attempt` = what we started, `failed`, both keyed by address, fed by
 // the watchers below from the adapter's own stable model):
 //   unpaired --click--> pair() : device.pairing => "Pairing…"
-//        paired becomes true  => trusted = true (so it reconnects later), then connect()
-//        pairing ends unpaired => "Failed" + hint (no BlueZ agent here, so PIN/confirm pairing fails)
+//        Bt's agent handles prompts and trusts/connects after pairing succeeds.
+//        pairing ends unpaired => "Failed" + the agent's error and a retry hint.
 //   paired --click--> connect() : state Connecting => "Connecting…" --> Connected
 //        Connecting ends Disconnected => "Failed"
 Column {
@@ -16,6 +16,9 @@ Column {
     spacing: 4
     property var attempt: ({})   // address -> "pair" | "connect"
     property var failed: ({})    // address -> "pair" | "connect"
+    property bool showUnnamed: false
+    readonly property var shownDevices: Bt.visibleDevices(showUnnamed)
+    readonly property int unnamedCount: Bt.devices.length - Bt.visibleDevices(false).length
     function mark(map, addr, v) {
         const m = Object.assign({}, p[map]);
         if (v) m[addr] = v; else delete m[addr];
@@ -34,14 +37,6 @@ Column {
             readonly property string addr: modelData.address
             property Connections c: Connections {
                 target: w.modelData
-                function onPairedChanged() {
-                    if (w.modelData.paired && p.attempt[w.addr] === "pair") {
-                        w.modelData.trusted = true;
-                        p.mark("failed", w.addr, false);
-                        p.mark("attempt", w.addr, "connect");
-                        w.modelData.connect();
-                    }
-                }
                 function onPairingChanged() {
                     if (!w.modelData.pairing && !w.modelData.paired && p.attempt[w.addr] === "pair") {
                         p.mark("attempt", w.addr, false);
@@ -51,7 +46,7 @@ Column {
                 function onStateChanged() {
                     const st = w.modelData.state;
                     if (st === BluetoothDeviceState.Connected) { p.mark("attempt", w.addr, false); p.mark("failed", w.addr, false); }
-                    else if (st === BluetoothDeviceState.Disconnected && p.attempt[w.addr] === "connect") {
+                    else if (st === BluetoothDeviceState.Disconnected && (p.attempt[w.addr] === "connect" || (p.attempt[w.addr] === "pair" && w.modelData.paired))) {
                         p.mark("attempt", w.addr, false);
                         p.mark("failed", w.addr, "connect");
                     }
@@ -62,28 +57,38 @@ Column {
     function activate(d) {
         mark("failed", d.address, false);
         if (d.connected) d.disconnect();
+        else if (Bt.pairingAddress === d.address) Bt.cancelPairing();
         else if (d.state === BluetoothDeviceState.Connecting) { mark("attempt", d.address, false); d.disconnect(); }   // cancel
         else if (d.paired) { mark("attempt", d.address, "connect"); d.connect(); }
-        else { mark("attempt", d.address, "pair"); d.pair(); }
+        else if (Bt.agentReady && !Bt.pairingAddress) { mark("attempt", d.address, "pair"); Bt.pair(d); }
     }
     readonly property bool pairFailed: Object.values(failed).includes("pair")
 
     Glyph { text: !Bt.available ? "No Bluetooth adapter" : !Bt.enabled ? "Bluetooth is off" : Bt.devices.length === 0 ? "No devices yet" : "Devices"; color: Theme.muted; font.pixelSize: Theme.fontSmall }
     Repeater {
-        model: Bt.enabled ? Bt.devices.slice(0, 12) : []
+        model: Bt.enabled ? p.shownDevices : []
         delegate: Rectangle {
             id: row
             required property var modelData
             readonly property string fail: p.failed[modelData.address] ?? ""
-            width: p.width; height: 32; radius: 7
+            width: p.width; height: Bt.hasName(modelData) ? 58 : 40; radius: 7
             color: modelData.connected ? Theme.accentSoft : (ma.containsMouse ? Theme.surface : "transparent")
-            Row {
-                anchors.fill: parent; anchors.leftMargin: 8; spacing: 8
-                Glyph { text: row.modelData.connected ? "󰂱" : "󰂯"; anchors.verticalCenter: parent.verticalCenter }
-                Glyph { text: row.modelData.name || row.modelData.address; color: row.modelData.connected ? Theme.accent : Theme.fg; anchors.verticalCenter: parent.verticalCenter; elide: Text.ElideRight; width: p.width - 130 }
+            Item {
+                anchors.fill: parent; anchors.leftMargin: 8; anchors.rightMargin: 12
+                Glyph { id: deviceIcon; text: row.modelData.connected ? "󰂱" : "󰂯"; anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter }
+                Column {
+                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.left: deviceIcon.right; anchors.leftMargin: 8
+                    anchors.right: deviceStatus.left; anchors.rightMargin: 12
+                    spacing: 6
+                    Glyph { text: Bt.deviceName(row.modelData); textFormat: Text.PlainText; color: row.modelData.connected ? Theme.accent : Theme.fg; elide: Text.ElideRight; width: parent.width }
+                    Glyph { visible: Bt.hasName(row.modelData); text: row.modelData.address; color: Theme.muted; font.pixelSize: Theme.fontSmall }
+                }
                 Glyph {
+                    id: deviceStatus
+                    anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter; font.pixelSize: Theme.fontSmall
-                    text: row.modelData.pairing ? "Pairing…" : row.modelData.state === BluetoothDeviceState.Connecting ? "Connecting…" : row.fail ? "Failed"
+                    text: row.modelData.pairing || Bt.pairingAddress === row.modelData.address ? "Pairing…" : row.modelData.state === BluetoothDeviceState.Connecting ? "Connecting…" : row.fail || Bt.errors[row.modelData.address] ? "Failed"
                           : row.modelData.batteryAvailable ? Math.round(row.modelData.battery * 100) + "%" : (row.modelData.paired ? "" : "pair")
                     color: row.fail ? Theme.error : Theme.muted
                 }
@@ -91,5 +96,19 @@ Column {
             MouseArea { id: ma; anchors.fill: parent; hoverEnabled: true; onClicked: p.activate(row.modelData) }
         }
     }
-    Glyph { visible: p.pairFailed; width: p.width; wrapMode: Text.Wrap; text: "Needs a PIN — pair with bluetoothctl"; color: Theme.error; font.pixelSize: Theme.fontSmall }
+    Glyph {
+        visible: Bt.enabled && p.unnamedCount > 0
+        width: p.width
+        text: p.showUnnamed ? "Hide unnamed devices" : "Show unnamed devices (" + p.unnamedCount + ")"
+        color: Theme.accent; font.pixelSize: Theme.fontSmall
+        MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: p.showUnnamed = !p.showUnnamed }
+    }
+    Glyph {
+        visible: Bt.enabled && p.shownDevices.length === 0
+        width: p.width; wrapMode: Text.Wrap
+        text: "Looking for devices… Put your device in pairing mode."
+        color: Theme.muted; font.pixelSize: Theme.fontSmall
+    }
+    Glyph { visible: p.pairFailed || Object.keys(Bt.errors).length > 0; width: p.width; wrapMode: Text.Wrap; textFormat: Text.PlainText; text: Object.values(Bt.errors).join("\n") || "Connection failed. Put the device in pairing mode and select it to retry."; color: Theme.error; font.pixelSize: Theme.fontSmall }
+    Glyph { visible: !Bt.agentReady; width: p.width; wrapMode: Text.Wrap; textFormat: Text.PlainText; text: Bt.agentError || "Waiting for Bluetooth pairing…"; color: Theme.error; font.pixelSize: Theme.fontSmall }
 }

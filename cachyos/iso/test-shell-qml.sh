@@ -16,3 +16,5 @@ QML_XHR_ALLOW_FILE_READ=1 QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../..
 QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_layout.qml"
 QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_main.qml"
 QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_share.qml"
+python3 "$DIR/../../dot-config/quickshell/fledge/test/test-bluetooth-agent.py"
+QT_QPA_PLATFORM=offscreen "$RUNNER" -input "$DIR/../../dot-config/quickshell/fledge/test/tst_bluetooth.qml"
