@@ -89,6 +89,8 @@ PACMAN_PACKAGES=(
   # Bluetooth stack for quick settings' Bluetooth picker. It used to arrive
   # only as bluetui's dependency, so retiring bluetui would cascade it away.
   bluez
+  # BlueZ pairing agent behind the shell's PIN and passkey dialog.
+  python-dbus python-gobject
   # fledge transcode (Super+Ctrl+Period, pictures) and fledge transcode ascii
   # (Style -> About). It used to arrive only as an elephant
   # dependency, so retiring elephant would cascade it away.
