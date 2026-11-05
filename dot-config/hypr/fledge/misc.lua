@@ -16,6 +16,9 @@ hl.config({
 
     touchpad = {
       natural_scroll = false,
+      -- Two/three-finger presses should match taps: right/middle click.
+      clickfinger_behavior = true,
+      tap_button_map = "lrm",
     },
   },
 
