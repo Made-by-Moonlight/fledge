@@ -129,6 +129,8 @@ PACMAN_PACKAGES=(
   # GUI file manager — lighter than the GNOME stack, no dependency on the
   # yazi TUI keybind it replaces.
   thunar
+  # Satty annotates screenshots; gThumb browses images and folders.
+  gthumb xdg-utils
   # fledge update: checkupdates (pending packages, without touching the real
   # sync db) and firmware. snapper is installed below, on btrfs only.
   pacman-contrib fwupd
@@ -280,6 +282,29 @@ seed_gtk_dark() {
   mkdir -p "${marker%/*}" && : >"$marker"
 }
 seed_gtk_dark || echo "WARN: could not set GTK dark mode via gsettings (needs gsettings and dconf); relying on gtk-3.0/settings.ini" >&2
+
+# Satty can be picked as the image viewer merely because it is installed for
+# screenshots. Seed common image types once, without replacing other viewers;
+# a later explicit choice, including Satty, then survives upgrades.
+seed_image_viewer() {
+  local marker="$HOME/.local/state/fledge/image-viewer-seeded" mime current desktop
+  [[ -e $marker ]] && return 0
+  if [[ -f /usr/share/applications/org.gnome.gthumb.desktop ]]; then
+    desktop=org.gnome.gthumb.desktop
+  elif [[ -f /usr/share/applications/org.gnome.gThumb.desktop ]]; then
+    desktop=org.gnome.gThumb.desktop
+  else
+    return 1
+  fi
+  for mime in image/jpeg image/png image/gif image/webp image/tiff; do
+    current="$(xdg-mime query default "$mime")" || return 1
+    case "$current" in
+      ''|satty.desktop) xdg-mime default "$desktop" "$mime" || return 1 ;;
+    esac
+  done
+  mkdir -p "${marker%/*}" && : >"$marker"
+}
+seed_image_viewer || echo "WARN: could not set the default image viewer" >&2
 # Not stow-managed (GTK tools rewrite it), so seed it only when the user hasn't made one.
 mkdir -p "$HOME/.config/gtk-3.0"
 if [ ! -e "$HOME/.config/gtk-3.0/settings.ini" ]; then
