@@ -69,7 +69,7 @@ from the ISO. Nothing migrates them.
 | ![Lock screen](docs/screenshots/08-lock.png) | ![Quick settings](docs/screenshots/09-quick-settings.png) |
 | Lock screen | Quick settings |
 | ![Settings](docs/screenshots/10-settings.png) | ![Displays](docs/screenshots/11-displays.png) |
-| Settings (keybinds, displays, bar, idle, input) | Displays: arrange screens at their real size, rotated or not |
+| Settings (keybinds, displays, bar, audio, idle, input) | Displays: arrange screens at their real size, rotated or not |
 | ![Installer data disks](docs/screenshots/12-installer-data-disks.png) | ![Window switcher](docs/screenshots/13-window-switcher.png) |
 | Data disks: mount a drive as it is, or wipe it into fresh storage | Alt+Tab: every window with a preview, on any workspace |
 
