@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+# Move the current workspace's windows without changing workspace mid-loop.
+set -euo pipefail
+
+target="${1:-}"
+if [[ ! $target =~ ^([1-9]|10)$ ]]; then
+  echo 'usage: fledge-move-windows <workspace 1-10>' >&2
+  exit 2
+fi
+
+fledge hypr eval "local ws = hl.get_active_workspace(); if ws then local windows = hl.get_windows({ workspace = ws }); for _, w in pairs(windows) do hl.dispatch(hl.dsp.window.move({ window = w, workspace = $target, follow = false })) end; if next(windows) then hl.dispatch(hl.dsp.focus({ workspace = $target })) end end"

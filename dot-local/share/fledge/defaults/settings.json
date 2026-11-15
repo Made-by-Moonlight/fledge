@@ -770,6 +770,96 @@
         }
       }
     },
+    "windows.move-all-windows-to-workspace-1": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:10",
+      "label": "Move all windows to workspace 1",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 1"
+      }
+    },
+    "windows.move-all-windows-to-workspace-2": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:11",
+      "label": "Move all windows to workspace 2",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 2"
+      }
+    },
+    "windows.move-all-windows-to-workspace-3": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:12",
+      "label": "Move all windows to workspace 3",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 3"
+      }
+    },
+    "windows.move-all-windows-to-workspace-4": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:13",
+      "label": "Move all windows to workspace 4",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 4"
+      }
+    },
+    "windows.move-all-windows-to-workspace-5": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:14",
+      "label": "Move all windows to workspace 5",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 5"
+      }
+    },
+    "windows.move-all-windows-to-workspace-6": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:15",
+      "label": "Move all windows to workspace 6",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 6"
+      }
+    },
+    "windows.move-all-windows-to-workspace-7": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:16",
+      "label": "Move all windows to workspace 7",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 7"
+      }
+    },
+    "windows.move-all-windows-to-workspace-8": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:17",
+      "label": "Move all windows to workspace 8",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 8"
+      }
+    },
+    "windows.move-all-windows-to-workspace-9": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:18",
+      "label": "Move all windows to workspace 9",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 9"
+      }
+    },
+    "windows.move-all-windows-to-workspace-10": {
+      "mods": "SUPER CTRL SHIFT",
+      "key": "code:19",
+      "label": "Move all windows to workspace 10",
+      "group": "Windows",
+      "action": {
+        "exec": "fledge-move-windows 10"
+      }
+    },
     "windows.move-window-silently-to-workspace-1": {
       "mods": "SUPER SHIFT ALT",
       "key": "code:10",
