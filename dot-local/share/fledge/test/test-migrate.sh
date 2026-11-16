@@ -116,7 +116,7 @@ check "migrate: old v1 defaults == v2 defaults (binds)" "true" \
           "utilities.slievr-menu-2": "utilities.system-menu-3",
           "utilities.exec-slievr-hw-external-monitors-slievr-hyprland-monitor-internal-off": "utilities.lid-closed",
           "utilities.exec-slievr-hyprland-monitor-internal-on": "utilities.lid-opened"}[.] // .))
-      | . == ($v2[0].binds | del(. [range(1; 11) | "windows.move-all-windows-to-workspace-\(.)"]))' "$FIX/defaults-v1.json" 2>&1)"
+      | . == ($v2[0].binds | del(.["media.vesktop-mute"], .[range(1; 11) | "windows.move-all-windows-to-workspace-\(.)"]))' "$FIX/defaults-v1.json" 2>&1)"
 check "migrate: v2 defaults have no dispatch left" "0" \
   "$(jq '[.. | objects | select(has("dispatch"))] | length' "$HERE/../defaults/settings.json")"
 check "migrate: v2 defaults are version 2" "2" "$(jq .version "$HERE/../defaults/settings.json")"

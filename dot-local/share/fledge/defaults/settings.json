@@ -330,6 +330,20 @@
       },
       "flags": "l"
     },
+    "media.vesktop-mute": {
+      "mods": "",
+      "key": "Page_Up",
+      "label": "Vesktop toggle mute",
+      "group": "Media",
+      "action": {
+        "dsp": "send_shortcut",
+        "args": {
+          "mods": "CTRL SHIFT",
+          "key": "M",
+          "window": "class:^(vesktop)$"
+        }
+      }
+    },
     "clipboard.universal-copy": {
       "mods": "SUPER",
       "key": "C",
