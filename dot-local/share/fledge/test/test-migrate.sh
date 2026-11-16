@@ -97,7 +97,8 @@ check "migrate: a version-less file holding a v1 zoom command needs migrating" "
 # Every legacy dispatcher in the old defaults has a translation, and the result
 # is exactly the shipped v2 defaults, give or take the binds changed since on
 # purpose: the YouTube web app bind went (no web apps), YouTube Music runs
-# limusic, Alt+Tab and Alt+Shift+Tab open the window switcher, and the scripts
+# limusic, Alt+Tab and Alt+Shift+Tab open the window switcher, the move-all
+# workspace binds are new, and the scripts
 # became `fledge <group> <action>` (slievr-a-b and the
 # slievr router's `slievr a b` both -> `fledge a b`), with the four bind ids that
 # were named after them renamed. The migration doesn't rename commands: a user's
@@ -115,7 +116,7 @@ check "migrate: old v1 defaults == v2 defaults (binds)" "true" \
           "utilities.slievr-menu-2": "utilities.system-menu-3",
           "utilities.exec-slievr-hw-external-monitors-slievr-hyprland-monitor-internal-off": "utilities.lid-closed",
           "utilities.exec-slievr-hyprland-monitor-internal-on": "utilities.lid-opened"}[.] // .))
-      | . == $v2[0].binds' "$FIX/defaults-v1.json" 2>&1)"
+      | . == ($v2[0].binds | del(. [range(1; 11) | "windows.move-all-windows-to-workspace-\(.)"]))' "$FIX/defaults-v1.json" 2>&1)"
 check "migrate: v2 defaults have no dispatch left" "0" \
   "$(jq '[.. | objects | select(has("dispatch"))] | length' "$HERE/../defaults/settings.json")"
 check "migrate: v2 defaults are version 2" "2" "$(jq .version "$HERE/../defaults/settings.json")"
