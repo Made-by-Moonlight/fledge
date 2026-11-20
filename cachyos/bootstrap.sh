@@ -53,6 +53,9 @@ PACMAN_PACKAGES=(
   # JetBrainsMono Nerd Font: the fledge shell's text and the vendored sddm
   # greeter theme's password field.
   ttf-cascadia-mono-nerd ttf-firacode-nerd ttf-jetbrains-mono-nerd
+  # Nerd Fonts do not cover Japanese, Chinese and Korean text; fontconfig
+  # uses Noto as a fallback when an application needs those glyphs.
+  noto-fonts-cjk
   # pamixer (fledge audio …), brightnessctl (fledge brightness keyboard,
   # the shell's brightness) were both previously only
   # pulled in transitively via cachyos-hyprland-settings (see the removal
